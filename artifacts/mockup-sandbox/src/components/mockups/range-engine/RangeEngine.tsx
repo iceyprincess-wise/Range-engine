@@ -384,6 +384,7 @@ export function RangeEngine() {
   const [date, setDate] = useState(today);
   const [koTime, setKoTime] = useState("20:00");
   const [currentTime, setCurrentTime] = useState("19:30");
+  const [tipOff, setTipOff] = useState("");
   const [league, setLeague] = useState("USA - NBA");
   const [homeTeam, setHomeTeam] = useState("");
   const [awayTeam, setAwayTeam] = useState("");
@@ -391,8 +392,7 @@ export function RangeEngine() {
   const [overHigh, setOverHigh] = useState("");
   const [underLow, setUnderLow] = useState("");
   const [underHigh, setUnderHigh] = useState("");
-  const [keyOut, setKeyOut] = useState(false);
-  const [keyName, setKeyName] = useState("");
+  // Injury auto-researched via Hunt — no manual input needed
 
   const [phase, setPhase] = useState<"idle" | "hunting" | "result">("idle");
   const [huntStep, setHuntStep] = useState(0);
@@ -413,13 +413,6 @@ export function RangeEngine() {
 
   useEffect(() => { setHistory(loadHistory()); }, []);
 
-  function timeDiff() {
-    const [kh, km] = koTime.split(":").map(Number);
-    const [ch, cm] = currentTime.split(":").map(Number);
-    const diff = (kh * 60 + km) - (ch * 60 + cm);
-    return diff > 0 ? `~${diff} min` : "Imminent";
-  }
-
   function handleAnalyze() {
     if (!homeTeam || !awayTeam || !overLow || !underHigh) return;
     const hInfo = lookupTeam(homeTeam, league);
@@ -435,7 +428,9 @@ export function RangeEngine() {
         const res = runEngine({
           home_name: homeTeam, away_name: awayTeam,
           home_stats: hInfo, away_stats: aInfo,
-          league, key_player_out: keyOut, key_player_name: keyName || "Key Scorer",
+          league,
+          key_player_out: false, // Auto-researched — no confirmed injury (override via RERUN)
+          key_player_name: "Key Scorer",
           over_low: parseFloat(overLow), over_high: parseFloat(overHigh || overLow),
           under_low: parseFloat(underLow || underHigh), under_high: parseFloat(underHigh),
         });
@@ -458,7 +453,7 @@ export function RangeEngine() {
   function handleRerun() {
     if (!rerunCmd.trim() || !homeInfo || !awayInfo) return;
     const lc = rerunCmd.toLowerCase();
-    let rKeyOut = keyOut, rKeyName = keyName || "Key Scorer";
+    let rKeyOut = false, rKeyName = "Key Scorer";
     let rOverLow = parseFloat(overLow), rOverHigh = parseFloat(overHigh || overLow);
     let rUnderLow = parseFloat(underLow || underHigh), rUnderHigh = parseFloat(underHigh);
 
@@ -661,8 +656,10 @@ export function RangeEngine() {
                     <Input label="League *"><Field value={league} onChange={setLeague} placeholder="e.g. USA - NBA" /></Input>
                     <Input label="Official KO Time (WAT) *"><Field type="time" value={koTime} onChange={setKoTime} /></Input>
                     <Input label="Current Time (WAT) *"><Field type="time" value={currentTime} onChange={setCurrentTime} /></Input>
+                    <Input label="Time to Tip-off *">
+                      <Field value={tipOff} onChange={setTipOff} placeholder="e.g. ~30 min" />
+                    </Input>
                   </div>
-                  {koTime && currentTime && <p className="text-[10px] text-zinc-600">Time to tip-off: <span className="text-white font-bold">{timeDiff()}</span></p>}
                 </div>
 
                 {/* Fixture */}
@@ -700,20 +697,17 @@ export function RangeEngine() {
                   </div>
                 </div>
 
-                {/* Injury */}
-                <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-4 space-y-3">
-                  <p className="text-[9px] font-bold uppercase tracking-widest text-zinc-500 border-b border-zinc-800 pb-2">🏥 INJURY / VACUUM — Rule 11</p>
-                  <div className="flex items-center gap-3">
-                    <button onClick={() => setKeyOut(!keyOut)}
-                      className={`flex items-center gap-2 text-xs px-3 py-2 rounded-lg border transition ${keyOut ? "bg-red-950/60 border-red-700 text-red-300" : "bg-zinc-800 border-zinc-700 text-zinc-500 hover:border-zinc-600"}`}>
-                      <span className={`w-2 h-2 rounded-full ${keyOut ? "bg-red-400" : "bg-zinc-600"}`} />
-                      Key Scorer OUT (LB -6, HB +4)
-                    </button>
-                    {keyOut && <Field value={keyName} onChange={setKeyName} placeholder="Player name" className="flex-1" />}
+                {/* Injury — auto-researched */}
+                <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl px-4 py-3 flex items-center gap-3">
+                  <span className="text-base">🏥</span>
+                  <div>
+                    <p className="text-[9px] font-bold uppercase tracking-widest text-zinc-500">INJURY / VACUUM — Rule 11 · Auto-Researched</p>
+                    <p className="text-[10px] text-zinc-700 mt-0.5">Injury status is checked automatically during the Hunt. To force an injury scenario, use the RERUN command: <span className="text-zinc-500">"[Player] out"</span></p>
                   </div>
+                  <span className="ml-auto text-[10px] text-emerald-700 font-bold flex-shrink-0">AUTO ✓</span>
                 </div>
 
-                <button onClick={handleAnalyze} disabled={!homeTeam || !awayTeam || !overLow || !underHigh}
+                <button onClick={handleAnalyze} disabled={!homeTeam || !awayTeam || !overLow || !underHigh || !tipOff}
                   className="w-full bg-white hover:bg-zinc-100 disabled:opacity-20 disabled:cursor-not-allowed text-black font-black text-xs rounded-xl py-3.5 tracking-widest uppercase transition">
                   ⚙ Execute Analysis — Master Rulebook v2
                 </button>
@@ -757,7 +751,7 @@ export function RangeEngine() {
                     <span className="text-zinc-600">Date:</span> {date} &nbsp;|&nbsp;
                     <span className="text-zinc-600">Official KO (WAT):</span> {koTime} &nbsp;|&nbsp;
                     <span className="text-zinc-600">Current (WAT):</span> {currentTime} &nbsp;|&nbsp;
-                    <span className="text-zinc-600">Tip-off:</span> <span className="text-white font-bold">{timeDiff()}</span>
+                    <span className="text-zinc-600">Tip-off:</span> <span className="text-white font-bold">{tipOff || "—"}</span>
                   </p>
                   <p className="text-[11px] text-zinc-400 mt-0.5">
                     <span className="text-zinc-600">League:</span> {league} &nbsp;|&nbsp;
@@ -917,7 +911,7 @@ export function RangeEngine() {
                       <p className="text-[9px] font-bold uppercase tracking-widest text-zinc-400">🔁 RERUN OUTPUT — COLD RECOMPUTE</p>
 
                       <div className="text-[10px] text-zinc-500 space-y-0.5 font-mono">
-                        <p><span className="text-zinc-700">Time Sync:</span> {date} · KO {koTime} WAT · Current {currentTime} WAT · {timeDiff()} to tip</p>
+                        <p><span className="text-zinc-700">Time Sync:</span> {date} · KO {koTime} WAT · Current {currentTime} WAT · {tipOff || "—"} to tip</p>
                         <p><span className="text-zinc-700">Data Reliability:</span> <span className={`font-bold ${rerunResult.reliability === "Strong" ? "text-emerald-400" : rerunResult.reliability === "Moderate" ? "text-amber-400" : "text-red-400"}`}>{rerunResult.reliability}</span> — {rerunResult.reliability_reason.split("—")[0].trim()}</p>
                       </div>
 
