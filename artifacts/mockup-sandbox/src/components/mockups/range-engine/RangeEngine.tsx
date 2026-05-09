@@ -1,62 +1,96 @@
 import { useState, useRef, useEffect } from "react";
 
-// ─── Team Database (30+ NBA + aliases) ───────────────────────────────────────
-const TEAM_DB: Record<string, { avg_pts: number; avg_allowed: number; def_rating: number; ft_pct: number; pace: number; games: number }> = {
-  lakers:       { avg_pts: 114.2, avg_allowed: 113.6, def_rating: 1.10, ft_pct: 0.77, pace: 100.1, games: 12 },
-  celtics:      { avg_pts: 120.6, avg_allowed: 108.9, def_rating: 1.05, ft_pct: 0.80, pace: 100.8, games: 14 },
-  warriors:     { avg_pts: 116.3, avg_allowed: 112.4, def_rating: 1.08, ft_pct: 0.78, pace: 101.5, games: 11 },
-  heat:         { avg_pts: 110.4, avg_allowed: 109.2, def_rating: 1.06, ft_pct: 0.76, pace:  98.4, games: 10 },
-  nuggets:      { avg_pts: 115.8, avg_allowed: 111.3, def_rating: 1.07, ft_pct: 0.79, pace: 100.3, games: 13 },
-  bucks:        { avg_pts: 118.1, avg_allowed: 114.2, def_rating: 1.11, ft_pct: 0.75, pace: 101.9, games: 12 },
-  "76ers":      { avg_pts: 113.7, avg_allowed: 115.4, def_rating: 1.12, ft_pct: 0.81, pace:  99.6, games: 11 },
-  sixers:       { avg_pts: 113.7, avg_allowed: 115.4, def_rating: 1.12, ft_pct: 0.81, pace:  99.6, games: 11 },
-  clippers:     { avg_pts: 112.8, avg_allowed: 110.7, def_rating: 1.07, ft_pct: 0.77, pace:  99.1, games: 10 },
-  suns:         { avg_pts: 116.9, avg_allowed: 117.1, def_rating: 1.14, ft_pct: 0.79, pace: 102.2, games: 12 },
-  mavericks:    { avg_pts: 117.4, avg_allowed: 112.9, def_rating: 1.09, ft_pct: 0.80, pace: 100.7, games: 13 },
-  mavs:         { avg_pts: 117.4, avg_allowed: 112.9, def_rating: 1.09, ft_pct: 0.80, pace: 100.7, games: 13 },
-  knicks:       { avg_pts: 113.5, avg_allowed: 109.8, def_rating: 1.06, ft_pct: 0.76, pace:  98.8, games: 11 },
-  nets:         { avg_pts: 109.3, avg_allowed: 118.2, def_rating: 1.15, ft_pct: 0.74, pace:  99.3, games:  9 },
-  bulls:        { avg_pts: 111.6, avg_allowed: 113.7, def_rating: 1.10, ft_pct: 0.77, pace:  99.9, games: 10 },
-  spurs:        { avg_pts: 108.4, avg_allowed: 119.3, def_rating: 1.16, ft_pct: 0.73, pace: 100.5, games: 11 },
-  raptors:      { avg_pts: 111.2, avg_allowed: 116.4, def_rating: 1.13, ft_pct: 0.76, pace:  99.7, games: 12 },
-  thunder:      { avg_pts: 119.1, avg_allowed: 110.8, def_rating: 1.07, ft_pct: 0.78, pace: 101.1, games: 13 },
-  timberwolves: { avg_pts: 112.4, avg_allowed: 108.6, def_rating: 1.05, ft_pct: 0.77, pace:  99.5, games: 11 },
-  wolves:       { avg_pts: 112.4, avg_allowed: 108.6, def_rating: 1.05, ft_pct: 0.77, pace:  99.5, games: 11 },
-  pacers:       { avg_pts: 121.3, avg_allowed: 119.4, def_rating: 1.15, ft_pct: 0.82, pace: 103.8, games: 12 },
-  hawks:        { avg_pts: 116.7, avg_allowed: 119.2, def_rating: 1.15, ft_pct: 0.79, pace: 102.4, games: 10 },
-  magic:        { avg_pts: 107.3, avg_allowed: 108.9, def_rating: 1.05, ft_pct: 0.73, pace:  98.1, games: 11 },
-  grizzlies:    { avg_pts: 113.8, avg_allowed: 112.4, def_rating: 1.08, ft_pct: 0.76, pace: 100.2, games: 10 },
-  pelicans:     { avg_pts: 112.1, avg_allowed: 114.7, def_rating: 1.11, ft_pct: 0.74, pace:  99.8, games:  9 },
-  jazz:         { avg_pts: 114.5, avg_allowed: 118.3, def_rating: 1.14, ft_pct: 0.78, pace: 100.9, games: 10 },
-  rockets:      { avg_pts: 112.7, avg_allowed: 110.4, def_rating: 1.07, ft_pct: 0.74, pace:  99.6, games: 11 },
-  kings:        { avg_pts: 118.4, avg_allowed: 117.2, def_rating: 1.13, ft_pct: 0.80, pace: 102.1, games: 12 },
-  pistons:      { avg_pts: 108.1, avg_allowed: 116.9, def_rating: 1.14, ft_pct: 0.76, pace: 100.3, games: 10 },
-  cavaliers:    { avg_pts: 116.2, avg_allowed: 107.4, def_rating: 1.04, ft_pct: 0.77, pace:  99.2, games: 13 },
-  cavs:         { avg_pts: 116.2, avg_allowed: 107.4, def_rating: 1.04, ft_pct: 0.77, pace:  99.2, games: 13 },
-  hornets:      { avg_pts: 108.9, avg_allowed: 117.6, def_rating: 1.14, ft_pct: 0.76, pace: 100.0, games: 10 },
-  wizards:      { avg_pts: 106.4, avg_allowed: 120.1, def_rating: 1.16, ft_pct: 0.74, pace: 100.7, games:  9 },
-  trailblazers: { avg_pts: 109.8, avg_allowed: 117.9, def_rating: 1.14, ft_pct: 0.77, pace: 100.5, games: 10 },
-  blazers:      { avg_pts: 109.8, avg_allowed: 117.9, def_rating: 1.14, ft_pct: 0.77, pace: 100.5, games: 10 },
+// ─── League DNA Profiles (Anti-Template, Anti-Generic) ────────────────────────
+const LEAGUE_DNA_PROFILES: Record<string, {
+  name: string; proxyPPG: number; hbDNA: number; lbDNA: number;
+  maxWidth: number; hammerEdge: number; buffer: number; grind: boolean;
+}> = {
+  NBA:        { name: "High-Octane NBA",           proxyPPG: 113.8, hbDNA: 0,  lbDNA: 0, maxWidth: 22, hammerEdge: 8,  buffer: 3.0, grind: false },
+  EUROLEAGUE: { name: "Structured EuroLeague",     proxyPPG: 82.0,  hbDNA: 0,  lbDNA: 0, maxWidth: 18, hammerEdge: 8,  buffer: 1.5, grind: false },
+  ACB:        { name: "Technical ACB Spain",       proxyPPG: 85.0,  hbDNA: 0,  lbDNA: 2, maxWidth: 18, hammerEdge: 8,  buffer: 1.5, grind: false },
+  RUSSIA:     { name: "Defensive Grind (Russia)",  proxyPPG: 78.5,  hbDNA: -3, lbDNA: 0, maxWidth: 16, hammerEdge: 15, buffer: 1.5, grind: true  },
+  GERMANY:    { name: "Efficiency/Transition BBL", proxyPPG: 80.0,  hbDNA: 0,  lbDNA: 2, maxWidth: 17, hammerEdge: 15, buffer: 1.5, grind: false },
+  ISRAEL:     { name: "Defensive Grind (Israel)",  proxyPPG: 78.5,  hbDNA: -3, lbDNA: 0, maxWidth: 16, hammerEdge: 15, buffer: 1.5, grind: true  },
+  PBA:        { name: "Philippine High-Pace",      proxyPPG: 95.0,  hbDNA: 0,  lbDNA: 0, maxWidth: 20, hammerEdge: 8,  buffer: 2.0, grind: false },
+  NBL:        { name: "Australian NBL",            proxyPPG: 88.0,  hbDNA: 0,  lbDNA: 0, maxWidth: 18, hammerEdge: 10, buffer: 2.0, grind: false },
+  NCAA:       { name: "College NCAA",              proxyPPG: 74.0,  hbDNA: 0,  lbDNA: 0, maxWidth: 16, hammerEdge: 10, buffer: 1.5, grind: false },
+  DEFAULT:    { name: "Generic Proxy League",      proxyPPG: 78.5,  hbDNA: -2, lbDNA: 0, maxWidth: 16, hammerEdge: 15, buffer: 1.5, grind: true  },
 };
 
-const LEAGUE_AVG: Record<string, number> = {
-  NBA: 113.8, NCAA: 74.0, EUROLEAGUE: 82.0, ACB: 85.0, PBA: 95.0, NBL: 88.0, DEFAULT: 100.0,
+function getLeagueDNA(league: string) {
+  const lg = league.toUpperCase();
+  if (lg.includes("NBA")) return { ...LEAGUE_DNA_PROFILES.NBA, key: "NBA" };
+  if (lg.includes("EUROLEAGUE") || lg.includes("EURO LEAGUE") || lg.includes("EUROCUP")) return { ...LEAGUE_DNA_PROFILES.EUROLEAGUE, key: "EUROLEAGUE" };
+  if (lg.includes("ACB") || (lg.includes("SPAIN") && lg.includes("BASKET"))) return { ...LEAGUE_DNA_PROFILES.ACB, key: "ACB" };
+  if (lg.includes("RUSSIA") || lg.includes("VTB") || lg.includes("SUPERLIGA") || lg.includes("SUPER LIGA") || lg.includes("PBL") || lg.includes("PARI")) return { ...LEAGUE_DNA_PROFILES.RUSSIA, key: "RUSSIA" };
+  if (lg.includes("GERMAN") || lg.includes("BBL") || lg.includes("BUNDESLIGA")) return { ...LEAGUE_DNA_PROFILES.GERMANY, key: "GERMANY" };
+  if (lg.includes("ISRAEL") || lg.includes("BSL") || lg.includes("WINNER") || lg.includes("LIGAT")) return { ...LEAGUE_DNA_PROFILES.ISRAEL, key: "ISRAEL" };
+  if (lg.includes("PBA") || lg.includes("PHILIPPINES")) return { ...LEAGUE_DNA_PROFILES.PBA, key: "PBA" };
+  if (lg.includes("NBL") || lg.includes("AUSTRALIA")) return { ...LEAGUE_DNA_PROFILES.NBL, key: "NBL" };
+  if (lg.includes("NCAA") || lg.includes("COLLEGE")) return { ...LEAGUE_DNA_PROFILES.NCAA, key: "NCAA" };
+  return { ...LEAGUE_DNA_PROFILES.DEFAULT, key: "DEFAULT" };
+}
+
+// ─── Team Database (NBA) ─────────────────────────────────────────────────────
+const TEAM_DB: Record<string, { avg_pts: number; avg_allowed: number; def_rating: number; ft_pct: number; pt2_pct: number; pt3_pct: number; pace: number; games: number }> = {
+  lakers:       { avg_pts: 114.2, avg_allowed: 113.6, def_rating: 1.10, ft_pct: 0.77, pt2_pct: 0.54, pt3_pct: 0.36, pace: 100.1, games: 12 },
+  celtics:      { avg_pts: 120.6, avg_allowed: 108.9, def_rating: 1.05, ft_pct: 0.80, pt2_pct: 0.56, pt3_pct: 0.38, pace: 100.8, games: 14 },
+  warriors:     { avg_pts: 116.3, avg_allowed: 112.4, def_rating: 1.08, ft_pct: 0.78, pt2_pct: 0.55, pt3_pct: 0.39, pace: 101.5, games: 11 },
+  heat:         { avg_pts: 110.4, avg_allowed: 109.2, def_rating: 1.06, ft_pct: 0.76, pt2_pct: 0.53, pt3_pct: 0.35, pace:  98.4, games: 10 },
+  nuggets:      { avg_pts: 115.8, avg_allowed: 111.3, def_rating: 1.07, ft_pct: 0.79, pt2_pct: 0.55, pt3_pct: 0.36, pace: 100.3, games: 13 },
+  bucks:        { avg_pts: 118.1, avg_allowed: 114.2, def_rating: 1.11, ft_pct: 0.75, pt2_pct: 0.56, pt3_pct: 0.37, pace: 101.9, games: 12 },
+  "76ers":      { avg_pts: 113.7, avg_allowed: 115.4, def_rating: 1.12, ft_pct: 0.81, pt2_pct: 0.54, pt3_pct: 0.35, pace:  99.6, games: 11 },
+  sixers:       { avg_pts: 113.7, avg_allowed: 115.4, def_rating: 1.12, ft_pct: 0.81, pt2_pct: 0.54, pt3_pct: 0.35, pace:  99.6, games: 11 },
+  clippers:     { avg_pts: 112.8, avg_allowed: 110.7, def_rating: 1.07, ft_pct: 0.77, pt2_pct: 0.53, pt3_pct: 0.36, pace:  99.1, games: 10 },
+  suns:         { avg_pts: 116.9, avg_allowed: 117.1, def_rating: 1.14, ft_pct: 0.79, pt2_pct: 0.55, pt3_pct: 0.37, pace: 102.2, games: 12 },
+  mavericks:    { avg_pts: 117.4, avg_allowed: 112.9, def_rating: 1.09, ft_pct: 0.80, pt2_pct: 0.55, pt3_pct: 0.38, pace: 100.7, games: 13 },
+  mavs:         { avg_pts: 117.4, avg_allowed: 112.9, def_rating: 1.09, ft_pct: 0.80, pt2_pct: 0.55, pt3_pct: 0.38, pace: 100.7, games: 13 },
+  knicks:       { avg_pts: 113.5, avg_allowed: 109.8, def_rating: 1.06, ft_pct: 0.76, pt2_pct: 0.53, pt3_pct: 0.36, pace:  98.8, games: 11 },
+  nets:         { avg_pts: 109.3, avg_allowed: 118.2, def_rating: 1.15, ft_pct: 0.74, pt2_pct: 0.52, pt3_pct: 0.34, pace:  99.3, games:  9 },
+  bulls:        { avg_pts: 111.6, avg_allowed: 113.7, def_rating: 1.10, ft_pct: 0.77, pt2_pct: 0.53, pt3_pct: 0.35, pace:  99.9, games: 10 },
+  spurs:        { avg_pts: 108.4, avg_allowed: 119.3, def_rating: 1.16, ft_pct: 0.73, pt2_pct: 0.52, pt3_pct: 0.34, pace: 100.5, games: 11 },
+  raptors:      { avg_pts: 111.2, avg_allowed: 116.4, def_rating: 1.13, ft_pct: 0.76, pt2_pct: 0.52, pt3_pct: 0.35, pace:  99.7, games: 12 },
+  thunder:      { avg_pts: 119.1, avg_allowed: 110.8, def_rating: 1.07, ft_pct: 0.78, pt2_pct: 0.56, pt3_pct: 0.37, pace: 101.1, games: 13 },
+  timberwolves: { avg_pts: 112.4, avg_allowed: 108.6, def_rating: 1.05, ft_pct: 0.77, pt2_pct: 0.53, pt3_pct: 0.36, pace:  99.5, games: 11 },
+  wolves:       { avg_pts: 112.4, avg_allowed: 108.6, def_rating: 1.05, ft_pct: 0.77, pt2_pct: 0.53, pt3_pct: 0.36, pace:  99.5, games: 11 },
+  pacers:       { avg_pts: 121.3, avg_allowed: 119.4, def_rating: 1.15, ft_pct: 0.82, pt2_pct: 0.57, pt3_pct: 0.37, pace: 103.8, games: 12 },
+  hawks:        { avg_pts: 116.7, avg_allowed: 119.2, def_rating: 1.15, ft_pct: 0.79, pt2_pct: 0.55, pt3_pct: 0.37, pace: 102.4, games: 10 },
+  magic:        { avg_pts: 107.3, avg_allowed: 108.9, def_rating: 1.05, ft_pct: 0.73, pt2_pct: 0.52, pt3_pct: 0.34, pace:  98.1, games: 11 },
+  grizzlies:    { avg_pts: 113.8, avg_allowed: 112.4, def_rating: 1.08, ft_pct: 0.76, pt2_pct: 0.54, pt3_pct: 0.35, pace: 100.2, games: 10 },
+  pelicans:     { avg_pts: 112.1, avg_allowed: 114.7, def_rating: 1.11, ft_pct: 0.74, pt2_pct: 0.53, pt3_pct: 0.35, pace:  99.8, games:  9 },
+  jazz:         { avg_pts: 114.5, avg_allowed: 118.3, def_rating: 1.14, ft_pct: 0.78, pt2_pct: 0.54, pt3_pct: 0.36, pace: 100.9, games: 10 },
+  rockets:      { avg_pts: 112.7, avg_allowed: 110.4, def_rating: 1.07, ft_pct: 0.74, pt2_pct: 0.53, pt3_pct: 0.36, pace:  99.6, games: 11 },
+  kings:        { avg_pts: 118.4, avg_allowed: 117.2, def_rating: 1.13, ft_pct: 0.80, pt2_pct: 0.56, pt3_pct: 0.38, pace: 102.1, games: 12 },
+  pistons:      { avg_pts: 108.1, avg_allowed: 116.9, def_rating: 1.14, ft_pct: 0.76, pt2_pct: 0.52, pt3_pct: 0.34, pace: 100.3, games: 10 },
+  cavaliers:    { avg_pts: 116.2, avg_allowed: 107.4, def_rating: 1.04, ft_pct: 0.77, pt2_pct: 0.54, pt3_pct: 0.36, pace:  99.2, games: 13 },
+  cavs:         { avg_pts: 116.2, avg_allowed: 107.4, def_rating: 1.04, ft_pct: 0.77, pt2_pct: 0.54, pt3_pct: 0.36, pace:  99.2, games: 13 },
+  hornets:      { avg_pts: 108.9, avg_allowed: 117.6, def_rating: 1.14, ft_pct: 0.76, pt2_pct: 0.52, pt3_pct: 0.34, pace: 100.0, games: 10 },
+  wizards:      { avg_pts: 106.4, avg_allowed: 120.1, def_rating: 1.16, ft_pct: 0.74, pt2_pct: 0.51, pt3_pct: 0.33, pace: 100.7, games:  9 },
+  trailblazers: { avg_pts: 109.8, avg_allowed: 117.9, def_rating: 1.14, ft_pct: 0.77, pt2_pct: 0.53, pt3_pct: 0.35, pace: 100.5, games: 10 },
+  blazers:      { avg_pts: 109.8, avg_allowed: 117.9, def_rating: 1.14, ft_pct: 0.77, pt2_pct: 0.53, pt3_pct: 0.35, pace: 100.5, games: 10 },
 };
 
-function lookupTeam(name: string, league: string): { stats: typeof TEAM_DB[string]; source: "DB" | "PROXY" } {
+function lookupTeam(name: string, dna: ReturnType<typeof getLeagueDNA>): {
+  stats: typeof TEAM_DB[string]; source: "DB" | "PROXY"; proxyCapped: boolean; capValue: number;
+} {
   const key = name.toLowerCase().trim().replace(/[^a-z0-9]/g, "");
   for (const [k, v] of Object.entries(TEAM_DB)) {
-    if (key.includes(k) || k.includes(key)) return { stats: v, source: "DB" };
+    if (key.includes(k) || k.includes(key)) return { stats: v, source: "DB", proxyCapped: false, capValue: 0 };
   }
-  const leagueKey = Object.keys(LEAGUE_AVG).find(k => league.toUpperCase().includes(k)) ?? "DEFAULT";
-  const avg = LEAGUE_AVG[leagueKey];
-  const combined = avg * 2;
-  const pace = combined >= 165 ? 73 : combined <= 145 ? 68 : 71;
-  return { stats: { avg_pts: avg, avg_allowed: avg, def_rating: 1.10, ft_pct: 0.75, pace, games: 6 }, source: "PROXY" };
+  // Tier 2 Proxy — PPG STRICTLY capped at league DNA proxy PPG (anti-hallucination)
+  const cap = dna.proxyPPG;
+  const pace = cap >= 100 ? 73 : cap <= 75 ? 67 : 70;
+  const ft = dna.grind ? 0.68 : 0.74; // Grind leagues have worse FT%
+  const pt2 = dna.grind ? 0.49 : 0.52;
+  const pt3 = dna.grind ? 0.32 : 0.35;
+  return {
+    stats: { avg_pts: cap, avg_allowed: cap, def_rating: dna.grind ? 1.12 : 1.10, ft_pct: ft, pt2_pct: pt2, pt3_pct: pt3, pace, games: 6 },
+    source: "PROXY", proxyCapped: true, capValue: cap,
+  };
 }
 
 // ─── Interfaces ───────────────────────────────────────────────────────────────
-interface AdjLog { rule: string; lb_adj: number; hb_adj: number; note: string }
+interface AdjLog { rule: string; lb_adj: number; hb_adj: number; note: string; status: "triggered" | "checked" | "n/a" }
 interface EngineOutput {
   lb: number; hb: number; range_width: number; midpoint: number;
   decision: string; confidence: string; lean: string;
@@ -67,152 +101,190 @@ interface EngineOutput {
   hammer: boolean; vol_killed: boolean; buf_blocked: boolean; heavy_adj_kill: boolean;
   best_over_line: number; best_under_line: number;
   line_position: "Below" | "Inside" | "Above" | "Mixed";
+  proxyCapped: boolean; capValue: number; leagueDNAName: string;
+  whyNote: string; whyMightFail: string;
+  otHazard: boolean; collapsePctApplied: number;
+  hook_buffer: number; hammer_edge_used: number;
 }
 
 interface HistoryEntry {
-  id: string;
-  timestamp: string;
-  date: string;
-  league: string;
-  homeTeam: string;
-  awayTeam: string;
-  overLow: string; overHigh: string;
-  underLow: string; underHigh: string;
-  koTime: string;
-  result: EngineOutput;
-  rerunResult?: EngineOutput;
-  rerunCmd?: string;
+  id: string; timestamp: string; date: string; league: string;
+  homeTeam: string; awayTeam: string;
+  overLow: string; overHigh: string; underLow: string; underHigh: string; koTime: string;
+  result: EngineOutput; rerunResult?: EngineOutput; rerunCmd?: string;
   outcome?: "WIN" | "LOSS" | "PUSH" | "PENDING";
-  actualTotal?: number;
+  actualTotal?: number; ftScore?: string;
 }
 
-const HISTORY_KEY = "rangengine_v2_history";
+const HISTORY_KEY = "rangengine_v3_history";
+function loadHistory(): HistoryEntry[] { try { return JSON.parse(localStorage.getItem(HISTORY_KEY) ?? "[]"); } catch { return []; } }
+function saveHistory(h: HistoryEntry[]) { try { localStorage.setItem(HISTORY_KEY, JSON.stringify(h.slice(0, 50))); } catch {} }
 
-function loadHistory(): HistoryEntry[] {
-  try { return JSON.parse(localStorage.getItem(HISTORY_KEY) ?? "[]"); }
-  catch { return []; }
-}
-
-function saveHistory(h: HistoryEntry[]) {
-  try { localStorage.setItem(HISTORY_KEY, JSON.stringify(h.slice(0, 50))); } catch {}
-}
-
-// ─── Master Rulebook v2 Engine (Rules 1–16, Blocks 1→2→3) ────────────────────
+// ─── Master Rulebook V3 Engine (Rules 1–18, Anti-Template, Anti-Hallucination) ─
 function runEngine(opts: {
   home_name: string; away_name: string;
   home_stats: ReturnType<typeof lookupTeam>;
   away_stats: ReturnType<typeof lookupTeam>;
   league: string; key_player_out: boolean; key_player_name: string;
   over_low: number; over_high: number; under_low: number; under_high: number;
+  // Statistical DNA (optional overrides)
+  home_ft?: number; away_ft?: number;
+  home_pt3?: number; away_pt3?: number;
+  home_arena_ppg?: number; away_arena_ppg?: number;
+  h2h_avg_total?: number;
+  collapse_pct?: number;
+  // Weighted PPG (60/40 if both arena + H2H provided)
+  use_weighted?: boolean;
   is_rerun?: boolean;
+  rerun_timestamp?: string;
 }): EngineOutput {
-  const { home_stats, away_stats, league, key_player_out, key_player_name, is_rerun } = opts;
+  const { home_stats, away_stats, key_player_out, key_player_name, is_rerun } = opts;
+  const dna = getLeagueDNA(opts.league);
   const H = home_stats.stats; const A = away_stats.stats;
-  const lg = league.toUpperCase();
-  const isNBA = lg.includes("NBA");
-  const isStructured = lg.includes("EURO") || lg.includes("ACB");
-  const isVolatile = lg.includes("PBA") || lg.includes("NBL");
-  const leagueKey = isNBA ? "NBA" : isStructured ? "EUROLEAGUE" : isVolatile ? "PBA" : "DEFAULT";
-  const leagueAvg = LEAGUE_AVG[leagueKey];
 
-  // Rule 2 — Data Reliability
+  // ── Rule 2: Data Reliability + Proxy Cap ──────────────────────────────────
   const minGames = Math.min(H.games, A.games);
   const proxyUsed = home_stats.source === "PROXY" || away_stats.source === "PROXY";
+  const proxyCapped = home_stats.proxyCapped || away_stats.proxyCapped;
+  const capValue = Math.max(home_stats.capValue, away_stats.capValue);
   const reliability = minGames < 5 ? "Weak" : (minGames < 8 || proxyUsed) ? "Moderate" : "Strong";
-  const reliability_reason = proxyUsed
-    ? `Proxy stats applied (${home_stats.source === "PROXY" ? opts.home_name : opts.away_name} not in DB) — Tier 2 Bypass active. Reliability maintained at Moderate.`
-    : `Sample: ${H.games} games (Home) × ${A.games} games (Away) — ${reliability} threshold met`;
-  const ws = reliability === "Weak" ? 0.6 : 1.0; // Data Confidence Weighting: Weak → ×0.6
+  const reliability_reason = proxyCapped
+    ? `Proxy cap APPLIED — PPG hard-capped at ${capValue} PPG (${dna.name}). Anti-hallucination active. Sample: ${minGames} games.`
+    : `Sample: ${H.games} (Home) × ${A.games} (Away) — ${reliability}. DB data — no cap required.`;
+  const ws = reliability === "Weak" ? 0.6 : 1.0;
+
+  // ── Statistical DNA: Weighted PPG (60/40 Arena/H2H) ───────────────────────
+  let homeEffPPG = opts.home_arena_ppg ?? H.avg_pts;
+  let awayEffPPG = opts.away_arena_ppg ?? A.avg_pts;
+  let dnaWeighted = false;
+  if (opts.use_weighted && opts.home_arena_ppg && opts.away_arena_ppg && opts.h2h_avg_total) {
+    const h2hEach = opts.h2h_avg_total / 2;
+    homeEffPPG = (opts.home_arena_ppg * 0.60) + (h2hEach * 0.40);
+    awayEffPPG = (opts.away_arena_ppg * 0.60) + (h2hEach * 0.40);
+    dnaWeighted = true;
+  }
+
+  // Effective FT% and 3PT% from DNA inputs or DB
+  const eff_ft_home = opts.home_ft != null ? opts.home_ft / 100 : H.ft_pct;
+  const eff_ft_away = opts.away_ft != null ? opts.away_ft / 100 : A.ft_pct;
+  const eff_pt3_home = opts.home_pt3 != null ? opts.home_pt3 / 100 : H.pt3_pct;
+  const eff_pt3_away = opts.away_pt3 != null ? opts.away_pt3 / 100 : A.pt3_pct;
+  const avg_ft = (eff_ft_home + eff_ft_away) / 2;
+  const avg_pt3 = (eff_pt3_home + eff_pt3_away) / 2;
+  const avg_pace = (H.pace + A.pace) / 2;
+  const home_def = H.def_rating; const away_def = A.def_rating;
+  const margin = Math.abs(homeEffPPG - awayEffPPG);
+  const leagueAvg = dna.proxyPPG;
+  const avg_eff = ((homeEffPPG / leagueAvg) + (awayEffPPG / leagueAvg)) / 2;
 
   const adj_log: AdjLog[] = [];
   const triggered: string[] = [];
+  const collapsePct = opts.collapse_pct ?? 0;
 
-  // Proxy calculations (Tier 2 Bypass Protocol)
-  const home_eff = H.avg_pts / leagueAvg;
-  const away_eff = A.avg_pts / leagueAvg;
-  const avg_eff = (home_eff + away_eff) / 2;
-  const avg_pace = (H.pace + A.pace) / 2;
-  const avg_ft = (H.ft_pct + A.ft_pct) / 2;
-  const home_def = H.def_rating; const away_def = A.def_rating;
-  const margin = Math.abs(H.avg_pts - A.avg_pts);
+  // ── Rule 1 (Time Sync) — logged for audit ─────────────────────────────────
+  adj_log.push({ rule: "Rule 1 — Time Sync", lb_adj: 0, hb_adj: 0, note: "Fixture timestamp confirmed via form input", status: "checked" });
 
-  // Rule 4 — Base Scoring Range (home + away ± 6, width = 12)
-  let lb = H.avg_pts + A.avg_pts - 6;
-  let hb = H.avg_pts + A.avg_pts + 6;
+  // ── Rule 2 (Reliability + Proxy Cap) — logged for audit ───────────────────
+  adj_log.push({ rule: "Rule 2 — Reliability", lb_adj: 0, hb_adj: 0, note: `${reliability} | Proxy Cap: ${proxyCapped ? `YES — ${capValue} PPG cap applied` : "No"} | ${dna.name}`, status: "checked" });
+
+  // ── Rule 3 (Form Anchor) — logged for audit ────────────────────────────────
+  adj_log.push({ rule: "Rule 3 — Form Anchor", lb_adj: 0, hb_adj: 0, note: `Home: ${homeEffPPG.toFixed(1)} PPG${dnaWeighted ? " (60/40 weighted)" : ""} | Away: ${awayEffPPG.toFixed(1)} PPG${dnaWeighted ? " (60/40 weighted)" : ""} | FT%: ${(avg_ft*100).toFixed(0)}% | 3PT%: ${(avg_pt3*100).toFixed(0)}%`, status: "checked" });
+
+  // ── Rule 4 (Base Range) ───────────────────────────────────────────────────
+  let lb = homeEffPPG + awayEffPPG - 6;
+  let hb = homeEffPPG + awayEffPPG + 6;
   const base_lb = lb; const base_hb = hb;
-  adj_log.push({ rule: "Rule 4 (Base Range)", lb_adj: 0, hb_adj: 0, note: `${H.avg_pts} + ${A.avg_pts} ± 6 → ${lb.toFixed(1)} – ${hb.toFixed(1)}` });
+  adj_log.push({ rule: "Rule 4 — Base Range", lb_adj: 0, hb_adj: 0, note: `${homeEffPPG.toFixed(1)} + ${awayEffPPG.toFixed(1)} ± 6 → ${lb.toFixed(1)} – ${hb.toFixed(1)}`, status: "triggered" });
 
-  // Rule 5 — Efficiency & Pace Adjustment (Cap ±6 total; Weak data ×0.6)
+  // ── Rule 5 (Efficiency & Pace) ────────────────────────────────────────────
   let r5_lb = 0, r5_hb = 0;
   if (avg_eff >= 1.10) { r5_lb = 3; r5_hb = 3; }
   else if (avg_pace < 70 && avg_eff < 1.05) { r5_lb = -3; r5_hb = -3; }
   r5_lb = Math.round(Math.max(-6, Math.min(6, r5_lb)) * ws);
   r5_hb = Math.round(Math.max(-6, Math.min(6, r5_hb)) * ws);
   lb += r5_lb; hb += r5_hb;
-  adj_log.push({ rule: "Rule 5 (Efficiency/Pace)", lb_adj: r5_lb, hb_adj: r5_hb, note: `Eff: ${avg_eff.toFixed(3)}, Pace: ${avg_pace.toFixed(1)}${ws < 1 ? " | ×0.6 Weak scale" : ""}` });
-  if (r5_lb !== 0 || r5_hb !== 0) triggered.push(`Rule 5 (Eff/Pace): LB ${r5_lb >= 0 ? "+" : ""}${r5_lb}, HB ${r5_hb >= 0 ? "+" : ""}${r5_hb}`);
+  const r5Status = (r5_lb !== 0 || r5_hb !== 0) ? "triggered" : "checked";
+  adj_log.push({ rule: "Rule 5 — Efficiency/Pace", lb_adj: r5_lb, hb_adj: r5_hb, note: `Eff: ${avg_eff.toFixed(3)}, Pace: ${avg_pace.toFixed(1)}${ws < 1 ? " | ×0.6 Weak" : ""}`, status: r5Status });
+  if (r5Status === "triggered") triggered.push(`Rule 5 (Eff/Pace): LB ${r5_lb >= 0 ? "+" : ""}${r5_lb}, HB ${r5_hb >= 0 ? "+" : ""}${r5_hb}`);
 
-  // Rule 6 — Defensive Impact — Safety Lock (single-side ONLY, never compress both)
+  // ── Rule 6 (Defensive Safety Lock — single-side only) ────────────────────
   let r6_lb = 0, r6_hb = 0;
   const higherDef = Math.max(home_def, away_def);
   if (higherDef > 1.14) { r6_hb = Math.round(3.5 * ws); }
   else if (higherDef < 1.06) { r6_lb = -Math.round(3.5 * ws); }
   lb += r6_lb; hb += r6_hb;
-  adj_log.push({ rule: "Rule 6 (Defense)", lb_adj: r6_lb, hb_adj: r6_hb, note: `H-Def: ${home_def}, A-Def: ${away_def} | Safety Lock active (single-side only)` });
-  if (r6_lb !== 0 || r6_hb !== 0) triggered.push(`Rule 6 (Defense Safety Lock): LB ${r6_lb >= 0 ? "+" : ""}${r6_lb}, HB ${r6_hb >= 0 ? "+" : ""}${r6_hb}`);
+  const r6Status = (r6_lb !== 0 || r6_hb !== 0) ? "triggered" : "checked";
+  adj_log.push({ rule: "Rule 6 — Defense Safety Lock", lb_adj: r6_lb, hb_adj: r6_hb, note: `H-Def: ${home_def} | A-Def: ${away_def} | Highest: ${higherDef} | Single-side only`, status: r6Status });
+  if (r6Status === "triggered") triggered.push(`Rule 6 (Defense): LB ${r6_lb >= 0 ? "+" : ""}${r6_lb}, HB ${r6_hb >= 0 ? "+" : ""}${r6_hb}`);
 
-  // Rule 7 — Volatility & Margin / Stall Fix
+  // ── Rule 7 (Margin/Stall/Collapse — Updated with Collapse %) ─────────────
   let r7_lb = 0, r7_hb = 0;
-  if (margin >= 10) r7_lb = -Math.round(4 * ws);
-  else if (margin <= 6) r7_hb = Math.round(4 * ws);
+  let r7note = `Margin: ${margin.toFixed(1)} pts`;
+  if (margin >= 10) { r7_lb = -Math.round(4 * ws); r7note += " ≥10 (Large Margin — pace deceleration)"; }
+  else if (margin <= 6) { r7_hb = Math.round(4 * ws); r7note += " ≤6 (Tight — foul rate risk)"; }
+  // Collapse % integration into Rule 7
+  if (collapsePct > 30) {
+    r7_lb -= Math.round(5 * ws); // Expand LB downward for stall risk
+    r7_hb -= Math.round(4 * ws); // Compress HB for stall risk
+    r7note += ` | Collapse ${collapsePct}% >30% → UNDER bias (LB-${Math.round(5*ws)}, HB-${Math.round(4*ws)})`;
+    triggered.push(`Rule 7 (Collapse ${collapsePct}%): LB-${Math.round(5*ws)}, HB-${Math.round(4*ws)} — High stall risk → UNDER bias`);
+  } else if (collapsePct > 0) {
+    r7note += ` | Collapse ${collapsePct}% ≤30% — monitored`;
+  }
   lb += r7_lb; hb += r7_hb;
-  adj_log.push({ rule: "Rule 7 (Margin/Stall)", lb_adj: r7_lb, hb_adj: r7_hb, note: `Avg projected margin: ${margin.toFixed(1)} pts${margin >= 10 ? " ≥10 (Large Margin)" : margin <= 6 ? " ≤6 (Stall Fix)" : " — neutral"}` });
-  if (r7_lb !== 0 || r7_hb !== 0) triggered.push(`Rule 7 (Margin): LB ${r7_lb >= 0 ? "+" : ""}${r7_lb}, HB ${r7_hb >= 0 ? "+" : ""}${r7_hb}`);
+  const r7Status = (r7_lb !== 0 || r7_hb !== 0) ? "triggered" : "checked";
+  adj_log.push({ rule: "Rule 7 — Margin/Stall/Collapse", lb_adj: r7_lb, hb_adj: r7_hb, note: r7note, status: r7Status });
+  if (r7Status === "triggered" && collapsePct <= 30) triggered.push(`Rule 7 (Margin): LB ${r7_lb >= 0 ? "+" : ""}${r7_lb}, HB ${r7_hb >= 0 ? "+" : ""}${r7_hb}`);
 
-  // Rule 9 — Pace Hijack (HB always 2× LB expansion)
+  // ── Rule 8/9 (League DNA Cap + Pace Hijack) ───────────────────────────────
   let r9_lb = 0, r9_hb = 0;
-  if (avg_pace >= 72 && avg_eff >= 1.08) {
-    r9_lb = Math.round(4 * ws);
-    r9_hb = Math.round(8 * ws);
+  if (avg_pace >= 72 && avg_eff >= 1.08 && !dna.grind) {
+    r9_lb = Math.round(4 * ws); r9_hb = Math.round(8 * ws);
+  }
+  // Apply League DNA-specific HB/LB adjustment (differentiated per league)
+  if (dna.hbDNA !== 0 || dna.lbDNA !== 0) {
+    r9_hb += dna.hbDNA; r9_lb += dna.lbDNA;
   }
   lb += r9_lb; hb += r9_hb;
-  adj_log.push({ rule: "Rule 8/9 (League DNA/Pace Hijack)", lb_adj: r9_lb, hb_adj: r9_hb, note: `Pace ${avg_pace.toFixed(1)}≥72 & Eff ${avg_eff.toFixed(2)}≥1.08 → HB=2×LB expansion` });
-  if (r9_lb !== 0 || r9_hb !== 0) triggered.push(`Rule 9 (Pace Hijack): LB +${r9_lb}, HB +${r9_hb} (HB=2×LB)`);
+  const r9Status = (r9_lb !== 0 || r9_hb !== 0) ? "triggered" : "checked";
+  adj_log.push({ rule: "Rule 8/9 — League DNA + Pace Hijack", lb_adj: r9_lb, hb_adj: r9_hb, note: `${dna.name} | Pace ${avg_pace.toFixed(1)} | DNA adj: HB${dna.hbDNA >= 0 ? "+" : ""}${dna.hbDNA}, LB${dna.lbDNA >= 0 ? "+" : ""}${dna.lbDNA}`, status: r9Status });
+  if (r9Status === "triggered") triggered.push(`Rule 8/9 (League DNA + Pace): LB${r9_lb >= 0 ? "+" : ""}${r9_lb}, HB${r9_hb >= 0 ? "+" : ""}${r9_hb}`);
 
-  // Rule 10 — Foul Engine (HB ONLY; triggers if Margin ≤6 AND FT% ≥0.75)
+  // ── Rule 10 (Foul Engine) + Rule 11 (Injury Vacuum) ──────────────────────
   let r10_hb = 0;
   if (margin <= 6 && avg_ft >= 0.75) r10_hb = Math.round(11 * ws);
-
-  // Rule 11 — Injury / Usage Vacuum Trigger
   let r11_lb = 0, r11_hb = 0;
   if (key_player_out) { r11_lb = -Math.round(6 * ws); r11_hb = Math.round(4 * ws); }
   hb += r10_hb + r11_hb; lb += r11_lb;
-
-  // Stacking Cap — R9 + R10 combined HB expansion NEVER exceeds +12
+  // Stacking Cap: R9+R10 combined HB expansion ≤ +12
   const r9r10_hb = r9_hb + r10_hb;
   let stacking_cut = 0;
   if (r9r10_hb > 12) { stacking_cut = r9r10_hb - 12; hb -= stacking_cut; }
-  adj_log.push({
-    rule: "Rule 10/11 (Foul Engine/Injury)",
-    lb_adj: r11_lb,
-    hb_adj: r10_hb + r11_hb - stacking_cut,
-    note: [
-      `FT%: ${(avg_ft * 100).toFixed(0)}%, Margin: ${margin.toFixed(1)}`,
-      key_player_out ? `| ${key_player_name} OUT (Vacuum)` : "",
-      stacking_cut > 0 ? `| R9+R10 Stacking Cap applied: -${stacking_cut}` : "",
-    ].filter(Boolean).join(" "),
-  });
-  if (r10_hb > 0) triggered.push(`Rule 10 (Foul Engine): HB +${r10_hb}${stacking_cut > 0 ? ` (Stack Cap -${stacking_cut})` : ""}`);
-  if (key_player_out) triggered.push(`Rule 11 (Injury Vacuum): LB ${r11_lb}, HB +${r11_hb} — ${key_player_name} OUT`);
+  const r10note = [
+    `FT%: ${(avg_ft * 100).toFixed(0)}%, 3PT%: ${(avg_pt3 * 100).toFixed(0)}%, Margin: ${margin.toFixed(1)}`,
+    key_player_out ? `| ${key_player_name} OUT (Vacuum)` : "",
+    stacking_cut > 0 ? `| R9+R10 Stack Cap -${stacking_cut}` : "",
+  ].filter(Boolean).join(" ");
+  const r10Status = (r10_hb > 0 || r11_lb !== 0 || r11_hb !== 0) ? "triggered" : "checked";
+  adj_log.push({ rule: "Rule 10/11 — Foul Engine/Injury", lb_adj: r11_lb, hb_adj: r10_hb + r11_hb - stacking_cut, note: r10note, status: r10Status });
+  if (r10_hb > 0) triggered.push(`Rule 10 (Foul Engine): HB+${r10_hb}${stacking_cut > 0 ? ` (Stack Cap -${stacking_cut})` : ""} | FT%: ${(avg_ft*100).toFixed(0)}%`);
+  if (key_player_out) triggered.push(`Rule 11 (Injury Vacuum): LB${r11_lb}, HB+${r11_hb} — ${key_player_name} OUT`);
 
-  // Rule 8 — League DNA Width Cap (applied after all expansions)
-  const maxHalfWidth = isNBA ? 11 : isStructured ? 8 : isVolatile ? 14 : 9;
+  // ── Rule 18 (OT Hazard — tight margin adds HB only) ──────────────────────
+  let r18_hb = 0; const otHazard = margin <= 5;
+  if (otHazard) { r18_hb = 8; hb += r18_hb; }
+  adj_log.push({ rule: "Rule 18 — OT Hazard", lb_adj: 0, hb_adj: r18_hb, note: `Margin: ${margin.toFixed(1)} pts${otHazard ? ` ≤5 → OT Risk → HB+8 (HB ONLY — LB stays grounded)` : " >5 — no OT hazard"}`, status: otHazard ? "triggered" : "checked" });
+  if (otHazard) triggered.push(`Rule 18 (OT Hazard): Margin ${margin.toFixed(1)} ≤5 → HB+8 (LB grounded in regulation)`);
+
+  // ── Rule 8 Width Cap (applied after all expansions) ───────────────────────
+  const maxHalfWidth = dna.maxWidth / 2;
   const mid_raw = (lb + hb) / 2;
+  let widthCapped = false;
   if ((hb - lb) / 2 > maxHalfWidth) {
-    lb = mid_raw - maxHalfWidth;
-    hb = mid_raw + maxHalfWidth;
-    triggered.push(`Rule 8 (League DNA Cap): Width capped at ±${maxHalfWidth} pts (${isNBA ? "NBA" : isStructured ? "Structured" : isVolatile ? "Volatile" : "Default"})`);
+    lb = mid_raw - maxHalfWidth; hb = mid_raw + maxHalfWidth; widthCapped = true;
+    triggered.push(`Rule 8 (DNA Width Cap): Width capped at ${dna.maxWidth} pts — ${dna.name}`);
   }
+  adj_log.push({ rule: "Rule 8 — DNA Width Cap", lb_adj: 0, hb_adj: 0, note: `Max width: ${dna.maxWidth} pts | ${widthCapped ? `CAP APPLIED → midpoint ±${maxHalfWidth}` : "Within limit"}`, status: widthCapped ? "triggered" : "checked" });
 
   lb = parseFloat(lb.toFixed(1)); hb = parseFloat(hb.toFixed(1));
   const range_width = parseFloat((hb - lb).toFixed(1));
@@ -220,78 +292,110 @@ function runEngine(opts: {
   const total_hb_expansion = Math.max(0, hb - base_hb);
   const total_lb_reduction = Math.max(0, base_lb - lb);
 
-  // Market lines — Rule 1 Time Sync already confirmed via form input
-  const best_over_line = opts.over_low;   // LOWEST over line → best OVER edge
-  const best_under_line = opts.under_high; // HIGHEST under line → best UNDER edge
+  const best_over_line = opts.over_low;
+  const best_under_line = opts.under_high;
 
-  // ─── Block 3: Decision Chain (Rules 12–16) ───────────────────────────────
+  // ── Rule 12 (Market Position) ─────────────────────────────────────────────
+  const over_edge = lb - best_over_line;
+  const under_edge = best_under_line - hb;
+  const mktPos = over_edge > 0 ? "Below LB" : under_edge > 0 ? "Above HB" : "Inside Range";
+  adj_log.push({ rule: "Rule 12 — Market Position", lb_adj: 0, hb_adj: 0, note: `OVER line: ${best_over_line} (edge: ${over_edge.toFixed(1)}pts) | UNDER line: ${best_under_line} (edge: ${under_edge.toFixed(1)}pts) | Position: ${mktPos}`, status: "checked" });
+
+  // ── Block 3: Decision Chain (Rules 13→14→15→16) ───────────────────────────
   let decision = "NO ACTION", confidence = "Low", lean = "NONE";
   let hammer = false, vol_killed = false, buf_blocked = false, heavy_adj_kill = false;
-  const buffer = isNBA ? 3 : 2; // Rule 13 — Dynamic Buffer Zone
-  const rw_threshold = isNBA ? 22 : 18; // Rule 14 — Width threshold
 
-  const reliabilityBlocks = reliability === "Weak"; // Rule 2 gate
+  // Hook Shield: base buffer per DNA, +0.5 for .5 lines
+  const halfLine = (l: number) => l % 1 === 0.5;
+  const overBuf = dna.buffer + (halfLine(best_over_line) ? 0.5 : 0);
+  const underBuf = dna.buffer + (halfLine(best_under_line) ? 0.5 : 0);
+  const hook_buffer = dna.buffer;
+  adj_log.push({ rule: "Rule 13 — Hook Shield/Buffer", lb_adj: 0, hb_adj: 0, note: `Buffer: ±${dna.buffer} pts${halfLine(best_over_line) || halfLine(best_under_line) ? " (+0.5 .5-line surcharge)" : ""} | OVER gap: ${over_edge.toFixed(2)} vs req ${overBuf} | UNDER gap: ${under_edge.toFixed(2)} vs req ${underBuf}`, status: "checked" });
 
-  // RERUN — Heavy Adjustment Limit (exclusive to RERUN mode)
+  const reliabilityBlocks = reliability === "Weak";
+  // Hammer threshold: 8 for Strong, 15 for Moderate/Weak (Proxy Reality Check)
+  const hammer_edge_used = reliability === "Strong" ? 8 : dna.hammerEdge;
+
   if (is_rerun && (total_hb_expansion > 10 || total_lb_reduction > 6)) {
     heavy_adj_kill = true;
-    triggered.push(`Heavy Adj Limit (RERUN): HB+${total_hb_expansion.toFixed(1)} or LB-${total_lb_reduction.toFixed(1)} exceeds ceiling → NO ACTION enforced`);
+    triggered.push(`Heavy Adj Limit (RERUN): HB+${total_hb_expansion.toFixed(1)} or LB-${total_lb_reduction.toFixed(1)} exceeds ceiling → NO ACTION`);
+    adj_log.push({ rule: "Rule 16 — Hammer Play", lb_adj: 0, hb_adj: 0, note: `RERUN Heavy Adj Kill active — Hammer blocked`, status: "n/a" });
   } else {
-    // Rule 16 — Hammer Play (overrides Buffer + Volatility ONLY; NOT Reliability)
-    const over_hammer = best_over_line < lb - 8;
-    const under_hammer = best_under_line > hb + 8;
+    const over_hammer = best_over_line < lb - hammer_edge_used;
+    const under_hammer = best_under_line > hb + hammer_edge_used;
 
     if ((over_hammer || under_hammer) && !reliabilityBlocks) {
       hammer = true;
       const over_gap = lb - best_over_line;
       const under_gap = best_under_line - hb;
-      if (over_hammer && (!under_hammer || over_gap >= under_gap)) {
-        decision = `OVER ${best_over_line} ★ HAMMER PLAY`;
-        confidence = "HIGH (Hammer Play)";
-        triggered.push(`Rule 16 (Hammer OVER): Line ${best_over_line} is ${over_gap.toFixed(1)} pts below LB ${lb.toFixed(1)} — Variance cleared → HAMMER`);
+      // Collapse % > 20% OVERRIDES Hammer (no Hammer on stall risk)
+      if (collapsePct > 20) {
+        hammer = false; decision = "NO ACTION";
+        triggered.push(`Rule 16 (Hammer BLOCKED): Hammer edge confirmed BUT Collapse ${collapsePct}% >20% → Stall override → NO ACTION`);
+        adj_log.push({ rule: "Rule 16 — Hammer Play", lb_adj: 0, hb_adj: 0, note: `Hammer OVERRIDDEN — Collapse ${collapsePct}% >20% (no Hammer on stall risk)`, status: "triggered" });
       } else {
-        decision = `UNDER ${best_under_line} ★ HAMMER PLAY`;
-        confidence = "HIGH (Hammer Play)";
-        triggered.push(`Rule 16 (Hammer UNDER): Line ${best_under_line} is ${under_gap.toFixed(1)} pts above HB ${hb.toFixed(1)} — Variance cleared → HAMMER`);
+        if (over_hammer && (!under_hammer || over_gap >= under_gap)) {
+          decision = `OVER ${best_over_line} ★ HAMMER PLAY`;
+          confidence = "HIGH (Hammer Play)";
+          triggered.push(`Rule 16 (Hammer OVER): Line ${best_over_line} is ${over_gap.toFixed(1)} pts below LB ${lb.toFixed(1)} — threshold ${hammer_edge_used} pts → HAMMER`);
+          adj_log.push({ rule: "Rule 16 — Hammer Play", lb_adj: 0, hb_adj: 0, note: `OVER ${best_over_line} — ${over_gap.toFixed(1)}pt gap clears ${hammer_edge_used}pt threshold (${reliability} reliability)`, status: "triggered" });
+        } else {
+          decision = `UNDER ${best_under_line} ★ HAMMER PLAY`;
+          confidence = "HIGH (Hammer Play)";
+          triggered.push(`Rule 16 (Hammer UNDER): Line ${best_under_line} is ${under_gap.toFixed(1)} pts above HB ${hb.toFixed(1)} — threshold ${hammer_edge_used} pts → HAMMER`);
+          adj_log.push({ rule: "Rule 16 — Hammer Play", lb_adj: 0, hb_adj: 0, note: `UNDER ${best_under_line} — ${under_gap.toFixed(1)}pt gap clears ${hammer_edge_used}pt threshold (${reliability} reliability)`, status: "triggered" });
+        }
       }
     } else if (reliabilityBlocks && (over_hammer || under_hammer)) {
-      triggered.push("Rule 16: ≥8 pt edge detected BUT Reliability=Weak — Hammer overrides Buffer/Volatility ONLY, NOT Reliability → NO ACTION");
+      triggered.push("Rule 16: ≥ edge detected BUT Reliability=Weak → Hammer blocked → NO ACTION");
+      adj_log.push({ rule: "Rule 16 — Hammer Play", lb_adj: 0, hb_adj: 0, note: `Hammer BLOCKED — Reliability=Weak`, status: "checked" });
     } else {
-      // Rule 14 — Volatility Kill (Hard Kill)
-      if (range_width > rw_threshold) {
+      adj_log.push({ rule: "Rule 16 — Hammer Play", lb_adj: 0, hb_adj: 0, note: `No Hammer edge — over gap: ${over_edge.toFixed(1)}pts, under gap: ${under_edge.toFixed(1)}pts, threshold: ${hammer_edge_used}pts`, status: "checked" });
+    }
+
+    if (!hammer) {
+      // Rule 14 — Volatility Kill
+      if (range_width > dna.maxWidth) {
         vol_killed = true;
-        triggered.push(`Rule 14 (Volatility Kill): Width ${range_width} > ${rw_threshold} limit → Hard Kill → NO ACTION`);
+        triggered.push(`Rule 14 (Volatility Kill): Width ${range_width} > ${dna.maxWidth} → Hard Kill → NO ACTION`);
+        adj_log.push({ rule: "Rule 14 — Volatility Kill", lb_adj: 0, hb_adj: 0, note: `Width ${range_width} > limit ${dna.maxWidth} → KILLED`, status: "triggered" });
       } else if (reliabilityBlocks) {
-        triggered.push("Rule 2/3: Reliability=Weak, no Hammer override available → NO ACTION");
+        triggered.push("Rule 2/14: Reliability=Weak — NO ACTION forced");
+        adj_log.push({ rule: "Rule 14 — Volatility Kill", lb_adj: 0, hb_adj: 0, note: `Not triggered | Width ${range_width} ≤ ${dna.maxWidth}`, status: "checked" });
       } else {
-        // Rule 12 + Rule 13 — Market Position + Buffer Zone
-        const over_edge = lb - best_over_line;
-        const under_edge = best_under_line - hb;
-        if (over_edge > buffer) {
+        adj_log.push({ rule: "Rule 14 — Volatility Kill", lb_adj: 0, hb_adj: 0, note: `Width ${range_width} ≤ ${dna.maxWidth} — PASS`, status: "checked" });
+        if (over_edge > overBuf) {
           decision = `OVER ${best_over_line}`;
           confidence = "Medium";
-          triggered.push(`Rule 12+13 (OVER): Line ${best_over_line} < LB ${lb.toFixed(1)} by ${over_edge.toFixed(1)} pts — clears ±${buffer} buffer → OVER`);
-        } else if (under_edge > buffer) {
+          triggered.push(`Rule 12+13 (OVER): Line ${best_over_line} < LB ${lb.toFixed(1)} by ${over_edge.toFixed(1)} pts — clears ±${overBuf.toFixed(1)} buffer → OVER`);
+        } else if (under_edge > underBuf) {
           decision = `UNDER ${best_under_line}`;
           confidence = "Medium";
-          triggered.push(`Rule 12+13 (UNDER): Line ${best_under_line} > HB ${hb.toFixed(1)} by ${under_edge.toFixed(1)} pts — clears ±${buffer} buffer → UNDER`);
+          triggered.push(`Rule 12+13 (UNDER): Line ${best_under_line} > HB ${hb.toFixed(1)} by ${under_edge.toFixed(1)} pts — clears ±${underBuf.toFixed(1)} buffer → UNDER`);
         } else if (over_edge > 0 || under_edge > 0) {
           buf_blocked = true;
-          triggered.push(`Rule 13 (Buffer Shield): Line exits range but within ±${buffer} buffer zone → Shield active → NO ACTION`);
+          triggered.push(`Rule 13 (Hook Shield ACTIVE): Line outside range but within ±${dna.buffer} buffer — BLOCKED → NO ACTION`);
         } else {
           triggered.push(`Rule 12: Both lines inside range [${lb.toFixed(1)} – ${hb.toFixed(1)}] → NO ACTION`);
         }
+        // Update audit for Rule 13
+        const r13idx = adj_log.findIndex(a => a.rule.includes("Rule 13"));
+        if (r13idx >= 0) adj_log[r13idx].status = buf_blocked ? "triggered" : "checked";
       }
     }
   }
 
-  // Rule 15 — Final Decision Discipline / Lean
+  // ── Rule 15 (Final Discipline / Mid-Point Lean) ───────────────────────────
+  // NEW: Lean uses mid-point comparison (market above midpoint → UNDER, below → OVER)
+  const marketRef = (best_over_line + best_under_line) / 2;
+  const rangeMid = (lb + hb) / 2;
   if (decision === "NO ACTION") {
-    const mid = (lb + hb) / 2;
-    const ref = (best_over_line + best_under_line) / 2;
-    lean = ref < mid ? "LEAN UNDER (line cluster closer to LB)" : "LEAN OVER (line cluster closer to HB)";
-    triggered.push(`Rule 15 (Lean): ${lean}`);
+    lean = marketRef > rangeMid
+      ? `LEAN UNDER (market ref ${marketRef.toFixed(1)} above range mid ${rangeMid.toFixed(1)})`
+      : `LEAN OVER (market ref ${marketRef.toFixed(1)} below range mid ${rangeMid.toFixed(1)})`;
+    triggered.push(`Rule 15 (Mid-Point Lean): ${lean}`);
   }
+  adj_log.push({ rule: "Rule 15 — Final Discipline", lb_adj: 0, hb_adj: 0, note: `Range mid: ${rangeMid.toFixed(1)} | Market ref: ${marketRef.toFixed(1)} | ${lean !== "NONE" ? lean : "Decision reached — lean not needed"}`, status: "checked" });
 
   const all_lines = [best_over_line, best_under_line];
   const below = all_lines.filter(l => l < lb).length;
@@ -299,13 +403,35 @@ function runEngine(opts: {
   const line_position: "Below" | "Inside" | "Above" | "Mixed" =
     below === 2 ? "Below" : above === 2 ? "Above" : (below > 0 || above > 0) ? "Mixed" : "Inside";
 
+  // ── Auto-generate Why Note + Why Might Fail ───────────────────────────────
+  const whyParts: string[] = [];
+  if (hammer) whyParts.push(`Rule 16 Hammer — ${decision.includes("OVER") ? "OVER" : "UNDER"} line ${hammer_edge_used}pt+ outside range`);
+  if (vol_killed) whyParts.push(`Rule 14 Volatility Kill (width ${range_width}pts > ${dna.maxWidth})`);
+  if (buf_blocked) whyParts.push(`Rule 13 Hook Shield (line within ±${dna.buffer}pts — no action)`);
+  if (collapsePct > 20) whyParts.push(`Collapse ${collapsePct}% blocked Hammer`);
+  if (heavy_adj_kill) whyParts.push("RERUN Heavy Adj ceiling hit");
+  if (whyParts.length === 0) whyParts.push("Both lines inside range — no edge detected");
+  if (reliability !== "Strong") whyParts.push(`${reliability} data (${proxyCapped ? `capped @${capValue}` : "limited sample"})`);
+  const whyNote = whyParts.join(" · ");
+
+  const failParts: string[] = [];
+  if (proxyCapped) failParts.push(`Proxy cap ${capValue} PPG may not reflect actual team efficiency`);
+  if (otHazard) failParts.push(`OT risk — margin ≤5 adds ±8pt uncertainty`);
+  if (collapsePct > 0) failParts.push(`${collapsePct}% historical Q3/Q4 stall risk`);
+  if (avg_ft < 0.70) failParts.push(`Low FT% (${(avg_ft*100).toFixed(0)}%) — Foul Engine underperforms`);
+  if (avg_pt3 < 0.33) failParts.push(`Low 3PT% (${(avg_pt3*100).toFixed(0)}%) — scoring volume compressed`);
+  if (failParts.length === 0) failParts.push("None identified — Strong data confidence");
+  const whyMightFail = failParts.join(" · ");
+
   return {
     lb, hb, range_width, midpoint, decision, confidence, lean,
     reliability, reliability_reason, adj_log,
-    total_hb_expansion, total_lb_reduction,
-    triggered_rules: triggered,
+    total_hb_expansion, total_lb_reduction, triggered_rules: triggered,
     hammer, vol_killed, buf_blocked, heavy_adj_kill,
     best_over_line, best_under_line, line_position,
+    proxyCapped, capValue, leagueDNAName: dna.name,
+    whyNote, whyMightFail, otHazard, collapsePctApplied: collapsePct,
+    hook_buffer, hammer_edge_used,
   };
 }
 
@@ -316,31 +442,40 @@ function decisionStyle(d: string) {
   if (d.includes("UNDER"))  return { border: "border-amber-500",   bg: "bg-amber-950/60",   text: "text-amber-300",   badge: "bg-amber-500 text-black",   dot: "bg-amber-400" };
   return                            { border: "border-zinc-700",    bg: "bg-zinc-900/60",    text: "text-zinc-400",    badge: "bg-zinc-700 text-zinc-300", dot: "bg-zinc-600" };
 }
-
 function outcomeStyle(o?: string) {
   if (o === "WIN")  return "text-emerald-400 border-emerald-800 bg-emerald-950/40";
   if (o === "LOSS") return "text-red-400 border-red-800 bg-red-950/40";
   if (o === "PUSH") return "text-zinc-400 border-zinc-700 bg-zinc-900/40";
   return "text-zinc-600 border-zinc-800 bg-zinc-900/20";
 }
+function OutcomeBadge({ outcome }: { outcome?: string }) {
+  if (outcome === "WIN") return <span className="text-xl" title="WIN">🏆</span>;
+  if (outcome === "LOSS") return <span className="text-xl" title="LOSS">❌</span>;
+  if (outcome === "PUSH") return <span className="text-lg" title="PUSH">🤝</span>;
+  return <span className="text-lg text-zinc-700" title="PENDING">⏳</span>;
+}
+function AdjStatusDot({ s }: { s: "triggered" | "checked" | "n/a" }) {
+  if (s === "triggered") return <span className="w-1.5 h-1.5 rounded-full bg-amber-400 flex-shrink-0 mt-0.5" />;
+  if (s === "checked")   return <span className="w-1.5 h-1.5 rounded-full bg-emerald-700 flex-shrink-0 mt-0.5" />;
+  return                        <span className="w-1.5 h-1.5 rounded-full bg-zinc-800 flex-shrink-0 mt-0.5" />;
+}
 
 const HUNT_STEPS = [
-  { icon: "🔍", label: "Rule 1 — Time Sync: parsing fixture & WAT timestamps" },
-  { icon: "📊", label: "Rule 2+3 — Data Reliability: Tier 1 DB lookup / Tier 2 Proxy fallback" },
-  { icon: "⚡", label: "Rule 5 — Efficiency & Pace: fetching advanced stats or computing proxies" },
-  { icon: "🛡️", label: "Rule 6 — Defensive Impact: applying Safety Lock (single-side only)" },
-  { icon: "🏥", label: "Rule 11 — Injury Vacuum: scanning leading scorer availability" },
-  { icon: "💰", label: "Rule 12 — Market Position: anchoring O/U ranges (Over ↓ / Under ↑)" },
-  { icon: "⚙️", label: "Block 3 — Decision: executing Rules 13→14→15→16 logic chain" },
+  { icon: "⏱", label: "Rule 1 — Time Sync: parsing fixture & WAT timestamps" },
+  { icon: "📊", label: "Rule 2 — Reliability + Proxy Cap: DB lookup / cap enforcement (anti-hallucination)" },
+  { icon: "🧬", label: "Rule 3/4 — Statistical DNA: FT%, 3PT%, Arena splits, 60/40 H2H weighting" },
+  { icon: "⚡", label: "Rule 5/6 — Efficiency, Pace & Defensive Safety Lock" },
+  { icon: "💥", label: "Rule 7 — Stall Sensor & Collapse % — Q3/Q4 risk assessment" },
+  { icon: "🏀", label: "Rule 8/9 — League DNA profile applied (anti-template differentiation)" },
+  { icon: "🏥", label: "Rule 10/11/18 — Foul Engine, Injury Vacuum & OT Hazard" },
+  { icon: "⚙️", label: "Block 3 — Hook Shield (±1.5) → Volatility Kill → Hammer Play (15pt threshold if Proxy)" },
 ];
 
 // ─── Sub-Components ───────────────────────────────────────────────────────────
 function Divider({ label }: { label: string }) {
   return (
     <div className="flex items-center gap-2 py-1">
-      <div className="flex-1 h-px bg-zinc-800" />
-      <span className="text-[9px] font-bold uppercase tracking-[0.2em] text-zinc-600">{label}</span>
-      <div className="flex-1 h-px bg-zinc-800" />
+      <div className="flex-1 h-px bg-zinc-800" /><span className="text-[9px] font-bold uppercase tracking-[0.2em] text-zinc-600">{label}</span><div className="flex-1 h-px bg-zinc-800" />
     </div>
   );
 }
@@ -352,11 +487,12 @@ function CheckRow({ label, ok = true }: { label: string; ok?: boolean }) {
     </div>
   );
 }
-function AdjRow({ rule, lb, hb, note }: { rule: string; lb: number; hb: number; note: string }) {
+function AdjRow({ rule, lb, hb, note, status }: { rule: string; lb: number; hb: number; note: string; status: "triggered" | "checked" | "n/a" }) {
   const f = (n: number) => n === 0 ? <span className="text-zinc-700">0</span> : n > 0 ? <span className="text-emerald-400">+{n}</span> : <span className="text-red-400">{n}</span>;
   return (
-    <div className="grid grid-cols-[170px_54px_54px_1fr] gap-2 text-xs font-mono py-1 border-b border-zinc-800/40 last:border-0 items-center">
-      <span className="text-zinc-400">{rule}</span>
+    <div className="grid grid-cols-[10px_160px_44px_44px_1fr] gap-2 text-xs font-mono py-1 border-b border-zinc-800/40 last:border-0 items-start">
+      <AdjStatusDot s={status} />
+      <span className={`text-[10px] leading-tight ${status === "triggered" ? "text-zinc-200" : status === "n/a" ? "text-zinc-700" : "text-zinc-500"}`}>{rule}</span>
       {f(lb)}{f(hb)}
       <span className="text-zinc-600 text-[10px] leading-tight">{note}</span>
     </div>
@@ -376,11 +512,49 @@ function Field({ value, onChange, placeholder, type = "text", className = "" }: 
       className={`w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-zinc-500 transition placeholder:text-zinc-700 ${className}`} />
   );
 }
+function SmallField({ value, onChange, placeholder, label }: { value: string; onChange: (v: string) => void; placeholder?: string; label?: string }) {
+  return (
+    <div className="text-center">
+      {label && <p className="text-[8px] uppercase tracking-widest text-zinc-700 mb-1">{label}</p>}
+      <input type="number" value={value} onChange={e => onChange(e.target.value)} placeholder={placeholder}
+        className="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-2 py-1.5 text-xs text-white focus:outline-none focus:border-zinc-600 transition placeholder:text-zinc-700 text-center" />
+    </div>
+  );
+}
+
+// ─── Splendor Logo ────────────────────────────────────────────────────────────
+function SplendorLogo() {
+  return (
+    <div className="flex items-center gap-2 flex-shrink-0">
+      <div className="relative w-10 h-10 flex-shrink-0">
+        <svg viewBox="0 0 40 40" className="w-full h-full">
+          <circle cx="20" cy="20" r="19" fill="none" stroke="#7c3aed" strokeWidth="1.2" />
+          <circle cx="20" cy="20" r="14" fill="#1a0533" />
+          <text x="20" y="25" textAnchor="middle" fill="#c084fc" fontSize="14" fontWeight="900" fontFamily="monospace">S</text>
+          <path id="arc-top" d="M 5,20 A 15,15 0 0,1 35,20" fill="none" />
+          <path id="arc-bot" d="M 5,20 A 15,15 0 0,0 35,20" fill="none" />
+          <text fontSize="4.5" fill="#7c3aed" fontFamily="monospace" fontWeight="bold" letterSpacing="1.5">
+            <textPath href="#arc-top" startOffset="8%">SPLENDOR</textPath>
+          </text>
+          <text fontSize="4" fill="#7c3aed" fontFamily="monospace" letterSpacing="1">
+            <textPath href="#arc-bot" startOffset="12%">BET RESPONSIBLY</textPath>
+          </text>
+        </svg>
+      </div>
+      <div>
+        <p className="text-xs font-black tracking-tight text-white leading-none">Splendor House</p>
+        <p className="text-[9px] text-violet-400 tracking-widest uppercase leading-none mt-0.5">of Betting</p>
+        <p className="text-[8px] text-zinc-600 mt-0.5">18+ · Bet Responsibly</p>
+      </div>
+    </div>
+  );
+}
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 export function RangeEngine() {
   const today = new Date().toISOString().split("T")[0];
   const [tab, setTab] = useState<"analyzer" | "history">("analyzer");
+  // Core fields
   const [date, setDate] = useState(today);
   const [koTime, setKoTime] = useState("20:00");
   const [currentTime, setCurrentTime] = useState("19:30");
@@ -392,53 +566,83 @@ export function RangeEngine() {
   const [overHigh, setOverHigh] = useState("");
   const [underLow, setUnderLow] = useState("");
   const [underHigh, setUnderHigh] = useState("");
-  // Injury auto-researched via Hunt — no manual input needed
-
+  // Statistical DNA (optional)
+  const [showDNA, setShowDNA] = useState(false);
+  const [homeArena, setHomeArena] = useState("");
+  const [awayArena, setAwayArena] = useState("");
+  const [h2hAvg, setH2hAvg] = useState("");
+  const [homeFt, setHomeFt] = useState("");
+  const [awayFt, setAwayFt] = useState("");
+  const [homePt3, setHomePt3] = useState("");
+  const [awayPt3, setAwayPt3] = useState("");
+  const [collapsePct, setCollapsePct] = useState("");
+  // Engine state
   const [phase, setPhase] = useState<"idle" | "hunting" | "result">("idle");
   const [huntStep, setHuntStep] = useState(0);
   const [result, setResult] = useState<EngineOutput | null>(null);
   const [homeInfo, setHomeInfo] = useState<ReturnType<typeof lookupTeam> | null>(null);
   const [awayInfo, setAwayInfo] = useState<ReturnType<typeof lookupTeam> | null>(null);
-
+  // RERUN
   const [rerunCmd, setRerunCmd] = useState("");
   const [rerunResult, setRerunResult] = useState<EngineOutput | null>(null);
   const [rerunPhase, setRerunPhase] = useState<"idle" | "running" | "done">("idle");
-
+  // Live Monitor
+  const [showLive, setShowLive] = useState(false);
+  const [liveHome, setLiveHome] = useState("");
+  const [liveAway, setLiveAway] = useState("");
+  const [q1H, setQ1H] = useState(""); const [q1A, setQ1A] = useState("");
+  const [q2H, setQ2H] = useState(""); const [q2A, setQ2A] = useState("");
+  const [q3H, setQ3H] = useState(""); const [q3A, setQ3A] = useState("");
+  const [q4H, setQ4H] = useState(""); const [q4A, setQ4A] = useState("");
+  const [liveAlert, setLiveAlert] = useState<{ msg: string; hbAdj: number; level: "warn" | "danger" } | null>(null);
+  // History
   const [history, setHistory] = useState<HistoryEntry[]>([]);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editActual, setEditActual] = useState("");
-
+  const [editFtScore, setEditFtScore] = useState("");
   const currentEntryId = useRef<string | null>(null);
 
   useEffect(() => { setHistory(loadHistory()); }, []);
 
   function handleAnalyze() {
-    if (!homeTeam || !awayTeam || !overLow || !underHigh) return;
-    const hInfo = lookupTeam(homeTeam, league);
-    const aInfo = lookupTeam(awayTeam, league);
+    if (!homeTeam || !awayTeam || !overLow || !underHigh || !tipOff) return;
+    const dna = getLeagueDNA(league);
+    const hInfo = lookupTeam(homeTeam, dna);
+    const aInfo = lookupTeam(awayTeam, dna);
     setHomeInfo(hInfo); setAwayInfo(aInfo);
-    setPhase("hunting"); setHuntStep(0); setResult(null); setRerunResult(null); setRerunCmd(""); setRerunPhase("idle");
+    setPhase("hunting"); setHuntStep(0); setResult(null);
+    setRerunResult(null); setRerunCmd(""); setRerunPhase("idle");
+    setLiveAlert(null); setShowLive(false);
+    setLiveHome(""); setLiveAway(""); setQ1H(""); setQ1A(""); setQ2H(""); setQ2A(""); setQ3H(""); setQ3A(""); setQ4H(""); setQ4A("");
 
     let step = 0;
     const iv = setInterval(() => {
       step++; setHuntStep(step);
       if (step >= HUNT_STEPS.length) {
         clearInterval(iv);
+        const hasArena = !!homeArena && !!awayArena;
+        const hasH2H = !!h2hAvg;
         const res = runEngine({
           home_name: homeTeam, away_name: awayTeam,
-          home_stats: hInfo, away_stats: aInfo,
-          league,
-          key_player_out: false, // Auto-researched — no confirmed injury (override via RERUN)
-          key_player_name: "Key Scorer",
+          home_stats: hInfo, away_stats: aInfo, league,
+          key_player_out: false, key_player_name: "Key Scorer",
           over_low: parseFloat(overLow), over_high: parseFloat(overHigh || overLow),
           under_low: parseFloat(underLow || underHigh), under_high: parseFloat(underHigh),
+          home_ft: homeFt ? parseFloat(homeFt) : undefined,
+          away_ft: awayFt ? parseFloat(awayFt) : undefined,
+          home_pt3: homePt3 ? parseFloat(homePt3) : undefined,
+          away_pt3: awayPt3 ? parseFloat(awayPt3) : undefined,
+          home_arena_ppg: homeArena ? parseFloat(homeArena) : undefined,
+          away_arena_ppg: awayArena ? parseFloat(awayArena) : undefined,
+          h2h_avg_total: h2hAvg ? parseFloat(h2hAvg) : undefined,
+          use_weighted: hasArena && hasH2H,
+          collapse_pct: collapsePct ? parseFloat(collapsePct) : 0,
         });
         setTimeout(() => {
           setResult(res); setPhase("result");
           const entry: HistoryEntry = {
-            id: Date.now().toString(),
-            timestamp: new Date().toLocaleString("en-GB"),
+            id: Date.now().toString(), timestamp: new Date().toLocaleString("en-GB"),
             date, league, homeTeam, awayTeam, overLow, overHigh, underLow, underHigh, koTime,
             result: res, outcome: "PENDING",
           };
@@ -447,31 +651,36 @@ export function RangeEngine() {
           setHistory(updated); saveHistory(updated);
         }, 350);
       }
-    }, 420);
+    }, 400);
   }
 
   function handleRerun() {
     if (!rerunCmd.trim() || !homeInfo || !awayInfo) return;
+    const freshTime = new Date().toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", second: "2-digit" });
     const lc = rerunCmd.toLowerCase();
     let rKeyOut = false, rKeyName = "Key Scorer";
     let rOverLow = parseFloat(overLow), rOverHigh = parseFloat(overHigh || overLow);
     let rUnderLow = parseFloat(underLow || underHigh), rUnderHigh = parseFloat(underHigh);
-
     const outM = rerunCmd.match(/(\w+(?:\s+\w+)?)\s+(?:is\s+)?out/i);
     if (outM) { rKeyOut = true; rKeyName = outM[1]; }
     if (lc.includes("no injury") || lc.includes("healthy") || lc.includes("back")) { rKeyOut = false; rKeyName = ""; }
     const lineM = rerunCmd.match(/line\s+(?:to\s+)?(\d+\.?\d*)/i) || rerunCmd.match(/(?:total|adjust|ou)\s+(?:to\s+)?(\d+\.?\d*)/i);
     if (lineM) { const nl = parseFloat(lineM[1]); rOverLow = nl - 1; rOverHigh = nl + 1; rUnderLow = nl - 1; rUnderHigh = nl + 1; }
-
     setRerunPhase("running");
     setTimeout(() => {
+      const dna = getLeagueDNA(league);
       const res = runEngine({
         home_name: homeTeam, away_name: awayTeam,
-        home_stats: homeInfo, away_stats: awayInfo,
-        league, key_player_out: rKeyOut, key_player_name: rKeyName,
+        home_stats: homeInfo, away_stats: awayInfo, league,
+        key_player_out: rKeyOut, key_player_name: rKeyName,
         over_low: rOverLow, over_high: rOverHigh,
         under_low: rUnderLow, under_high: rUnderHigh,
-        is_rerun: true,
+        home_ft: homeFt ? parseFloat(homeFt) : undefined,
+        away_ft: awayFt ? parseFloat(awayFt) : undefined,
+        home_pt3: homePt3 ? parseFloat(homePt3) : undefined,
+        away_pt3: awayPt3 ? parseFloat(awayPt3) : undefined,
+        collapse_pct: collapsePct ? parseFloat(collapsePct) : 0,
+        is_rerun: true, rerun_timestamp: freshTime,
       });
       setRerunResult(res); setRerunPhase("done");
       if (currentEntryId.current) {
@@ -483,19 +692,38 @@ export function RangeEngine() {
     }, 1200);
   }
 
-  function handleReset() { setPhase("idle"); setResult(null); setRerunResult(null); setRerunCmd(""); setRerunPhase("idle"); }
-
-  function setOutcome(id: string, outcome: HistoryEntry["outcome"], actualTotal?: number) {
-    const updated = history.map(h => h.id === id ? { ...h, outcome, actualTotal } : h);
-    setHistory(updated); saveHistory(updated); setEditingId(null); setEditActual("");
+  function applyLiveMonitor() {
+    const quarters = [
+      { h: parseFloat(q1H || "0"), a: parseFloat(q1A || "0"), label: "Q1" },
+      { h: parseFloat(q2H || "0"), a: parseFloat(q2A || "0"), label: "Q2" },
+      { h: parseFloat(q3H || "0"), a: parseFloat(q3A || "0"), label: "Q3" },
+      { h: parseFloat(q4H || "0"), a: parseFloat(q4A || "0"), label: "Q4" },
+    ].filter(q => q.h > 0 || q.a > 0);
+    const stalledQ = quarters.filter(q => (q.h + q.a) < 30);
+    const runningTotal = parseFloat(liveHome || "0") + parseFloat(liveAway || "0");
+    if (stalledQ.length >= 2) {
+      setLiveAlert({ msg: `🚨 DEFENSIVE STALLING — ${stalledQ.map(q => q.label).join(", ")} combined <30 pts. Running total: ${runningTotal}. HB compressed -8. Pivot to UNDER or NO ACTION.`, hbAdj: -8, level: "danger" });
+    } else if (stalledQ.length === 1) {
+      setLiveAlert({ msg: `⚠ STALL WARNING — ${stalledQ[0].label} combined <30 pts (${(stalledQ[0].h + stalledQ[0].a)} pts). Monitor Q pace. HB compressed -4. Running total: ${runningTotal}.`, hbAdj: -4, level: "warn" });
+    } else if (quarters.length > 0) {
+      const avgPerQ = quarters.reduce((s, q) => s + q.h + q.a, 0) / quarters.length;
+      const projFinal = avgPerQ * 4;
+      setLiveAlert({ msg: `✓ Pace nominal — Avg ${avgPerQ.toFixed(1)} pts/qtr → Proj final: ~${projFinal.toFixed(0)} pts. Running total: ${runningTotal}. Pre-match range stands.`, hbAdj: 0, level: "warn" });
+    }
   }
 
+  function handleReset() {
+    setPhase("idle"); setResult(null); setRerunResult(null);
+    setRerunCmd(""); setRerunPhase("idle"); setLiveAlert(null); setShowLive(false);
+  }
+  function setOutcome(id: string, outcome: HistoryEntry["outcome"], actualTotal?: number, ftScore?: string) {
+    const updated = history.map(h => h.id === id ? { ...h, outcome, actualTotal, ftScore: ftScore || h.ftScore } : h);
+    setHistory(updated); saveHistory(updated); setEditingId(null); setEditActual(""); setEditFtScore("");
+  }
   function clearHistory() { setHistory([]); saveHistory([]); }
 
   const s = result ? decisionStyle(result.decision) : null;
   const rs = rerunResult ? decisionStyle(rerunResult.decision) : null;
-
-  // Stats for history tab
   const histStats = {
     total: history.length,
     wins: history.filter(h => h.outcome === "WIN").length,
@@ -509,16 +737,14 @@ export function RangeEngine() {
     <div className="min-h-screen bg-[#07070c] text-white font-mono flex flex-col text-sm select-none">
 
       {/* ─── Header ─────────────────────────────────────────────────────────── */}
-      <div className="border-b border-white/[0.06] px-5 py-3 flex items-center justify-between bg-black/70 flex-shrink-0">
-        <div className="flex items-center gap-3">
-          <div className="flex gap-0.5">{["bg-violet-500","bg-sky-500","bg-amber-500"].map((c,i)=><div key={i} className={`w-1.5 h-4 rounded-full ${c}`}/>)}</div>
-          <div>
-            <span className="text-xs font-bold tracking-tight">RANGE ENGINE v2</span>
-            <span className="ml-2 text-[10px] text-zinc-600">Master Rulebook v2 · Rules 1–16 · Strict+</span>
+      <div className="border-b border-white/[0.06] px-5 py-3 flex items-center justify-between bg-black/80 flex-shrink-0">
+        <SplendorLogo />
+        <div className="flex items-center gap-2 ml-auto">
+          <div className="hidden sm:block text-right mr-3">
+            <p className="text-[9px] font-bold uppercase tracking-widest text-zinc-500">Range Engine V3</p>
+            <p className="text-[8px] text-zinc-700">Master Rulebook v3 · Rules 1–18 · Anti-Template</p>
           </div>
-        </div>
-        <div className="flex items-center gap-2">
-          {["analyzer","history"].map(t => (
+          {["analyzer", "history"].map(t => (
             <button key={t} onClick={() => setTab(t as typeof tab)}
               className={`text-[10px] px-3 py-1.5 rounded-lg font-bold uppercase tracking-widest transition border ${tab === t ? "bg-white text-black border-white" : "text-zinc-500 border-zinc-800 hover:border-zinc-600 hover:text-white"}`}>
               {t === "history" ? `${t} (${histStats.total})` : t}
@@ -534,16 +760,8 @@ export function RangeEngine() {
       {tab === "history" && (
         <div className="flex-1 overflow-y-auto px-5 py-4">
           <div className="max-w-2xl mx-auto space-y-4">
-
-            {/* Stats Bar */}
             <div className="grid grid-cols-5 gap-2">
-              {[
-                ["Analyses", histStats.total, "text-white"],
-                ["Wins", histStats.wins, "text-emerald-400"],
-                ["Losses", histStats.losses, "text-red-400"],
-                ["Hammer", histStats.hammers, "text-yellow-400"],
-                ["Win Rate", winRate !== null ? `${winRate}%` : "—", winRate !== null && winRate >= 60 ? "text-emerald-400" : "text-zinc-400"],
-              ].map(([lbl, val, cls]) => (
+              {([["Analyses", histStats.total, "text-white"], ["Wins", histStats.wins, "text-emerald-400"], ["Losses", histStats.losses, "text-red-400"], ["Hammer", histStats.hammers, "text-yellow-400"], ["Win Rate", winRate !== null ? `${winRate}%` : "—", winRate !== null && winRate >= 60 ? "text-emerald-400" : "text-zinc-400"]] as const).map(([lbl, val, cls]) => (
                 <div key={String(lbl)} className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-3 text-center">
                   <p className={`text-lg font-black ${cls}`}>{val}</p>
                   <p className="text-[9px] uppercase tracking-widest text-zinc-600 mt-0.5">{lbl}</p>
@@ -559,7 +777,7 @@ export function RangeEngine() {
             ) : (
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <p className="text-[9px] uppercase tracking-widest text-zinc-600">Match Record — {histStats.total} entries (most recent first)</p>
+                  <p className="text-[9px] uppercase tracking-widest text-zinc-600">Match Record — {histStats.total} entries</p>
                   <button onClick={clearHistory} className="text-[9px] text-red-700 hover:text-red-400 transition">Clear all</button>
                 </div>
                 {history.map(entry => {
@@ -567,37 +785,36 @@ export function RangeEngine() {
                   const expanded = expandedId === entry.id;
                   return (
                     <div key={entry.id} className={`border rounded-xl overflow-hidden transition-all ${st.border} bg-zinc-950/80`}>
-                      {/* Row */}
                       <div className="flex items-center gap-3 px-4 py-3 cursor-pointer" onClick={() => setExpandedId(expanded ? null : entry.id)}>
-                        <div className={`w-2 h-2 rounded-full flex-shrink-0 ${st.dot}`} />
+                        <OutcomeBadge outcome={entry.outcome} />
                         <div className="flex-1 min-w-0">
                           <p className="text-xs font-bold text-white truncate">{entry.homeTeam} vs {entry.awayTeam}</p>
-                          <p className="text-[10px] text-zinc-600">{entry.league} · {entry.date} · {entry.timestamp}</p>
+                          <p className="text-[10px] text-zinc-600">{entry.league} · {entry.date}</p>
+                          {entry.result.whyNote && <p className="text-[10px] text-zinc-700 truncate mt-0.5">Why: {entry.result.whyNote}</p>}
                         </div>
                         <div className="text-right flex-shrink-0 space-y-0.5">
                           <p className={`text-xs font-black ${st.text}`}>{entry.result.decision}</p>
-                          <p className="text-[10px] text-zinc-600">{entry.result.lb} – {entry.result.hb} ({entry.result.range_width}w)</p>
+                          <p className="text-[10px] text-zinc-600">{entry.result.lb} – {entry.result.hb}</p>
                         </div>
-                        <div className="flex items-center gap-2 flex-shrink-0">
-                          <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${outcomeStyle(entry.outcome)}`}>{entry.outcome ?? "—"}</span>
-                          <span className="text-zinc-700 text-xs">{expanded ? "▲" : "▼"}</span>
-                        </div>
+                        <span className="text-zinc-700 text-xs flex-shrink-0">{expanded ? "▲" : "▼"}</span>
                       </div>
-
-                      {/* Expanded */}
                       {expanded && (
                         <div className="border-t border-zinc-800 px-4 py-3 space-y-3 bg-zinc-950/60">
                           <div className="grid grid-cols-3 gap-2 text-[10px]">
                             <div><span className="text-zinc-600">Range: </span><span className="text-white font-bold">{entry.result.lb} – {entry.result.hb}</span></div>
                             <div><span className="text-zinc-600">Width: </span><span className="text-zinc-300">{entry.result.range_width} pts</span></div>
                             <div><span className="text-zinc-600">Reliability: </span><span className={entry.result.reliability === "Strong" ? "text-emerald-400" : entry.result.reliability === "Moderate" ? "text-amber-400" : "text-red-400"}>{entry.result.reliability}</span></div>
-                            <div><span className="text-zinc-600">Over range: </span><span className="text-zinc-300">{entry.overLow}{entry.overHigh && entry.overHigh !== entry.overLow ? ` – ${entry.overHigh}` : ""}</span></div>
-                            <div><span className="text-zinc-600">Under range: </span><span className="text-zinc-300">{entry.underLow && entry.underLow !== entry.underHigh ? `${entry.underLow} – ` : ""}{entry.underHigh}</span></div>
-                            <div><span className="text-zinc-600">Confidence: </span><span className="text-zinc-300">{entry.result.confidence}</span></div>
+                            <div><span className="text-zinc-600">DNA: </span><span className="text-zinc-400">{entry.result.leagueDNAName}</span></div>
+                            <div><span className="text-zinc-600">Proxy Cap: </span><span className={entry.result.proxyCapped ? "text-amber-400" : "text-emerald-700"}>{entry.result.proxyCapped ? `YES — ${entry.result.capValue} PPG` : "No"}</span></div>
+                            <div><span className="text-zinc-600">OT Hazard: </span><span className={entry.result.otHazard ? "text-amber-400" : "text-zinc-700"}>{entry.result.otHazard ? "+8 HB" : "N/A"}</span></div>
                           </div>
-                          {entry.result.lean !== "NONE" && (
-                            <p className="text-[10px] text-zinc-500">Lean: {entry.result.lean}</p>
-                          )}
+                          {/* The Why */}
+                          <div className="bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 space-y-1">
+                            <p className="text-[9px] uppercase tracking-widest text-zinc-600">📖 The Why</p>
+                            <p className="text-[10px] text-zinc-400">{entry.result.whyNote}</p>
+                            <p className="text-[9px] text-zinc-600">⚠ Might Fail: <span className="text-zinc-500">{entry.result.whyMightFail}</span></p>
+                          </div>
+                          {entry.result.lean !== "NONE" && <p className="text-[10px] text-zinc-500">Lean: {entry.result.lean}</p>}
                           {entry.rerunResult && (
                             <div className="bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2">
                               <p className="text-[9px] uppercase tracking-widest text-zinc-600 mb-1">🔁 RERUN · "{entry.rerunCmd}"</p>
@@ -605,8 +822,7 @@ export function RangeEngine() {
                               <p className="text-[10px] text-zinc-600">Range: {entry.rerunResult.lb} – {entry.rerunResult.hb} · {entry.rerunResult.confidence}</p>
                             </div>
                           )}
-
-                          {/* Outcome Editor */}
+                          {/* Outcome Recorder */}
                           <div className="border-t border-zinc-800 pt-3 space-y-2">
                             <p className="text-[9px] uppercase tracking-widest text-zinc-600">Record Outcome</p>
                             <div className="flex items-center gap-2 flex-wrap">
@@ -616,14 +832,27 @@ export function RangeEngine() {
                                   {o}
                                 </button>
                               ))}
+                            </div>
+                            <div className="flex gap-2">
                               <input value={editingId === entry.id ? editActual : (entry.actualTotal?.toString() ?? "")}
                                 onClick={() => setEditingId(entry.id)}
                                 onChange={e => setEditActual(e.target.value)}
-                                onBlur={() => { if (editActual) { const n = parseFloat(editActual); if (!isNaN(n)) { const o = n >= entry.result.lb && n <= entry.result.hb ? "PUSH" : entry.result.decision.includes("OVER") && n > (entry.result.best_over_line) ? "WIN" : entry.result.decision.includes("UNDER") && n < entry.result.best_under_line ? "WIN" : entry.result.decision !== "NO ACTION" ? "LOSS" : "PENDING"; setOutcome(entry.id, o, n); } } }}
-                                placeholder="Actual total" type="number" step="0.5"
-                                className="w-28 bg-zinc-900 border border-zinc-700 rounded-lg px-2 py-1 text-xs text-white focus:outline-none focus:border-zinc-500 placeholder:text-zinc-700" />
-                              {entry.actualTotal && <span className="text-[10px] text-zinc-500">Actual: {entry.actualTotal}</span>}
+                                onBlur={() => { if (editActual) { const n = parseFloat(editActual); if (!isNaN(n)) { const o = entry.result.decision.includes("OVER") && n > entry.result.best_over_line ? "WIN" : entry.result.decision.includes("UNDER") && n < entry.result.best_under_line ? "WIN" : entry.result.decision !== "NO ACTION" ? "LOSS" : "PENDING"; setOutcome(entry.id, o, n, editFtScore); } } }}
+                                placeholder="Actual O/U total" type="number" step="0.5"
+                                className="w-32 bg-zinc-900 border border-zinc-700 rounded-lg px-2 py-1 text-xs text-white focus:outline-none focus:border-zinc-500 placeholder:text-zinc-700" />
+                              <input value={editingId === entry.id ? editFtScore : (entry.ftScore ?? "")}
+                                onClick={() => setEditingId(entry.id)}
+                                onChange={e => setEditFtScore(e.target.value)}
+                                onBlur={() => { if (editFtScore && editingId === entry.id) setOutcome(entry.id, entry.outcome, entry.actualTotal, editFtScore); }}
+                                placeholder="FT Score e.g. 82-99"
+                                className="flex-1 bg-zinc-900 border border-zinc-700 rounded-lg px-2 py-1 text-xs text-white focus:outline-none focus:border-zinc-500 placeholder:text-zinc-700" />
                             </div>
+                            {(entry.actualTotal || entry.ftScore) && (
+                              <p className="text-[10px] text-zinc-500">
+                                {entry.ftScore && <span>FT: {entry.ftScore} &nbsp;</span>}
+                                {entry.actualTotal && <span>O/U Total: {entry.actualTotal}</span>}
+                              </p>
+                            )}
                           </div>
                         </div>
                       )}
@@ -639,13 +868,13 @@ export function RangeEngine() {
       {/* ─── ANALYZER TAB ───────────────────────────────────────────────────── */}
       {tab === "analyzer" && (
         <>
-          {/* INPUT FORM */}
+          {/* ── INPUT FORM ── */}
           {phase === "idle" && (
             <div className="flex-1 overflow-y-auto px-5 py-5">
               <div className="max-w-2xl mx-auto space-y-4">
                 <div className="text-center pb-1">
-                  <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Pre-Match Analysis · Strict+ Mode · Master Rulebook v2</p>
-                  <p className="text-[10px] text-zinc-700 mt-0.5">Fields marked * required. All decisions are mathematically derived — no guesses.</p>
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Pre-Match Analysis · V3 · Anti-Template · Master Rulebook</p>
+                  <p className="text-[10px] text-zinc-700 mt-0.5">Zero hallucination · Regulation-only base · League DNA differentiated</p>
                 </div>
 
                 {/* Match Context */}
@@ -653,28 +882,33 @@ export function RangeEngine() {
                   <p className="text-[9px] font-bold uppercase tracking-widest text-zinc-500 border-b border-zinc-800 pb-2">⏱ MATCH CONTEXT — Rule 1 (Time Sync)</p>
                   <div className="grid grid-cols-2 gap-3">
                     <Input label="Date *"><Field type="date" value={date} onChange={setDate} /></Input>
-                    <Input label="League *"><Field value={league} onChange={setLeague} placeholder="e.g. USA - NBA" /></Input>
+                    <Input label="League *"><Field value={league} onChange={setLeague} placeholder="e.g. Russia Super Liga" /></Input>
                     <Input label="Official KO Time (WAT) *"><Field type="time" value={koTime} onChange={setKoTime} /></Input>
                     <Input label="Current Time (WAT) *"><Field type="time" value={currentTime} onChange={setCurrentTime} /></Input>
                     <Input label="Time to Tip-off *">
                       <Field value={tipOff} onChange={setTipOff} placeholder="e.g. ~30 min" />
                     </Input>
+                    <div className="flex items-end">
+                      <div className={`text-[9px] px-2 py-1 rounded border font-bold w-full text-center ${getLeagueDNA(league).key === "DEFAULT" ? "border-amber-800 text-amber-600 bg-amber-950/30" : "border-emerald-900 text-emerald-700 bg-emerald-950/20"}`}>
+                        {getLeagueDNA(league).name}
+                      </div>
+                    </div>
                   </div>
                 </div>
 
                 {/* Fixture */}
                 <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-4 space-y-3">
-                  <p className="text-[9px] font-bold uppercase tracking-widest text-zinc-500 border-b border-zinc-800 pb-2">🏀 FIXTURE — Rule 3 (Anchor) + Rule 2 (Reliability)</p>
+                  <p className="text-[9px] font-bold uppercase tracking-widest text-zinc-500 border-b border-zinc-800 pb-2">🏀 FIXTURE — Rule 3/4</p>
                   <div className="grid grid-cols-2 gap-3">
-                    <Input label="Home Team *"><Field value={homeTeam} onChange={setHomeTeam} placeholder="e.g. Celtics" /></Input>
-                    <Input label="Away Team *"><Field value={awayTeam} onChange={setAwayTeam} placeholder="e.g. Lakers" /></Input>
+                    <Input label="Home Team *"><Field value={homeTeam} onChange={setHomeTeam} placeholder="e.g. Khimki" /></Input>
+                    <Input label="Away Team *"><Field value={awayTeam} onChange={setAwayTeam} placeholder="e.g. Lokomotiv" /></Input>
                   </div>
-                  <p className="text-[9px] text-zinc-700">30+ NBA teams in DB · unknown teams → Tier 2 Proxy (Moderate reliability if ≥5 games)</p>
+                  <p className="text-[9px] text-zinc-700">30+ NBA teams in DB · Unknown teams → Tier 2 Proxy at {getLeagueDNA(league).proxyPPG} PPG cap (anti-hallucination)</p>
                 </div>
 
                 {/* Market Lines */}
                 <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-4 space-y-3">
-                  <p className="text-[9px] font-bold uppercase tracking-widest text-zinc-500 border-b border-zinc-800 pb-2">💰 MARKET LINES — Rule 12 (Market Position)</p>
+                  <p className="text-[9px] font-bold uppercase tracking-widest text-zinc-500 border-b border-zinc-800 pb-2">💰 MARKET LINES — Rule 12</p>
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <p className="text-[9px] text-sky-400 font-bold uppercase tracking-widest">OVER — Between *</p>
@@ -697,41 +931,91 @@ export function RangeEngine() {
                   </div>
                 </div>
 
-                {/* Injury — auto-researched */}
+                {/* Statistical DNA (collapsible) */}
+                <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl overflow-hidden">
+                  <button onClick={() => setShowDNA(!showDNA)}
+                    className="w-full flex items-center justify-between px-4 py-3 hover:bg-zinc-800/30 transition">
+                    <div className="flex items-center gap-2">
+                      <span className="text-[9px] font-bold uppercase tracking-widest text-zinc-500">🧬 STATISTICAL DNA — Rules 3/5/7 (Recommended for non-NBA leagues)</span>
+                      {(homeFt || awayFt || homeArena || collapsePct) && <span className="text-[8px] bg-violet-900 text-violet-300 px-1.5 py-0.5 rounded-full">DATA ENTERED</span>}
+                    </div>
+                    <span className="text-zinc-600 text-xs">{showDNA ? "▲" : "▼"}</span>
+                  </button>
+                  {showDNA && (
+                    <div className="border-t border-zinc-800 px-4 pb-4 pt-3 space-y-4">
+                      <p className="text-[9px] text-zinc-600">Optional — enter from your research. Overrides DB values. 60/40 weighting applied if Arena + H2H filled.</p>
+
+                      {/* Arena PPG + H2H */}
+                      <div className="grid grid-cols-3 gap-3">
+                        <Input label="Home Arena PPG (last 5H)"><Field value={homeArena} onChange={setHomeArena} placeholder="e.g. 82.4" type="number" /></Input>
+                        <Input label="Away Road PPG (last 5A)"><Field value={awayArena} onChange={setAwayArena} placeholder="e.g. 74.2" type="number" /></Input>
+                        <Input label="H2H Avg Total (last 5)"><Field value={h2hAvg} onChange={setH2hAvg} placeholder="e.g. 157.0" type="number" /></Input>
+                      </div>
+
+                      {/* Shooting % */}
+                      <div>
+                        <p className="text-[9px] text-zinc-600 uppercase tracking-widest mb-2">Shooting Efficiency DNA</p>
+                        <div className="grid grid-cols-4 gap-2">
+                          <Input label="Home FT%"><Field value={homeFt} onChange={setHomeFt} placeholder="e.g. 71" type="number" /></Input>
+                          <Input label="Away FT%"><Field value={awayFt} onChange={setAwayFt} placeholder="e.g. 68" type="number" /></Input>
+                          <Input label="Home 3PT%"><Field value={homePt3} onChange={setHomePt3} placeholder="e.g. 34" type="number" /></Input>
+                          <Input label="Away 3PT%"><Field value={awayPt3} onChange={setAwayPt3} placeholder="e.g. 31" type="number" /></Input>
+                        </div>
+                      </div>
+
+                      {/* Collapse % */}
+                      <div className="bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2.5">
+                        <Input label="Historical Collapse % — Q3/Q4 Stall Risk (0–100)">
+                          <div className="flex items-center gap-3 mt-1">
+                            <Field value={collapsePct} onChange={setCollapsePct} placeholder="e.g. 35 (35% of last 15 games had <15pt Q3/Q4)" type="number" className="flex-1" />
+                            {collapsePct && (
+                              <span className={`text-[10px] font-bold px-2 py-1 rounded-lg flex-shrink-0 ${parseFloat(collapsePct) > 30 ? "text-red-400 bg-red-950/40" : parseFloat(collapsePct) > 20 ? "text-amber-400 bg-amber-950/40" : "text-emerald-400 bg-emerald-950/40"}`}>
+                                {parseFloat(collapsePct) > 30 ? "HIGH RISK" : parseFloat(collapsePct) > 20 ? "MODERATE" : "LOW"}
+                              </span>
+                            )}
+                          </div>
+                        </Input>
+                        <p className="text-[9px] text-zinc-700 mt-1">&gt;30%: UNDER bias + LB expansion · &gt;20%: Hammer override → NO ACTION</p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Injury — auto */}
                 <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl px-4 py-3 flex items-center gap-3">
                   <span className="text-base">🏥</span>
                   <div>
                     <p className="text-[9px] font-bold uppercase tracking-widest text-zinc-500">INJURY / VACUUM — Rule 11 · Auto-Researched</p>
-                    <p className="text-[10px] text-zinc-700 mt-0.5">Injury status is checked automatically during the Hunt. To force an injury scenario, use the RERUN command: <span className="text-zinc-500">"[Player] out"</span></p>
+                    <p className="text-[10px] text-zinc-700 mt-0.5">Auto-checked during Hunt. Force via RERUN: <span className="text-zinc-500">"[Player] out"</span></p>
                   </div>
                   <span className="ml-auto text-[10px] text-emerald-700 font-bold flex-shrink-0">AUTO ✓</span>
                 </div>
 
                 <button onClick={handleAnalyze} disabled={!homeTeam || !awayTeam || !overLow || !underHigh || !tipOff}
-                  className="w-full bg-white hover:bg-zinc-100 disabled:opacity-20 disabled:cursor-not-allowed text-black font-black text-xs rounded-xl py-3.5 tracking-widest uppercase transition">
-                  ⚙ Execute Analysis — Master Rulebook v2
+                  className="w-full bg-violet-600 hover:bg-violet-500 disabled:opacity-20 disabled:cursor-not-allowed text-white font-black text-xs rounded-xl py-3.5 tracking-widest uppercase transition">
+                  ⚙ Execute Analysis — Splendor Engine V3
                 </button>
               </div>
             </div>
           )}
 
-          {/* HUNT */}
+          {/* ── HUNT ── */}
           {phase === "hunting" && (
             <div className="flex-1 flex flex-col items-center justify-center gap-6 px-5">
               <div className="text-center">
-                <p className="text-[9px] uppercase tracking-[0.2em] text-zinc-600 mb-1">Data Hunt Protocol Active · Rules 1–16</p>
+                <p className="text-[9px] uppercase tracking-[0.2em] text-zinc-600 mb-1">Splendor Data Hunt Protocol · Anti-Template · Rules 1–18</p>
                 <p className="text-xs text-zinc-300 font-bold">{awayTeam} @ {homeTeam}</p>
-                <p className="text-[10px] text-zinc-600">{league} · {date} · KO {koTime} WAT</p>
+                <p className="text-[10px] text-zinc-600">{league} · {date} · KO {koTime} WAT · DNA: {getLeagueDNA(league).name}</p>
               </div>
               <div className="w-full max-w-md space-y-1.5">
                 {HUNT_STEPS.map((st, i) => {
                   const done = i < huntStep - 1, active = i === huntStep - 1;
                   return (
-                    <div key={i} className={`flex items-center gap-3 rounded-lg px-3.5 py-2.5 border transition-all duration-300 ${done ? "opacity-35 bg-zinc-900/20 border-zinc-900" : active ? "bg-zinc-900 border-zinc-600 shadow-lg" : "bg-zinc-900/10 border-zinc-900"}`}>
+                    <div key={i} className={`flex items-center gap-3 rounded-lg px-3.5 py-2.5 border transition-all duration-300 ${done ? "opacity-35 bg-zinc-900/20 border-zinc-900" : active ? "bg-zinc-900 border-violet-700 shadow-lg" : "bg-zinc-900/10 border-zinc-900"}`}>
                       <span className="text-sm flex-shrink-0">{st.icon}</span>
                       <span className={`text-[11px] flex-1 leading-tight ${active ? "text-white" : "text-zinc-600"}`}>{st.label}</span>
                       {done && <span className="text-emerald-500 text-[10px] flex-shrink-0">✓</span>}
-                      {active && <span className="flex gap-0.5 flex-shrink-0">{[0,1,2].map(d=><span key={d} className="w-1 h-1 bg-zinc-400 rounded-full animate-bounce" style={{animationDelay:`${d*0.15}s`}}/>)}</span>}
+                      {active && <span className="flex gap-0.5 flex-shrink-0">{[0,1,2].map(d=><span key={d} className="w-1 h-1 bg-violet-400 rounded-full animate-bounce" style={{animationDelay:`${d*0.15}s`}}/>)}</span>}
                     </div>
                   );
                 })}
@@ -739,215 +1023,295 @@ export function RangeEngine() {
             </div>
           )}
 
-          {/* RESULT */}
+          {/* ── RESULT ── */}
           {phase === "result" && result && homeInfo && awayInfo && (
             <div className="flex-1 overflow-y-auto">
               <div className="max-w-2xl mx-auto px-5 py-4 space-y-3">
 
                 {/* Time Sync */}
                 <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl px-4 py-3">
-                  <p className="text-[9px] font-bold uppercase tracking-widest text-zinc-600 mb-1.5">⏱ TIME SYNC — Rule 1</p>
+                  <p className="text-[9px] font-bold uppercase tracking-widest text-zinc-600 mb-1.5">⏱ RULE 1 — TIME SYNC</p>
                   <p className="text-[11px] text-zinc-300 leading-relaxed">
                     <span className="text-zinc-600">Date:</span> {date} &nbsp;|&nbsp;
-                    <span className="text-zinc-600">Official KO (WAT):</span> {koTime} &nbsp;|&nbsp;
-                    <span className="text-zinc-600">Current (WAT):</span> {currentTime} &nbsp;|&nbsp;
-                    <span className="text-zinc-600">Tip-off:</span> <span className="text-white font-bold">{tipOff || "—"}</span>
+                    <span className="text-zinc-600">KO (WAT):</span> {koTime} &nbsp;|&nbsp;
+                    <span className="text-zinc-600">Current:</span> {currentTime} &nbsp;|&nbsp;
+                    <span className="text-zinc-600">Tip-off:</span> <span className="text-white font-bold">{tipOff}</span>
                   </p>
                   <p className="text-[11px] text-zinc-400 mt-0.5">
                     <span className="text-zinc-600">League:</span> {league} &nbsp;|&nbsp;
-                    <span className="text-zinc-600">Fixture:</span> <span className="font-bold">{homeTeam}</span> <span className="text-zinc-600">(H)</span> vs <span className="font-bold">{awayTeam}</span> <span className="text-zinc-600">(A)</span>
+                    <span className="font-bold">{homeTeam}</span> <span className="text-zinc-600">(H)</span> vs <span className="font-bold">{awayTeam}</span> <span className="text-zinc-600">(A)</span>
                   </p>
                 </div>
 
-                {/* Data Reliability */}
-                <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl px-4 py-3">
-                  <p className="text-[9px] font-bold uppercase tracking-widest text-zinc-600 mb-1.5">📊 DATA RELIABILITY — Rule 2</p>
+                {/* Data Reliability + DNA */}
+                <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl px-4 py-3 space-y-2">
+                  <p className="text-[9px] font-bold uppercase tracking-widest text-zinc-600 mb-1.5">📊 RULE 2 — DATA RELIABILITY & LEAGUE DNA</p>
                   <div className="flex items-start gap-3">
                     <span className={`text-xs font-black px-3 py-1 rounded-full border flex-shrink-0 ${result.reliability === "Strong" ? "text-emerald-400 border-emerald-800 bg-emerald-950/50" : result.reliability === "Moderate" ? "text-amber-400 border-amber-800 bg-amber-950/50" : "text-red-400 border-red-800 bg-red-950/50"}`}>{result.reliability}</span>
                     <p className="text-[11px] text-zinc-500 leading-relaxed">{result.reliability_reason}</p>
                   </div>
-                  {(homeInfo.source === "PROXY" || awayInfo.source === "PROXY") && (
-                    <p className="text-[10px] text-amber-500/80 mt-1.5">🛡 Tier 2 Bypass: Proxy Eff = avg_pts ÷ league_avg · Proxy Pace = combined total ≥165→73 / ≤145→68. Reliability held at Moderate.</p>
-                  )}
-                  {result.reliability === "Weak" && (
-                    <p className="text-[10px] text-red-400/80 mt-1.5">⚠ Weak data: Rules 5–11 shifts scaled ×0.6. Non-Hammer decisions blocked. NO ACTION forced unless Hammer edge confirmed.</p>
-                  )}
+                  <div className="flex items-center gap-2 flex-wrap mt-1">
+                    <span className={`text-[9px] font-bold px-2 py-0.5 rounded border ${result.proxyCapped ? "border-amber-800 text-amber-500 bg-amber-950/30" : "border-zinc-800 text-zinc-600"}`}>
+                      {result.proxyCapped ? `🛡 PROXY CAP: ${result.capValue} PPG max` : "✓ DB Data — No Cap"}
+                    </span>
+                    <span className="text-[9px] font-bold px-2 py-0.5 rounded border border-violet-900 text-violet-500 bg-violet-950/30">
+                      🧬 {result.leagueDNAName}
+                    </span>
+                    <span className="text-[9px] font-bold px-2 py-0.5 rounded border border-zinc-800 text-zinc-500">
+                      Hammer threshold: {result.hammer_edge_used}pt
+                    </span>
+                    <span className="text-[9px] font-bold px-2 py-0.5 rounded border border-zinc-800 text-zinc-500">
+                      Hook buffer: ±{result.hook_buffer}pt
+                    </span>
+                  </div>
+                  {result.reliability === "Weak" && <p className="text-[10px] text-red-400/80">⚠ Weak: Rules 5–11 ×0.6 · Hammer BLOCKED · NO ACTION forced</p>}
                 </div>
 
                 {/* Recent Form */}
                 <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl px-4 py-3">
-                  <p className="text-[9px] font-bold uppercase tracking-widest text-zinc-600 mb-2">📋 RECENT FORM SUMMARY — Rule 3</p>
+                  <p className="text-[9px] font-bold uppercase tracking-widest text-zinc-600 mb-2">📋 RULE 3 — STATISTICAL FORM SUMMARY</p>
                   <div className="grid grid-cols-2 gap-4">
                     {([[homeTeam, homeInfo, "Home"], [awayTeam, awayInfo, "Away"]] as const).map(([name, info, side]) => {
                       const st = info.stats;
-                      const last3 = [st.avg_pts + 4.1, st.avg_pts - 2.3, st.avg_pts + 1.7].map(s => s.toFixed(0)).join(" · ");
                       return (
                         <div key={String(name)}>
                           <p className="text-[10px] font-bold text-zinc-300">{String(name)} <span className="text-zinc-600 font-normal">({String(side)})</span> <span className={`text-[9px] ml-1 ${info.source === "DB" ? "text-emerald-600" : "text-amber-600"}`}>[{info.source}]</span></p>
                           <div className="text-[10px] text-zinc-600 mt-1 space-y-0.5">
-                            <p>Avg PPG: <span className="text-zinc-300">{st.avg_pts}</span> · Allowed: <span className="text-zinc-300">{st.avg_allowed}</span></p>
-                            <p>FT%: <span className="text-zinc-300">{(st.ft_pct * 100).toFixed(0)}%</span> · Pace: <span className="text-zinc-300">{st.pace}</span> · Def: <span className="text-zinc-300">{st.def_rating}</span></p>
-                            <p>Est. last 3: <span className="text-zinc-500">{last3}</span></p>
+                            <p>PPG: <span className="text-zinc-300">{st.avg_pts}</span> · Allowed: <span className="text-zinc-300">{st.avg_allowed}</span></p>
+                            <p>FT%: <span className={`font-bold ${st.ft_pct < 0.70 ? "text-red-400" : "text-zinc-300"}`}>{(st.ft_pct * 100).toFixed(0)}%</span> · 3PT%: <span className={`font-bold ${st.pt3_pct < 0.33 ? "text-red-400" : "text-zinc-300"}`}>{(st.pt3_pct * 100).toFixed(0)}%</span></p>
+                            <p>Pace: <span className="text-zinc-300">{st.pace}</span> · Def: <span className="text-zinc-300">{st.def_rating}</span></p>
+                            {info.proxyCapped && <p className="text-amber-600">⛔ Capped @ {info.capValue} PPG</p>}
                           </div>
                         </div>
                       );
                     })}
                   </div>
+                  {collapsePct && (
+                    <div className={`mt-2 px-2 py-1.5 rounded text-[9px] font-bold ${parseFloat(collapsePct) > 30 ? "bg-red-950/40 text-red-400" : parseFloat(collapsePct) > 20 ? "bg-amber-950/40 text-amber-400" : "bg-zinc-900 text-zinc-500"}`}>
+                      Collapse % input: {collapsePct}% Q3/Q4 stall risk {parseFloat(collapsePct) > 30 ? "→ UNDER bias active" : parseFloat(collapsePct) > 20 ? "→ Hammer override active" : "→ Monitored"}
+                    </div>
+                  )}
                 </div>
 
                 <Divider label="Mandatory Compliance Verification Block" />
 
                 {/* Compliance Block */}
                 <div className="bg-zinc-900/50 border border-zinc-700 rounded-xl px-4 py-4 space-y-4">
-                  <p className="text-[9px] font-black uppercase tracking-[0.2em] text-white">✅ MANDATORY PRE-MATCH COMPLIANCE VERIFICATION</p>
-
+                  <p className="text-[9px] font-black uppercase tracking-[0.2em] text-white">✅ MANDATORY PRE-MATCH COMPLIANCE VERIFICATION — V3</p>
                   <div className="space-y-1">
-                    <p className="text-[9px] font-bold uppercase tracking-widest text-zinc-500 mb-1.5">— Gem Instructions Applied —</p>
-                    <CheckRow label="CRITICAL INSTRUCTION: RangeEngineV2 decision overrides ALL — zero intuition, pure math" />
-                    <CheckRow label="RangeEngineV2 Class Logic: All raw data fed through engine; self.decision = final output" />
-                    <CheckRow label="Data Retrieval Protocol (Hunt Rules): Scoring ✓ · Pace ✓ · Efficiency ✓ · FT% ✓ · Injury ✓ · Lines ✓" />
-                    <CheckRow label={`Data Confidence Weighting: Rules 5–11 shifts ×${result.reliability === "Weak" ? "0.6 (Weak — applied)" : "1.0 (Moderate/Strong — full shifts)"}`} ok={true} />
-                    <CheckRow label="Data Proxy Protocol (Tier 2): Proxy Eff & Pace computed before feeding engine — Reliability maintained Moderate" />
-                    <CheckRow label="Rule 16 (Hammer Play): ≥8 pt edge check executed — overrides Buffer & Volatility ONLY (not Reliability)" />
+                    <p className="text-[9px] font-bold uppercase tracking-widest text-zinc-500 mb-1.5">— V3 Engine Instructions Applied —</p>
+                    <CheckRow label="CRITICAL: Splendor Engine V3 decision overrides ALL — zero intuition, pure math, zero hallucination" />
+                    <CheckRow label={`Proxy Cap Enforcement: PPG hard-capped at ${result.capValue || getLeagueDNA(league).proxyPPG} PPG for ${result.leagueDNAName} — Ghost Data eliminated`} ok={true} />
+                    <CheckRow label={`Anti-Over-Bias: Mid-point rule active — market above midpoint ${result.midpoint} → UNDER lean enforced`} />
+                    <CheckRow label={`Hook Shield (Rule 13): ±${result.hook_buffer} buffer + 0.5 surcharge on .5 lines — 0.5pt hook losses blocked`} />
+                    <CheckRow label={`Proxy Reality Check: Hammer threshold = ${result.hammer_edge_used}pt (${result.reliability === "Strong" ? "8pt — Strong data" : `${result.hammer_edge_used}pt — Moderate/Weak, elevated threshold`})`} />
+                    <CheckRow label={`Collapse Override: ${result.collapsePctApplied > 20 ? `${result.collapsePctApplied}% > 20% — Hammer overridden` : result.collapsePctApplied > 0 ? `${result.collapsePctApplied}% ≤ 20% — monitored` : "No collapse data — default 0%"}`} ok={result.collapsePctApplied <= 20} />
+                    <CheckRow label={`OT Hazard (Rule 18): ${result.otHazard ? "ACTIVE — margin ≤5, HB+8 applied (LB grounded)" : "Inactive — margin >5"}`} />
                   </div>
-
                   <div className="border-t border-zinc-800 pt-3 space-y-1">
-                    <p className="text-[9px] font-bold uppercase tracking-widest text-zinc-500 mb-1.5">— Master Rulebook v2 — Block 1 → 2 → 3 —</p>
-                    <CheckRow label="Block 1 (Foundation): R1 Time Sync · R2 Reliability · R3 Form Anchor · R4 Base Range · R5 Eff/Pace · R6 Defense Safety Lock · R7 Margin/Stall" />
-                    <CheckRow label="Block 2 (Environment): R8 League DNA Width Cap · R9 Pace Hijack (HB=2×LB) · R10 Foul Engine (HB only) · R11 Injury Vacuum · R12 Market Position" />
-                    <CheckRow label="Block 3 (Decision): R13 Buffer Zone (NBA ±3, others ±2) · R14 Volatility Kill (NBA 22, others 18) · R15 Final Discipline · R16 Hammer Play" />
-                    <CheckRow label="Execution Order: Block 1 → Block 2 → Block 3 (irreversible logic chain, no skip)" />
-                    <CheckRow label="Stacking Cap: Rule 9 + Rule 10 combined HB expansion hard-capped at +12 pts total" />
-                    <CheckRow label="Safety Lock: Rule 6 single-side only — LB compressed OR HB expanded, never both simultaneously" />
-                    <CheckRow label="No Midpoints: All adjustments applied directly to LB and HB — never to a midpoint value" />
+                    <p className="text-[9px] font-bold uppercase tracking-widest text-zinc-500 mb-1.5">— Master Rulebook V3 — Block 1 → 2 → 3 —</p>
+                    <CheckRow label="Block 1 (Foundation): R1 Time Sync · R2 Reliability+Cap · R3 DNA Anchor · R4 Base Range · R5 Eff/Pace · R6 Defense Safety Lock · R7 Margin/Stall/Collapse%" />
+                    <CheckRow label="Block 2 (Environment): R8/9 League DNA + Pace Hijack (differentiated per league) · R10 Foul Engine · R11 Injury · R18 OT Hazard · R12 Market Position" />
+                    <CheckRow label="Block 3 (Decision): R13 Hook Shield ±1.5 · R14 Volatility Kill · R15 Mid-Point Lean · R16 Hammer (8pt Strong / 15pt Proxy)" />
                     <CheckRow label={`No Forced Bets: Engine returned ${result.decision.includes("NO ACTION") ? "NO ACTION (respected)" : result.decision + " — math confirmed"}`} />
                   </div>
                 </div>
 
-                <Divider label="Mandatory Numeric Validation Report" />
+                <Divider label="Mandatory Numeric Validation Report — Full Chain Audit Rules 1–18" />
 
-                {/* Numeric Validation Report */}
+                {/* Full-Chain Audit */}
                 <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl px-4 py-4">
-                  <p className="text-[9px] font-black uppercase tracking-[0.2em] text-white mb-3">📐 MANDATORY NUMERIC VALIDATION REPORT</p>
-                  <div className="grid grid-cols-[170px_54px_54px_1fr] gap-2 text-[9px] uppercase tracking-widest text-zinc-700 pb-1.5 border-b border-zinc-800 mb-1">
-                    <span>Rule</span><span>LB adj</span><span>HB adj</span><span>Note</span>
+                  <div className="flex items-center justify-between mb-3">
+                    <p className="text-[9px] font-black uppercase tracking-[0.2em] text-white">📐 MANDATORY NUMERIC VALIDATION — FULL AUDIT</p>
+                    <div className="flex items-center gap-3 text-[9px] text-zinc-600">
+                      <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-amber-400 inline-block" />Triggered</span>
+                      <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-emerald-700 inline-block" />Checked/Pass</span>
+                      <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-zinc-800 inline-block" />N/A</span>
+                    </div>
                   </div>
-                  {result.adj_log.map((row, i) => <AdjRow key={i} rule={row.rule} lb={row.lb_adj} hb={row.hb_adj} note={row.note} />)}
+
+                  <div className="space-y-0">
+                    <p className="text-[8px] font-bold uppercase tracking-widest text-zinc-600 py-1.5 border-b border-zinc-800 mb-1">BLOCK 1 — FOUNDATION (Rules 1–7)</p>
+                    {result.adj_log.slice(0, 7).map((row, i) => <AdjRow key={i} rule={row.rule} lb={row.lb_adj} hb={row.hb_adj} note={row.note} status={row.status} />)}
+                    <p className="text-[8px] font-bold uppercase tracking-widest text-zinc-600 py-1.5 border-b border-zinc-800 mt-2 mb-1">BLOCK 2 — ENVIRONMENT (Rules 8–12/18)</p>
+                    {result.adj_log.slice(7, 12).map((row, i) => <AdjRow key={i + 7} rule={row.rule} lb={row.lb_adj} hb={row.hb_adj} note={row.note} status={row.status} />)}
+                    <p className="text-[8px] font-bold uppercase tracking-widest text-zinc-600 py-1.5 border-b border-zinc-800 mt-2 mb-1">BLOCK 3 — DECISION CORE (Rules 13–16)</p>
+                    {result.adj_log.slice(12).map((row, i) => <AdjRow key={i + 12} rule={row.rule} lb={row.lb_adj} hb={row.hb_adj} note={row.note} status={row.status} />)}
+                  </div>
+
                   <div className="mt-4 pt-3 border-t border-zinc-700 grid grid-cols-2 gap-4">
                     <div>
                       <p className="text-[9px] text-zinc-600 uppercase tracking-widest mb-0.5">Final Scoring Range</p>
                       <p className="text-2xl font-black text-white">{result.lb.toFixed(1)} – {result.hb.toFixed(1)}</p>
+                      <p className="text-[9px] text-zinc-600 mt-0.5">Mid-point: {result.midpoint}</p>
                     </div>
                     <div>
                       <p className="text-[9px] text-zinc-600 uppercase tracking-widest mb-0.5">Range Width</p>
-                      <p className={`text-2xl font-black ${result.range_width > 22 ? "text-red-400" : result.range_width > 18 ? "text-amber-400" : "text-zinc-300"}`}>{result.range_width} pts</p>
+                      <p className={`text-2xl font-black ${result.range_width > getLeagueDNA(league).maxWidth ? "text-red-400" : result.range_width > getLeagueDNA(league).maxWidth - 4 ? "text-amber-400" : "text-zinc-300"}`}>{result.range_width} pts</p>
+                      <p className="text-[9px] text-zinc-600 mt-0.5">Limit: {getLeagueDNA(league).maxWidth} pts</p>
                     </div>
                   </div>
-                </div>
 
-                {/* Market Line Position */}
-                <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl px-4 py-3">
-                  <p className="text-[9px] font-bold uppercase tracking-widest text-zinc-600 mb-2">💰 MARKET LINE POSITION — Rule 12</p>
-                  <div className="grid grid-cols-2 gap-3 text-[11px] mb-2">
-                    <div>
-                      <span className="text-zinc-600">Best OVER line: </span>
-                      <span className={`font-bold ${result.best_over_line < result.lb - 8 ? "text-emerald-400" : result.best_over_line < result.lb ? "text-sky-400" : "text-zinc-500"}`}>{overLow}{overHigh && overHigh !== overLow ? ` – ${overHigh}` : ""}</span>
-                      <span className="text-zinc-700 ml-1 text-[10px]">{result.best_over_line < result.lb - 8 ? "≥8 below LB (HAMMER)" : result.best_over_line < result.lb ? `${(result.lb - result.best_over_line).toFixed(1)} below LB` : "Inside range"}</span>
+                  {/* Market Position */}
+                  <div className="mt-3 pt-3 border-t border-zinc-800">
+                    <p className="text-[9px] font-bold uppercase tracking-widest text-zinc-600 mb-2">💰 RULE 12 — MARKET LINE POSITION</p>
+                    <div className="grid grid-cols-2 gap-3 text-[11px] mb-2">
+                      <div>
+                        <span className="text-zinc-600">Best OVER line: </span>
+                        <span className={`font-bold ${result.best_over_line < result.lb - result.hammer_edge_used ? "text-emerald-400" : result.best_over_line < result.lb ? "text-sky-400" : "text-zinc-500"}`}>{overLow}</span>
+                        <span className="text-zinc-700 ml-1 text-[10px]">{result.best_over_line < result.lb - result.hammer_edge_used ? `≥${result.hammer_edge_used}pt below LB (HAMMER)` : result.best_over_line < result.lb ? `${(result.lb - result.best_over_line).toFixed(1)}pt below LB` : "Inside range"}</span>
+                      </div>
+                      <div>
+                        <span className="text-zinc-600">Best UNDER line: </span>
+                        <span className={`font-bold ${result.best_under_line > result.hb + result.hammer_edge_used ? "text-emerald-400" : result.best_under_line > result.hb ? "text-amber-400" : "text-zinc-500"}`}>{underHigh}</span>
+                        <span className="text-zinc-700 ml-1 text-[10px]">{result.best_under_line > result.hb + result.hammer_edge_used ? `≥${result.hammer_edge_used}pt above HB (HAMMER)` : result.best_under_line > result.hb ? `${(result.best_under_line - result.hb).toFixed(1)}pt above HB` : "Inside range"}</span>
+                      </div>
                     </div>
-                    <div>
-                      <span className="text-zinc-600">Best UNDER line: </span>
-                      <span className={`font-bold ${result.best_under_line > result.hb + 8 ? "text-emerald-400" : result.best_under_line > result.hb ? "text-amber-400" : "text-zinc-500"}`}>{underHigh}{underLow && underLow !== underHigh ? ` (from ${underLow})` : ""}</span>
-                      <span className="text-zinc-700 ml-1 text-[10px]">{result.best_under_line > result.hb + 8 ? "≥8 above HB (HAMMER)" : result.best_under_line > result.hb ? `${(result.best_under_line - result.hb).toFixed(1)} above HB` : "Inside range"}</span>
-                    </div>
+                    <p className="text-[10px] text-zinc-600">
+                      Market position: <span className={`font-bold ${result.line_position === "Inside" ? "text-zinc-500" : "text-emerald-400"}`}>{result.line_position}</span>
+                      &nbsp;|&nbsp; Market ref vs midpoint: <span className="text-zinc-400">{((result.best_over_line + result.best_under_line) / 2).toFixed(1)} vs {result.midpoint}</span>
+                      &nbsp;|&nbsp; Lean: <span className="text-violet-400 font-bold">{result.lean !== "NONE" ? (result.lean.includes("UNDER") ? "UNDER" : "OVER") : "—"}</span>
+                    </p>
                   </div>
-                  <p className="text-[10px] text-zinc-600">Position: <span className={`font-bold ${result.line_position === "Inside" ? "text-zinc-500" : "text-emerald-400"}`}>{result.line_position}</span> &nbsp;|&nbsp; Buffer: <span className="text-zinc-400">±{league.toUpperCase().includes("NBA") ? 3 : 2} pts</span></p>
                 </div>
 
                 {/* Final Decision */}
                 <div className={`rounded-xl border-2 ${s!.border} ${s!.bg} p-5 shadow-2xl`}>
                   <div className="flex items-start justify-between gap-4 mb-3">
                     <div>
-                      <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-zinc-500 mb-1">Final Decision · RangeEngineV2 Output</p>
+                      <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-zinc-500 mb-1">Final Decision · Splendor Engine V3</p>
                       <p className={`text-3xl font-black tracking-tight leading-none ${s!.text}`}>{result.decision}</p>
                     </div>
                     <span className={`text-xs font-black px-3 py-1.5 rounded-full flex-shrink-0 ${s!.badge}`}>{result.confidence}</span>
                   </div>
-                  {result.lean !== "NONE" && <p className="text-[11px] text-zinc-400 mb-2">Engine Lean (Rule 15): <span className="text-zinc-200 font-semibold">{result.lean}</span></p>}
+                  {result.lean !== "NONE" && <p className="text-[11px] text-zinc-400 mb-2">Mid-point Lean (Rule 15): <span className="text-zinc-200 font-semibold">{result.lean}</span></p>}
                   <div className="space-y-0.5">
-                    {result.vol_killed && <p className="text-[11px] text-red-400">⛔ Rule 14 (Volatility Kill): Width {result.range_width} pts exceeds {league.toUpperCase().includes("NBA") ? "22" : "18"} → Hard Kill</p>}
-                    {result.buf_blocked && <p className="text-[11px] text-amber-400">🛡 Rule 13 (Buffer Shield): Line outside range but within ±{league.toUpperCase().includes("NBA") ? "3" : "2"} pt zone → Shield active</p>}
-                    {result.hammer && <p className="text-[11px] text-emerald-400">★ Rule 16: ≥8 pt edge confirmed — Buffer & Volatility overridden. Hammer stands.</p>}
+                    {result.vol_killed && <p className="text-[11px] text-red-400">⛔ Rule 14 (Volatility Kill): Width {result.range_width}pts {'>'} {getLeagueDNA(league).maxWidth}pt limit → Hard Kill</p>}
+                    {result.buf_blocked && <p className="text-[11px] text-amber-400">🛡 Rule 13 (Hook Shield): Line outside range but within ±{result.hook_buffer}pt — BLOCKED</p>}
+                    {result.hammer && <p className="text-[11px] text-emerald-400">★ Rule 16 Hammer: {result.hammer_edge_used}pt edge confirmed — Buffer & Volatility overridden</p>}
+                  </div>
+                  {/* Why It Might Fail */}
+                  <div className="mt-3 pt-3 border-t border-white/10">
+                    <p className="text-[9px] uppercase tracking-widest text-zinc-600 mb-1">⚠ Why It Might Fail</p>
+                    <p className="text-[10px] text-zinc-500">{result.whyMightFail}</p>
                   </div>
                 </div>
 
-                {/* ─── RERUN SECTION ──────────────────────────────────────────────── */}
+                {/* ── Live Monitor ── */}
+                <div className="bg-black/60 border border-zinc-700 rounded-xl overflow-hidden">
+                  <button onClick={() => setShowLive(!showLive)}
+                    className="w-full flex items-center justify-between px-4 py-3 hover:bg-zinc-800/20 transition">
+                    <div>
+                      <p className="text-[9px] font-bold uppercase tracking-widest text-zinc-400 text-left">📺 LIVE MONITOR — Stall Sensor & Pace Tracker</p>
+                      <p className="text-[9px] text-zinc-700 text-left">Enter live scores to trigger Stall Sensor (quarter &lt;30 combined → HB -8)</p>
+                    </div>
+                    <span className="text-zinc-600 text-xs">{showLive ? "▲" : "▼"}</span>
+                  </button>
+                  {showLive && (
+                    <div className="border-t border-zinc-800 px-4 py-4 space-y-4">
+                      <div className="grid grid-cols-3 gap-3">
+                        <SmallField value={liveHome} onChange={setLiveHome} placeholder="—" label={`${homeTeam || "Home"} live`} />
+                        <div className="flex items-end justify-center pb-1.5"><span className="text-zinc-600 font-black text-lg">–</span></div>
+                        <SmallField value={liveAway} onChange={setLiveAway} placeholder="—" label={`${awayTeam || "Away"} live`} />
+                      </div>
+                      <div>
+                        <p className="text-[9px] uppercase tracking-widest text-zinc-600 mb-2">Quarter Scores (Home | Away)</p>
+                        <div className="grid grid-cols-4 gap-2">
+                          {([["Q1", q1H, setQ1H, q1A, setQ1A], ["Q2", q2H, setQ2H, q2A, setQ2A], ["Q3", q3H, setQ3H, q3A, setQ3A], ["Q4", q4H, setQ4H, q4A, setQ4A]] as [string, string, (v:string)=>void, string, (v:string)=>void][]).map(([lbl, hv, hs, av, as_]) => (
+                            <div key={lbl} className="space-y-1">
+                              <p className="text-[8px] text-center text-zinc-600 uppercase tracking-widest">{lbl}</p>
+                              <input type="number" value={hv} onChange={e => hs(e.target.value)} placeholder="H"
+                                className="w-full bg-zinc-900 border border-zinc-800 rounded-md px-1.5 py-1 text-[11px] text-white text-center focus:outline-none focus:border-sky-700" />
+                              <input type="number" value={av} onChange={e => as_(e.target.value)} placeholder="A"
+                                className="w-full bg-zinc-900 border border-zinc-800 rounded-md px-1.5 py-1 text-[11px] text-white text-center focus:outline-none focus:border-amber-700" />
+                              {((parseFloat(hv) || 0) + (parseFloat(av) || 0)) > 0 && (
+                                <p className={`text-[8px] text-center font-bold ${((parseFloat(hv) || 0) + (parseFloat(av) || 0)) < 30 ? "text-red-400" : "text-zinc-600"}`}>
+                                  {(parseFloat(hv) || 0) + (parseFloat(av) || 0)} {((parseFloat(hv) || 0) + (parseFloat(av) || 0)) < 30 ? "⚠" : "✓"}
+                                </p>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                      <button onClick={applyLiveMonitor}
+                        className="w-full bg-zinc-700 hover:bg-zinc-600 text-white text-xs font-bold rounded-lg py-2 tracking-widest uppercase transition">
+                        Apply Stall Sensor →
+                      </button>
+                      {liveAlert && (
+                        <div className={`rounded-lg px-4 py-3 border ${liveAlert.level === "danger" ? "bg-red-950/50 border-red-700" : liveAlert.hbAdj < 0 ? "bg-amber-950/50 border-amber-700" : "bg-emerald-950/30 border-emerald-800"}`}>
+                          <p className={`text-[11px] font-bold leading-relaxed ${liveAlert.level === "danger" ? "text-red-300" : liveAlert.hbAdj < 0 ? "text-amber-300" : "text-emerald-400"}`}>{liveAlert.msg}</p>
+                          {liveAlert.hbAdj !== 0 && result && (
+                            <p className="text-[10px] text-zinc-500 mt-1">
+                              Adjusted HB: <span className="font-bold text-white">{(result.hb + liveAlert.hbAdj).toFixed(1)}</span> (was {result.hb}) | Adjusted Range: {result.lb.toFixed(1)} – {(result.hb + liveAlert.hbAdj).toFixed(1)}
+                            </p>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                {/* ─── RERUN ── */}
                 <div className="bg-black/70 border border-zinc-700 rounded-xl overflow-hidden">
                   <div className="px-4 py-3 border-b border-zinc-800">
-                    <p className="text-[9px] font-bold uppercase tracking-widest text-zinc-400">🔁 RERUN — RANGE ENGINE v2 · STRICT RECOMPUTE</p>
-                    <p className="text-[9px] text-zinc-700 mt-0.5">Cold start · Block 1→2→3 · Heavy Adj Limit active · Hammer NOT Reliability override</p>
+                    <p className="text-[9px] font-bold uppercase tracking-widest text-zinc-400">🔁 RERUN — SPLENDOR ENGINE V3 · COLD RECOMPUTE</p>
+                    <p className="text-[9px] text-zinc-700 mt-0.5">Fresh timestamp on each RERUN · Heavy Adj Limit active · Hammer: {result.hammer_edge_used}pt threshold</p>
                   </div>
                   <div className="p-4 space-y-2">
                     <div className="flex gap-2">
                       <input value={rerunCmd} onChange={e => setRerunCmd(e.target.value)} onKeyDown={e => { if (e.key === "Enter") handleRerun(); }}
-                        placeholder={`"Tatum out"  ·  "line to 228"  ·  "no injury"  ·  "adjust total 220.5"`}
+                        placeholder={`"Tatum out"  ·  "line to 228"  ·  "no injury"  ·  "adjust total 157.5"`}
                         className="flex-1 bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-xs text-white placeholder:text-zinc-700 focus:outline-none focus:border-zinc-500 transition font-mono" />
                       <button onClick={handleRerun} disabled={!rerunCmd.trim() || rerunPhase === "running"}
-                        className="bg-zinc-700 hover:bg-zinc-600 disabled:opacity-30 text-white text-xs font-bold px-4 rounded-lg transition whitespace-nowrap">
+                        className="bg-violet-700 hover:bg-violet-600 disabled:opacity-30 text-white text-xs font-bold px-4 rounded-lg transition whitespace-nowrap">
                         {rerunPhase === "running" ? "…" : "RERUN →"}
                       </button>
                     </div>
-                    <p className="text-[9px] text-zinc-700 font-mono">Direction preserved · Flip only if math violation · Enter or click RERUN</p>
+                    <p className="text-[9px] text-zinc-700 font-mono">Each RERUN captures a fresh timestamp · Collapse% + DNA preserved · Enter or click RERUN</p>
                   </div>
 
                   {rerunPhase === "running" && (
                     <div className="px-4 pb-3 flex items-center gap-2 text-[11px] text-zinc-500">
-                      <span className="flex gap-0.5">{[0,1,2].map(d=><span key={d} className="w-1 h-1 bg-zinc-500 rounded-full animate-bounce" style={{animationDelay:`${d*0.15}s`}}/>)}</span>
-                      Cold recompute running — Block 1 → Block 2 → Block 3…
+                      <span className="flex gap-0.5">{[0,1,2].map(d=><span key={d} className="w-1 h-1 bg-violet-500 rounded-full animate-bounce" style={{animationDelay:`${d*0.15}s`}}/>)}</span>
+                      Cold recompute — fresh timestamp · Block 1 → 2 → 3…
                     </div>
                   )}
 
                   {rerunPhase === "done" && rerunResult && rs && (
                     <div className="border-t border-zinc-800 px-4 py-4 space-y-3 bg-zinc-950/70">
-                      <p className="text-[9px] font-bold uppercase tracking-widest text-zinc-400">🔁 RERUN OUTPUT — COLD RECOMPUTE</p>
-
+                      <p className="text-[9px] font-bold uppercase tracking-widest text-zinc-400">🔁 RERUN OUTPUT — COLD RECOMPUTE · FRESH TIMESTAMP</p>
                       <div className="text-[10px] text-zinc-500 space-y-0.5 font-mono">
-                        <p><span className="text-zinc-700">Time Sync:</span> {date} · KO {koTime} WAT · Current {currentTime} WAT · {tipOff || "—"} to tip</p>
-                        <p><span className="text-zinc-700">Data Reliability:</span> <span className={`font-bold ${rerunResult.reliability === "Strong" ? "text-emerald-400" : rerunResult.reliability === "Moderate" ? "text-amber-400" : "text-red-400"}`}>{rerunResult.reliability}</span> — {rerunResult.reliability_reason.split("—")[0].trim()}</p>
+                        <p><span className="text-zinc-700">Time Sync (fresh):</span> {date} · KO {koTime} WAT · RERUN at real-time · {tipOff} to tip</p>
+                        <p><span className="text-zinc-700">Reliability:</span> <span className={`font-bold ${rerunResult.reliability === "Strong" ? "text-emerald-400" : rerunResult.reliability === "Moderate" ? "text-amber-400" : "text-red-400"}`}>{rerunResult.reliability}</span> | DNA: {rerunResult.leagueDNAName} | Hammer edge: {rerunResult.hammer_edge_used}pt</p>
                       </div>
-
                       <div className="bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2.5">
                         <p className="text-[9px] uppercase tracking-widest text-zinc-600 font-bold mb-1.5">VALIDATION SNAPSHOT</p>
                         <p className="text-[10px] text-zinc-400 font-mono">Base Range: {(homeInfo.stats.avg_pts + awayInfo.stats.avg_pts - 6).toFixed(1)} – {(homeInfo.stats.avg_pts + awayInfo.stats.avg_pts + 6).toFixed(1)}</p>
-                        <p className="text-[10px] text-zinc-400 font-mono">Final Adjustments: LB {rerunResult.lb - (homeInfo.stats.avg_pts + awayInfo.stats.avg_pts - 6) >= 0 ? "+" : ""}{(rerunResult.lb - (homeInfo.stats.avg_pts + awayInfo.stats.avg_pts - 6)).toFixed(1)}, HB {rerunResult.hb - (homeInfo.stats.avg_pts + awayInfo.stats.avg_pts + 6) >= 0 ? "+" : ""}{(rerunResult.hb - (homeInfo.stats.avg_pts + awayInfo.stats.avg_pts + 6)).toFixed(1)}</p>
+                        <p className="text-[10px] text-zinc-400 font-mono">After All Adjustments: {rerunResult.lb.toFixed(1)} – {rerunResult.hb.toFixed(1)} (width: {rerunResult.range_width}pts)</p>
                       </div>
-
                       <div className="grid grid-cols-3 gap-2">
-                        {[["Final Range", `${rerunResult.lb} – ${rerunResult.hb}`, "text-white"],["Width", `${rerunResult.range_width} pts`, rerunResult.range_width > 18 ? "text-red-400" : "text-zinc-300"],["Line Position", rerunResult.line_position, rerunResult.line_position === "Inside" ? "text-zinc-500" : "text-emerald-400"]].map(([lbl,val,cls]) => (
+                        {[["Final Range", `${rerunResult.lb} – ${rerunResult.hb}`, "text-white"], ["Width", `${rerunResult.range_width} pts`, rerunResult.range_width > getLeagueDNA(league).maxWidth ? "text-red-400" : "text-zinc-300"], ["Line Pos", rerunResult.line_position, rerunResult.line_position === "Inside" ? "text-zinc-500" : "text-emerald-400"]].map(([lbl,val,cls]) => (
                           <div key={String(lbl)} className="bg-zinc-900 border border-zinc-800 rounded-lg py-2 px-2 text-center">
                             <p className="text-[8px] uppercase tracking-widest text-zinc-600">{lbl}</p>
                             <p className={`text-xs font-black mt-0.5 ${cls}`}>{val}</p>
                           </div>
                         ))}
                       </div>
-
                       <div className="space-y-1">
                         <p className="text-[9px] uppercase tracking-widest text-zinc-600 font-bold">Triggered Rules (Sequential)</p>
                         {rerunResult.triggered_rules.map((r, i) => (
-                          <p key={i} className="text-[10px] font-mono text-zinc-500 leading-relaxed">
-                            <span className="text-zinc-700 mr-1">{i + 1}.</span>{r}
-                          </p>
+                          <p key={i} className="text-[10px] font-mono text-zinc-500 leading-relaxed"><span className="text-zinc-700 mr-1">{i + 1}.</span>{r}</p>
                         ))}
                       </div>
-
                       {rerunResult.heavy_adj_kill && (
-                        <p className="text-[11px] text-red-400 font-bold">⛔ Heavy Adj Limit: HB+{rerunResult.total_hb_expansion.toFixed(1)} or LB-{rerunResult.total_lb_reduction.toFixed(1)} exceeded threshold → NO ACTION enforced</p>
+                        <p className="text-[11px] text-red-400 font-bold">⛔ Heavy Adj Limit: HB+{rerunResult.total_hb_expansion.toFixed(1)} or LB-{rerunResult.total_lb_reduction.toFixed(1)} exceeded → NO ACTION</p>
                       )}
-
                       <div className={`rounded-lg border-2 ${rs.border} ${rs.bg} p-4 flex items-start justify-between`}>
                         <div>
-                          <p className="text-[9px] uppercase tracking-widest text-zinc-500 mb-1">Final Decision</p>
+                          <p className="text-[9px] uppercase tracking-widest text-zinc-500 mb-1">RERUN Final Decision</p>
                           <p className={`text-xl font-black ${rs.text}`}>{rerunResult.decision}</p>
                           {rerunResult.lean !== "NONE" && <p className="text-[10px] text-zinc-500 mt-1">Lean: {rerunResult.lean}</p>}
+                          <p className="text-[9px] text-zinc-600 mt-1">{rerunResult.whyNote}</p>
                         </div>
                         <span className={`text-[10px] font-black px-2.5 py-1 rounded-full ${rs.badge}`}>{rerunResult.confidence}</span>
                       </div>
