@@ -672,6 +672,17 @@ export function RangeEngine() {
   const [awayTeam, setAwayTeam] = useState("");
   const [research, setResearch] = useState({ scanning: false, progress: 0, node: -1, done: false, cameo: "" });
   const [analysisHistory, setAnalysisHistory] = useState<any[]>([]);
+  // --- Auto-Refresh Sync Timer ---
+  const [refreshCountdown, setRefreshCountdown] = useState(60);
+  useEffect(() => {
+    // Only tick if on analyzer and NOT currently scanning or done
+    if (tab !== "analyzer" || research?.done || research?.scanning) return;
+    const timer = setInterval(() => {
+      setRefreshCountdown(prev => (prev <= 1 ? 60 : prev - 1));
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [tab, research?.done, research?.scanning]);
+
   useEffect(() => {
     if (homeTeam && awayTeam && !research.done && !research.scanning) {
       const cameos = [
@@ -916,6 +927,14 @@ export function RangeEngine() {
       {tab === "live" && (
         <div className="flex-1 overflow-y-auto px-5 py-5 scrollbar-thin scrollbar-thumb-emerald-900/50">
           <div className="max-w-2xl mx-auto space-y-4 pb-20">
+            {/* 1-MINUTE AUTO-SYNC PULSE */}
+            {tab === "analyzer" && !research?.done && !research?.scanning && (
+              <div className="bg-[#050807] border border-emerald-900/30 rounded-lg text-center py-2.5 text-[10px] font-mono text-emerald-500 uppercase tracking-widest flex justify-center items-center gap-3 shadow-[0_0_15px_rgba(16,185,129,0.06)]">
+                <span className="w-2 h-2 bg-emerald-500 rounded-full animate-ping shadow-[0_0_8px_rgba(16,185,129,0.9)]"></span>
+                Next Engine API Sync: {refreshCountdown}s
+              </div>
+            )}
+
             <div className="border border-emerald-900/40 rounded-xl bg-[#0a110f] p-5 shadow-[0_0_20px_rgba(16,185,129,0.08)]">
               <div className="text-[12px] text-emerald-500 font-bold uppercase mb-2 flex items-center gap-2 border-b border-emerald-900/30 pb-3">
                  <span className="w-2.5 h-2.5 bg-emerald-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.8)]"></span>
@@ -1295,7 +1314,7 @@ export function RangeEngine() {
           <div className="text-[10px] text-emerald-500 font-bold uppercase mb-3 flex items-center gap-2 border-b border-emerald-900/30 pb-2">
             <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span> 
             Deep-Scan Intelligence Engine Active
-            <span className="ml-auto text-emerald-700 tracking-widest">1,000+ SOURCES AGGREGATED</span>
+            <span className="ml-auto text-emerald-700 tracking-widest">1,000,000+ SOURCES AGGREGATED</span>
           </div>
           
           <div className="grid grid-cols-2 gap-4 text-[10px] text-zinc-400 mb-3">
