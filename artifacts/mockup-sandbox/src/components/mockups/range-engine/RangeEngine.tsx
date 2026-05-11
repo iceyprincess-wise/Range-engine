@@ -558,7 +558,7 @@ function runEngine(opts: {
   const failParts: string[] = [];
   if (proxyCapped) failParts.push(`Proxy cap ${capValue} PPG may not reflect actual team efficiency`);
   if (otHazard) failParts.push(`OT risk — margin ≤5 adds ±8pt uncertainty`);
-  if (collapsePct > 0) failParts.push(`${collapsePct}% historical Q3/Q4 stall risk`);
+  if (collapsePct > 0) failParts.push(`${collapsePct}% historical Q1-Q4 Structural Collapse`);
   if (avg_ft < 0.70) failParts.push(`Low FT% (${(avg_ft*100).toFixed(0)}%) — Foul Engine underperforms`);
   if (avg_pt3 < 0.33) failParts.push(`Low 3PT% (${(avg_pt3*100).toFixed(0)}%) — scoring volume compressed`);
   if (failParts.length === 0) failParts.push("None identified — Strong data confidence");
@@ -1546,7 +1546,7 @@ useEffect(() => {
                   </div>
                   {researchData?.collapsePct != null && (
                     <div className={`mt-2 px-2 py-1.5 rounded text-[9px] font-bold ${researchData.collapsePct > 30 ? "bg-red-950/40 text-red-400" : researchData.collapsePct > 20 ? "bg-amber-950/40 text-amber-400" : "bg-zinc-900 text-zinc-500"}`}>
-                      Collapse % (auto-researched): {researchData.collapsePct}% Q3/Q4 stall risk {researchData.collapsePct > 30 ? "→ UNDER bias active" : researchData.collapsePct > 20 ? "→ Hammer override active" : "→ Monitored"}
+                      Collapse % (auto-researched): {researchData.collapsePct}% Q1-Q4 Structural Collapse {researchData.collapsePct > 30 ? "→ UNDER bias active" : researchData.collapsePct > 20 ? "→ Hammer override active" : "→ Monitored"}
                     </div>
                   )}
                 </div>
