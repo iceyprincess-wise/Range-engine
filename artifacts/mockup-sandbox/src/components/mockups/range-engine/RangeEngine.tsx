@@ -684,22 +684,42 @@ export function RangeEngine() {
   }, [tab, research?.done, research?.scanning]);
 
   useEffect(() => {
-    if (homeTeam && awayTeam && !research.done && !research.scanning) {
+  let timeouts = [];
+  if (homeTeam && awayTeam && !research.done && !research.scanning) {
+    // DEBOUNCE: Wait 1.2 seconds after typing stops before scanning
+    const timer = setTimeout(() => {
       const cameos = [
-        "> [FETCHING] api.flashscore.com/matches/live...", 
-        "> [SCRAPING] x.com/search?q=injury+report...", 
-        "> [PULLING] pinnacle.com/odds/market...", 
-        "> [SYNCING] sofascore.com/basketball/feed...", 
+        "> [FETCHING] api.flashscore.com/matches/live...",
+        "> [SCRAPING] x.com/search?q=injury+report...",
+        "> [PULLING] pinnacle.com/odds/market...",
+        "> [SYNCING] sofascore.com/basketball/feed...",
         "> [VERIFYING] internal_db: LEAGUE_DNA_MATRIX..."
       ];
-      setResearch({ scanning: true, progress: 0, node: 0, done: false, cameo: cameos[0] });
+      setResearch(r => ({ ...r, scanning: true, progress: 0, node: 0, done: false, cameo: cameos[0] }));
       const timings = [600, 1400, 2200, 3000, 3800];
-      timings.forEach((ms, i) => setTimeout(() => setResearch(r => ({ ...r, node: i, progress: (i + 1) * 20, cameo: cameos[i] || cameos[cameos.length-1] })), ms));
-      setTimeout(() => setResearch({ scanning: false, progress: 100, node: 5, done: true, cameo: "> ALL NODES SECURED - 200 OK" }), 4200);
-    } else if (!homeTeam || !awayTeam) {
-      setResearch({ scanning: false, progress: 0, node: -1, done: false, cameo: "" });
-    }
+      timings.forEach((ms, i) => {
+        timeouts.push(setTimeout(() => setResearch(r => ({ ...r, node: i, progress: (i + 1) * 20, cameo: cameos[i] || cameos[cameos.length-1] })), ms));
+      });
+      timeouts.push(setTimeout(() => setResearch(r => ({ ...r, scanning: false, progress: 100, node: 5, done: true, cameo: "> ALL NODES SECURED - 200 OK" })), 4200));
+    }, 1200);
+    timeouts.push(timer);
+  } else if (!homeTeam || !awayTeam) {
+    setResearch({ scanning: false, progress: 0, node: -1, done: false, cameo: "" });
+  }
+  // CRITICAL: Cleanup function prevents memory leak and UI freezing
+  return () => timeouts.forEach(clearTimeout);
 }, [homeTeam, awayTeam]);
+
+// 2. LIVE SYNC TICKER (60s loop)
+useEffect(() => {
+  if (refreshCountdown > 0) {
+    const ticker = setTimeout(() => setRefreshCountdown(c => c - 1), 1000);
+    return () => clearTimeout(ticker);
+  } else {
+    // Background sync triggers here
+    setRefreshCountdown(60);
+  }
+}, [refreshCountdown]);
 
   const [overLow, setOverLow] = useState("");
   const [overHigh, setOverHigh] = useState("");
