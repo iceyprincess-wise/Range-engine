@@ -1108,7 +1108,18 @@ export function RangeEngine() {
                   <p className="text-[10px] text-zinc-700 mt-0.5">Zero hallucination · Regulation-only base · League DNA differentiated</p>
                 </div>
 
-                {/* Match Context */}
+                            {/* 60-Second Auto-Sync Timer Sentinel */}
+            <div className="bg-zinc-950 border border-zinc-800 rounded-lg p-3 mb-4 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="text-amber-500 animate-pulse">⏳</span>
+                <span className="text-[10px] font-bold text-zinc-300 uppercase tracking-wider">Live Sync Active</span>
+              </div>
+              <div className="text-xs font-mono text-amber-400 font-bold">
+                00:{refreshCountdown.toString().padStart(2, '0')}
+              </div>
+            </div>
+
+            {/* Match Context */}
                 <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-4 space-y-3">
                   <p className="text-[9px] font-bold uppercase tracking-widest text-zinc-500 border-b border-zinc-800 pb-2">⏱ MATCH CONTEXT — Rule 1 (Time Sync)</p>
                   <div className="grid grid-cols-2 gap-3">
