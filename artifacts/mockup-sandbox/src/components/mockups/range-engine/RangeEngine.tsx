@@ -349,6 +349,48 @@ function runEngine(opts: {
   adj_log.push({ rule: "Rule 8/9 — League DNA + Pace Hijack", lb_adj: r9_lb, hb_adj: r9_hb, note: `${dna.name} | Pace ${avg_pace.toFixed(1)} | DNA adj: HB${dna.hbDNA >= 0 ? "+" : ""}${dna.hbDNA}, LB${dna.lbDNA >= 0 ? "+" : ""}${dna.lbDNA}`, status: r9Status });
   if (r9Status === "triggered") triggered.push(`Rule 8/9 (League DNA + Pace): LB${r9_lb >= 0 ? "+" : ""}${r9_lb}, HB${r9_hb >= 0 ? "+" : ""}${r9_hb}`);
 
+
+            {/* SPORTYBET PRE-MATCH MATRIX */}
+            <div className="px-4 py-4 space-y-3 border-b border-zinc-800/50 bg-zinc-950/30">
+              <div className="flex items-center justify-between">
+                <p className="text-[9px] font-bold uppercase tracking-widest text-emerald-400 flex items-center gap-2">
+                  <span>🎯</span> SPORTYBET PRE-MATCH MATRIX
+                </p>
+                <span className="text-[8px] text-zinc-500 uppercase tracking-widest border border-zinc-800 px-1.5 py-0.5 rounded">Pre-Match DNA</span>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-3 text-[10px] text-zinc-300">
+                {/* Home Stats */}
+                <div className="bg-zinc-900/60 border border-zinc-800/80 rounded-lg p-3 shadow-inner space-y-1">
+                  <p className="text-[9px] font-bold uppercase tracking-widest text-zinc-400 mb-2 border-b border-zinc-800/80 pb-1">{homeTeam || "HOME TEAM"} AVERAGES</p>
+                  <div className="flex justify-between py-0.5"><span>Field Goals %</span> <span className="font-mono text-zinc-100">46.5%</span></div>
+                  <div className="flex justify-between py-0.5"><span>2-Pointers %</span> <span className="font-mono text-zinc-100">52.1%</span></div>
+                  <div className="flex justify-between py-0.5"><span>3-Pointers %</span> <span className="font-mono text-zinc-100">35.2%</span></div>
+                  <div className="flex justify-between py-0.5"><span>Free Throws %</span> <span className="font-mono text-emerald-400 font-bold">78.1%</span></div>
+                  <div className="flex justify-between py-0.5 mt-1 border-t border-zinc-800/50 pt-1"><span>PPG Scored</span> <span className="font-mono text-emerald-400">112.4</span></div>
+                  <div className="flex justify-between py-0.5"><span>PPG Allowed</span> <span className="font-mono text-amber-400">109.1</span></div>
+                  <div className="flex justify-between py-0.5"><span>Point Diff</span> <span className="font-mono text-emerald-400">+3.3</span></div>
+                  <div className="flex justify-between py-0.5 mt-1 border-t border-zinc-800/50 pt-1"><span>Avg Rebounds</span> <span className="font-mono text-zinc-300">42.1</span></div>
+                  <div className="flex justify-between py-0.5"><span>Avg Fouls</span> <span className="font-mono text-amber-400/80">19.5</span></div>
+                  <div className="flex justify-between py-0.5"><span>Time in Lead</span> <span className="font-mono text-zinc-300">22m 14s</span></div>
+                </div>
+                
+                {/* Away Stats */}
+                <div className="bg-zinc-900/60 border border-zinc-800/80 rounded-lg p-3 shadow-inner space-y-1">
+                  <p className="text-[9px] font-bold uppercase tracking-widest text-zinc-400 mb-2 border-b border-zinc-800/80 pb-1">{awayTeam || "AWAY TEAM"} AVERAGES</p>
+                  <div className="flex justify-between py-0.5"><span>Field Goals %</span> <span className="font-mono text-zinc-100">44.8%</span></div>
+                  <div className="flex justify-between py-0.5"><span>2-Pointers %</span> <span className="font-mono text-zinc-100">49.9%</span></div>
+                  <div className="flex justify-between py-0.5"><span>3-Pointers %</span> <span className="font-mono text-zinc-100">33.9%</span></div>
+                  <div className="flex justify-between py-0.5"><span>Free Throws %</span> <span className="font-mono text-emerald-400 font-bold">81.0%</span></div>
+                  <div className="flex justify-between py-0.5 mt-1 border-t border-zinc-800/50 pt-1"><span>PPG Scored</span> <span className="font-mono text-emerald-400">108.2</span></div>
+                  <div className="flex justify-between py-0.5"><span>PPG Allowed</span> <span className="font-mono text-amber-400">111.5</span></div>
+                  <div className="flex justify-between py-0.5"><span>Point Diff</span> <span className="font-mono text-amber-400">-3.3</span></div>
+                  <div className="flex justify-between py-0.5 mt-1 border-t border-zinc-800/50 pt-1"><span>Avg Rebounds</span> <span className="font-mono text-zinc-300">39.5</span></div>
+                  <div className="flex justify-between py-0.5"><span>Avg Fouls</span> <span className="font-mono text-amber-400/80">21.2</span></div>
+                  <div className="flex justify-between py-0.5"><span>Time in Lead</span> <span className="font-mono text-zinc-300">18m 45s</span></div>
+                </div>
+              </div>
+            </div>
   // ── Rule 10 (Foul Engine) + Rule 11 (Injury Vacuum) ──────────────────────
   let r10_hb = 0;
   if (margin <= 6 && avg_ft >= 0.75) r10_hb = Math.round(11 * ws);
