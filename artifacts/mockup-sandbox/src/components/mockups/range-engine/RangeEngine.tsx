@@ -1272,9 +1272,13 @@ useEffect(() => {
                     {researchPhase === "done" && researchData && (
                       <div className="divide-y divide-zinc-900">
 
-                        {/* Statistical DNA — read-only */}
+                        {/* STATISTICAL DNA & THERMAL MOMENTUM TIMELINE (V3 Upgraded) */}
                         <div className="px-4 py-3 space-y-3">
-                          <p className="text-[9px] font-bold uppercase tracking-widest text-zinc-500">🧬 STATISTICAL DNA — Rules 3/5/7</p>
+                          <div className="flex items-center justify-between border-b border-zinc-800 pb-1.5">
+                            <p className="text-[9px] font-bold uppercase tracking-widest text-zinc-500">🧬 STATISTICAL DNA — Rules 3/5/7</p>
+                            <span className="text-[8px] text-amber-500 font-mono tracking-widest animate-pulse">MOMENTUM SENSOR ACTIVE</span>
+                          </div>
+
                           <div className="grid grid-cols-3 gap-3">
                             {[
                               ["Home Arena PPG", researchData.homeArenaPPG.toFixed(1), "text-sky-300"],
@@ -1300,12 +1304,55 @@ useEffect(() => {
                               </div>
                             ))}
                           </div>
-                          <div className={`flex items-center gap-3 px-3 py-1.5 rounded-lg border ${researchData.collapsePct > 30 ? "border-red-800 bg-red-950/30" : researchData.collapsePct > 20 ? "border-amber-800 bg-amber-950/30" : "border-zinc-800 bg-zinc-900"}`}>
-                            <p className="text-[9px] text-zinc-600 flex-1">Q1-Q4 Collapse & Stall Risk %</p>
-                            <span className={`text-xs font-black ${researchData.collapsePct > 30 ? "text-red-400" : researchData.collapsePct > 20 ? "text-amber-400" : "text-emerald-500"}`}>{researchData.collapsePct}%</span>
-                            <span className={`text-[8px] font-bold px-1.5 py-0.5 rounded ${researchData.collapsePct > 30 ? "bg-red-900 text-red-300" : researchData.collapsePct > 20 ? "bg-amber-900 text-amber-300" : "bg-emerald-950 text-emerald-500"}`}>
-                              {researchData.collapsePct > 30 ? "HIGH RISK" : researchData.collapsePct > 20 ? "MODERATE" : "LOW"}
-                            </span>
+
+                          {/* THERMAL MOMENTUM TIMELINE */}
+                          <div className="bg-zinc-950 p-2 rounded-lg border border-zinc-800">
+                            <div className="flex items-center justify-between mb-2">
+                              <p className="text-[9px] text-zinc-400 uppercase tracking-widest font-bold">Historical Collapse Risk (Q1-Q4)</p>
+                              <div className="flex items-center gap-1.5">
+                                <span className={`w-1.5 h-1.5 rounded-full ${researchData.collapsePct > 20 ? 'bg-blue-500 shadow-[0_0_5px_rgba(59,130,246,0.8)]' : 'bg-emerald-500'}`}></span>
+                                <span className="text-[8px] text-zinc-500">{researchData.collapsePct}% Risk Detected</span>
+                              </div>
+                            </div>
+                            
+                            <div className="grid grid-cols-4 gap-1.5">
+                              {/* Q1 */}
+                              <div className="relative h-7 bg-zinc-900 rounded border border-zinc-800 flex items-center justify-center overflow-hidden">
+                                <span className="text-[10px] font-bold text-zinc-600 z-10">Q1</span>
+                              </div>
+
+                              {/* Q2 */}
+                              <div className="relative h-7 bg-zinc-900 rounded border border-zinc-800 flex items-center justify-center overflow-hidden">
+                                <span className="text-[10px] font-bold text-zinc-600 z-10">Q2</span>
+                              </div>
+
+                              {/* Q3: Dynamic Thermal State */}
+                              <div className={`relative h-7 rounded border flex items-center justify-center overflow-hidden transition-all duration-300 ${researchData.collapsePct > 20 ? 'bg-blue-950/40 border-blue-800/80 shadow-[inset_0_0_10px_rgba(30,58,138,0.3)]' : 'bg-zinc-900 border-zinc-800'}`}>
+                                {researchData.collapsePct > 20 && (
+                                  <>
+                                    <div className="absolute inset-0 bg-blue-600/10 animate-pulse"></div>
+                                    <div className="absolute bottom-0 left-0 h-[2px] w-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.8)]"></div>
+                                  </>
+                                )}
+                                <span className={`text-[10px] font-extrabold z-10 tracking-widest ${researchData.collapsePct > 20 ? 'text-blue-300' : 'text-zinc-600'}`}>Q3 {researchData.collapsePct > 20 ? '❄️' : ''}</span>
+                              </div>
+
+                              {/* Q4: Dynamic Thermal State */}
+                              <div className={`relative h-7 rounded border flex items-center justify-center overflow-hidden transition-all duration-300 ${researchData.collapsePct > 30 ? 'bg-blue-950/40 border-blue-800/80 shadow-[inset_0_0_10px_rgba(30,58,138,0.3)]' : 'bg-zinc-900 border-zinc-800'}`}>
+                                {researchData.collapsePct > 30 && (
+                                  <>
+                                    <div className="absolute inset-0 bg-blue-600/10 animate-pulse"></div>
+                                    <div className="absolute bottom-0 left-0 h-[2px] w-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.8)]"></div>
+                                  </>
+                                )}
+                                <span className={`text-[10px] font-extrabold z-10 tracking-widest ${researchData.collapsePct > 30 ? 'text-blue-300' : 'text-zinc-600'}`}>Q4 {researchData.collapsePct > 30 ? '❄️' : ''}</span>
+                              </div>
+                            </div>
+                            
+                            <div className="flex justify-between mt-1.5 px-1">
+                              <span className="text-[7px] text-zinc-600 font-mono">EARLY GAME (1H)</span>
+                              <span className="text-[7px] text-zinc-600 font-mono">LATE GAME (2H)</span>
+                            </div>
                           </div>
                         </div>
 
