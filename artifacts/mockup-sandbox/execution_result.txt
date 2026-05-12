@@ -1,231 +1,0 @@
-Script started on 2026-05-12 02:49:05+00:00 [TERM="xterm-256color" TTY="/dev/pts/1" COLUMNS="41" LINES="49"]
-[?2004h[0;32m@michaeledidiong131-sys [0m➜ [1;34m.../range-engine-v3/Range-Engine-Logic/artifacts/mockup-sandbox [0;36m([1;31mmain[0;36m) [0m$ [K[A[K[A[K[0;32m@michaeledidiong131-sys [0m➜ [1;34m.../range-engine-v3/Range-Engine-Logic/artifacts/mockup-sandbox [0;36m([1;31mmain[0;36m) [0m$ [K[A[K[A[K[0;32m@michaeledidiong131-sys [0m➜ [1;34m.../range-engine-v3/Range-Engine-Logic/artifacts/mockup-sandbox [0;36m([1;31mmain[0;36m) [0m$ cd /workspaces/range-engine-v3/Range-Engine-Logic/artifacts/mockup-sandbox
-[?2004l[?2004h[0;32m@michaeledidiong131-sys [0m➜ [1;34m.../range-engine-v3/Range-Engine-Logic/artifacts/mockup-sandbox [0;36m([1;31mmain[0;36m) [0m$ cat << 'EOF' > inject_point4.cjs
-[?2004l[?2004h> const fs = require('fs');
-[?2004l[?2004h> const path = require('path');
-[?2004l[?2004h> 
-[?2004l[?2004h> // Safe pathing for strict ESM environments
-[?2004l[?2004h> const targetDir = path.join(process.cwd(), 'src', 'components', 'mockups', 'range-engine');
-[?2004l[?2004h> const targetFile = path.join(targetDir, 'InjuryVacuumEngine.tsx');
-[?2004l[?2004h> 
-[?2004l[?2004h> // Ensure directory exists
-[?2004l[?2004h> if (!fs.existsSync(targetDir)){
-[?2004l[?2004h>     fs.mkdirSync(targetDir, { recursive: true });
-[?2004l[?2004h> }
-[?2004l[?2004h> 
-[?2004l[?2004h> const componentCode = `import React, { useState, useEffect } from 'react';
-[?2004l[?2004h> 
-[?2004l[?2004h> // Strict Type Definitions for 100% Data Accuracy Mapping
-[?2004l[?2004h> interface Player {
-[?2004l[?2004h>   id: string;
-[?2004l[?2004h>   name: string;
-[?2004l[?2004h>   status: 'ACTIVE' | 'OUT' | 'QUESTIONABLE';
-[?2004l[?2004h>   usageRate: number; // e.g., 30.5 for 30.5%
-[?2004l[?2004h>   avgPoints: number;
-[?2004l[?2004h> }
-[?2004l[?2004h> 
-[?2004l[?2004h> interface VacuumDistribution {
-[?2004l[?2004h>   beneficiaryName: string;
-[?2004l[?2004h>   expectedVolumeIncrease: number; // Percentage increase in shot volume
-[?2004l[?2004h>   efficiencyPenalty: number; // Expected drop in efficiency
-[?2004l[?2004h> }
-[?2004l[?2004h> 
-[?2004l[?2004h> interface MarketLatency {
-[?2004l[?2004h>   initialTotalLine: number;
-[?2004lld te[?2004h>   currentTotalLine: number;
-[?2004l[?2004h>   timeSinceInjuryReport: number; // in minutes
-[?2004l[?2004h>   marketAdjusted: boolean;
-[?2004l[?2004h> }
-[?2004l[?2004h> 
-[?2004l[?2004h> interface InjuryVacuumProps {
-[?2004l[?2004h>   homeTeamId: string;
-[?2004l[?2004h>   awayTeamId: string;
-[?2004l[?2004h>   gameTipOffTime: Date;
-[?2004l[?2004h>   apiEndpoint?: string; // Placeholder for future backend
-[?2004l[?2004h> }
-[?2004l[?2004h> 
-[?2004l[?2004h> export const InjuryVacuumEngine: React.FC<InjuryVacuumProps> = ({ homeTeamId, awayTeamId, gameTipOffTime }) => {
-[?2004l[?2004h>   const [injuredStars, setInjuredStars] = useState<Player[]>([]);
-[?2004l[?2004h>   const [vacuumData, setVacuumData] = useState<VacuumDistribution[]>([]);
-[?2004l[?2004h>   const [latencyData, setLatencyData] = useState<MarketLatency | null>(null);
-[?2004l[?2004h> 
-[?2004l[?2004h>   // Simulated Deep Scan Initialization [A[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[Kn
-[?2004l[?2004h>   useEffect(() => {
-[?2004l[?2004h>     // ⚠️ CORE LOGIC: When a player with >= 25% Usage is OUT:
-[?2004l[?2004h>     // 1. Shift Base Range: -6 points (Efficiency drop)
-[?2004l[?2004h>     // 2. Expand Range Width: +8 points (High variance from bench shooters)
-[?2004l[?2004h>     
-[?2004l[?2004h>     const simulateLiveData = () => {
-[?2004l[?2004h>       const detectedOut: Player = {
-[?2004l[?2004h>         id: 'p_101',
-[?2004l[?2004h>         name: 'Stephen Curry',
-[?2004l[?2004h>         status: 'OUT',
-[?2004l[?2004h>         usageRate: 31.2,
-[?2004l[?2004h>         avgPoints: 26.5
-[?2004l[?2004h>       };
-[?2004l[?2004h>       
-[?2004l[?2004h>       setInjuredStars([detectedOut]);
-[?2004l[?2004h> 
-[?2004l[?2004h>       // The Vacuum Distribution Heatmap
-[?2004l[?2004h>       setVacuumData([
-[?2004l[?2004h>         { beneficiaryName: 'Klay Thompson', expectedVolumeIncrease: 15, efficiencyPenalty: -2.1 },
-[?2004l[?2004h>         { beneficiaryName: 'Jonathan Kuminga', expectedVolumeIncrease: 8, efficiencyPenalty: -1.5 }
-[?2004l[?2004h>       ]);
-[?2004l[?2004h> 
-[?2004l[?2004h>       // The Line-Movement Latency Tracker
-[?2004l[?2004h>       setLatencyData({
-[?2004l[?2004h>         initialTotalLine: 228.5,
-[?2004l[?2004h>         currentTotalLine: 227.5, // Only dropped 1 point
-[?2004l[?2004h>         timeSinceInjuryReport: 30, // 30 mins ago
-[?2004l[?2004h>         marketAdjusted: false // Market is sleeping
-[?2004l[?2004h>       });
-[?2004l[?2004h>     };
-[?2004l[?2004h> 
-[?2004l[?2004h>     simulateLiveData();
-[?2004l[?2004h>   }, [homeTeamId, awayTeamId]);
-[?2004l[?2004h> 
-[?2004l[?2004h>   return (
-[?2004l[?2004h>     <div className="bg-slate-900 border border-red-500/50 rounded-lg p-4 font-mono text-slate-200 mt-4 mb-4">
-[?2004l[?2004h>       <h3 className="text-xl font-bold text-red-500 mb-3 flex items-center">
-[?2004l[?2004h>         <span className="animate-pulse mr-2">🔴</span> INJURY / USAGE VACUUM ACTIVE
-[?2004l[?2004h>       </h3>
-[?2004l[?2004h> 
-[?2004l[?2004h>       {injuredStars.length > 0 ? (
-[?2004l[?2004h>         <div className="space-y-4">
-[?2004l[?2004h>           {/* Injured List */}
-[?2004l[?2004h>           <div className="bg-slate-800 p-3 rounded">
-[?2004l[?2004h>             <h4 className="text-gray-400 text-sm uppercase tracking-wider mb-2">Confirmed Out</h4>
-[?2004l[?2004h>             {injuredStars.map(player => (
-[?2004l[?2004h>               <div key={player.id} className="flex justify-between items-center text-red-400 font-bold">
-[?2004l[?2004h>                 <span>{player.name}</span>
-[?2004l[?2004h>                 <span>{player.usageRate}% USG</span>
-[?2004l[?2004h>               </div>
-[?2004l[?2004h>             ))}
-[?2004l[?2004h>           </div>
-[?2004l[?2004h> 
-[?2004l[?2004h>           {/* Vacuum Distribution Heatmap */}
-[?2004l[?2004h>           <div className="bg-slate-800 p-3 rounded border border-orange-500/30"> [A[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[K>
-[?2004l[?2004h>             <h4 className="text-orange-400 text-sm uppercase tracking-wider mb-2">Vacuum Distribution Alert</h4>
-[?2004l[?2004h>             <div className="space-y-2"> [A[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[K>
-[?2004l[?2004h>               {vacuumData.map((dist, idx) => (
-[?2004l[?2004h>                 <div key={idx} className="flex justify-between text-sm">
-[?2004l[?2004h>                   <span className="text-slate-300">➡️ {dist.beneficiaryName}</span>
-[?2004l[?2004h>                   <span className="text-orange-300">+{dist.expectedVolumeIncrease}% Vol</span>
-[?2004l[?2004h>                 </div>
-[?2004l[?2004h>               ))}
-[?2004l[?2004h>             </div>
-[?2004l[?2004h>             <div className="mt-2 text-xs text-slate-500 border-t border-slate-700 pt-2">
-[?2004l[?2004h>               SYSTEM ACTION: Shifting total range down (-6 pts), expanding width (+8 pts) to account for efficiency drop. [A[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[K.
-[?2004l[?2004h>             </div>
-[?2004l[?2004h>           </div>
-[?2004l[?2004h> 
-[?2004l[?2004h>           {/* Line-Movement Latency Tracker */}
-[?2004l[?2004h>           {latencyData && !latencyData.marketAdjusted && (
-[?2004l[?2004h>             <div className="bg-red-950 border border-red-600 p-3 rounded">
-[?2004l[?2004h>               <h4 className="text-red-500 text-sm uppercase tracking-wider mb-2 font-bold animate-pulse">🚨 VACUUM EDGE ALARM</h4>
-[?2004l[?2004h>               <p className="text-xs text-slate-300 mb-1">
-[?2004l[?2004h>                 Market has only adjusted <span className="text-white font-bold">{latencyData.initialTotalLine - latencyData.currentTotalLine} pts</span> in {latencyData.timeSinceInjuryReport} mins.
-[?2004l[?2004h>               </p>
-[?2004l[?2004h>               <p className="text-sm font-bold text-green-400">
-[?2004l[?2004h>                 EDGE DETECTED: Line has not fully reacted to missing {injuredStars[0]?.usageRate}% usage.
-[?2004l[?2004h>               </p>
-[?2004l[?2004h>             </div>
-[?2004l[?2004h>           )}
-[?2004l[?2004h>         </div>
-[?2004l[?2004h>       ) : (
-[?2004l[?2004h>         <div className="text-green-500 text-sm">✓ No high-usage injuries detected. Rosters stable.</div>
-[?2004l[?2004h>       )}
-[?2004l[?2004h>     </div>
-[?2004l[?2004h>   );
-[?2004l[?2004h> };
-[?2004l[?2004h> `;
-[?2004l[?2004h> 
-[?2004l[?2004h> try {
-[?2004l[?2004h>     fs.writeFileSync(targetFile, componentCode, 'utf8');
-[?2004l[?2004h>     console.log('\n\x1b[32m%s\x1b[0m', '✅ SUCCESS: InjuryVacuumEngine.tsx generated flawlessly.');
-[?2004l[?2004h> } catch (err) {
-[?2004l[?2004h>     console.error('\n\x1b[31m%s\x1b[0m', '❌ ERROR WRITING FILE:', err);
-[?2004l[?2004h> }
-[?2004l[?2004h> EOF
-[?2004l[?2004h[0;32m@michaeledidiong131-sys [0m➜ [1;34m.../range-engine-v3/Range-Engine-Logic/artifacts/mockup-sandbox [0;36m([1;31mmain[0;36m) [0m$ 
-[?2004l[?2004h[0;32m@michaeledidiong131-sys [0m➜ [1;34m.../range-engine-v3/Range-Engine-Logic/artifacts/mockup-sandbox [0;36m([1;31mmain[0;36m) [0m$ node inject_point4.cjs
-[?2004l
-[32m✅ SUCCESS: InjuryVacuumEngine.tsx generated flawlessly.[0m
-[?2004h[0;32m@michaeledidiong131-sys [0m➜ [1;34m.../range-engine-v3/Range-Engine-Logic/artifacts/mockup-sandbox [0;36m([1;31mmain[0;36m) [0m$ cat << 'EOF' > inject_hookup.cjs
-[?2004l[?2004h> const fs = require('fs');
-[?2004l[?2004h> const path = require('path');
-[?2004l[?2004h> 
-[?2004l[?2004h> const targetFile = path.join(process.cwd(), 'src', 'components', 'mockups', 'range-engine', 'RangeEngine.tsx');
-[?2004l[?2004h> 
-[?2004l[?2004h> if (!fs.existsSync(targetFile)) {
-[?2004l[?2004h>     console.error('\x1b[31m%s\x1b[0m', '❌ ERROR: RangeEngine.tsx not found. Are you in the right directory?');
-[?2004l[?2004h>     process.exit(1);
-[?2004l[?2004h> }
-[?2004l[?2004h> 
-[?2004l[?2004h> let content = fs.readFileSync(targetFile, 'utf8');
-[?2004l[?2004h> let modified = false;
-[?2004l[?2004h> 
-[?2004l[?2004h> // 1. Inject the Import Statement
-[?2004l[?2004h> if (!content.includes('InjuryVacuumEngine')) {
-[?2004l[?2004h>     // Find the last import statement to safely append ours
-[?2004l[?2004h>     const importRegex = /import .* from ['"].*['"];?\n/g;
-[?2004l[?2004h>     let match;
-[?2004l[?2004h>     let lastIndex = 0;
-[?2004l[?2004h>     while ((match = importRegex.exec(content)) !== null) {
-[?2004l[?2004h>         lastIndex = importRegex.lastIndex;
-[?2004l[?2004h>     }
-[?2004l[?2004h>     
-[?2004l[?2004h>     if (lastIndex === 0) {
-[?2004l[?2004h>         // Fallback if no imports exist (unlikely)
-[?2004l[?2004h>         lastIndex = content.indexOf('\n') + 1;
-[?2004l[?2004h>     }
-[?2004l[?2004h>     
-[?2004l[?2004h>     content = content.slice(0, lastIndex) + `import { InjuryVacuumEngine } from "./InjuryVacuumEngine";\n` + content.slice(lastIndex);
-[?2004l[?2004h>     modified = true;
-[?2004l[?2004h>     console.log('\x1b[36m%s\x1b[0m', '↳ Import statement injected successfully.');
-[?2004l[?2004h> }
-[?2004l[?2004h> 
-[?2004l[?2004h> // 2. Inject the Component into the JSX [A[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[KX
-[?2004l[?2004h> if (!content.includes('<InjuryVacuumEngine')) {
-[?2004l[?2004h>     // Look for the main return statement's opening wrapper (usually a div or fragment)
-[?2004l[?2004h>     const returnRegex = /return\s*\(\s*(<div[^>]*>|<main[^>]*>|<>\s*<div[^>]*>)/i;
-[?2004l[?2004h>     const match = returnRegex.exec(content);
-[?2004l[?2004h>     
-[?2004l[?2004h>     if (match) {
-[?2004l[?2004h>         const insertPos = match.index + match[0].length;
-[?2004l[?2004h>         const injection = `\n\n        {/* 🔴 POINT 4: INJURY / USAGE VACUUM ENGINE (AUTO-INJECTED) */}\n        <div className="mb-6">\n          <InjuryVacuumEngine homeTeamId="HOME" awayTeamId="AWAY" gameTipOffTime={new Date()} />\n        </div>\n`;
-[?2004l[?2004h>         
-[?2004l[?2004h>         content = content.slice(0, insertPos) + injection + content.slice(insertPos);
-[?2004l[?2004h>         modified = true;
-[?2004l[?2004h>         console.log('\x1b[36m%s\x1b[0m', '↳ Component mounted successfully inside the main JSX return block.');
-[?2004l[?2004h>     } else {
-[?2004l[?2004h>         // Fallback: If we can't find the main return, look for the final closing div
-[?2004l[?2004h>         const lastDiv = content.lastIndexOf('</div>');
-[?2004l[?2004h>         if (lastDiv !== -1) {
-[?2004l[?2004h>             const injection = `\n      {/* 🔴 POINT 4: INJURY / USAGE VACUUM ENGINE (AUTO-INJECTED) */}\n      <div className="mb-6">\n        <InjuryVacuumEngine homeTeamId="HOME" awayTeamId="AWAY" gameTipOffTime={new Date()} />\n      </div>\n`;
-[?2004l[?2004h>             content = content.slice(0, lastDiv) + injection + content.slice(lastDiv);
-[?2004l[?2004h>             modified = true;
-[?2004l[?2004h>             console.log('\x1b[33m%s\x1b[0m', '↳ Component mounted near the bottom of the file (fallback strategy).');
-[?2004l[?2004h>         } else {
-[?2004l[?2004h>             console.error('\x1b[31m%s\x1b[0m', '❌ ERROR: Could not find a safe JSX insertion point. Hook-up failed.');
-[?2004l[?2004h>             process.exit(1);
-[?2004l[?2004h>         }
-[?2004l[?2004h>     }
-[?2004l[?2004h> }
-[?2004l[?2004h> 
-[?2004l[?2004h> if (modified) {
-[?2004l[?2004h>     fs.writeFileSync(targetFile, content, 'utf8');
-[?2004l[?2004h>     console.log('\x1b[32m%s\x1b[0m', ' [K✅ SUCCESS: Point 4 has been completely hooked up via terminal command!');
-[?2004l[?2004h> } else {
-[?2004l[?2004h>     console.log('\x1b[32m%s\x1b[0m', ' [K✅ STATUS: Code is already hooked up. No changes needed.');
-[?2004l[?2004h> }
-[?2004l[?2004h> EOF
-[?2004l[?2004h[0;32m@michaeledidiong131-sys [0m➜ [1;34m.../range-engine-v3/Range-Engine-Logic/artifacts/mockup-sandbox [0;36m([1;31mmain[0;36m) [0m$ 
-[?2004l[?2004h[0;32m@michaeledidiong131-sys [0m➜ [1;34m.../range-engine-v3/Range-Engine-Logic/artifacts/mockup-sandbox [0;36m([1;31mmain[0;36m) [0m$ node inject_hookup.cjs
-[?2004l[36m↳ Import statement injected successfully.[0m
-[36m↳ Component mounted successfully inside the main JSX return block.[0m
-[32m✅ SUCCESS: Point 4 has been completely hooked up via terminal command![0m
-[?2004h[0;32m@michaeledidiong131-sys [0m➜ [1;34m.../range-engine-v3/Range-Engine-Logic/artifacts/mockup-sandbox [0;36m([1;31mmain[0;36m) [0m$ exit
-[?2004lexit
-
-Script done on 2026-05-12 02:49:54+00:00 [COMMAND_EXIT_CODE="0"]
