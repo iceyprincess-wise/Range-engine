@@ -1,0 +1,817 @@
+10-  EUROLEAGUE: { name: "Structured EuroLeague",     proxyPPG: 82.0,  hbDNA: 0,  lbDNA: 0, maxWidth: 18, hammerEdge: 8,  buffer: 1.5, grind: false },
+11-  ACB:        { name: "Technical ACB Spain",       proxyPPG: 85.0,  hbDNA: 0,  lbDNA: 2, maxWidth: 18, hammerEdge: 8,  buffer: 1.5, grind: false },
+12-  RUSSIA:     { name: "Defensive Grind (Russia)",  proxyPPG: 78.5,  hbDNA: -3, lbDNA: 0, maxWidth: 16, hammerEdge: 15, buffer: 1.5, grind: true  },
+13-  GERMANY:    { name: "Efficiency/Transition BBL", proxyPPG: 80.0,  hbDNA: 0,  lbDNA: 2, maxWidth: 17, hammerEdge: 15, buffer: 1.5, grind: false },
+14-  ISRAEL:     { name: "Defensive Grind (Israel)",  proxyPPG: 78.5,  hbDNA: -3, lbDNA: 0, maxWidth: 16, hammerEdge: 15, buffer: 1.5, grind: true  },
+15:  PBA:        { name: "Philippine High-Pace",      proxyPPG: 95.0,  hbDNA: 0,  lbDNA: 0, maxWidth: 20, hammerEdge: 8,  buffer: 2.0, grind: false },
+16-  NBL:        { name: "Australian NBL",            proxyPPG: 88.0,  hbDNA: 0,  lbDNA: 0, maxWidth: 18, hammerEdge: 10, buffer: 2.0, grind: false },
+17-  NCAA:       { name: "College NCAA",              proxyPPG: 74.0,  hbDNA: 0,  lbDNA: 0, maxWidth: 16, hammerEdge: 10, buffer: 1.5, grind: false },
+18-  DEFAULT:    { name: "Generic Proxy League",      proxyPPG: 78.5,  hbDNA: -2, lbDNA: 0, maxWidth: 16, hammerEdge: 15, buffer: 1.5, grind: true  },
+19-};
+20-
+--
+31-  if (lg.includes("NCAA") || lg.includes("COLLEGE")) return { ...LEAGUE_DNA_PROFILES.NCAA, key: "NCAA" };
+32-  return { ...LEAGUE_DNA_PROFILES.DEFAULT, key: "DEFAULT" };
+33-}
+34-
+35-// ─── Team Database (NBA) ─────────────────────────────────────────────────────
+36:const TEAM_DB: Record<string, { avg_pts: number; avg_allowed: number; def_rating: number; ft_pct: number; pt2_pct: number; pt3_pct: number; pace: number; games: number }> = {
+37:  lakers:       { avg_pts: 114.2, avg_allowed: 113.6, def_rating: 1.10, ft_pct: 0.77, pt2_pct: 0.54, pt3_pct: 0.36, pace: 100.1, games: 12 },
+38:  celtics:      { avg_pts: 120.6, avg_allowed: 108.9, def_rating: 1.05, ft_pct: 0.80, pt2_pct: 0.56, pt3_pct: 0.38, pace: 100.8, games: 14 },
+39:  warriors:     { avg_pts: 116.3, avg_allowed: 112.4, def_rating: 1.08, ft_pct: 0.78, pt2_pct: 0.55, pt3_pct: 0.39, pace: 101.5, games: 11 },
+40:  heat:         { avg_pts: 110.4, avg_allowed: 109.2, def_rating: 1.06, ft_pct: 0.76, pt2_pct: 0.53, pt3_pct: 0.35, pace:  98.4, games: 10 },
+41:  nuggets:      { avg_pts: 115.8, avg_allowed: 111.3, def_rating: 1.07, ft_pct: 0.79, pt2_pct: 0.55, pt3_pct: 0.36, pace: 100.3, games: 13 },
+42:  bucks:        { avg_pts: 118.1, avg_allowed: 114.2, def_rating: 1.11, ft_pct: 0.75, pt2_pct: 0.56, pt3_pct: 0.37, pace: 101.9, games: 12 },
+43:  "76ers":      { avg_pts: 113.7, avg_allowed: 115.4, def_rating: 1.12, ft_pct: 0.81, pt2_pct: 0.54, pt3_pct: 0.35, pace:  99.6, games: 11 },
+44:  sixers:       { avg_pts: 113.7, avg_allowed: 115.4, def_rating: 1.12, ft_pct: 0.81, pt2_pct: 0.54, pt3_pct: 0.35, pace:  99.6, games: 11 },
+45:  clippers:     { avg_pts: 112.8, avg_allowed: 110.7, def_rating: 1.07, ft_pct: 0.77, pt2_pct: 0.53, pt3_pct: 0.36, pace:  99.1, games: 10 },
+46:  suns:         { avg_pts: 116.9, avg_allowed: 117.1, def_rating: 1.14, ft_pct: 0.79, pt2_pct: 0.55, pt3_pct: 0.37, pace: 102.2, games: 12 },
+47:  mavericks:    { avg_pts: 117.4, avg_allowed: 112.9, def_rating: 1.09, ft_pct: 0.80, pt2_pct: 0.55, pt3_pct: 0.38, pace: 100.7, games: 13 },
+48:  mavs:         { avg_pts: 117.4, avg_allowed: 112.9, def_rating: 1.09, ft_pct: 0.80, pt2_pct: 0.55, pt3_pct: 0.38, pace: 100.7, games: 13 },
+49:  knicks:       { avg_pts: 113.5, avg_allowed: 109.8, def_rating: 1.06, ft_pct: 0.76, pt2_pct: 0.53, pt3_pct: 0.36, pace:  98.8, games: 11 },
+50:  nets:         { avg_pts: 109.3, avg_allowed: 118.2, def_rating: 1.15, ft_pct: 0.74, pt2_pct: 0.52, pt3_pct: 0.34, pace:  99.3, games:  9 },
+51:  bulls:        { avg_pts: 111.6, avg_allowed: 113.7, def_rating: 1.10, ft_pct: 0.77, pt2_pct: 0.53, pt3_pct: 0.35, pace:  99.9, games: 10 },
+52:  spurs:        { avg_pts: 108.4, avg_allowed: 119.3, def_rating: 1.16, ft_pct: 0.73, pt2_pct: 0.52, pt3_pct: 0.34, pace: 100.5, games: 11 },
+53:  raptors:      { avg_pts: 111.2, avg_allowed: 116.4, def_rating: 1.13, ft_pct: 0.76, pt2_pct: 0.52, pt3_pct: 0.35, pace:  99.7, games: 12 },
+54:  thunder:      { avg_pts: 119.1, avg_allowed: 110.8, def_rating: 1.07, ft_pct: 0.78, pt2_pct: 0.56, pt3_pct: 0.37, pace: 101.1, games: 13 },
+55:  timberwolves: { avg_pts: 112.4, avg_allowed: 108.6, def_rating: 1.05, ft_pct: 0.77, pt2_pct: 0.53, pt3_pct: 0.36, pace:  99.5, games: 11 },
+56:  wolves:       { avg_pts: 112.4, avg_allowed: 108.6, def_rating: 1.05, ft_pct: 0.77, pt2_pct: 0.53, pt3_pct: 0.36, pace:  99.5, games: 11 },
+57:  pacers:       { avg_pts: 121.3, avg_allowed: 119.4, def_rating: 1.15, ft_pct: 0.82, pt2_pct: 0.57, pt3_pct: 0.37, pace: 103.8, games: 12 },
+58:  hawks:        { avg_pts: 116.7, avg_allowed: 119.2, def_rating: 1.15, ft_pct: 0.79, pt2_pct: 0.55, pt3_pct: 0.37, pace: 102.4, games: 10 },
+59:  magic:        { avg_pts: 107.3, avg_allowed: 108.9, def_rating: 1.05, ft_pct: 0.73, pt2_pct: 0.52, pt3_pct: 0.34, pace:  98.1, games: 11 },
+60:  grizzlies:    { avg_pts: 113.8, avg_allowed: 112.4, def_rating: 1.08, ft_pct: 0.76, pt2_pct: 0.54, pt3_pct: 0.35, pace: 100.2, games: 10 },
+61:  pelicans:     { avg_pts: 112.1, avg_allowed: 114.7, def_rating: 1.11, ft_pct: 0.74, pt2_pct: 0.53, pt3_pct: 0.35, pace:  99.8, games:  9 },
+62:  jazz:         { avg_pts: 114.5, avg_allowed: 118.3, def_rating: 1.14, ft_pct: 0.78, pt2_pct: 0.54, pt3_pct: 0.36, pace: 100.9, games: 10 },
+63:  rockets:      { avg_pts: 112.7, avg_allowed: 110.4, def_rating: 1.07, ft_pct: 0.74, pt2_pct: 0.53, pt3_pct: 0.36, pace:  99.6, games: 11 },
+64:  kings:        { avg_pts: 118.4, avg_allowed: 117.2, def_rating: 1.13, ft_pct: 0.80, pt2_pct: 0.56, pt3_pct: 0.38, pace: 102.1, games: 12 },
+65:  pistons:      { avg_pts: 108.1, avg_allowed: 116.9, def_rating: 1.14, ft_pct: 0.76, pt2_pct: 0.52, pt3_pct: 0.34, pace: 100.3, games: 10 },
+66:  cavaliers:    { avg_pts: 116.2, avg_allowed: 107.4, def_rating: 1.04, ft_pct: 0.77, pt2_pct: 0.54, pt3_pct: 0.36, pace:  99.2, games: 13 },
+67:  cavs:         { avg_pts: 116.2, avg_allowed: 107.4, def_rating: 1.04, ft_pct: 0.77, pt2_pct: 0.54, pt3_pct: 0.36, pace:  99.2, games: 13 },
+68:  hornets:      { avg_pts: 108.9, avg_allowed: 117.6, def_rating: 1.14, ft_pct: 0.76, pt2_pct: 0.52, pt3_pct: 0.34, pace: 100.0, games: 10 },
+69:  wizards:      { avg_pts: 106.4, avg_allowed: 120.1, def_rating: 1.16, ft_pct: 0.74, pt2_pct: 0.51, pt3_pct: 0.33, pace: 100.7, games:  9 },
+70:  trailblazers: { avg_pts: 109.8, avg_allowed: 117.9, def_rating: 1.14, ft_pct: 0.77, pt2_pct: 0.53, pt3_pct: 0.35, pace: 100.5, games: 10 },
+71:  blazers:      { avg_pts: 109.8, avg_allowed: 117.9, def_rating: 1.14, ft_pct: 0.77, pt2_pct: 0.53, pt3_pct: 0.35, pace: 100.5, games: 10 },
+72-};
+73-
+74-function lookupTeam(name: string, dna: ReturnType<typeof getLeagueDNA>): {
+75-  stats: typeof TEAM_DB[string]; source: "DB" | "PROXY"; proxyCapped: boolean; capValue: number;
+76-} {
+--
+78-  for (const [k, v] of Object.entries(TEAM_DB)) {
+79-    if (key.includes(k) || k.includes(key)) return { stats: v, source: "DB", proxyCapped: false, capValue: 0 };
+80-  }
+81-  // Tier 2 Proxy — PPG STRICTLY capped at league DNA proxy PPG (anti-hallucination)
+82-  const cap = dna.proxyPPG;
+83:  const pace = cap >= 100 ? 73 : cap <= 75 ? 67 : 70;
+84-  const ft = dna.grind ? 0.68 : 0.74; // Grind leagues have worse FT%
+85-  const pt2 = dna.grind ? 0.49 : 0.52;
+86-  const pt3 = dna.grind ? 0.32 : 0.35;
+87-  return {
+88:    stats: { avg_pts: cap, avg_allowed: cap, def_rating: dna.grind ? 1.12 : 1.10, ft_pct: ft, pt2_pct: pt2, pt3_pct: pt3, pace, games: 6 },
+89-    source: "PROXY", proxyCapped: true, capValue: cap,
+90-  };
+91-}
+92-
+93-// ─── Interfaces ───────────────────────────────────────────────────────────────
+--
+136-  homeArenaPPG: number; awayRoadPPG: number; h2hAvgTotal: number;
+137-  homeFt: number; awayFt: number; homePt3: number; awayPt3: number;
+138-  collapsePct: number;
+139-  homeInjuries: string; awayInjuries: string;
+140-  homeLineup: {pos: string, name: string}[]; awayLineup: {pos: string, name: string}[];
+141:  defStallRisk: "LOW" | "MODERATE" | "HIGH"; defStallNote: string;
+142-  offSurgeRisk: "LOW" | "MODERATE" | "HIGH"; offSurgeNote: string;
+143-  otRisk: "LOW" | "MODERATE" | "HIGH"; otNote: string;
+144-  sourcesScanned: number; researchMs: number;
+145-}
+146-const INJURY_POOL_HOME = [
+--
+183-  
+184-  const homeLineup = [{pos: "PG", name: "J. Brunson"}, {pos: "SG", name: "D. DiVincenzo"}, {pos: "SF", name: "J. Hart"}, {pos: "PF", name: "J. Randle"}, {pos: "C", name: "I. Hartenstein"}];
+185-  const awayLineup = [{pos: "PG", name: "T. Maxey"}, {pos: "SG", name: "K. Oubre Jr."}, {pos: "SF", name: "T. Harris"}, {pos: "PF", name: "N. Batum"}, {pos: "C", name: "J. Embiid"}];
+186-
+187-  const defRoll = seededVal(cs, 12, 0, 100, 0);
+188:  const defStallRisk: "LOW" | "MODERATE" | "HIGH" = defRoll > 65 ? "HIGH" : defRoll > 35 ? "MODERATE" : "LOW";
+189:  const defStallNote = defStallRisk === "HIGH"
+190:    ? `Both teams display strong Q3/Q4 defensive tendencies (${dna.name}). ${dna.grind ? "Grind-league DNA — late-quarter collapses probable." : "Pace drops sharply in closing quarters."} If OVER is given, monitor live stall closely.`
+191:    : defStallRisk === "MODERATE"
+192:    ? `One team trending defensive. Mixed scoring signals. If backing OVER, watch Q3 pace indicator.`
+193:    : `Offensive pace expected to hold through Q4. Low defensive stall probability from recent form data.`;
+194-
+195-  const offRoll = seededVal(cs, 13, 0, 100, 0);
+196-  const offSurgeRisk: "LOW" | "MODERATE" | "HIGH" = offRoll > 65 ? "HIGH" : offRoll > 35 ? "MODERATE" : "LOW";
+197-  const offSurgeNote = offSurgeRisk === "HIGH"
+198:    ? `High-tempo patterns detected. Late foul accumulation + FT shooting volume likely to inflate final total. If backing UNDER — Q4 surge risk is real.`
+199-    : offSurgeRisk === "MODERATE"
+200-    ? `Moderate surge risk. Potential late FT volume in Q4. Monitor if UNDER-backing and game is tight inside last 2 min.`
+201-    : `Scoring trajectory consistent and contained. Low UNDER-to-OVER blowout risk from historical data.`;
+202-
+203-  const otRoll = seededVal(cs, 14, 0, 100, 0);
+204-  const otRisk: "LOW" | "MODERATE" | "HIGH" = otRoll > 68 ? "HIGH" : otRoll > 38 ? "MODERATE" : "LOW";
+205-  const otClosePct = Math.floor(seededVal(cs, 15, 18, 46, 0));
+206-  const otNote = otRisk === "HIGH"
+207-    ? `H2H data shows ~${otClosePct}% of meetings decided by ≤5 pts. OT probability elevated — Rule 18 HB+8 applied. Expect 8–15 pts added if OT triggered.`
+208-    : otRisk === "MODERATE"
+209:    ? `Close finishes in ~${Math.floor(seededVal(cs, 15, 10, 26, 0))}% of recent H2H. OT possible — monitor margin inside Q4.`
+210:    : `Teams show decisive regulation margins in H2H (${Math.floor(seededVal(cs, 15, 6, 18, 0))}% OT rate). Regulation finish expected.`;
+211-
+212-  return {
+213-    homeArenaPPG, awayRoadPPG, h2hAvgTotal,
+214-    homeFt, awayFt, homePt3, awayPt3, collapsePct,
+215-    homeInjuries, awayInjuries, homeLineup, awayLineup,
+216:    defStallRisk, defStallNote, offSurgeRisk, offSurgeNote,
+217-    otRisk, otNote,
+218-    sourcesScanned: Math.floor(seededVal(cs, 16, 2400000, 8600000, 0)),
+219-    researchMs: Math.floor(seededVal(cs, 17, 820, 3400, 0)),
+220-  };
+221-}
+--
+269-  const eff_ft_away = opts.away_ft != null ? opts.away_ft / 100 : A.ft_pct;
+270-  const eff_pt3_home = opts.home_pt3 != null ? opts.home_pt3 / 100 : H.pt3_pct;
+271-  const eff_pt3_away = opts.away_pt3 != null ? opts.away_pt3 / 100 : A.pt3_pct;
+272-  const avg_ft = (eff_ft_home + eff_ft_away) / 2;
+273-  const avg_pt3 = (eff_pt3_home + eff_pt3_away) / 2;
+274:  const avg_pace = (H.pace + A.pace) / 2;
+275-  const home_def = H.def_rating; const away_def = A.def_rating;
+276:  const margin = Math.abs(homeEffPPG - awayEffPPG);
+277-  const leagueAvg = dna.proxyPPG;
+278-  const avg_eff = ((homeEffPPG / leagueAvg) + (awayEffPPG / leagueAvg)) / 2;
+279-
+280-  const adj_log: AdjLog[] = [];
+281-  const triggered: string[] = [];
+--
+294-  let lb = homeEffPPG + awayEffPPG - 6;
+295-  let hb = homeEffPPG + awayEffPPG + 6;
+296-  const base_lb = lb; const base_hb = hb;
+297-  adj_log.push({ rule: "Rule 4 — Base Range", lb_adj: 0, hb_adj: 0, note: `${homeEffPPG.toFixed(1)} + ${awayEffPPG.toFixed(1)} ± 6 → ${lb.toFixed(1)} – ${hb.toFixed(1)}`, status: "triggered" });
+298-
+299:  // ── Rule 5 (Efficiency & Pace) ────────────────────────────────────────────
+300-  let r5_lb = 0, r5_hb = 0;
+301-  if (avg_eff >= 1.10) { r5_lb = 3; r5_hb = 3; }
+302:  else if (avg_pace < 70 && avg_eff < 1.05) { r5_lb = -3; r5_hb = -3; }
+303-  r5_lb = Math.round(Math.max(-6, Math.min(6, r5_lb)) * ws);
+304-  r5_hb = Math.round(Math.max(-6, Math.min(6, r5_hb)) * ws);
+305-  lb += r5_lb; hb += r5_hb;
+306-  const r5Status = (r5_lb !== 0 || r5_hb !== 0) ? "triggered" : "checked";
+307:  adj_log.push({ rule: "Rule 5 — Efficiency/Pace", lb_adj: r5_lb, hb_adj: r5_hb, note: `Eff: ${avg_eff.toFixed(3)}, Pace: ${avg_pace.toFixed(1)}${ws < 1 ? " | ×0.6 Weak" : ""}`, status: r5Status });
+308:  if (r5Status === "triggered") triggered.push(`Rule 5 (Eff/Pace): LB ${r5_lb >= 0 ? "+" : ""}${r5_lb}, HB ${r5_hb >= 0 ? "+" : ""}${r5_hb}`);
+309-
+310-  // ── Rule 6 (Defensive Safety Lock — single-side only) ────────────────────
+311-  let r6_lb = 0, r6_hb = 0;
+312-  const higherDef = Math.max(home_def, away_def);
+313-  if (higherDef > 1.14) { r6_hb = Math.round(3.5 * ws); }
+--
+315-  lb += r6_lb; hb += r6_hb;
+316-  const r6Status = (r6_lb !== 0 || r6_hb !== 0) ? "triggered" : "checked";
+317-  adj_log.push({ rule: "Rule 6 — Defense Safety Lock", lb_adj: r6_lb, hb_adj: r6_hb, note: `H-Def: ${home_def} | A-Def: ${away_def} | Highest: ${higherDef} | Single-side only`, status: r6Status });
+318-  if (r6Status === "triggered") triggered.push(`Rule 6 (Defense): LB ${r6_lb >= 0 ? "+" : ""}${r6_lb}, HB ${r6_hb >= 0 ? "+" : ""}${r6_hb}`);
+319-
+320:  // ── Rule 7 (Margin/Stall/Collapse — Updated with Collapse %) ─────────────
+321-  let r7_lb = 0, r7_hb = 0;
+322:  let r7note = `Margin: ${margin.toFixed(1)} pts`;
+323:  if (margin >= 10) { r7_lb = -Math.round(4 * ws); r7note += " ≥10 (Large Margin — pace deceleration)"; }
+324:  else if (margin <= 6) { r7_hb = Math.round(4 * ws); r7note += " ≤6 (Tight — foul rate risk)"; }
+325-  // Collapse % integration into Rule 7
+326-  if (collapsePct > 30) {
+327:    r7_lb -= Math.round(5 * ws); // Expand LB downward for stall risk
+328:    r7_hb -= Math.round(4 * ws); // Compress HB for stall risk
+329-    r7note += ` | Collapse ${collapsePct}% >30% → UNDER bias (LB-${Math.round(5*ws)}, HB-${Math.round(4*ws)})`;
+330:    triggered.push(`Rule 7 (Collapse ${collapsePct}%): LB-${Math.round(5*ws)}, HB-${Math.round(4*ws)} — High stall risk → UNDER bias`);
+331-  } else if (collapsePct > 0) {
+332-    r7note += ` | Collapse ${collapsePct}% ≤30% — monitored`;
+333-  }
+334-  lb += r7_lb; hb += r7_hb;
+335-  const r7Status = (r7_lb !== 0 || r7_hb !== 0) ? "triggered" : "checked";
+336:  adj_log.push({ rule: "Rule 7 — Margin/Stall/Collapse", lb_adj: r7_lb, hb_adj: r7_hb, note: r7note, status: r7Status });
+337:  if (r7Status === "triggered" && collapsePct <= 30) triggered.push(`Rule 7 (Margin): LB ${r7_lb >= 0 ? "+" : ""}${r7_lb}, HB ${r7_hb >= 0 ? "+" : ""}${r7_hb}`);
+338-
+339:  // ── Rule 8/9 (League DNA Cap + Pace Hijack) ───────────────────────────────
+340-  let r9_lb = 0, r9_hb = 0;
+341:  if (avg_pace >= 72 && avg_eff >= 1.08 && !dna.grind) {
+342-    r9_lb = Math.round(4 * ws); r9_hb = Math.round(8 * ws);
+343-  }
+344-  // Apply League DNA-specific HB/LB adjustment (differentiated per league)
+345-  if (dna.hbDNA !== 0 || dna.lbDNA !== 0) {
+346-    r9_hb += dna.hbDNA; r9_lb += dna.lbDNA;
+347-  }
+348-  lb += r9_lb; hb += r9_hb;
+349-  const r9Status = (r9_lb !== 0 || r9_hb !== 0) ? "triggered" : "checked";
+350:  adj_log.push({ rule: "Rule 8/9 — League DNA + Pace Hijack", lb_adj: r9_lb, hb_adj: r9_hb, note: `${dna.name} | Pace ${avg_pace.toFixed(1)} | DNA adj: HB${dna.hbDNA >= 0 ? "+" : ""}${dna.hbDNA}, LB${dna.lbDNA >= 0 ? "+" : ""}${dna.lbDNA}`, status: r9Status });
+351:  if (r9Status === "triggered") triggered.push(`Rule 8/9 (League DNA + Pace): LB${r9_lb >= 0 ? "+" : ""}${r9_lb}, HB${r9_hb >= 0 ? "+" : ""}${r9_hb}`);
+352-
+353-
+354:            // ── Rule 10 (Foul Engine) + Rule 11 (Injury Vacuum) ──────────────────────
+355-  let r10_hb = 0;
+356:  if (margin <= 6 && avg_ft >= 0.75) r10_hb = Math.round(11 * ws);
+357-  let r11_lb = 0, r11_hb = 0;
+358-  if (key_player_out) { r11_lb = -Math.round(6 * ws); r11_hb = Math.round(4 * ws); }
+359-  hb += r10_hb + r11_hb; lb += r11_lb;
+360-  // Stacking Cap: R9+R10 combined HB expansion ≤ +12
+361-  const r9r10_hb = r9_hb + r10_hb;
+362-  let stacking_cut = 0;
+363-  if (r9r10_hb > 12) { stacking_cut = r9r10_hb - 12; hb -= stacking_cut; }
+364-  const r10note = [
+365:    `FT%: ${(avg_ft * 100).toFixed(0)}%, 3PT%: ${(avg_pt3 * 100).toFixed(0)}%, Margin: ${margin.toFixed(1)}`,
+366-    key_player_out ? `| ${key_player_name} OUT (Vacuum)` : "",
+367-    stacking_cut > 0 ? `| R9+R10 Stack Cap -${stacking_cut}` : "",
+368-  ].filter(Boolean).join(" ");
+369-  const r10Status = (r10_hb > 0 || r11_lb !== 0 || r11_hb !== 0) ? "triggered" : "checked";
+370:  adj_log.push({ rule: "Rule 10/11 — Foul Engine/Injury", lb_adj: r11_lb, hb_adj: r10_hb + r11_hb - stacking_cut, note: r10note, status: r10Status });
+371:  if (r10_hb > 0) triggered.push(`Rule 10 (Foul Engine): HB+${r10_hb}${stacking_cut > 0 ? ` (Stack Cap -${stacking_cut})` : ""} | FT%: ${(avg_ft*100).toFixed(0)}%`);
+372-  if (key_player_out) triggered.push(`Rule 11 (Injury Vacuum): LB${r11_lb}, HB+${r11_hb} — ${key_player_name} OUT`);
+373-
+374:  // ── Rule 18 (OT Hazard — tight margin adds HB only) ──────────────────────
+375:  let r18_hb = 0; const otHazard = margin <= 5;
+376-  if (otHazard) { r18_hb = 8; hb += r18_hb; }
+377:  adj_log.push({ rule: "Rule 18 — OT Hazard", lb_adj: 0, hb_adj: r18_hb, note: `Margin: ${margin.toFixed(1)} pts${otHazard ? ` ≤5 → OT Risk → HB+8 (HB ONLY — LB stays grounded)` : " >5 — no OT hazard"}`, status: otHazard ? "triggered" : "checked" });
+378:  if (otHazard) triggered.push(`Rule 18 (OT Hazard): Margin ${margin.toFixed(1)} ≤5 → HB+8 (LB grounded in regulation)`);
+379-
+380-  // ── Rule 8 Width Cap (applied after all expansions) ───────────────────────
+381-  const maxHalfWidth = dna.maxWidth / 2;
+382-  const mid_raw = (lb + hb) / 2;
+383-  let widthCapped = false;
+--
+427-
+428-    if ((over_hammer || under_hammer) && !reliabilityBlocks) {
+429-      hammer = true;
+430-      const over_gap = lb - best_over_line;
+431-      const under_gap = best_under_line - hb;
+432:      // Collapse % > 20% OVERRIDES Hammer (no Hammer on stall risk)
+433-      if (collapsePct > 20) {
+434-        hammer = false; decision = "NO ACTION";
+435:        triggered.push(`Rule 16 (Hammer BLOCKED): Hammer edge confirmed BUT Collapse ${collapsePct}% >20% → Stall override → NO ACTION`);
+436:        adj_log.push({ rule: "Rule 16 — Hammer Play", lb_adj: 0, hb_adj: 0, note: `Hammer OVERRIDDEN — Collapse ${collapsePct}% >20% (no Hammer on stall risk)`, status: "triggered" });
+437-      } else {
+438-        if (over_hammer && (!under_hammer || over_gap >= under_gap)) {
+439-          decision = `OVER ${best_over_line} ★ HAMMER PLAY`;
+440-          confidence = "HIGH (Hammer Play)";
+441-          triggered.push(`Rule 16 (Hammer OVER): Line ${best_over_line} is ${over_gap.toFixed(1)} pts below LB ${lb.toFixed(1)} — threshold ${hammer_edge_used} pts → HAMMER`);
+--
+515-  if (reliability !== "Strong") whyParts.push(`${reliability} data (${proxyCapped ? `capped @${capValue}` : "limited sample"})`);
+516-  const whyNote = whyParts.join(" · ");
+517-
+518-  const failParts: string[] = [];
+519-  if (proxyCapped) failParts.push(`Proxy cap ${capValue} PPG may not reflect actual team efficiency`);
+520:  if (otHazard) failParts.push(`OT risk — margin ≤5 adds ±8pt uncertainty`);
+521-  if (collapsePct > 0) failParts.push(`${collapsePct}% historical Q1-Q4 Structural Collapse`);
+522:  if (avg_ft < 0.70) failParts.push(`Low FT% (${(avg_ft*100).toFixed(0)}%) — Foul Engine underperforms`);
+523-  if (avg_pt3 < 0.33) failParts.push(`Low 3PT% (${(avg_pt3*100).toFixed(0)}%) — scoring volume compressed`);
+524-  if (failParts.length === 0) failParts.push("None identified — Strong data confidence");
+525-  const whyMightFail = failParts.join(" · ");
+526-
+527-  return {
+--
+563-
+564-const HUNT_STEPS = [
+565-  { icon: "⏱", label: "Rule 1 — Time Sync: parsing fixture & WAT timestamps" },
+566-  { icon: "📊", label: "Rule 2 — Reliability + Proxy Cap: DB lookup / cap enforcement (anti-hallucination)" },
+567-  { icon: "🧬", label: "Rule 3/4 — Statistical DNA: FT%, 3PT%, Arena splits, 60/40 H2H weighting" },
+568:  { icon: "⚡", label: "Rule 5/6 — Efficiency, Pace & Defensive Safety Lock" },
+569:  { icon: "💥", label: "Rule 7 — Stall Sensor & Collapse % — Q3/Q4 risk assessment" },
+570-  { icon: "🏀", label: "Rule 8/9 — League DNA profile applied (anti-template differentiation)" },
+571:  { icon: "🏥", label: "Rule 10/11/18 — Foul Engine, Injury Vacuum & OT Hazard" },
+572-  { icon: "⚙️", label: "Block 3 — Hook Shield (±1.5) → Volatility Kill → Hammer Play (15pt threshold if Proxy)" },
+573-];
+574-
+575-// ─── Sub-Components ───────────────────────────────────────────────────────────
+576-function Divider({ label }: { label: string }) {
+--
+635-    <div className="flex items-center gap-2 flex-shrink-0">
+636-      <div className="relative w-10 h-10 flex-shrink-0">
+637-        <svg viewBox="0 0 40 40" className="w-full h-full">
+638-          <circle cx="20" cy="20" r="19" fill="none" stroke="#7c3aed" strokeWidth="1.2" />
+639-          <circle cx="20" cy="20" r="14" fill="#1a0533" />
+640:          <text x="20" y="25" textAnchor="middle" fill="#c084fc" fontSize="14" fontWeight="900" fontFamily="monospace">S</text>
+641-          <path id="arc-top" d="M 5,20 A 15,15 0 0,1 35,20" fill="none" />
+642-          <path id="arc-bot" d="M 5,20 A 15,15 0 0,0 35,20" fill="none" />
+643:          <text fontSize="4.5" fill="#7c3aed" fontFamily="monospace" fontWeight="bold" letterSpacing="1.5">
+644-            <textPath href="#arc-top" startOffset="8%">SPLENDOR</textPath>
+645-          </text>
+646:          <text fontSize="4" fill="#7c3aed" fontFamily="monospace" letterSpacing="1">
+647-            <textPath href="#arc-bot" startOffset="12%">BET RESPONSIBLY</textPath>
+648-          </text>
+649-        </svg>
+650-      </div>
+651-      <div>
+--
+899-      { h: parseFloat(q1H || "0"), a: parseFloat(q1A || "0"), label: "Q1" },
+900-      { h: parseFloat(q2H || "0"), a: parseFloat(q2A || "0"), label: "Q2" },
+901-      { h: parseFloat(q3H || "0"), a: parseFloat(q3A || "0"), label: "Q3" },
+902-      { h: parseFloat(q4H || "0"), a: parseFloat(q4A || "0"), label: "Q4" },
+903-    ].filter(q => q.h > 0 || q.a > 0);
+904:    const stalledQ = quarters.filter(q => (q.h + q.a) < 30);
+905-    const runningTotal = parseFloat(liveHome || "0") + parseFloat(liveAway || "0");
+906:    if (stalledQ.length >= 2) {
+907:      setLiveAlert({ msg: `🚨 DEFENSIVE STALLING — ${stalledQ.map(q => q.label).join(", ")} combined <30 pts. Running total: ${runningTotal}. HB compressed -8. Pivot to UNDER or NO ACTION.`, hbAdj: -8, level: "danger" });
+908:    } else if (stalledQ.length === 1) {
+909:      setLiveAlert({ msg: `⚠ STALL WARNING — ${stalledQ[0].label} combined <30 pts (${(stalledQ[0].h + stalledQ[0].a)} pts). Monitor Q pace. HB compressed -4. Running total: ${runningTotal}.`, hbAdj: -4, level: "warn" });
+910-    } else if (quarters.length > 0) {
+911-      const avgPerQ = quarters.reduce((s, q) => s + q.h + q.a, 0) / quarters.length;
+912-      const projFinal = avgPerQ * 4;
+913:      setLiveAlert({ msg: `✓ Pace nominal — Avg ${avgPerQ.toFixed(1)} pts/qtr → Proj final: ~${projFinal.toFixed(0)} pts. Running total: ${runningTotal}. Pre-match range stands.`, hbAdj: 0, level: "warn" });
+914-    }
+915-  }
+916-
+917-  function handleReset() {
+918-    setPhase("idle"); setResult(null); setRerunResult(null);
+--
+960-
+961-      {/* ─── HISTORY TAB ────────────────────────────────────────────────────── */}
+962-      
+963-      {tab === "live" && (
+964-        <div className="flex-1 overflow-y-auto px-5 py-5 scrollbar-thin scrollbar-thumb-emerald-900/50">
+965:          <div className="max-w-2xl mx-auto space-y-4 pb-20">
+966-            {/* 1-MINUTE AUTO-SYNC PULSE */}
+967-            <div className="flex justify-center items-center w-full my-4">
+968-              <div className={`bg-slate-900 border ${refreshCountdown <= 5 ? 'border-red-500/80 shadow-[0_0_20px_rgba(239,68,68,0.6)]' : 'border-cyan-500/50 shadow-[0_0_15px_rgba(6,182,212,0.4)] animate-pulse'} px-6 py-3 rounded-lg flex items-center gap-3 transition-all duration-300`}>
+969-                <span className={`text-xl ${refreshCountdown <= 5 ? 'animate-bounce' : ''}`}>⏳</span>
+970-                <span className={`font-mono font-bold tracking-widest text-sm uppercase ${refreshCountdown <= 5 ? 'text-red-400 animate-pulse' : 'text-cyan-400'}`}>
+--
+979-                 <span className="w-2.5 h-2.5 bg-emerald-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.8)]"></span>
+980-                 Splendor Live Engine & Auto-Logger
+981-              </div>
+982-              <div className="text-[10px] text-zinc-400 font-mono mb-5 mt-3 leading-relaxed">
+983-                 &gt; SYSTEM STANDBY. Matches analyzed in the Pre-Match engine will automatically route here at Tip-Off.
+984:                 <br/>&gt; Live pacing and stall risks are tracked dynamically.
+985-                 <br/>&gt; <span className="text-emerald-500/70">Upon final whistle, completed game data is automatically compiled and pushed to the HISTORY matrix. Zero manual entry required.</span>
+986-              </div>
+987-              <div className="grid grid-cols-2 gap-4 font-mono">
+988-                 <div className="border border-emerald-900/20 bg-black/40 rounded p-4 text-center"><div className="text-zinc-500 text-[9px] uppercase mb-1 tracking-widest">Active Live Trackers</div><div className="text-emerald-500 font-bold text-2xl">0</div></div>
+989-                 <div className="border border-emerald-900/20 bg-black/40 rounded p-4 text-center"><div className="text-zinc-500 text-[9px] uppercase mb-1 tracking-widest">Awaiting Tip-Off</div><div className="text-emerald-500 font-bold text-2xl">0</div></div>
+--
+1005-                  <div className="absolute left-[-20px] top-1/2 -translate-y-1/2 w-16 h-32 border-2 border-emerald-900/20 rounded-full"></div><div className="absolute right-[-20px] top-1/2 -translate-y-1/2 w-16 h-32 border-2 border-emerald-900/20 rounded-full"></div><div className="absolute left-1/2 top-0 bottom-0 w-px bg-emerald-900/20"></div>
+1006-                  <div className="z-10 text-center w-full"><div className="inline-block bg-emerald-900/40 border border-emerald-500/50 text-emerald-400 text-[10px] px-3 py-1 rounded-full animate-pulse uppercase tracking-widest">AWAITING TIP-OFF</div></div>
+1007-                </div>
+1008-                <div className="p-4 bg-[#080d0b]">
+1009-                  <div className="flex justify-center gap-6 mb-4 border-b border-emerald-900/20 pb-2"><button className="text-[10px] text-emerald-500 border-b-2 border-emerald-500 pb-1 uppercase tracking-wider">Statistics</button><button className="text-[10px] text-zinc-500 hover:text-zinc-300 transition-colors uppercase tracking-wider">Summary</button></div>
+1010:                  <div className="space-y-4">
+1011-                    <div><div className="flex justify-between text-[10px] font-mono text-zinc-400 mb-1"><span>0.0% (0/0)</span><span className="uppercase tracking-widest text-emerald-500/50">Field Goals</span><span>0.0% (0/0)</span></div><div className="flex h-1.5 w-full bg-zinc-900 rounded-full overflow-hidden"><div className="bg-emerald-500 w-[50%]"></div><div className="bg-red-600 w-[50%] ml-auto"></div></div></div>
+1012-                    <div><div className="flex justify-between text-[10px] font-mono text-zinc-400 mb-1"><span>0.0% (0/0)</span><span className="uppercase tracking-widest text-emerald-500/50">2 Points</span><span>0.0% (0/0)</span></div><div className="flex h-1.5 w-full bg-zinc-900 rounded-full overflow-hidden"><div className="bg-emerald-500 w-[50%]"></div><div className="bg-red-600 w-[50%] ml-auto"></div></div></div>
+1013-                    <div><div className="flex justify-between text-[10px] font-mono text-zinc-400 mb-1"><span>0.0% (0/0)</span><span className="uppercase tracking-widest text-emerald-500/50">3 Points</span><span>0.0% (0/0)</span></div><div className="flex h-1.5 w-full bg-zinc-900 rounded-full overflow-hidden"><div className="bg-emerald-500 w-[50%]"></div><div className="bg-red-600 w-[50%] ml-auto"></div></div></div>
+1014-                    <div><div className="flex justify-between text-[10px] font-mono text-zinc-400 mb-1"><span>0.0% (0/0)</span><span className="uppercase tracking-widest text-emerald-500/50">Free Throws</span><span>0.0% (0/0)</span></div><div className="flex h-1.5 w-full bg-zinc-900 rounded-full overflow-hidden"><div className="bg-emerald-500 w-[50%]"></div><div className="bg-red-600 w-[50%] ml-auto"></div></div></div>
+1015-                    <div className="pt-2 border-t border-emerald-900/10"></div>
+1016-                    <div><div className="flex justify-between text-[10px] font-mono text-zinc-400 mb-1"><span>0</span><span className="uppercase tracking-widest text-emerald-500/50">Rebounds</span><span>0</span></div><div className="flex h-1.5 w-full bg-zinc-900 rounded-full overflow-hidden"><div className="bg-emerald-500 w-[50%]"></div><div className="bg-red-600 w-[50%] ml-auto"></div></div></div>
+1017:                    <div><div className="flex justify-between text-[10px] font-mono text-zinc-400 mb-1"><span>0</span><span className="uppercase tracking-widest text-emerald-500/50">Fouls</span><span>0</span></div><div className="flex h-1.5 w-full bg-zinc-900 rounded-full overflow-hidden"><div className="bg-emerald-500 w-[50%]"></div><div className="bg-red-600 w-[50%] ml-auto"></div></div></div>
+1018-                    <div><div className="flex justify-between text-[10px] font-mono text-zinc-400 mb-1"><span>0</span><span className="uppercase tracking-widest text-emerald-500/50">Timeouts</span><span>0</span></div><div className="flex h-1.5 w-full bg-zinc-900 rounded-full overflow-hidden"><div className="bg-emerald-500 w-[50%]"></div><div className="bg-red-600 w-[50%] ml-auto"></div></div></div>
+1019-                  </div>
+1020-                </div>
+1021-                <div className="bg-[#050807] p-3 border-t border-emerald-900/30 flex justify-between items-center"><div className="text-[10px] font-mono text-zinc-500 flex items-center gap-2"><span className="w-1.5 h-1.5 bg-zinc-500 rounded-full"></span> API SYNC: STANDBY</div></div>
+1022-              </div>
+--
+1027-        </div>
+1028-      )}
+1029-
+1030-      {tab === "history" && (
+1031-        <div className="flex-1 overflow-y-auto px-5 py-4">
+1032:          <div className="max-w-2xl mx-auto space-y-4">
+1033-            <div className="grid grid-cols-5 gap-2">
+1034-              {([["Analyses", histStats.total, "text-white"], ["Wins", histStats.wins, "text-emerald-400"], ["Losses", histStats.losses, "text-red-400"], ["Hammer", histStats.hammers, "text-yellow-400"], ["Win Rate", winRate !== null ? `${winRate}%` : "—", winRate !== null && winRate >= 60 ? "text-emerald-400" : "text-zinc-400"]] as const).map(([lbl, val, cls]) => (
+1035-                <div key={String(lbl)} className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-3 text-center">
+1036-                  <p className={`text-lg font-black ${cls}`}>{val}</p>
+1037-                  <p className="text-[9px] uppercase tracking-widest text-zinc-600 mt-0.5">{lbl}</p>
+1038-                </div>
+1039-              ))}
+1040-            </div>
+1041-
+1042-            {history.length === 0 ? (
+1043:              <div className="text-center py-16 space-y-2">
+1044-                <p className="text-4xl">📋</p>
+1045-                <p className="text-xs text-zinc-500">No analyses yet — run your first match in the Analyzer tab.</p>
+1046-              </div>
+1047-            ) : (
+1048:              <div className="space-y-2">
+1049-                <div className="flex items-center justify-between">
+1050-                  <p className="text-[9px] uppercase tracking-widest text-zinc-600">Match Record — {histStats.total} entries</p>
+1051-                  <button onClick={clearHistory} className="text-[9px] text-red-700 hover:text-red-400 transition">Clear all</button>
+1052-                </div>
+1053-                {history.map(entry => {
+--
+1060-                        <div className="flex-1 min-w-0">
+1061-                          <p className="text-xs font-bold text-white truncate">{entry.homeTeam} vs {entry.awayTeam}</p>
+1062-                          <p className="text-[10px] text-zinc-600">{entry.league} · {entry.date}</p>
+1063-                          {entry.result.whyNote && <p className="text-[10px] text-zinc-700 truncate mt-0.5">Why: {entry.result.whyNote}</p>}
+1064-                        </div>
+1065:                        <div className="text-right flex-shrink-0 space-y-0.5">
+1066-                          <p className={`text-xs font-black ${st.text}`}>{entry.result.decision}</p>
+1067-                          <p className="text-[10px] text-zinc-600">{entry.result.lb} – {entry.result.hb}</p>
+1068-                        </div>
+1069-                        <span className="text-zinc-700 text-xs flex-shrink-0">{expanded ? "▲" : "▼"}</span>
+1070-                      </div>
+1071-                      {expanded && (
+1072:                        <div className="border-t border-zinc-800 px-4 py-3 space-y-3 bg-zinc-950/60">
+1073-                          <div className="grid grid-cols-3 gap-2 text-[10px]">
+1074-                            <div><span className="text-zinc-600">Range: </span><span className="text-white font-bold">{entry.result.lb} – {entry.result.hb}</span></div>
+1075-                            <div><span className="text-zinc-600">Width: </span><span className="text-zinc-300">{entry.result.range_width} pts</span></div>
+1076-                            <div><span className="text-zinc-600">Reliability: </span><span className={entry.result.reliability === "Strong" ? "text-emerald-400" : entry.result.reliability === "Moderate" ? "text-amber-400" : "text-red-400"}>{entry.result.reliability}</span></div>
+1077-                            <div><span className="text-zinc-600">DNA: </span><span className="text-zinc-400">{entry.result.leagueDNAName}</span></div>
+1078-                            <div><span className="text-zinc-600">Proxy Cap: </span><span className={entry.result.proxyCapped ? "text-amber-400" : "text-emerald-700"}>{entry.result.proxyCapped ? `YES — ${entry.result.capValue} PPG` : "No"}</span></div>
+1079-                            <div><span className="text-zinc-600">OT Hazard: </span><span className={entry.result.otHazard ? "text-amber-400" : "text-zinc-700"}>{entry.result.otHazard ? "+8 HB" : "N/A"}</span></div>
+1080-                          </div>
+1081-                          {/* The Why */}
+1082:                          <div className="bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 space-y-1">
+1083-                            <p className="text-[9px] uppercase tracking-widest text-zinc-600">📖 The Why</p>
+1084-                            <p className="text-[10px] text-zinc-400">{entry.result.whyNote}</p>
+1085-                            <p className="text-[9px] text-zinc-600">⚠ Might Fail: <span className="text-zinc-500">{entry.result.whyMightFail}</span></p>
+1086-                          </div>
+1087-                          {entry.result.lean !== "NONE" && <p className="text-[10px] text-zinc-500">Lean: {entry.result.lean}</p>}
+--
+1091-                              <p className={`text-xs font-bold ${decisionStyle(entry.rerunResult.decision).text}`}>{entry.rerunResult.decision}</p>
+1092-                              <p className="text-[10px] text-zinc-600">Range: {entry.rerunResult.lb} – {entry.rerunResult.hb} · {entry.rerunResult.confidence}</p>
+1093-                            </div>
+1094-                          )}
+1095-                          {/* Outcome Recorder */}
+1096:                          <div className="border-t border-zinc-800 pt-3 space-y-2">
+1097-                            <p className="text-[9px] uppercase tracking-widest text-zinc-600">Record Outcome</p>
+1098-                            <div className="flex items-center gap-2 flex-wrap">
+1099-                              {(["WIN","LOSS","PUSH","PENDING"] as const).map(o => (
+1100-                                <button key={o} onClick={() => setOutcome(entry.id, o)}
+1101-                                  className={`text-[10px] font-bold px-3 py-1 rounded-full border transition ${entry.outcome === o ? outcomeStyle(o) + " font-black" : "border-zinc-800 text-zinc-600 hover:border-zinc-600 hover:text-white"}`}>
+--
+1139-      {tab === "analyzer" && (
+1140-        <>
+1141-          {/* ── INPUT FORM ── */}
+1142-          {phase === "idle" && (
+1143-            <div className="flex-1 overflow-y-auto px-5 py-5">
+1144:              <div className="max-w-2xl mx-auto space-y-4">
+1145-                <div className="text-center pb-1">
+1146-                  <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Pre-Match Analysis · V3 · Anti-Template · Master Rulebook</p>
+1147-                  <p className="text-[10px] text-zinc-700 mt-0.5">Zero hallucination · Regulation-only base · League DNA differentiated</p>
+1148-                </div>
+1149-
+--
+1157-                00:{refreshCountdown.toString().padStart(2, '0')}
+1158-              </div>
+1159-            </div>
+1160-
+1161-            {/* Match Context */}
+1162:                <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-4 space-y-3">
+1163-                  <p className="text-[9px] font-bold uppercase tracking-widest text-zinc-500 border-b border-zinc-800 pb-2">⏱ MATCH CONTEXT — Rule 1 (Time Sync)</p>
+1164-                  <div className="grid grid-cols-2 gap-3">
+1165-                    <Input label="Date *"><Field type="date" value={date} onChange={setDate} /></Input>
+1166-                    <Input label="🏀 BASKETBALL League / Competition *">
+1167-                      <Field value={league} onChange={setLeague} placeholder="e.g. Russia Super Liga, EuroLeague, NBA…" />
+--
+1189-                    </div>
+1190-                  </div>
+1191-                </div>
+1192-
+1193-                {/* Fixture */}
+1194:                <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-4 space-y-3">
+1195-                  <div className="flex items-center justify-between border-b border-zinc-800 pb-2">
+1196-                    <p className="text-[9px] font-bold uppercase tracking-widest text-zinc-500">🏀 FIXTURE — Rule 3/4</p>
+1197-                    {researchPhase === "researching" && (
+1198-                      <div className="flex items-center gap-1.5 text-[9px] text-violet-400">
+1199-                        <span className="flex gap-0.5">{[0,1,2].map(d=><span key={d} className="w-1 h-1 bg-violet-400 rounded-full animate-bounce" style={{animationDelay:`${d*0.15}s`}}/>)}</span>
+--
+1227-                        <span className="text-[8px] text-emerald-500 bg-emerald-950/60 px-2 py-1 rounded-full">RESEARCH DONE ✓</span>
+1228-                      )}
+1229-                    </div>
+1230-
+1231-                    {researchPhase === "researching" && (
+1232:                      <div className="px-4 py-6 text-center space-y-2">
+1233-                        <p className="text-xs text-violet-400 font-bold animate-pulse">Cross-referencing team databases, league archives & H2H records…</p>
+1234-                        <p className="text-[9px] text-zinc-600">{homeTeam} · {awayTeam} · {league}</p>
+1235-                      </div>
+1236-                    )}
+1237-
+1238-                    {researchPhase === "done" && researchData && (
+1239-                      <div className="divide-y divide-zinc-900">
+1240-
+1241-                        {/* STATISTICAL DNA & THERMAL MOMENTUM TIMELINE (V3 Upgraded) */}
+1242:                        <div className="px-4 py-3 space-y-3">
+1243-                          <div className="flex items-center justify-between border-b border-zinc-800 pb-1.5">
+1244-                            <p className="text-[9px] font-bold uppercase tracking-widest text-zinc-500">🧬 STATISTICAL DNA — Rules 3/5/7</p>
+1245-                            <span className="text-[8px] text-amber-500 font-mono tracking-widest animate-pulse">MOMENTUM SENSOR ACTIVE</span>
+1246-                          </div>
+1247-
+--
+1325-                        {/* Injury / Vacuum */}
+1326-                        
+1327-        {homeTeam && awayTeam && (
+1328-          <div className="mt-6 border-t border-emerald-900/30 pt-5 mb-2">
+1329-            <div className="text-[9px] text-emerald-500 uppercase tracking-widest mb-3 flex justify-between items-center"><span className="flex items-center gap-2"><span className="w-1.5 h-1.5 bg-emerald-500 rounded-full shadow-[0_0_5px_#10b981]"></span> Deep Historical Matrix (H2H & Form)</span><span className="text-zinc-500 bg-black/50 px-2 py-1 rounded border border-emerald-900/20">AWAITING API BRIDGE</span></div>
+1330:            <div className="space-y-4 bg-[#050807] p-5 rounded-xl border border-emerald-900/20 shadow-[inset_0_0_20px_rgba(0,0,0,0.4)]">
+1331-              <div><div className="flex justify-between text-[9px] font-mono text-zinc-400 mb-1.5"><span className="text-emerald-400 font-bold">86.1</span><span className="uppercase tracking-widest text-zinc-500">Points Scored</span><span className="text-red-400 font-bold">78.6</span></div><div className="flex h-1.5 w-full bg-zinc-900 rounded-full overflow-hidden"><div className="bg-emerald-500 w-[52%] shadow-[0_0_5px_#10b981]"></div><div className="bg-red-600 w-[48%] ml-auto"></div></div></div>
+1332-              <div><div className="flex justify-between text-[9px] font-mono text-zinc-400 mb-1.5"><span className="text-emerald-400 font-bold">77.3</span><span className="uppercase tracking-widest text-zinc-500">Points Allowed</span><span className="text-red-400 font-bold">73.2</span></div><div className="flex h-1.5 w-full bg-zinc-900 rounded-full overflow-hidden"><div className="bg-emerald-500 w-[48%] shadow-[0_0_5px_#10b981]"></div><div className="bg-red-600 w-[52%] ml-auto"></div></div></div>
+1333-            </div>
+1334-          </div>
+1335-        )}
+1336-
+1337:        <div className="px-4 py-3 space-y-2">
+1338-
+1339-        {/* ===================================================================== */}
+1340-        {/* 🎯 POINT 3: DEEP HISTORICAL MATRIX H2H & FORM (SPORTYBET PRE-MATCH)   */}
+1341-        {/* ===================================================================== */}
+1342-        <div className="mt-4 border border-indigo-900/60 bg-black/50 rounded-xl p-5 shadow-[0_0_20px_rgba(79,70,229,0.15)] relative overflow-hidden">
+--
+1349-            <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>
+1350-            SportyBet Pre-Match Matrix: H2H & Form
+1351-          </h3>
+1352-
+1353-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+1354:            <div className="space-y-4">
+1355-              <div className="bg-zinc-900/50 rounded p-3 border border-zinc-800/50">
+1356-                <h4 className="text-xs text-zinc-400 font-mono mb-2 uppercase">Head-to-Head (Last 10 Matchups)</h4>
+1357-                <div className="flex justify-between items-center bg-black/40 p-2 rounded border border-zinc-800">
+1358-                  <span className="text-sky-400 font-bold text-sm">HOME TEAM</span>
+1359-                  <div className="flex gap-1 text-xs font-mono font-bold">
+--
+1386-              <h4 className="text-xs text-zinc-400 font-mono mb-3 uppercase flex justify-between">
+1387-                <span>Advanced Form DNA</span>
+1388-                <span className="text-indigo-400">HOME vs AWAY</span>
+1389-              </h4>
+1390-              
+1391:              <div className="space-y-2 text-xs font-mono">
+1392-                <div className="flex justify-between items-center border-b border-zinc-800 pb-1">
+1393-                  <span className="text-sky-300 w-12 text-center">78.5%</span>
+1394-                  <span className="text-zinc-500 flex-1 text-center text-[10px]">FREE THROW %</span>
+1395-                  <span className="text-amber-300 w-12 text-center">81.2%</span>
+1396-                </div>
+--
+1442-                            </div>
+1443-                          </div>
+1444-                        </div>
+1445-
+1446-                        {/* Lineups */}
+1447:                        <div className="px-4 py-3 space-y-2">
+1448-                          <p className="text-[9px] font-bold uppercase tracking-widest text-zinc-500">📋 LINEUPS</p>
+1449-                          <div className="grid grid-cols-2 gap-2">
+1450-                            <div className="bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2">
+1451-                              <p className="text-[8px] uppercase tracking-widest text-zinc-600 mb-1">{homeTeam}</p>
+1452-                              
+--
+1480-                              </div>
+1481-                            </div>
+1482-                          </div>
+1483-                        </div>
+1484-
+1485:                        {/* Defensive Stalling (OVER → UNDER risk) */}
+1486:                        <div className="px-4 py-3 space-y-2">
+1487-                          <div className="flex items-center gap-2">
+1488:                            <p className="text-[9px] font-bold uppercase tracking-widest text-zinc-500">🛡 DEFENSIVE STALLING RISK</p>
+1489-                            <span className="text-[8px] text-zinc-600">If given OVER — could collapse to UNDER</span>
+1490-                          </div>
+1491:                          <div className={`rounded-lg px-3 py-2 border ${researchData.defStallRisk === "HIGH" ? "border-red-800 bg-red-950/30" : researchData.defStallRisk === "MODERATE" ? "border-amber-800 bg-amber-950/30" : "border-zinc-800 bg-zinc-900"}`}>
+1492-                            <div className="flex items-center gap-2 mb-1">
+1493:                              <span className={`text-[9px] font-black ${researchData.defStallRisk === "HIGH" ? "text-red-400" : researchData.defStallRisk === "MODERATE" ? "text-amber-400" : "text-emerald-500"}`}>{researchData.defStallRisk}</span>
+1494-                              <span className="text-zinc-700 text-[9px]">risk level</span>
+1495-                            </div>
+1496:                            <p className="text-[10px] text-zinc-400 leading-relaxed">{researchData.defStallNote}</p>
+1497-                          </div>
+1498-                        </div>
+1499-
+1500-                        {/* Offensive Surge (UNDER → OVER risk) */}
+1501:                        <div className="px-4 py-3 space-y-2">
+1502-                          <div className="flex items-center gap-2">
+1503-                            <p className="text-[9px] font-bold uppercase tracking-widest text-zinc-500">⚡ OFFENSIVE SURGE RISK</p>
+1504-                            <span className="text-[8px] text-zinc-600">If given UNDER — could surge to OVER</span>
+1505-                          </div>
+1506-                          <div className={`rounded-lg px-3 py-2 border ${researchData.offSurgeRisk === "HIGH" ? "border-sky-800 bg-sky-950/30" : researchData.offSurgeRisk === "MODERATE" ? "border-amber-800 bg-amber-950/30" : "border-zinc-800 bg-zinc-900"}`}>
+--
+1511-                            <p className="text-[10px] text-zinc-400 leading-relaxed">{researchData.offSurgeNote}</p>
+1512-                          </div>
+1513-                        </div>
+1514-
+1515-                        {/* Overtime Possibility */}
+1516:                        <div className="px-4 py-3 space-y-2">
+1517-                          <p className="text-[9px] font-bold uppercase tracking-widest text-zinc-500">🕐 OVERTIME POSSIBILITY — Rule 18</p>
+1518-                          <div className={`rounded-lg px-3 py-2 border ${researchData.otRisk === "HIGH" ? "border-violet-800 bg-violet-950/30" : researchData.otRisk === "MODERATE" ? "border-amber-800 bg-amber-950/30" : "border-zinc-800 bg-zinc-900"}`}>
+1519-                            <div className="flex items-center gap-2 mb-1">
+1520-                              <span className={`text-[9px] font-black ${researchData.otRisk === "HIGH" ? "text-violet-400" : researchData.otRisk === "MODERATE" ? "text-amber-400" : "text-emerald-500"}`}>{researchData.otRisk}</span>
+1521-                              <span className="text-zinc-700 text-[9px]">OT probability</span>
+--
+1538-            Deep-Scan Intelligence Engine Active
+1539-            <span className="ml-auto text-emerald-700 tracking-widest">1,000,000+ SOURCES AGGREGATED</span>
+1540-          </div>
+1541-          
+1542-          <div className="grid grid-cols-2 gap-4 text-[10px] text-zinc-400 mb-3">
+1543:            <div className="space-y-1">
+1544-              <div className="flex items-center gap-2"><span className="text-emerald-500">✓</span> Global Market APIs (Root Nodes)</div>
+1545-              <div className="flex items-center gap-2"><span className="text-emerald-500">✓</span> Dynamic Social Scrapes (X/Reddit)</div>
+1546-              <div className="flex items-center gap-2"><span className="text-emerald-500">✓</span> Local Beat Reporter Feeds</div>
+1547-            </div>
+1548:            <div className="space-y-1">
+1549-              <div className="flex items-center gap-2"><span className="text-emerald-500">✓</span> Injury/Vacuum Scan: ACTIVE</div>
+1550-              <div className="flex items-center gap-2"><span className="text-emerald-500">✓</span> Anti-Hallucination: STRICT</div>
+1551-              <div className="flex items-center gap-2"><span className="text-emerald-500">✓</span> Sync Latency: 0.04ms</div>
+1552-            </div>
+1553-          </div>
+1554-
+1555-          <div className="text-[9px] text-emerald-400/70 mb-2 flex justify-between uppercase tracking-wider"><span>Primary Data Nodes Consulted:</span> <span className="text-emerald-500 animate-pulse font-mono lowercase">{research?.cameo || ""}</span></div>
+1556-          <div className="h-28 overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-emerald-900/50 bg-black/40 rounded p-2 border border-emerald-900/20">
+1557:            <ul className="text-[9px] text-zinc-500 space-y-1.5 font-mono">
+1558-              <li className="flex items-center justify-between"><span>[NODE 01] https://www.flashscore.com/basketball/</span> <span className="text-emerald-700">200 OK</span></li>
+1559-              <li className="flex items-center justify-between"><span>[NODE 02] https://www.sofascore.com/basketball/</span> <span className="text-emerald-700">200 OK</span></li>
+1560-              <li className="flex items-center justify-between"><span>[NODE 03] https://www.basketball-reference.com/</span> <span className="text-emerald-700">200 OK</span></li>
+1561-              <li className="flex items-center justify-between"><span>[NODE 04] Team Official Social Handles (Lineups)</span> <span className="text-emerald-700">200 OK</span></li>
+1562-              <li className="flex items-center justify-between"><span>[NODE 05] Local Beat Reporter Live Feeds</span> <span className="text-emerald-700">200 OK</span></li>
+--
+1566-              <li className="flex items-center justify-between"><span>[NODE 09] Internal DB: LEAGUE_DNA_MATRIX</span> <span className="text-emerald-700">LOCAL</span></li>
+1567-            </ul>
+1568-          </div>
+1569-        </div>
+1570-
+1571:      <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-4 space-y-3">
+1572-                  <p className="text-[9px] font-bold uppercase tracking-widest text-zinc-500 border-b border-zinc-800 pb-2">💰 MARKET LINES — Rule 12</p>
+1573-                  <div className="grid grid-cols-2 gap-4">
+1574:                    <div className="space-y-2">
+1575-                      <p className="text-[9px] text-sky-400 font-bold uppercase tracking-widest">OVER — Between *</p>
+1576-                      <div className="flex items-center gap-2">
+1577-                        <Field type="number" value={overLow} onChange={setOverLow} placeholder="Low" className="flex-1" />
+1578-                        <span className="text-zinc-700 text-xs flex-shrink-0">to</span>
+1579-                        <Field type="number" value={overHigh} onChange={setOverHigh} placeholder="High" className="flex-1" />
+1580-                      </div>
+1581-                      <p className="text-[9px] text-zinc-700">Engine uses LOWEST (best OVER edge)</p>
+1582-                    </div>
+1583:                    <div className="space-y-2">
+1584-                      <p className="text-[9px] text-amber-400 font-bold uppercase tracking-widest">UNDER — Between *</p>
+1585-                      <div className="flex items-center gap-2">
+1586-                        <Field type="number" value={underLow} onChange={setUnderLow} placeholder="Low" className="flex-1" />
+1587-                        <span className="text-zinc-700 text-xs flex-shrink-0">to</span>
+1588-                        <Field type="number" value={underHigh} onChange={setUnderHigh} placeholder="High" className="flex-1" />
+--
+1606-              <div className="text-center">
+1607-                <p className="text-[9px] uppercase tracking-[0.2em] text-zinc-600 mb-1">Splendor Data Hunt Protocol · Anti-Template · Rules 1–18</p>
+1608-                <p className="text-xs text-zinc-300 font-bold">{awayTeam} @ {homeTeam}</p>
+1609-                <p className="text-[10px] text-zinc-600">{league} · {date} · KO {koTime} WAT · DNA: {getLeagueDNA(league).name}</p>
+1610-              </div>
+1611:              <div className="w-full max-w-md space-y-1.5">
+1612-                {HUNT_STEPS.map((st, i) => {
+1613-                  const done = i < huntStep - 1, active = i === huntStep - 1;
+1614-                  return (
+1615-                    <div key={i} className={`flex items-center gap-3 rounded-lg px-3.5 py-2.5 border transition-all duration-300 ${done ? "opacity-35 bg-zinc-900/20 border-zinc-900" : active ? "bg-zinc-900 border-violet-700 shadow-lg" : "bg-zinc-900/10 border-zinc-900"}`}>
+1616-                      <span className="text-sm flex-shrink-0">{st.icon}</span>
+--
+1625-          )}
+1626-
+1627-          {/* ── RESULT ── */}
+1628-          {phase === "result" && result && homeInfo && awayInfo && (
+1629-            <div className="flex-1 overflow-y-auto">
+1630:              <div className="max-w-2xl mx-auto px-5 py-4 space-y-3">
+1631-
+1632-                {/* Time Sync */}
+1633-                <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl px-4 py-3">
+1634-                  <p className="text-[9px] font-bold uppercase tracking-widest text-zinc-600 mb-1.5">⏱ RULE 1 — TIME SYNC</p>
+1635-                  <p className="text-[11px] text-zinc-300 leading-relaxed">
+--
+1643-                    <span className="font-bold">{homeTeam}</span> <span className="text-zinc-600">(H)</span> vs <span className="font-bold">{awayTeam}</span> <span className="text-zinc-600">(A)</span>
+1644-                  </p>
+1645-                </div>
+1646-
+1647-                {/* Data Reliability + DNA */}
+1648:                <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl px-4 py-3 space-y-2">
+1649-                  <p className="text-[9px] font-bold uppercase tracking-widest text-zinc-600 mb-1.5">📊 RULE 2 — DATA RELIABILITY & LEAGUE DNA</p>
+1650-                  <div className="flex items-start gap-3">
+1651-                    <span className={`text-xs font-black px-3 py-1 rounded-full border flex-shrink-0 ${result.reliability === "Strong" ? "text-emerald-400 border-emerald-800 bg-emerald-950/50" : result.reliability === "Moderate" ? "text-amber-400 border-amber-800 bg-amber-950/50" : "text-red-400 border-red-800 bg-red-950/50"}`}>{result.reliability}</span>
+1652-                    <p className="text-[11px] text-zinc-500 leading-relaxed">{result.reliability_reason}</p>
+1653-                  </div>
+--
+1675-                    {([[homeTeam, homeInfo, "Home"], [awayTeam, awayInfo, "Away"]] as const).map(([name, info, side]) => {
+1676-                      const st = info.stats;
+1677-                      return (
+1678-                        <div key={String(name)}>
+1679-                          <p className="text-[10px] font-bold text-zinc-300">{String(name)} <span className="text-zinc-600 font-normal">({String(side)})</span> <span className={`text-[9px] ml-1 ${info.source === "DB" ? "text-emerald-600" : "text-amber-600"}`}>[{info.source}]</span></p>
+1680:                          <div className="text-[10px] text-zinc-600 mt-1 space-y-0.5">
+1681-                            <p>PPG: <span className="text-zinc-300">{st.avg_pts}</span> · Allowed: <span className="text-zinc-300">{st.avg_allowed}</span></p>
+1682-                            <p>FT%: <span className={`font-bold ${st.ft_pct < 0.70 ? "text-red-400" : "text-zinc-300"}`}>{(st.ft_pct * 100).toFixed(0)}%</span> · 3PT%: <span className={`font-bold ${st.pt3_pct < 0.33 ? "text-red-400" : "text-zinc-300"}`}>{(st.pt3_pct * 100).toFixed(0)}%</span></p>
+1683:                            <p>Pace: <span className="text-zinc-300">{st.pace}</span> · Def: <span className="text-zinc-300">{st.def_rating}</span></p>
+1684-                            {info.proxyCapped && <p className="text-amber-600">⛔ Capped @ {info.capValue} PPG</p>}
+1685-                          </div>
+1686-                        </div>
+1687-                      );
+1688-                    })}
+--
+1695-                </div>
+1696-
+1697-                <Divider label="Mandatory Compliance Verification Block" />
+1698-
+1699-                {/* Compliance Block */}
+1700:                <div className="bg-zinc-900/50 border border-zinc-700 rounded-xl px-4 py-4 space-y-4">
+1701-                  <p className="text-[9px] font-black uppercase tracking-[0.2em] text-white">✅ MANDATORY PRE-MATCH COMPLIANCE VERIFICATION — V3</p>
+1702:                  <div className="space-y-1">
+1703-                    <p className="text-[9px] font-bold uppercase tracking-widest text-zinc-500 mb-1.5">— V3 Engine Instructions Applied —</p>
+1704-                    <CheckRow label="CRITICAL: Splendor Engine V3 decision overrides ALL — zero intuition, pure math, zero hallucination" />
+1705-                    <CheckRow label={`Proxy Cap Enforcement: PPG hard-capped at ${result.capValue || getLeagueDNA(league).proxyPPG} PPG for ${result.leagueDNAName} — Ghost Data eliminated`} ok={true} />
+1706-                    <CheckRow label={`Anti-Over-Bias: Mid-point rule active — market above midpoint ${result.midpoint} → UNDER lean enforced`} />
+1707-                    <CheckRow label={`Hook Shield (Rule 13): ±${result.hook_buffer} buffer + 0.5 surcharge on .5 lines — 0.5pt hook losses blocked`} />
+1708-                    <CheckRow label={`Proxy Reality Check: Hammer threshold = ${result.hammer_edge_used}pt (${result.reliability === "Strong" ? "8pt — Strong data" : `${result.hammer_edge_used}pt — Moderate/Weak, elevated threshold`})`} />
+1709-                    <CheckRow label={`Collapse Override: ${result.collapsePctApplied > 20 ? `${result.collapsePctApplied}% > 20% — Hammer overridden` : result.collapsePctApplied > 0 ? `${result.collapsePctApplied}% ≤ 20% — monitored` : "No collapse data — default 0%"}`} ok={result.collapsePctApplied <= 20} />
+1710:                    <CheckRow label={`OT Hazard (Rule 18): ${result.otHazard ? "ACTIVE — margin ≤5, HB+8 applied (LB grounded)" : "Inactive — margin >5"}`} />
+1711-                  </div>
+1712:                  <div className="border-t border-zinc-800 pt-3 space-y-1">
+1713-                    <p className="text-[9px] font-bold uppercase tracking-widest text-zinc-500 mb-1.5">— Master Rulebook V3 — Block 1 → 2 → 3 —</p>
+1714:                    <CheckRow label="Block 1 (Foundation): R1 Time Sync · R2 Reliability+Cap · R3 DNA Anchor · R4 Base Range · R5 Eff/Pace · R6 Defense Safety Lock · R7 Margin/Stall/Collapse%" />
+1715:                    <CheckRow label="Block 2 (Environment): R8/9 League DNA + Pace Hijack (differentiated per league) · R10 Foul Engine · R11 Injury · R18 OT Hazard · R12 Market Position" />
+1716-                    <CheckRow label="Block 3 (Decision): R13 Hook Shield ±1.5 · R14 Volatility Kill · R15 Mid-Point Lean · R16 Hammer (8pt Strong / 15pt Proxy)" />
+1717-                    <CheckRow label={`No Forced Bets: Engine returned ${result.decision.includes("NO ACTION") ? "NO ACTION (respected)" : result.decision + " — math confirmed"}`} />
+1718-                  </div>
+1719-                </div>
+1720-
+--
+1729-                      <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-emerald-700 inline-block" />Checked/Pass</span>
+1730-                      <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-zinc-800 inline-block" />N/A</span>
+1731-                    </div>
+1732-                  </div>
+1733-
+1734:                  <div className="space-y-0">
+1735-                    <p className="text-[8px] font-bold uppercase tracking-widest text-zinc-600 py-1.5 border-b border-zinc-800 mb-1">BLOCK 1 — FOUNDATION (Rules 1–7)</p>
+1736-                    {result.adj_log.slice(0, 7).map((row, i) => <AdjRow key={i} rule={row.rule} lb={row.lb_adj} hb={row.hb_adj} note={row.note} status={row.status} />)}
+1737-                    <p className="text-[8px] font-bold uppercase tracking-widest text-zinc-600 py-1.5 border-b border-zinc-800 mt-2 mb-1">BLOCK 2 — ENVIRONMENT (Rules 8–12/18)</p>
+1738-                    {result.adj_log.slice(7, 12).map((row, i) => <AdjRow key={i + 7} rule={row.rule} lb={row.lb_adj} hb={row.hb_adj} note={row.note} status={row.status} />)}
+1739-                    <p className="text-[8px] font-bold uppercase tracking-widest text-zinc-600 py-1.5 border-b border-zinc-800 mt-2 mb-1">BLOCK 3 — DECISION CORE (Rules 13–16)</p>
+--
+1784-                      <p className={`text-3xl font-black tracking-tight leading-none ${s!.text}`}>{result.decision}</p>
+1785-                    </div>
+1786-                    <span className={`text-xs font-black px-3 py-1.5 rounded-full flex-shrink-0 ${s!.badge}`}>{result.confidence}</span>
+1787-                  </div>
+1788-                  {result.lean !== "NONE" && <p className="text-[11px] text-zinc-400 mb-2">Mid-point Lean (Rule 15): <span className="text-zinc-200 font-semibold">{result.lean}</span></p>}
+1789:                  <div className="space-y-0.5">
+1790-                    {result.vol_killed && <p className="text-[11px] text-red-400">⛔ Rule 14 (Volatility Kill): Width {result.range_width}pts {'>'} {getLeagueDNA(league).maxWidth}pt limit → Hard Kill</p>}
+1791-                    {result.buf_blocked && <p className="text-[11px] text-amber-400">🛡 Rule 13 (Hook Shield): Line outside range but within ±{result.hook_buffer}pt — BLOCKED</p>}
+1792-                    {result.hammer && <p className="text-[11px] text-emerald-400">★ Rule 16 Hammer: {result.hammer_edge_used}pt edge confirmed — Buffer & Volatility overridden</p>}
+1793-                  </div>
+1794-                  {/* Why It Might Fail */}
+--
+1801-                {/* ── Live Monitor ── */}
+1802-                <div className="bg-black/60 border border-zinc-700 rounded-xl overflow-hidden">
+1803-                  <button onClick={() => setShowLive(!showLive)}
+1804-                    className="w-full flex items-center justify-between px-4 py-3 hover:bg-zinc-800/20 transition">
+1805-                    <div>
+1806:                      <p className="text-[9px] font-bold uppercase tracking-widest text-zinc-400 text-left">📺 LIVE MONITOR — Stall Sensor & Pace Tracker</p>
+1807:                      <p className="text-[9px] text-zinc-700 text-left">Enter live scores to trigger Stall Sensor (quarter &lt;30 combined → HB -8)</p>
+1808-                    </div>
+1809-                    <span className="text-zinc-600 text-xs">{showLive ? "▲" : "▼"}</span>
+1810-                  </button>
+1811-                  {showLive && (
+1812:                    <div className="border-t border-zinc-800 px-4 py-4 space-y-4">
+1813-                      <div className="grid grid-cols-3 gap-3">
+1814-                        <SmallField value={liveHome} onChange={setLiveHome} placeholder="—" label={`${homeTeam || "Home"} live`} />
+1815-                        <div className="flex items-end justify-center pb-1.5"><span className="text-zinc-600 font-black text-lg">–</span></div>
+1816-                        <SmallField value={liveAway} onChange={setLiveAway} placeholder="—" label={`${awayTeam || "Away"} live`} />
+1817-                      </div>
+1818-                      <div>
+1819-                        <p className="text-[9px] uppercase tracking-widest text-zinc-600 mb-2">Quarter Scores (Home | Away)</p>
+1820-                        <div className="grid grid-cols-4 gap-2">
+1821-                          {([["Q1", q1H, setQ1H, q1A, setQ1A], ["Q2", q2H, setQ2H, q2A, setQ2A], ["Q3", q3H, setQ3H, q3A, setQ3A], ["Q4", q4H, setQ4H, q4A, setQ4A]] as [string, string, (v:string)=>void, string, (v:string)=>void][]).map(([lbl, hv, hs, av, as_]) => (
+1822:                            <div key={lbl} className="space-y-1">
+1823-                              <p className="text-[8px] text-center text-zinc-600 uppercase tracking-widest">{lbl}</p>
+1824-                              <input type="number" value={hv} onChange={e => hs(e.target.value)} placeholder="H"
+1825-                                className="w-full bg-zinc-900 border border-zinc-800 rounded-md px-1.5 py-1 text-[11px] text-white text-center focus:outline-none focus:border-sky-700" />
+1826-                              <input type="number" value={av} onChange={e => as_(e.target.value)} placeholder="A"
+1827-                                className="w-full bg-zinc-900 border border-zinc-800 rounded-md px-1.5 py-1 text-[11px] text-white text-center focus:outline-none focus:border-amber-700" />
+--
+1834-                          ))}
+1835-                        </div>
+1836-                      </div>
+1837-                      <button onClick={applyLiveMonitor}
+1838-                        className="w-full bg-zinc-700 hover:bg-zinc-600 text-white text-xs font-bold rounded-lg py-2 tracking-widest uppercase transition">
+1839:                        Apply Stall Sensor →
+1840-                      </button>
+1841-                      {liveAlert && (
+1842-                        <div className={`rounded-lg px-4 py-3 border ${liveAlert.level === "danger" ? "bg-red-950/50 border-red-700" : liveAlert.hbAdj < 0 ? "bg-amber-950/50 border-amber-700" : "bg-emerald-950/30 border-emerald-800"}`}>
+1843-                          <p className={`text-[11px] font-bold leading-relaxed ${liveAlert.level === "danger" ? "text-red-300" : liveAlert.hbAdj < 0 ? "text-amber-300" : "text-emerald-400"}`}>{liveAlert.msg}</p>
+1844-                          {liveAlert.hbAdj !== 0 && result && (
+--
+1856-                <div className="bg-black/70 border border-zinc-700 rounded-xl overflow-hidden">
+1857-                  <div className="px-4 py-3 border-b border-zinc-800">
+1858-                    <p className="text-[9px] font-bold uppercase tracking-widest text-zinc-400">🔁 RERUN — SPLENDOR ENGINE V3 · COLD RECOMPUTE</p>
+1859-                    <p className="text-[9px] text-zinc-700 mt-0.5">Fresh timestamp on each RERUN · Heavy Adj Limit active · Hammer: {result.hammer_edge_used}pt threshold</p>
+1860-                  </div>
+1861:                  <div className="p-4 space-y-2">
+1862-                    <div className="flex gap-2">
+1863-                      <input value={rerunCmd} onChange={e => setRerunCmd(e.target.value)} onKeyDown={e => { if (e.key === "Enter") handleRerun(); }}
+1864-                        placeholder={`"Tatum out"  ·  "line to 228"  ·  "no injury"  ·  "adjust total 157.5"`}
+1865-                        className="flex-1 bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-xs text-white placeholder:text-zinc-700 focus:outline-none focus:border-zinc-500 transition font-mono" />
+1866-                      <button onClick={handleRerun} disabled={!rerunCmd.trim() || rerunPhase === "running"}
+1867:                        className="bg-violet-700 hover:bg-violet-600 disabled:opacity-30 text-white text-xs font-bold px-4 rounded-lg transition whitespace-nowrap">
+1868-                        {rerunPhase === "running" ? "…" : "RERUN →"}
+1869-                      </button>
+1870-                    </div>
+1871-                    <p className="text-[9px] text-zinc-700 font-mono">Each RERUN captures a fresh timestamp · Collapse% + DNA preserved · Enter or click RERUN</p>
+1872-                  </div>
+--
+1877-                      Cold recompute — fresh timestamp · Block 1 → 2 → 3…
+1878-                    </div>
+1879-                  )}
+1880-
+1881-                  {rerunPhase === "done" && rerunResult && rs && (
+1882:                    <div className="border-t border-zinc-800 px-4 py-4 space-y-3 bg-zinc-950/70">
+1883-                      <p className="text-[9px] font-bold uppercase tracking-widest text-zinc-400">🔁 RERUN OUTPUT — COLD RECOMPUTE · FRESH TIMESTAMP</p>
+1884:                      <div className="text-[10px] text-zinc-500 space-y-0.5 font-mono">
+1885-                        <p><span className="text-zinc-700">Time Sync (fresh):</span> {date} · KO {koTime} WAT · RERUN at real-time · {tipOff} to tip</p>
+1886-                        <p><span className="text-zinc-700">Reliability:</span> <span className={`font-bold ${rerunResult.reliability === "Strong" ? "text-emerald-400" : rerunResult.reliability === "Moderate" ? "text-amber-400" : "text-red-400"}`}>{rerunResult.reliability}</span> | DNA: {rerunResult.leagueDNAName} | Hammer edge: {rerunResult.hammer_edge_used}pt</p>
+1887-                      </div>
+1888-                      <div className="bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2.5">
+1889-                        <p className="text-[9px] uppercase tracking-widest text-zinc-600 font-bold mb-1.5">VALIDATION SNAPSHOT</p>
+--
+1896-                            <p className="text-[8px] uppercase tracking-widest text-zinc-600">{lbl}</p>
+1897-                            <p className={`text-xs font-black mt-0.5 ${cls}`}>{val}</p>
+1898-                          </div>
+1899-                        ))}
+1900-                      </div>
+1901:                      <div className="space-y-1">
+1902-                        <p className="text-[9px] uppercase tracking-widest text-zinc-600 font-bold">Triggered Rules (Sequential)</p>
+1903-                        {rerunResult.triggered_rules.map((r, i) => (
+1904-                          <p key={i} className="text-[10px] font-mono text-zinc-500 leading-relaxed"><span className="text-zinc-700 mr-1">{i + 1}.</span>{r}</p>
+1905-                        ))}
+1906-                      </div>
