@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from "react";
+import { InjuryVacuumEngine } from "./InjuryVacuumEngine";
 
 // ─── League DNA Profiles (Anti-Template, Anti-Generic) ────────────────────────
 const LEAGUE_DNA_PROFILES: Record<string, {
@@ -575,6 +576,12 @@ const HUNT_STEPS = [
 function Divider({ label }: { label: string }) {
   return (
     <div className="flex items-center gap-2 py-1">
+
+        {/* 🔴 POINT 4: INJURY / USAGE VACUUM ENGINE (AUTO-INJECTED) */}
+        <div className="mb-6">
+          <InjuryVacuumEngine homeTeamId="HOME" awayTeamId="AWAY" gameTipOffTime={new Date()} />
+        </div>
+
       <div className="flex-1 h-px bg-zinc-800" /><span className="text-[9px] font-bold uppercase tracking-[0.2em] text-zinc-600">{label}</span><div className="flex-1 h-px bg-zinc-800" />
     </div>
   );
