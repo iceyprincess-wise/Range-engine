@@ -716,6 +716,14 @@ export function RangeEngine() {
   const [analysisHistory, setAnalysisHistory] = useState<any[]>([]);
   // --- Auto-Refresh Sync Timer ---
   const [refreshCountdown, setRefreshCountdown] = useState(60);
+
+  // --- POINT 1: TOP NOTCH AUTO-SYNC ENGINE TIMER ---
+  useEffect(() => {
+    const syncEngine = setInterval(() => {
+      setRefreshCountdown(prev => (prev <= 1 ? 60 : prev - 1));
+    }, 1000);
+    return () => clearInterval(syncEngine);
+  }, []);
   useEffect(() => {
     // Only tick if on analyzer and NOT currently scanning or done
     if (tab !== "analyzer" || research?.done || research?.scanning) return;
@@ -990,12 +998,15 @@ useEffect(() => {
         <div className="flex-1 overflow-y-auto px-5 py-5 scrollbar-thin scrollbar-thumb-emerald-900/50">
           <div className="max-w-2xl mx-auto space-y-4 pb-20">
             {/* 1-MINUTE AUTO-SYNC PULSE */}
-            {tab === "analyzer" && !research?.done && !research?.scanning && (
-              <div className="bg-[#050807] border border-emerald-900/30 rounded-lg text-center py-2.5 text-[10px] font-mono text-emerald-500 uppercase tracking-widest flex justify-center items-center gap-3 shadow-[0_0_15px_rgba(16,185,129,0.06)]">
-                <span className="w-2 h-2 bg-emerald-500 rounded-full animate-ping shadow-[0_0_8px_rgba(16,185,129,0.9)]"></span>
-                Next Engine API Sync: {refreshCountdown}s
+            <div className="flex justify-center items-center w-full my-4">
+              <div className={`bg-slate-900 border ${refreshCountdown <= 5 ? 'border-red-500/80 shadow-[0_0_20px_rgba(239,68,68,0.6)]' : 'border-cyan-500/50 shadow-[0_0_15px_rgba(6,182,212,0.4)] animate-pulse'} px-6 py-3 rounded-lg flex items-center gap-3 transition-all duration-300`}>
+                <span className={`text-xl ${refreshCountdown <= 5 ? 'animate-bounce' : ''}`}>⏳</span>
+                <span className={`font-mono font-bold tracking-widest text-sm uppercase ${refreshCountdown <= 5 ? 'text-red-400 animate-pulse' : 'text-cyan-400'}`}>
+                  Auto-Sync Analysis in {refreshCountdown}s
+                </span>
               </div>
-            )}
+            </div>
+              {/* [V3 ENGINE: Orphaned conditional bracket safely neutralized] */}
 
             <div className="border border-emerald-900/40 rounded-xl bg-[#0a110f] p-5 shadow-[0_0_20px_rgba(16,185,129,0.08)]">
               <div className="text-[12px] text-emerald-500 font-bold uppercase mb-2 flex items-center gap-2 border-b border-emerald-900/30 pb-3">
