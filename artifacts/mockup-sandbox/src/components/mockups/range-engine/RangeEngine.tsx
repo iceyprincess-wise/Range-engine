@@ -695,6 +695,7 @@ export function RangeEngine() {
   const [homeTeam, setHomeTeam] = useState("");
   const [awayTeam, setAwayTeam] = useState("");
   const [research, setResearch] = useState({ scanning: false, progress: 0, node: -1, done: false, cameo: "", confidence: "0.00" });
+  const [isReportOpen, setIsReportOpen] = useState(false);
   const [analysisHistory, setAnalysisHistory] = useState<any[]>([]);
   // --- Auto-Refresh Sync Timer ---
   const [refreshCountdown, setRefreshCountdown] = useState(60);
@@ -736,23 +737,14 @@ export function RangeEngine() {
   let timeouts = [];
   let jitterInterval;
 
-  if (homeTeam && awayTeam && !research.done && !research.scanning) {
+  if (homeTeam && awayTeam) {
+    // STRICT RESET: Forces the engine to completely reset if teams change
+    setResearch(r => ({ ...r, scanning: false, progress: 0, node: -1, done: false, cameo: "", confidence: "0.00" }));
+    
     const timer = setTimeout(() => {
       if (!active) return;
       
-      const cameos = [
-        "> [PING] api.flashscore.com/matches/live_feed... 200 OK", 
-        "> [SCRAPE] x.com/search?q=injury+report+live... 200 OK", 
-        "> [PULL] pinnacle.com/odds/market_depth_v2... 200 OK", 
-        "> [COMPUTE] internal_db: NEURAL_PATTERN_REC... 200 OK", 
-        "> [SYNC] sofascore.com/basketball/feed... 200 OK", 
-        "> [VERIFY] rotowire.com/nba/lineups_confirmed... 200 OK", 
-        "> [ANALYZE] 82games.com/advanced_stats_matrix... 200 OK", 
-        "> [AGGREGATE] reddit.com/r/sportsbook/sharp_money... 200 OK", 
-        "> [FINALIZING] DEEP_SCAN_MATRIX_AGGREGATION... 200 OK" 
-      ];
-
-      setResearch(r => ({ ...r, scanning: true, progress: 0, node: 0, done: false, cameo: cameos[0], confidence: "0.00" }));
+      setResearch(r => ({ ...r, scanning: true, progress: 0, node: 0, done: false, cameo: "> INITIATING 1,000,000+ SOURCE AGGREGATION...", confidence: "0.00" }));
 
       const scheduleNode = (nodeIndex, delay, progressOverride = null, isJitter = false) => {
         timeouts.push(setTimeout(() => {
@@ -763,40 +755,40 @@ export function RangeEngine() {
              jitterInterval = setInterval(() => {
                 if (!active) return;
                 const jitterVal = (98 + Math.random() * 1.5).toFixed(2);
-                setResearch(r => ({ ...r, node: nodeIndex, progress: 99, cameo: cameos[nodeIndex], confidence: jitterVal }));
+                setResearch(r => ({ ...r, node: nodeIndex, progress: 99, cameo: "> RESOLVING NEURAL CONFLICTS...", confidence: jitterVal }));
              }, 75);
           } else {
-             setResearch(r => ({ ...r, node: nodeIndex, progress, cameo: cameos[nodeIndex] }));
+             setResearch(r => ({ ...r, node: nodeIndex, progress, cameo: `> PINGING SECURE NODE ${nodeIndex}...` }));
           }
         }, delay));
       };
 
-      // The Asynchronous Waterfall
-      scheduleNode(1, 150);
-      scheduleNode(2, 500);
-      scheduleNode(3, 900);
+      // Phase 1: Initial Hookups (Slower)
+      scheduleNode(1, 800);
+      scheduleNode(2, 2000);
+      scheduleNode(3, 3500);
       
-      // Node 4: Heavy Computation Stall
-      const stall1 = 1200 + Math.random() * 1300; 
-      scheduleNode(4, 900 + stall1);
-      scheduleNode(5, 900 + stall1 + 400);
-      scheduleNode(6, 900 + stall1 + 750);
-      scheduleNode(7, 900 + stall1 + 1100);
+      // Phase 2: The Deep Scrape Stall (Massive 4 to 6 second pause)
+      const stall1 = 4000 + Math.random() * 2000; 
+      scheduleNode(4, 3500 + stall1);
+      scheduleNode(5, 3500 + stall1 + 1200);
+      scheduleNode(6, 3500 + stall1 + 2400);
+      scheduleNode(7, 3500 + stall1 + 3600);
       
-      // Node 9: Micro-Jitter Stall at 99%
-      const node9Time = 900 + stall1 + 1600;
+      // Phase 3: The Agonizing Micro-Jitter (Holds at 99% for 4.5 seconds)
+      const node9Time = 3500 + stall1 + 5000;
       scheduleNode(8, node9Time, 99, true); 
       
-      // Final 100% Unlock
+      // Phase 4: Final Unlock
       timeouts.push(setTimeout(() => {
          if (!active) return;
          clearInterval(jitterInterval);
          setResearch(r => ({ ...r, scanning: false, progress: 100, node: 8, done: true, cameo: "> 1,000,000+ SOURCES SECURED - 100% OK", confidence: "100.00" }));
-      }, node9Time + 1500));
+      }, node9Time + 4500));
 
-    }, 1200);
+    }, 1500); // 1.5s debounce before scan starts
     timeouts.push(timer);
-  } else if (!homeTeam || !awayTeam) {
+  } else {
     setResearch({ scanning: false, progress: 0, node: -1, done: false, cameo: "", confidence: "0.00" });
   }
 
@@ -1659,7 +1651,7 @@ useEffect(() => {
       </span>
     </div>
 
-    {/* The 9 Node Glow Indicators */}
+    {/* The 9 Primary Root Nodes */}
     <div className="flex justify-between items-center w-full px-1 py-1">
       {[...Array(9)].map((_, i) => (
         <div 
@@ -1673,24 +1665,31 @@ useEffect(() => {
       ))}
     </div>
 
-    {/* The Merged Dynamic URL Terminal */}
-    <div className="bg-black/60 rounded p-2 border border-indigo-900/40 h-[105px] overflow-y-auto scrollbar-thin scrollbar-thumb-indigo-900/50 mt-1">
-      <ul className="text-[8.5px] text-zinc-500 space-y-1.5 font-mono">
+    {/* The Heavyweight Dynamic URL Terminal (32 Sources) */}
+    <div className="bg-black/80 rounded p-2 border border-indigo-900/40 h-[140px] overflow-hidden relative mt-1 flex flex-col">
+      <div className="absolute top-0 left-0 w-full h-4 bg-gradient-to-b from-black/80 to-transparent z-10 pointer-events-none"></div>
+      <div className="absolute bottom-0 left-0 w-full h-4 bg-gradient-to-t from-black/80 to-transparent z-10 pointer-events-none"></div>
+      
+      <ul className="text-[8px] text-zinc-500 space-y-1.5 font-mono overflow-y-auto scrollbar-none pb-4 pt-2">
         {[
-          { id: "NODE 01", url: "https://www.flashscore.com/basketball/" },
-          { id: "NODE 02", url: "https://www.sofascore.com/basketball/" },
-          { id: "NODE 03", url: "https://www.basketball-reference.com/" },
-          { id: "NODE 04", url: "Team Official Social Handles (Lineups)" },
-          { id: "NODE 05", url: "Local Beat Reporter Live Feeds" },
-          { id: "NODE 06", url: "Pinnacle Market Odds API" },
-          { id: "NODE 07", url: "Bet365 Line Movement Tracker" },
-          { id: "NODE 08", url: "Internal DB: TEAM_MATCHUP_HISTORY" },
-          { id: "NODE 09", url: "Internal DB: NEURAL_AGGREGATION_MATRIX" }
-        ].map((n, i) => (
-          <li key={i} className={`flex items-center justify-between transition-opacity duration-300 ${research.node >= i ? 'opacity-100' : 'opacity-20'}`}>
-            <span className={research.node === i && !research.done ? 'text-indigo-300 animate-pulse' : ''}>[{n.id}] {n.url}</span> 
-            <span className={research.node > i || research.done ? 'text-indigo-400 font-bold' : research.node === i ? 'text-amber-400' : 'text-slate-700'}>
-              {research.node > i || research.done ? '200 OK' : research.node === i ? 'SYNC...' : 'WAIT'}
+          "https://www.flashscore.com/basketball/", "https://www.sofascore.com/basketball/", "https://www.basketball-reference.com/",
+          "Team Official Social Handles (Lineups)", "Local Beat Reporter Live Feeds", "Pinnacle Market Odds API",
+          "Bet365 Line Movement Tracker", "Internal DB: TEAM_MATCHUP_HISTORY", "Internal DB: NEURAL_AGGREGATION_MATRIX",
+          "https://www.espn.com/nba/stats", "https://stats.nba.com/advanced", "https://www.rotowire.com/nba/news",
+          "https://twitter.com/search?q=injury+report", "https://www.reddit.com/r/sportsbook", "https://www.covers.com/sports/nba/matchups",
+          "https://www.oddsshark.com/nba/computer-picks", "https://hoopshype.com/rumors/", "https://www.actionnetwork.com/nba",
+          "https://basketball.realgm.com/", "https://cleaningtheglass.com/stats/", "https://dunksandthrees.com/",
+          "https://www.82games.com/", "Synergy Sports Tech API (Root Access)", "Second Spectrum Movement DB",
+          "Vegas Insider Line Movement", "DraftKings API Endpoint", "FanDuel Odds XML Feed", "BetMGM Sharp Money Tracker",
+          "Offshore Market Consensus Node", "Global Weather APIs (Arena Conditions)", "Referee Assignment Database", "Player Prop Edge Scanner"
+        ]
+        .slice(0, Math.max(1, Math.floor((research.progress / 100) * 32)))
+        .reverse()
+        .map((url, i, arr) => (
+          <li key={url} className="flex items-center justify-between transition-all duration-300">
+            <span className={i === 0 && !research.done ? 'text-indigo-300 animate-pulse' : 'text-zinc-500'}>[NODE {(arr.length - i).toString().padStart(2, '0')}] {url}</span> 
+            <span className={i === 0 && !research.done ? 'text-amber-400' : 'text-emerald-500 font-bold'}>
+              {i === 0 && !research.done ? 'SYNC...' : '200 OK'}
             </span>
           </li>
         ))}
@@ -1718,9 +1717,105 @@ useEffect(() => {
         </div>
       )}
     </div>
+      {research.done && (
+        <button 
+          onClick={() => setIsReportOpen(true)} 
+          className="mt-3 w-full py-2 bg-indigo-600/20 hover:bg-indigo-600/40 border border-indigo-500/50 rounded text-[10px] text-indigo-300 font-bold tracking-widest uppercase transition-all duration-300 flex justify-center items-center gap-2"
+        >
+          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+          View Classified Node Report
+        </button>
+      )}
   </div>
 )}
 {/* --- END DEEP SCAN INTELLIGENCE UI --- */}
+
+{/* --- CLASSIFIED REPORT MODAL --- */}
+{isReportOpen && (
+  <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90 backdrop-blur-md">
+    <div className="bg-[#05080f] border border-indigo-500/50 rounded-xl w-full max-w-lg max-h-[85vh] flex flex-col shadow-[0_0_50px_rgba(79,70,229,0.15)] relative overflow-hidden">
+      
+      {/* Modal Header */}
+      <div className="bg-indigo-950/40 border-b border-indigo-500/30 p-4 flex justify-between items-center">
+        <div>
+          <h3 className="text-xs font-black tracking-widest text-indigo-400 uppercase flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_#10b981]"></span>
+            Post-Scan Extraction Report
+          </h3>
+          <p className="text-[9px] text-zinc-500 font-mono mt-1">1,000,000+ SOURCES COMPUTED // 100% ACCURACY LOCK</p>
+        </div>
+        <button onClick={() => setIsReportOpen(false)} className="text-zinc-500 hover:text-red-400 transition">
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+        </button>
+      </div>
+
+      {/* Modal Body - The Data Readout */}
+      <div className="p-4 overflow-y-auto scrollbar-thin scrollbar-thumb-indigo-900/50 space-y-3 font-mono">
+        
+        <div className="bg-black/50 border border-zinc-800 rounded p-3">
+          <div className="flex justify-between items-center mb-1">
+            <span className="text-[10px] text-emerald-400 font-bold">[NODE 01-03] Global Live Feeds</span>
+            <span className="text-[8px] bg-emerald-900/50 text-emerald-300 px-1.5 py-0.5 rounded">DATA SECURED</span>
+          </div>
+          <p className="text-[9px] text-zinc-400 leading-relaxed">
+            EXTRACTED: Base possession count stabilized at 98.4 Pace. True Shooting % (TS%) variance detected (+2.1% above season baseline). Free throw attempt rate increasing.
+          </p>
+        </div>
+
+        <div className="bg-black/50 border border-zinc-800 rounded p-3">
+          <div className="flex justify-between items-center mb-1">
+            <span className="text-[10px] text-zinc-300 font-bold">[NODE 06-07] Market Odds APIs</span>
+            <span className="text-[8px] bg-sky-900/50 text-sky-300 px-1.5 py-0.5 rounded">SHARP MOVEMENT</span>
+          </div>
+          <p className="text-[9px] text-zinc-400 leading-relaxed">
+            EXTRACTED: Pinnacle and Bet365 show massive sharp money accumulation. Total line shifted +1.5 points in the last 14 minutes. Heavy volume flagged on the OVER.
+          </p>
+        </div>
+
+        <div className="bg-black/50 border border-zinc-800 rounded p-3">
+          <div className="flex justify-between items-center mb-1">
+            <span className="text-[10px] text-zinc-500 font-bold opacity-70">[NODE 12-13] X/Reddit Injury Scrapes</span>
+            <span className="text-[8px] bg-zinc-800 text-zinc-400 px-1.5 py-0.5 rounded opacity-70">NO DATA YIELD</span>
+          </div>
+          <p className="text-[9px] text-zinc-500 leading-relaxed opacity-70">
+            NULL: Scan of 14,200 recent social queries returned no severe rotational alerts, late scratches, or locker room leaks. Roster health stable.
+          </p>
+        </div>
+
+        <div className="bg-black/50 border border-zinc-800 rounded p-3">
+          <div className="flex justify-between items-center mb-1">
+            <span className="text-[10px] text-amber-400 font-bold">[NODE 24] Second Spectrum DB</span>
+            <span className="text-[8px] bg-amber-900/50 text-amber-300 px-1.5 py-0.5 rounded">FATIGUE ANOMALY</span>
+          </div>
+          <p className="text-[9px] text-zinc-400 leading-relaxed">
+            EXTRACTED: Defensive close-out speed has dropped by 0.4 seconds compared to Q1. Weak-side rotation is stalling. High probability of late-game defensive collapse (Rule 7 Factor).
+          </p>
+        </div>
+        
+        <div className="bg-black/50 border border-zinc-800 rounded p-3">
+          <div className="flex justify-between items-center mb-1">
+            <span className="text-[10px] text-zinc-500 font-bold opacity-70">[NODE 30] Global Weather / Arena</span>
+            <span className="text-[8px] bg-zinc-800 text-zinc-400 px-1.5 py-0.5 rounded opacity-70">BASELINE NORMAL</span>
+          </div>
+          <p className="text-[9px] text-zinc-500 leading-relaxed opacity-70">
+            NULL: Indoor arena humidity levels within standard deviation. No HVAC anomalies detected affecting ball pressure or flight metrics.
+          </p>
+        </div>
+
+      </div>
+      
+      {/* Modal Footer */}
+      <div className="bg-indigo-950/20 border-t border-indigo-900/50 p-3">
+        <button onClick={() => setIsReportOpen(false)} className="w-full bg-indigo-600 hover:bg-indigo-500 text-white text-[10px] font-black tracking-widest uppercase py-2.5 rounded transition">
+          Acknowledge & Close Report
+        </button>
+      </div>
+
+    </div>
+  </div>
+)}
+{/* --- END CLASSIFIED REPORT MODAL --- */}
+
 <button onClick={handleAnalyze} disabled={!homeTeam || !awayTeam || !overLow || !underHigh || !tipOff || research.scanning || !research.done}
                   className="w-full bg-violet-600 hover:bg-violet-500 disabled:opacity-20 disabled:cursor-not-allowed text-white font-black text-xs rounded-xl py-3.5 tracking-widest uppercase transition">
                   ⚙ Execute Analysis — Splendor Engine V3
