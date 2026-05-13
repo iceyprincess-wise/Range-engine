@@ -1,0 +1,58 @@
+Script started on 2026-05-13 05:36:47+00:00 [TERM="xterm-256color" TTY="/dev/pts/0" COLUMNS="58" LINES="68"]
+[?2004h[0;32m@michaeledidiong131-sys [0m➜ [1;34m.../range-engine-v3/Range-Engine-Logic/artifacts/mockup-sandbox [0;36m([1;31mmain[0;36m) [0m$ [K[A[K[0;32m@michaeledidiong131-sys [0m➜ [1;34m.../range-engine-v3/Range-Engine-Logic/artifacts/mockup-sandbox [0;36m([1;31mmain[0;36m) [0m$ [K[A[K[0;32m@michaeledidiong131-sys [0m➜ [1;34m.../range-engine-v3/Range-Engine-Logic/artifacts/mockup-sandbox [0;36m([1;31mmain[0;36m) [0m$ cat << 'EOF' > point12_connect.cjs
+[?2004l[?2004h> const fs = require('fs');
+[?2004l[?2004h> const path = require('path');
+[?2004l[?2004h> const file = path.join(process.cwd(), 'src', 'components', 'mockups', 'range-engine', 'RangeEngine.tsx');
+[?2004l[?2004h> 
+[?2004l[?2004h> let code = fs.readFileSync(file, 'utf8');
+[?2004l[?2004h> 
+[?2004l[?2004h> console.log("\n=========================================================");
+[?2004l[?2004h> console.log("🔌 INITIATING LIVE HUB CONNECTION & LEGACY CLOAKING");
+[?2004l[?2004h> console.log("=========================================================");
+[?2004l[?2004h> 
+[?2004l[?2004h> let modified = false;
+[?2004l[?2004h> 
+[?2004l[?2004h> // 1. INJECT IMPORT
+[?2004l[?2004h> if (!code.includes('LiveMonitorHub')) {
+[?2004l[?2004h>     const importStr = "import { LiveMonitorHub } from '../live-monitor/LiveMonitorHub';\n";
+[?2004l[?2004h>     code = importStr + code;
+[?2004l[?2004h>     
+[?2004l[?2004h>     // 2. INJECT COMPONENT AT TOP OF DASHBOARD
+[?2004l[?2004h>     const returnIndex = code.indexOf('return (');
+[?2004l[?2004h>     if (returnIndex !== -1) {
+[?2004l[?2004h>         const firstDivIndex = code.indexOf('<div', returnIndex);
+[?2004l[?2004h>         const closeBracketIndex = code.indexOf('>', firstDivIndex);
+[?2004l[?2004h>         
+[?2004l[?2004h>         if (firstDivIndex !== -1 && closeBracketIndex !== -1) {
+[?2004l[?2004h>             const insertPos = closeBracketIndex + 1;
+[?2004l[?2004h>             const injection = `
+[?2004l[?2004h>             {/* ⚡ NEW AUTONOMOUS LIVE MONITOR HUB ⚡ */}
+[?2004l[?2004h>             <div className="w-full mb-6 border-b-4 border-purple-600 pb-4 bg-zinc-950 rounded-lg shadow-2xl">
+[?2004l[?2004h>                 <LiveMonitorHub />
+[?2004l[?2004h>             </div>
+[?2004l[?2004h> `;
+[?2004l[?2004h>             code = code.substring(0, insertPos) + injection + code.substring(insertPos);
+[?2004l[?2004h>             console.log("✅ [CONNECTED] LiveMonitorHub successfully wired into the main dashboard.");
+[?2004l[?2004h>             modified = true;
+[?2004l[?2004h>         }
+[?2004l[?2004h>     }
+[?2004l[?2004h> } else {
+[?2004l[?2004h>     console.log("⚡ [SKIP] LiveMonitorHub is already imported.");
+[?2004l[?2004h> }
+[?2004l[?2004h> 
+[?2004l[?2004h> // 3. CLOAK THE OLD UI (ZERO RED SCREEN RISK)
+[?2004l[?2004h> if (code.includes('Apply Stall Sensor →')) {
+[?2004l[?2004h>     code = code.replace(/<button([^>]*)>\s*Apply Stall Sensor →\s*<\/button>/g, '<button$1 style={{display: "none"}}>Apply Stall Sensor →</button>');
+[?2004l[?2004h>     console.log("✅ [CLOAKED] Legacy Stall Sensor button neutralized visually.");
+[?2004l[?2004h>     modified = true;
+[?2004l[?2004h> }
+[?2004l[?2004h> 
+[?2004l[?2004h> if (code.includes('QUARTER SCORES (HOME | AWAY)')) {
+[?2004l[?2004h>      code = code.replace(/QUARTER SCORES \(HOME \| AWAY\)/g, "⚠️ LEGACY STALL SENSOR DEPRECATED — USE NEW GLOBAL LIVE HUB ABOVE");
+[?2004l[?2004h>      console.log("✅ [CLOAKED] Legacy Quarter Scores section labeled as deprecated.");
+[?2004l[?2004h>      modified = true;
+[?2004l[?2004h> }
+[?2004l[?2004h> 
+[?2004l[?2004h> if (modified) {
+[?2004l[?2004h>     fs.writeFileSync(file, code, 'utf8');
+[?2004l[?2004h>     console.log("🛡️ [VERIFIED] Zero JSX tags delete

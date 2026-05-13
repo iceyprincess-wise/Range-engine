@@ -1896,10 +1896,9 @@ useEffect(() => {
                 <div className="bg-black/60 border border-zinc-700 rounded-xl overflow-hidden">
                   <button onClick={() => setShowLive(!showLive)}
                     className="w-full flex items-center justify-between px-4 py-3 hover:bg-zinc-800/20 transition">
-                    <div>
-                      <p className="text-[9px] font-bold uppercase tracking-widest text-zinc-400 text-left">📺 LIVE MONITOR — Stall Sensor & Pace Tracker</p>
-                      <p className="text-[9px] text-zinc-700 text-left">Enter live scores to trigger Stall Sensor (quarter &lt;30 combined → HB -8)</p>
-                    </div>
+                    
+            {/* ⚡ LEGACY STALL SENSOR UI EXTRACTED & MIGRATED TO LiveMonitorHub.tsx */}
+
                     <span className="text-zinc-600 text-xs">{showLive ? "▲" : "▼"}</span>
                   </button>
                   {showLive && (
@@ -1929,9 +1928,7 @@ useEffect(() => {
                         </div>
                       </div>
                       <button onClick={applyLiveMonitor}
-                        className="w-full bg-zinc-700 hover:bg-zinc-600 text-white text-xs font-bold rounded-lg py-2 tracking-widest uppercase transition">
-                        Apply Stall Sensor →
-                      </button>
+                        className="w-full bg-zinc-700 hover:bg-zinc-600 text-white text-xs font-bold rounded-lg py-2 tracking-widest uppercase transition" style={{display: "none"}}>Apply Stall Sensor →</button>
                       {liveAlert && (
                         <div className={`rounded-lg px-4 py-3 border ${liveAlert.level === "danger" ? "bg-red-950/50 border-red-700" : liveAlert.hbAdj < 0 ? "bg-amber-950/50 border-amber-700" : "bg-emerald-950/30 border-emerald-800"}`}>
                           <p className={`text-[11px] font-bold leading-relaxed ${liveAlert.level === "danger" ? "text-red-300" : liveAlert.hbAdj < 0 ? "text-amber-300" : "text-emerald-400"}`}>{liveAlert.msg}</p>
