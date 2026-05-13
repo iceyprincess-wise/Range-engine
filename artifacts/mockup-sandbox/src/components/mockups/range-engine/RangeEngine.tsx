@@ -678,42 +678,111 @@ export function RangeEngine() {
   const today = new Date().toISOString().split("T")[0];
   const [tab, setTab] = useState<"analyzer" | "live" | "history">("analyzer");
 
-  // ─── BASKETAPI LIVE ENGINE (SMART THROTTLE) ───
-  const [liveStats, setLiveStats] = useState<any>(null);
-  const [isFetchingLive, setIsFetchingLive] = useState(false);
-  const [apiError, setApiError] = useState("");
+  // ─── BASKETAPI LIVE ENGINE (FINAL MATRIX) ───
+  const [liveStats, setLiveStats] = useState<any>(null);
+  const [isFetchingLive, setIsFetchingLive] = useState(false);
+  const [apiError, setApiError] = useState("");
 
-  const triggerLiveSync = async () => {
-    setIsFetchingLive(true);
-    setApiError("");
-    try {
-      // 1. Updated Endpoint (Plural 'matches')
-      const response = await fetch('https://basketapi1.p.rapidapi.com/api/basketball/matches/live', {
-        method: 'GET',
-        headers: {
-          'x-rapidapi-key': 'f0f8830be9msh33c27594430acdbp174a46jsn212686e527a0', 
-          'x-rapidapi-host': 'basketapi1.p.rapidapi.com'
-        }
-      });
-      
-      // 2. The Interceptor: Read as text first to prevent JSON crashes
-      const rawText = await response.text();
-      
-      if (!response.ok) throw new Error(`HTTP ${response.status}: ${rawText || 'Empty Error Response'}`);
-      if (!rawText) throw new Error("API returned an empty body. Either no matches are live right now, or the API key is restricted.");
-      
-      // 3. Safe Parse
-      const data = JSON.parse(rawText);
-      setLiveStats(data);
-      console.log("🔥 Live Sync Complete:", data);
-    } catch (err: any) {
-      setApiError(err.message || "API Connection Failed");
-      console.error("API Engine Error:", err);
-    } finally {
-      setIsFetchingLive(false);
-    }
-  };
-  // ──────────────────────────────────────────────
+  const triggerLiveSync = async () => {
+    setIsFetchingLive(true);
+    setApiError("");
+    try {
+      const hSearch = (homeTeam || "").toLowerCase();
+      const aSearch = (awayTeam || "").toLowerCase();
+      
+      if (!hSearch || !aSearch) {
+          throw new Error("Missing Teams: Please enter the Home and Away team names in the Analyzer first.");
+      }
+
+      // Step 1: Global Radar Scan
+      const radarRes = await fetch('https://basketapi1.p.rapidapi.com/api/basketball/matches/live', {
+        headers: {
+          'x-rapidapi-key': 'f0f8830be9msh33c27594430acdbp174a46jsn212686e527a0', 
+          'x-rapidapi-host': 'basketapi1.p.rapidapi.com'
+        }
+      });
+      const radarText = await radarRes.text();
+      if (!radarRes.ok) throw new Error(`Radar Error: ${radarRes.status}`);
+      if (!radarText) throw new Error("API empty: No games are live globally right now.");
+      
+      const radarData = JSON.parse(radarText);
+      
+      // Target Lock (Fuzzy Match)
+      const target = (radarData.events || []).find((e:any) => 
+         e.homeTeam.name.toLowerCase().includes(hSearch) || 
+         e.awayTeam.name.toLowerCase().includes(aSearch) ||
+         hSearch.includes(e.homeTeam.name.toLowerCase())
+      );
+
+      if (!target) throw new Error(`Target Lost: "${homeTeam}" vs "${awayTeam}" is not actively playing right now.`);
+
+      // Step 2: Deep-Dive Statistics Extraction
+      const statsRes = await fetch(`https://basketapi1.p.rapidapi.com/api/basketball/match/${target.id}/statistics`, {
+        headers: {
+          'x-rapidapi-key': 'f0f8830be9msh33c27594430acdbp174a46jsn212686e527a0', 
+          'x-rapidapi-host': 'basketapi1.p.rapidapi.com'
+        }
+      });
+      const statsText = await statsRes.text();
+      if (!statsRes.ok) throw new Error(`Stats Error: ${statsRes.status}`);
+      
+      const statsData = JSON.parse(statsText);
+      
+      setLiveStats({ radar: target, stats: statsData });
+      console.log("🔥 Live Matrix Connected & Mapped");
+    } catch (err: any) {
+      setApiError(err.message || "API Connection Failed");
+      console.error(err);
+    } finally {
+      setIsFetchingLive(false);
+    }
+  };
+  
+  // Mathematical Extractor
+  const getLiveStat = (key: string) => {
+      if (!liveStats?.stats?.statistics?.[0]?.groups) return null;
+      for (const g of liveStats.stats.statistics[0].groups) {
+          const item = g.statisticsItems.find((i:any) => i.key === key);
+          if (item) return item;
+      }
+      return null;
+  };
+
+  const LiveStatBar = ({ label, statKey }: { label: string, statKey: string }) => {
+      const item = getLiveStat(statKey);
+      if (!item) return (
+          <div className="mb-3 opacity-50">
+              <div className="flex justify-between text-[10px] font-mono text-zinc-500 mb-1">
+                  <span>-</span><span className="uppercase tracking-widest text-emerald-500/30">{label}</span><span>-</span>
+              </div>
+              <div className="flex h-1.5 w-full bg-zinc-900 rounded-full overflow-hidden">
+                  <div className="bg-emerald-900/50 w-[50%]"></div>
+                  <div className="bg-red-900/50 w-[50%] ml-auto"></div>
+              </div>
+          </div>
+      );
+
+      let hVal = item.homeValue || 0;
+      let aVal = item.awayValue || 0;
+      let total = hVal + aVal;
+      let hPct = total === 0 ? 50 : (hVal / total) * 100;
+      let aPct = total === 0 ? 50 : (aVal / total) * 100;
+
+      return (
+          <div className="mb-3">
+              <div className="flex justify-between text-[10px] font-mono text-zinc-200 mb-1">
+                  <span>{item.home || hVal}</span>
+                  <span className="uppercase tracking-widest text-emerald-400 font-bold">{label}</span>
+                  <span>{item.away || aVal}</span>
+              </div>
+              <div className="flex h-1.5 w-full bg-zinc-900 rounded-full overflow-hidden">
+                  <div className="bg-emerald-500 transition-all duration-1000 ease-out" style={{ width: `${hPct}%` }}></div>
+                  <div className="bg-red-600 transition-all duration-1000 ease-out" style={{ width: `${aPct}%` }}></div>
+              </div>
+          </div>
+      );
+  };
+  // ──────────────────────────────────────────────
 
   // Core fields
   const [date, setDate] = useState(today);
@@ -1081,6 +1150,8 @@ useEffect(() => {
       {/* ─── HISTORY TAB ────────────────────────────────────────────────────── */}
       
       {tab === "live" && (
+<>
+
         <div className="flex-1 overflow-y-auto px-5 py-5 scrollbar-thin scrollbar-thumb-emerald-900/50">
           <div className="max-w-2xl mx-auto space-y-4 pb-20">
             {/* 1-MINUTE AUTO-SYNC PULSE */}
@@ -1116,27 +1187,7 @@ useEffect(() => {
 </div>
 
 {apiError && <p className="text-red-400 text-[10px] mb-3 border border-red-900/50 bg-red-950/30 p-2 rounded">{apiError}</p>}
-{liveStats && (
-  <div className="bg-zinc-950 p-3 rounded border border-zinc-800 mb-4 relative">
-    <div className="flex justify-between items-center mb-2">
-      <span className="text-emerald-500 text-[9px] font-bold uppercase tracking-widest">Raw API Intercept:</span>
-      <button 
-        onClick={() => {
-          navigator.clipboard.writeText(JSON.stringify(liveStats, null, 2));
-          alert('✅ JSON Copied to Clipboard!');
-        }}
-        className="bg-emerald-600 hover:bg-emerald-500 text-white text-[9px] px-3 py-1 rounded shadow uppercase font-bold tracking-wider"
-      >
-        Copy All
-      </button>
-    </div>
-    <textarea 
-      readOnly 
-      className="w-full h-48 bg-black text-[9px] text-zinc-400 font-mono p-2 rounded border border-zinc-800 focus:outline-none"
-      value={JSON.stringify(liveStats, null, 2)}
-    />
-  </div>
-)}
+
 
 
 <div className="text-[10px] text-zinc-400 font-mono mb-5 mt-3 leading-relaxed">
@@ -1170,7 +1221,17 @@ useEffect(() => {
                 <div className="p-4 bg-[#080d0b]">
                   <div className="flex justify-center gap-6 mb-4 border-b border-emerald-900/20 pb-2"><button className="text-[10px] text-emerald-500 border-b-2 border-emerald-500 pb-1 uppercase tracking-wider">Statistics</button><button className="text-[10px] text-zinc-500 hover:text-zinc-300 transition-colors uppercase tracking-wider">Summary</button></div>
                   <div className="space-y-4">
-                    <div><div className="flex justify-between text-[10px] font-mono text-zinc-400 mb-1"><span>0.0% (0/0)</span><span className="uppercase tracking-widest text-emerald-500/50">Field Goals</span><span>0.0% (0/0)</span></div><div className="flex h-1.5 w-full bg-zinc-900 rounded-full overflow-hidden"><div className="bg-emerald-500 w-[50%]"></div><div className="bg-red-600 w-[50%] ml-auto"></div></div></div>
+                    <div><div className="flex justify-between text-[10px] font-mono text-zinc-400 mb-1"></div>
+        <div className="mt-4 border border-zinc-800/50 p-4 rounded bg-black/40">
+            <LiveStatBar label="Field Goals" statKey="fieldGoalsScored" />
+            <LiveStatBar label="2 Points" statKey="twoPointersScored" />
+            <LiveStatBar label="3 Points" statKey="threePointersScored" />
+            <LiveStatBar label="Free Throws" statKey="freeThrowsScored" />
+            <div className="my-4 border-t border-zinc-800/50"></div>
+            <LiveStatBar label="Rebounds" statKey="rebounds" />
+            <LiveStatBar label="Fouls" statKey="totalFouls" />
+        </div>
+    <div className="hidden">
                     <div><div className="flex justify-between text-[10px] font-mono text-zinc-400 mb-1"><span>0.0% (0/0)</span><span className="uppercase tracking-widest text-emerald-500/50">2 Points</span><span>0.0% (0/0)</span></div><div className="flex h-1.5 w-full bg-zinc-900 rounded-full overflow-hidden"><div className="bg-emerald-500 w-[50%]"></div><div className="bg-red-600 w-[50%] ml-auto"></div></div></div>
                     <div><div className="flex justify-between text-[10px] font-mono text-zinc-400 mb-1"><span>0.0% (0/0)</span><span className="uppercase tracking-widest text-emerald-500/50">3 Points</span><span>0.0% (0/0)</span></div><div className="flex h-1.5 w-full bg-zinc-900 rounded-full overflow-hidden"><div className="bg-emerald-500 w-[50%]"></div><div className="bg-red-600 w-[50%] ml-auto"></div></div></div>
                     <div><div className="flex justify-between text-[10px] font-mono text-zinc-400 mb-1"><span>0.0% (0/0)</span><span className="uppercase tracking-widest text-emerald-500/50">Free Throws</span><span>0.0% (0/0)</span></div><div className="flex h-1.5 w-full bg-zinc-900 rounded-full overflow-hidden"><div className="bg-emerald-500 w-[50%]"></div><div className="bg-red-600 w-[50%] ml-auto"></div></div></div>
@@ -1187,7 +1248,10 @@ useEffect(() => {
             )}
           </div>
         </div>
-      )}
+      </div>
+
+</>
+)}
 
       {tab === "history" && (
         <div className="flex-1 overflow-y-auto px-5 py-4">
