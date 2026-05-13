@@ -361,6 +361,15 @@ function runEngine(opts: {
             // ── Rule 10 (Foul Engine) + Rule 11 (Injury Vacuum) ──────────────────────
   let r10_hb = 0;
   if (margin <= 6 && avg_ft >= 0.75) r10_hb = Math.round(11 * ws);
+
+    // 🧠 POINT 9: REFEREE WHISTLE-RATE ANOMALY SENSOR
+    // Concept: Dynamically expands High Bound to absorb 'Phantom Free Throws'
+    const isHighFoulRateCrew = true; // ⚠️ Placeholder: Will hook into Python Backend
+    let refereeAnomalyActive = false;
+    if (isHighFoulRateCrew && margin <= 8) {
+        r10_hb += 2.5; 
+        refereeAnomalyActive = true;
+    }
   let r11_lb = 0, r11_hb = 0;
   if (key_player_out) { r11_lb = -Math.round(6 * ws); r11_hb = Math.round(4 * ws); }
   hb += r10_hb + r11_hb; lb += r11_lb;
@@ -375,7 +384,7 @@ function runEngine(opts: {
   ].filter(Boolean).join(" ");
   const r10Status = (r10_hb > 0 || r11_lb !== 0 || r11_hb !== 0) ? "triggered" : "checked";
   adj_log.push({ rule: "Rule 10/11 — Foul Engine/Injury", lb_adj: r11_lb, hb_adj: r10_hb + r11_hb - stacking_cut, note: r10note, status: r10Status });
-  if (r10_hb > 0) triggered.push(`Rule 10 (Foul Engine): HB+${r10_hb}${stacking_cut > 0 ? ` (Stack Cap -${stacking_cut})` : ""} | FT%: ${(avg_ft*100).toFixed(0)}%`);
+  if (r10_hb > 0) triggered.push(`Rule 10 (Foul Engine): HB+${r10_hb}${stacking_cut > 0 ? ` (Stack Cap -${stacking_cut})` : ""} | FT%: ${(avg_ft*100).toFixed(0)}%${refereeAnomalyActive ? " 🚨 [Phantom FT Adj +2.5]" : ""}`);
   if (key_player_out) triggered.push(`Rule 11 (Injury Vacuum): LB${r11_lb}, HB+${r11_hb} — ${key_player_name} OUT`);
 
   // ── Rule 18 (OT Hazard — tight margin adds HB only) ──────────────────────
@@ -685,7 +694,7 @@ export function RangeEngine() {
   const [league, setLeague] = useState(""); // universal — no default
   const [homeTeam, setHomeTeam] = useState("");
   const [awayTeam, setAwayTeam] = useState("");
-  const [research, setResearch] = useState({ scanning: false, progress: 0, node: -1, done: false, cameo: "" });
+  const [research, setResearch] = useState({ scanning: false, progress: 0, node: -1, done: false, cameo: "", confidence: "0.00" });
   const [analysisHistory, setAnalysisHistory] = useState<any[]>([]);
   // --- Auto-Refresh Sync Timer ---
   const [refreshCountdown, setRefreshCountdown] = useState(60);
@@ -1624,7 +1633,60 @@ useEffect(() => {
                   </div>
                 </div>
 
-                <button onClick={handleAnalyze} disabled={!homeTeam || !awayTeam || !overLow || !underHigh || !tipOff}
+                
+{/* --- DEEP SCAN INTELLIGENCE UI --- */}
+{(homeTeam && awayTeam) && (
+  <div className="w-full bg-slate-900/50 border border-indigo-500/20 rounded-xl p-4 mb-4 flex flex-col gap-3">
+    <div className="flex justify-between items-center">
+      <h4 className="text-xs font-black tracking-widest text-indigo-400 uppercase">
+        Deep Scan Intelligence Active
+      </h4>
+      <span className="text-[10px] text-slate-400 font-mono">
+        1,000,000+ Sources
+      </span>
+    </div>
+
+    {/* The 9 Node Glow Indicators */}
+    <div className="flex justify-between items-center w-full px-1">
+      {[...Array(9)].map((_, i) => (
+        <div 
+          key={i} 
+          className={`h-2 w-2 rounded-full transition-all duration-300 ${
+            research.node >= i 
+              ? 'bg-indigo-500 shadow-[0_0_8px_rgba(99,102,241,0.8)] scale-110' 
+              : 'bg-slate-700 opacity-30'
+          }`}
+        />
+      ))}
+    </div>
+
+    {/* Data Readout & Micro-Jitter */}
+    <div className="flex flex-col mt-1">
+      <div className="flex justify-between text-xs font-mono">
+        <span className={`${research.done ? 'text-green-400' : 'text-indigo-300 animate-pulse'}`}>
+          {research.scanning ? "Real-time aggregation active. Delay for accuracy..." : research.done ? "SCAN COMPLETE" : "AWAITING PARAMS..."}
+        </span>
+        <span className={research.scanning && research.progress === 99 ? 'text-yellow-400 font-bold' : research.done ? 'text-green-400' : 'text-slate-500'}>
+          {research.progress}%
+        </span>
+      </div>
+      
+      {/* Dynamic Cameo Stream */}
+      <div className="text-[10px] text-slate-500 font-mono mt-1 h-3 overflow-hidden">
+        {research.cameo}
+      </div>
+      
+      {/* Micro-Jitter Confidence Readout */}
+      {research.node >= 0 && (
+        <div className="text-[10px] text-right text-indigo-400/70 font-mono mt-1">
+          CONFIDENCE INTERVAL: <span className={research.progress === 99 ? 'text-yellow-400 font-bold' : ''}>{research.confidence}%</span>
+        </div>
+      )}
+    </div>
+  </div>
+)}
+{/* --- END DEEP SCAN INTELLIGENCE UI --- */}
+<button onClick={handleAnalyze} disabled={!homeTeam || !awayTeam || !overLow || !underHigh || !tipOff || research.scanning || !research.done}
                   className="w-full bg-violet-600 hover:bg-violet-500 disabled:opacity-20 disabled:cursor-not-allowed text-white font-black text-xs rounded-xl py-3.5 tracking-widest uppercase transition">
                   ⚙ Execute Analysis — Splendor Engine V3
                 </button>
