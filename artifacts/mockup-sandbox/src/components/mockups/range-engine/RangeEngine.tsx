@@ -753,7 +753,7 @@ export function RangeEngine() {
 useEffect(() => {
   if (refreshCountdown > 0) {
     /* ❌ NEUTRALIZED: Conflicting setTimeout ticker (Point 11 Fix) */
-    return () => clearTimeout(ticker);
+    // return () => clearTimeout(ticker); // ✅ FIXED: Removed undefined ticker reference from Point 11
   } else {
     // Background sync triggers here
     /* ❌ NEUTRALIZED: Conflicting hard reset (Point 11 Fix) */
