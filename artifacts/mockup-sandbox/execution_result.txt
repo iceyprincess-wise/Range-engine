@@ -1,108 +1,0 @@
-Script started on 2026-05-13 15:16:43+00:00 [TERM="xterm-256color" TTY="/dev/pts/0" COLUMNS="58" LINES="68"]
-[?2004h[0;32m@michaeledidiong131-sys [0m➜ [1;34m.../range-engine-v3/Range-Engine-Logic/artifacts/mockup-sandbox [0;36m([1;31mmain[0;36m) [0m$ cat << 'EOF' > revert_point13.cjs
-[?2004l[?2004h> const fs = require('fs');
-[?2004l[?2004h> 
-[?2004l[?2004h> const targetPath = './src/components/mockups/range-engine/RangeEngine.tsx';
-[?2004l[?2004h> 
-[?2004l[?2004h> console.log('======================================================');
-[?2004l[?2004h> console.log(' 🧹 INITIATING SURGICAL EXTRACTION: < POINT 13 REVERT >');
-[?2004l[?2004h> console.log('======================================================\n');
-[?2004l[?2004h> 
-[?2004l[?2004h> let code = fs.readFileSync(targetPath, 'utf8');
-[?2004l[?2004h> 
-[?2004l[?2004h> // 1. Remove the Component Definition block
-[?2004l[?2004h> const componentRegex = /\/\/ =====================================================================\r?\n\/\/ ⚡ POINT 13: THE PHANTOM-DELTA MATRIX[\s\S]*?\/\/ =====================================================================\r?\n/;
-[?2004l[?2004h> if (componentRegex.test(code)) {
-[?2004l[?2004h>     code = code.replace(componentRegex, '');
-[?2004l[?2004h>     console.log('✅ STATUS: PhantomLiveHub component logic removed.');
-[?2004l[?2004h> } else {
-[?2004l[?2004h>     console.log('⚠️ STATUS: Component logic not found. May have already been removed.');
-[?2004l[?2004h> }
-[?2004l[?2004h> 
-[?2004l[?2004h> // 2. Remove the Render Invocation
-[?2004l[?2004h> const renderRegex = /\{\/\* INJECTED POINT 13: LIVE UI HUB \*\/\}\r?\n<PhantomLiveHub \/>\r?\n/g;
-[?2004l[?2004h> if (renderRegex.test(code)) {
-[?2004l[?2004h>     code = code.replace(renderRegex, '');
-[?2004l[?2004h>     console.log('✅ STATUS: PhantomLiveHub UI render removed.');
-[?2004l[?2004h> } else {
-[?2004l[?2004h>     console.log('⚠️ STATUS: UI render not found.');
-[?2004l[?2004h> }
-[?2004l[?2004h> 
-[?2004l[?2004h> fs.writeFileSync(targetPath, code, 'utf8');
-[?2004l[?2004h> console.log('\n✅ STATUS: Codebase restored to prior state. Ready to activate existing Live UI.');
-[?2004l[?2004h> console.log('======================================================\n');
-[?2004l[?2004h> EOF
-[?2004l[?2004h[0;32m@michaeledidiong131-sys [0m➜ [1;34m.../range-engine-v3/Range-Engine-Logic/artifacts/mockup-sandbox [0;36m([1;31mmain[0;36m) [0m$ 
-[?2004l[?2004h[0;32m@michaeledidiong131-sys [0m➜ [1;34m.../range-engine-v3/Range-Engine-Logic/artifacts/mockup-sandbox [0;36m([1;31mmain[0;36m) [0m$ node revert_point13.cjs
-[?2004l======================================================
- 🧹 INITIATING SURGICAL EXTRACTION: < POINT 13 REVERT >
-======================================================
-
-✅ STATUS: PhantomLiveHub component logic removed.
-✅ STATUS: PhantomLiveHub UI render removed.
-
-✅ STATUS: Codebase restored to prior state. Ready to activate existing Live UI.
-======================================================
-
-[?2004h[0;32m@michaeledidiong131-sys [0m➜ [1;34m.../range-engine-v3/Range-Engine-Logic/artifacts/mockup-sandbox [0;36m([1;31mmain[0;36m) [0m$ [K[A[K[0;32m@michaeledidiong131-sys [0m➜ [1;34m.../range-engine-v3/Range-Engine-Logic/artifacts/mockup-sandbox [0;36m([1;31mmain[0;36m) [0m$ [K[A[K[0;32m@michaeledidiong131-sys [0m➜ [1;34m.../range-engine-v3/Range-Engine-Logic/artifacts/mockup-sandbox [0;36m([1;31mmain[0;36m) [0m$ cat << 'EOF' > scan_api_point13.cjs
-[?2004l[?2004h> const fs = require('fs');
-[?2004l[?2004h> 
-[?2004l[?2004h> const targetPath = './src/components/mockups/range-engine/RangeEngine.tsx';
-[?2004l[?2004h> 
-[?2004l[?2004h> console.log('======================================================');
-[?2004l[?2004h> console.log(' 🔍 DEEP SCAN: BASKETAPI (RECODEX) & LIVE UI ARCHITECTURE');
-[?2004l[?2004h> console.log('======================================================\n');
-[?2004l[?2004h> 
-[?2004l[?2004h> if (!fs.existsSync(targetPath)) {
-[?2004l[?2004h>     console.error(`❌ ERROR: File not found at ${targetPath}`);
-[?2004l[?2004h>     process.exit(1);
-[?2004l[?2004h> }
-[?2004l[?2004h> 
-[?2004l[?2004h> const content = fs.readFileSync(targetPath, 'utf-8');
-[?2004l[?2004h> const lines = content.split('\n');
-[?2004l[?2004h> 
-[?2004l[?2004h> const targets = [
-[?2004l[?2004h>     'rapidapi', 'basketapi', 'x-rapidapi-key', 'fetch(', 'axios', 
-[?2004l[?2004h>     'Caneros', 'Metros', 'Field Goals', 'Rebounds', 'Fouls', 'liveStats'
-[?2004l[?2004h> ];
-[?2004l[?2004h> 
-[?2004l[?2004h> let matchCount = 0;
-[?2004l[?2004h> 
-[?2004l[?2004h> console.log('--- SCAN RESULTS ---');
-[?2004l[?2004h> lines.forEach((line, index) => {
-[?2004l[?2004h>     const lowerLine = line.toLowerCase();
-[?2004l[?2004h>     const isMatch = targets.some(target => lowerLine.includes(target.toLowerCase()));
-[?2004l[?2004h>     
-[?2004l[?2004h>     if (isMatch) {
-[?2004l[?2004h>         // Filter out extreme noise, keep the core logic [A[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[C[Kc
-[?2004l[?2004h>         if (!lowerLine.includes('className=') || lowerLine.includes('fetch') || lowerLine.includes('rapidapi')) {
-[?2004l[?2004h>             console.log(`[Line ${index + 1}] => ${line.trim()}`);
-[?2004l[?2004h>             matchCount++;
-[?2004l[?2004h>         }
-[?2004l[?2004h>     }
-[?2004l[?2004h> });
-[?2004l[?2004h> 
-[?2004l[?2004h> console.log('\n======================================================');
-[?2004l[?2004h> console.log(`✅ STATUS: ${matchCount} API & UI fragments located.`);
-[?2004l[?2004h> console.log('======================================================\n');
-[?2004l[?2004h> EOF
-[?2004l[?2004h[0;32m@michaeledidiong131-sys [0m➜ [1;34m.../range-engine-v3/Range-Engine-Logic/artifacts/mockup-sandbox [0;36m([1;31mmain[0;36m) [0m$ node scan_api_point13.cjs
-[?2004l======================================================
- 🔍 DEEP SCAN: BASKETAPI (RECODEX) & LIVE UI ARCHITECTURE
-======================================================
-
---- SCAN RESULTS ---
-[Line 190] => ? `🚨 PACE-DROP STALL SENSOR TRIGGERED: Historical data shows severe pace deceleration in the 2nd half. High probability of Foul-Induced Stalling (Key initiators picking up 4th/5th fouls). ${dna.grind ? "Grind-league DNA amplifies this structural collapse." : "Half-court isolation traps expected."} UNDER ALERT issued if early OVER trajectory stalls.`
-[Line 1095] => <div><div className="flex justify-between text-[10px] font-mono text-zinc-400 mb-1"><span>0.0% (0/0)</span><span className="uppercase tracking-widest text-emerald-500/50">Field Goals</span><span>0.0% (0/0)</span></div><div className="flex h-1.5 w-full bg-zinc-900 rounded-full overflow-hidden"><div className="bg-emerald-500 w-[50%]"></div><div className="bg-red-600 w-[50%] ml-auto"></div></div></div>
-[Line 1100] => <div><div className="flex justify-between text-[10px] font-mono text-zinc-400 mb-1"><span>0</span><span className="uppercase tracking-widest text-emerald-500/50">Rebounds</span><span>0</span></div><div className="flex h-1.5 w-full bg-zinc-900 rounded-full overflow-hidden"><div className="bg-emerald-500 w-[50%]"></div><div className="bg-red-600 w-[50%] ml-auto"></div></div></div>
-[Line 1101] => <div><div className="flex justify-between text-[10px] font-mono text-zinc-400 mb-1"><span>0</span><span className="uppercase tracking-widest text-emerald-500/50">Fouls</span><span>0</span></div><div className="flex h-1.5 w-full bg-zinc-900 rounded-full overflow-hidden"><div className="bg-emerald-500 w-[50%]"></div><div className="bg-red-600 w-[50%] ml-auto"></div></div></div>
-[Line 1488] => <span className="text-zinc-500 flex-1 text-center text-[10px]">FIELD GOALS %</span>
-
-======================================================
-✅ STATUS: 5 API & UI fragments located.
-======================================================
-
-[?2004h[0;32m@michaeledidiong131-sys [0m➜ [1;34m.../range-engine-v3/Range-Engine-Logic/artifacts/mockup-sandbox [0;36m([1;31mmain[0;36m) [0m$ exit
-[?2004lexit
-
-Script done on 2026-05-13 15:17:40+00:00 [COMMAND_EXIT_CODE="0"]
