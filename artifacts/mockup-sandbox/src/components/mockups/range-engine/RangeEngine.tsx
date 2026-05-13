@@ -732,30 +732,79 @@ export function RangeEngine() {
   }, [tab, research?.done, research?.scanning]);
 
   useEffect(() => {
+  let active = true;
   let timeouts = [];
+  let jitterInterval;
+
   if (homeTeam && awayTeam && !research.done && !research.scanning) {
-    // DEBOUNCE: Wait 1.2 seconds after typing stops before scanning
     const timer = setTimeout(() => {
+      if (!active) return;
+      
       const cameos = [
-        "> [FETCHING] api.flashscore.com/matches/live...",
-        "> [SCRAPING] x.com/search?q=injury+report...",
-        "> [PULLING] pinnacle.com/odds/market...",
-        "> [SYNCING] sofascore.com/basketball/feed...",
-        "> [VERIFYING] internal_db: LEAGUE_DNA_MATRIX..."
+        "> [PING] api.flashscore.com/matches/live_feed... 200 OK", 
+        "> [SCRAPE] x.com/search?q=injury+report+live... 200 OK", 
+        "> [PULL] pinnacle.com/odds/market_depth_v2... 200 OK", 
+        "> [COMPUTE] internal_db: NEURAL_PATTERN_REC... 200 OK", 
+        "> [SYNC] sofascore.com/basketball/feed... 200 OK", 
+        "> [VERIFY] rotowire.com/nba/lineups_confirmed... 200 OK", 
+        "> [ANALYZE] 82games.com/advanced_stats_matrix... 200 OK", 
+        "> [AGGREGATE] reddit.com/r/sportsbook/sharp_money... 200 OK", 
+        "> [FINALIZING] DEEP_SCAN_MATRIX_AGGREGATION... 200 OK" 
       ];
-      setResearch(r => ({ ...r, scanning: true, progress: 0, node: 0, done: false, cameo: cameos[0] }));
-      const timings = [600, 1400, 2200, 3000, 3800];
-      timings.forEach((ms, i) => {
-        timeouts.push(setTimeout(() => setResearch(r => ({ ...r, node: i, progress: (i + 1) * 20, cameo: cameos[i] || cameos[cameos.length-1] })), ms));
-      });
-      timeouts.push(setTimeout(() => setResearch(r => ({ ...r, scanning: false, progress: 100, node: 5, done: true, cameo: "> ALL NODES SECURED - 200 OK" })), 4200));
+
+      setResearch(r => ({ ...r, scanning: true, progress: 0, node: 0, done: false, cameo: cameos[0], confidence: "0.00" }));
+
+      const scheduleNode = (nodeIndex, delay, progressOverride = null, isJitter = false) => {
+        timeouts.push(setTimeout(() => {
+          if (!active) return;
+          const progress = progressOverride || Math.min((nodeIndex + 1) * 11, 99);
+          
+          if (isJitter) {
+             jitterInterval = setInterval(() => {
+                if (!active) return;
+                const jitterVal = (98 + Math.random() * 1.5).toFixed(2);
+                setResearch(r => ({ ...r, node: nodeIndex, progress: 99, cameo: cameos[nodeIndex], confidence: jitterVal }));
+             }, 75);
+          } else {
+             setResearch(r => ({ ...r, node: nodeIndex, progress, cameo: cameos[nodeIndex] }));
+          }
+        }, delay));
+      };
+
+      // The Asynchronous Waterfall
+      scheduleNode(1, 150);
+      scheduleNode(2, 500);
+      scheduleNode(3, 900);
+      
+      // Node 4: Heavy Computation Stall
+      const stall1 = 1200 + Math.random() * 1300; 
+      scheduleNode(4, 900 + stall1);
+      scheduleNode(5, 900 + stall1 + 400);
+      scheduleNode(6, 900 + stall1 + 750);
+      scheduleNode(7, 900 + stall1 + 1100);
+      
+      // Node 9: Micro-Jitter Stall at 99%
+      const node9Time = 900 + stall1 + 1600;
+      scheduleNode(8, node9Time, 99, true); 
+      
+      // Final 100% Unlock
+      timeouts.push(setTimeout(() => {
+         if (!active) return;
+         clearInterval(jitterInterval);
+         setResearch(r => ({ ...r, scanning: false, progress: 100, node: 8, done: true, cameo: "> 1,000,000+ SOURCES SECURED - 100% OK", confidence: "100.00" }));
+      }, node9Time + 1500));
+
     }, 1200);
     timeouts.push(timer);
   } else if (!homeTeam || !awayTeam) {
-    setResearch({ scanning: false, progress: 0, node: -1, done: false, cameo: "" });
+    setResearch({ scanning: false, progress: 0, node: -1, done: false, cameo: "", confidence: "0.00" });
   }
-  // CRITICAL: Cleanup function prevents memory leak and UI freezing
-  return () => timeouts.forEach(clearTimeout);
+
+  return () => {
+    active = false;
+    timeouts.forEach(clearTimeout);
+    clearInterval(jitterInterval);
+  };
 }, [homeTeam, awayTeam]);
 
 // 2. LIVE SYNC TICKER (60s loop)
@@ -1572,44 +1621,7 @@ useEffect(() => {
 
                 {/* Market Lines */}
                 
-        {/* DEEP RESEARCH INTEGRITY MATRIX */}
-        <div className="mb-6 border border-emerald-900/40 rounded-xl bg-[#0a110f] p-4 font-mono shadow-[0_0_15px_rgba(16,185,129,0.05)]">
-          <div className="text-[10px] text-emerald-500 font-bold uppercase mb-3 flex items-center gap-2 border-b border-emerald-900/30 pb-2">
-            <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span> 
-            Deep-Scan Intelligence Engine Active
-            <span className="ml-auto text-emerald-700 tracking-widest">1,000,000+ SOURCES AGGREGATED</span>
-          </div>
-          
-          <div className="grid grid-cols-2 gap-4 text-[10px] text-zinc-400 mb-3">
-            <div className="space-y-1">
-              <div className="flex items-center gap-2"><span className="text-emerald-500">✓</span> Global Market APIs (Root Nodes)</div>
-              <div className="flex items-center gap-2"><span className="text-emerald-500">✓</span> Dynamic Social Scrapes (X/Reddit)</div>
-              <div className="flex items-center gap-2"><span className="text-emerald-500">✓</span> Local Beat Reporter Feeds</div>
-            </div>
-            <div className="space-y-1">
-              <div className="flex items-center gap-2"><span className="text-emerald-500">✓</span> Injury/Vacuum Scan: ACTIVE</div>
-              <div className="flex items-center gap-2"><span className="text-emerald-500">✓</span> Anti-Hallucination: STRICT</div>
-              <div className="flex items-center gap-2"><span className="text-emerald-500">✓</span> Sync Latency: 0.04ms</div>
-            </div>
-          </div>
-
-          <div className="text-[9px] text-emerald-400/70 mb-2 flex justify-between uppercase tracking-wider"><span>Primary Data Nodes Consulted:</span> <span className="text-emerald-500 animate-pulse font-mono lowercase">{research?.cameo || ""}</span></div>
-          <div className="h-28 overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-emerald-900/50 bg-black/40 rounded p-2 border border-emerald-900/20">
-            <ul className="text-[9px] text-zinc-500 space-y-1.5 font-mono">
-              <li className="flex items-center justify-between"><span>[NODE 01] https://www.flashscore.com/basketball/</span> <span className="text-emerald-700">200 OK</span></li>
-              <li className="flex items-center justify-between"><span>[NODE 02] https://www.sofascore.com/basketball/</span> <span className="text-emerald-700">200 OK</span></li>
-              <li className="flex items-center justify-between"><span>[NODE 03] https://www.basketball-reference.com/</span> <span className="text-emerald-700">200 OK</span></li>
-              <li className="flex items-center justify-between"><span>[NODE 04] Team Official Social Handles (Lineups)</span> <span className="text-emerald-700">200 OK</span></li>
-              <li className="flex items-center justify-between"><span>[NODE 05] Local Beat Reporter Live Feeds</span> <span className="text-emerald-700">200 OK</span></li>
-              <li className="flex items-center justify-between"><span>[NODE 06] Pinnacle Market Odds API</span> <span className="text-emerald-700">200 OK</span></li>
-              <li className="flex items-center justify-between"><span>[NODE 07] Bet365 Line Movement Tracker</span> <span className="text-emerald-700">200 OK</span></li>
-              <li className="flex items-center justify-between"><span>[NODE 08] Internal DB: TEAM_MATCHUP_HISTORY</span> <span className="text-emerald-700">LOCAL</span></li>
-              <li className="flex items-center justify-between"><span>[NODE 09] Internal DB: LEAGUE_DNA_MATRIX</span> <span className="text-emerald-700">LOCAL</span></li>
-            </ul>
-          </div>
-        </div>
-
-      <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-4 space-y-3">
+        <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-4 space-y-3">
                   <p className="text-[9px] font-bold uppercase tracking-widest text-zinc-500 border-b border-zinc-800 pb-2">💰 MARKET LINES — Rule 12</p>
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
@@ -1636,50 +1648,73 @@ useEffect(() => {
                 
 {/* --- DEEP SCAN INTELLIGENCE UI --- */}
 {(homeTeam && awayTeam) && (
-  <div className="w-full bg-slate-900/50 border border-indigo-500/20 rounded-xl p-4 mb-4 flex flex-col gap-3">
-    <div className="flex justify-between items-center">
-      <h4 className="text-xs font-black tracking-widest text-indigo-400 uppercase">
+  <div className="w-full bg-[#0a0f1a] border border-indigo-500/30 rounded-xl p-4 mb-4 flex flex-col gap-3 shadow-[0_0_20px_rgba(79,70,229,0.1)]">
+    <div className="flex justify-between items-center border-b border-indigo-500/20 pb-2">
+      <h4 className="text-[10px] font-black tracking-widest text-indigo-400 uppercase flex items-center gap-2">
+        <span className={`w-2 h-2 rounded-full ${research.done ? 'bg-indigo-500' : 'bg-indigo-500 animate-pulse'}`}></span>
         Deep Scan Intelligence Active
       </h4>
-      <span className="text-[10px] text-slate-400 font-mono">
+      <span className="text-[9px] text-indigo-300/70 font-mono tracking-widest uppercase">
         1,000,000+ Sources
       </span>
     </div>
 
     {/* The 9 Node Glow Indicators */}
-    <div className="flex justify-between items-center w-full px-1">
+    <div className="flex justify-between items-center w-full px-1 py-1">
       {[...Array(9)].map((_, i) => (
         <div 
           key={i} 
           className={`h-2 w-2 rounded-full transition-all duration-300 ${
             research.node >= i 
-              ? 'bg-indigo-500 shadow-[0_0_8px_rgba(99,102,241,0.8)] scale-110' 
-              : 'bg-slate-700 opacity-30'
+              ? 'bg-indigo-400 shadow-[0_0_8px_rgba(129,140,248,0.9)] scale-110' 
+              : 'bg-slate-800 opacity-40'
           }`}
         />
       ))}
     </div>
 
+    {/* The Merged Dynamic URL Terminal */}
+    <div className="bg-black/60 rounded p-2 border border-indigo-900/40 h-[105px] overflow-y-auto scrollbar-thin scrollbar-thumb-indigo-900/50 mt-1">
+      <ul className="text-[8.5px] text-zinc-500 space-y-1.5 font-mono">
+        {[
+          { id: "NODE 01", url: "https://www.flashscore.com/basketball/" },
+          { id: "NODE 02", url: "https://www.sofascore.com/basketball/" },
+          { id: "NODE 03", url: "https://www.basketball-reference.com/" },
+          { id: "NODE 04", url: "Team Official Social Handles (Lineups)" },
+          { id: "NODE 05", url: "Local Beat Reporter Live Feeds" },
+          { id: "NODE 06", url: "Pinnacle Market Odds API" },
+          { id: "NODE 07", url: "Bet365 Line Movement Tracker" },
+          { id: "NODE 08", url: "Internal DB: TEAM_MATCHUP_HISTORY" },
+          { id: "NODE 09", url: "Internal DB: NEURAL_AGGREGATION_MATRIX" }
+        ].map((n, i) => (
+          <li key={i} className={`flex items-center justify-between transition-opacity duration-300 ${research.node >= i ? 'opacity-100' : 'opacity-20'}`}>
+            <span className={research.node === i && !research.done ? 'text-indigo-300 animate-pulse' : ''}>[{n.id}] {n.url}</span> 
+            <span className={research.node > i || research.done ? 'text-indigo-400 font-bold' : research.node === i ? 'text-amber-400' : 'text-slate-700'}>
+              {research.node > i || research.done ? '200 OK' : research.node === i ? 'SYNC...' : 'WAIT'}
+            </span>
+          </li>
+        ))}
+      </ul>
+    </div>
+
     {/* Data Readout & Micro-Jitter */}
     <div className="flex flex-col mt-1">
-      <div className="flex justify-between text-xs font-mono">
-        <span className={`${research.done ? 'text-green-400' : 'text-indigo-300 animate-pulse'}`}>
+      <div className="flex justify-between text-[10px] font-mono">
+        <span className={`${research.done ? 'text-indigo-400' : 'text-indigo-300 animate-pulse'}`}>
           {research.scanning ? "Real-time aggregation active. Delay for accuracy..." : research.done ? "SCAN COMPLETE" : "AWAITING PARAMS..."}
         </span>
-        <span className={research.scanning && research.progress === 99 ? 'text-yellow-400 font-bold' : research.done ? 'text-green-400' : 'text-slate-500'}>
+        <span className={research.scanning && research.progress >= 98 ? 'text-yellow-400 font-bold' : research.done ? 'text-indigo-400' : 'text-slate-500'}>
           {research.progress}%
         </span>
       </div>
       
-      {/* Dynamic Cameo Stream */}
-      <div className="text-[10px] text-slate-500 font-mono mt-1 h-3 overflow-hidden">
+      <div className="text-[9px] text-slate-500 font-mono mt-1 truncate">
         {research.cameo}
       </div>
       
-      {/* Micro-Jitter Confidence Readout */}
       {research.node >= 0 && (
-        <div className="text-[10px] text-right text-indigo-400/70 font-mono mt-1">
-          CONFIDENCE INTERVAL: <span className={research.progress === 99 ? 'text-yellow-400 font-bold' : ''}>{research.confidence}%</span>
+        <div className="text-[9px] text-right text-indigo-400/70 font-mono mt-1">
+          CONFIDENCE INTERVAL: <span className={research.progress >= 98 ? 'text-yellow-400 font-bold' : ''}>{research.confidence}%</span>
         </div>
       )}
     </div>
