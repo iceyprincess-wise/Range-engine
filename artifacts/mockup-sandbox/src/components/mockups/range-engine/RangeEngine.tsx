@@ -687,8 +687,8 @@ export function RangeEngine() {
     setIsFetchingLive(true);
     setApiError("");
     try {
-      // NOTE: Replace YOUR_API_KEY_HERE with your actual RapidAPI key
-      const response = await fetch('https://basketapi1.p.rapidapi.com/api/basketball/match/live', {
+      // 1. Updated Endpoint (Plural 'matches')
+      const response = await fetch('https://basketapi1.p.rapidapi.com/api/basketball/matches/live', {
         method: 'GET',
         headers: {
           'x-rapidapi-key': 'f0f8830be9msh33c27594430acdbp174a46jsn212686e527a0', 
@@ -696,14 +696,19 @@ export function RangeEngine() {
         }
       });
       
-      if (!response.ok) throw new Error(`HTTP Error: ${response.status}`);
+      // 2. The Interceptor: Read as text first to prevent JSON crashes
+      const rawText = await response.text();
       
-      const data = await response.json();
+      if (!response.ok) throw new Error(`HTTP ${response.status}: ${rawText || 'Empty Error Response'}`);
+      if (!rawText) throw new Error("API returned an empty body. Either no matches are live right now, or the API key is restricted.");
+      
+      // 3. Safe Parse
+      const data = JSON.parse(rawText);
       setLiveStats(data);
       console.log("🔥 Live Sync Complete:", data);
     } catch (err: any) {
       setApiError(err.message || "API Connection Failed");
-      console.error(err);
+      console.error("API Engine Error:", err);
     } finally {
       setIsFetchingLive(false);
     }
@@ -1109,7 +1114,30 @@ useEffect(() => {
     {isFetchingLive ? "Syncing..." : "Sync Live Data"}
   </button>
 </div>
+
 {apiError && <p className="text-red-400 text-[10px] mb-3 border border-red-900/50 bg-red-950/30 p-2 rounded">{apiError}</p>}
+{liveStats && (
+  <div className="bg-zinc-950 p-3 rounded border border-zinc-800 mb-4 relative">
+    <div className="flex justify-between items-center mb-2">
+      <span className="text-emerald-500 text-[9px] font-bold uppercase tracking-widest">Raw API Intercept:</span>
+      <button 
+        onClick={() => {
+          navigator.clipboard.writeText(JSON.stringify(liveStats, null, 2));
+          alert('✅ JSON Copied to Clipboard!');
+        }}
+        className="bg-emerald-600 hover:bg-emerald-500 text-white text-[9px] px-3 py-1 rounded shadow uppercase font-bold tracking-wider"
+      >
+        Copy All
+      </button>
+    </div>
+    <textarea 
+      readOnly 
+      className="w-full h-48 bg-black text-[9px] text-zinc-400 font-mono p-2 rounded border border-zinc-800 focus:outline-none"
+      value={JSON.stringify(liveStats, null, 2)}
+    />
+  </div>
+)}
+
 
 <div className="text-[10px] text-zinc-400 font-mono mb-5 mt-3 leading-relaxed">
                  &gt; SYSTEM STANDBY. Matches analyzed in the Pre-Match engine will automatically route here at Tip-Off.
