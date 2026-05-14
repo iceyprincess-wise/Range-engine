@@ -592,12 +592,14 @@ interface EngineOutput {
   decision: string;
   confidence: string;
   lean: string;
-  reliability: string;
+  reliability: "Weak" | "Moderate" | "Strong";
   reliability_reason: string;
   adj_log: AdjLog[];
   total_hb_expansion: number;
   total_lb_reduction: number;
   triggered_rules: string[];
+  unit_play?: string;
+  sharp_money_warning?: boolean;
   hammer: boolean;
   vol_killed: boolean;
   buf_blocked: boolean;
@@ -683,6 +685,9 @@ interface ResearchData {
   awayLineup: { pos: string; name: string }[];
   defStallRisk: "LOW" | "MODERATE" | "HIGH";
   defStallNote: string;
+  openingLine?: number;
+  currentLine?: number;
+  bettingPercent?: number;
   offSurgeRisk: "LOW" | "MODERATE" | "HIGH";
   offSurgeNote: string;
   otRisk: "LOW" | "MODERATE" | "HIGH";
@@ -1233,8 +1238,13 @@ function runEngine(opts: {
         });
       } else {
         if (over_hammer && (!under_hammer || over_gap >= under_gap)) {
-          decision = `OVER ${best_over_line} ★ HAMMER PLAY`;
-          confidence = "HIGH (Hammer Play)";
+          let unitPlay = "3-Unit Max Play";
+          
+          // 🛡️ Volatility Cushion Check
+          if (typeof collapsePct !== 'undefined' && collapsePct > 10) unitPlay = "0.5-Unit Cautious Play";
+          
+          decision = `OVER ${best_over_line} ★ HAMMER PLAY [${unitPlay}]`;
+          confidence = `HIGH (Hammer Play) — ${unitPlay}`;
           triggered.push(
             `Rule 16 (Hammer OVER): Line ${best_over_line} is ${over_gap.toFixed(1)} pts below LB ${lb.toFixed(1)} — threshold ${hammer_edge_used} pts → HAMMER`,
           );
@@ -1246,8 +1256,13 @@ function runEngine(opts: {
             status: "triggered",
           });
         } else {
-          decision = `UNDER ${best_under_line} ★ HAMMER PLAY`;
-          confidence = "HIGH (Hammer Play)";
+          let unitPlay = "3-Unit Max Play";
+          
+          // 🛡️ Volatility Cushion Check
+          if (typeof collapsePct !== 'undefined' && collapsePct > 10) unitPlay = "0.5-Unit Cautious Play";
+
+          decision = `UNDER ${best_under_line} ★ HAMMER PLAY [${unitPlay}]`;
+          confidence = `HIGH (Hammer Play) — ${unitPlay}`;
           triggered.push(
             `Rule 16 (Hammer UNDER): Line ${best_under_line} is ${under_gap.toFixed(1)} pts above HB ${hb.toFixed(1)} — threshold ${hammer_edge_used} pts → HAMMER`,
           );
@@ -1725,7 +1740,8 @@ function SplendorLogo() {
 // ─── Main Component ───────────────────────────────────────────────────────────
 export function RangeEngine() {
   const today = new Date().toISOString().split("T")[0];
-  const [tab, setTab] = useState<"analyzer" | "live" | "history">("analyzer"); // ─── BASKETAPI LIVE ENGINE (FINAL MATRIX) ───
+  const IS_OWNER = true; // 🚨 TRUTH PROTOCOL: Owner Gateway Architecture
+  const [tab, setTab] = useState<"analyzer" | "live" | "history" | "football">("analyzer"); // ─── BASKETAPI LIVE ENGINE (FINAL MATRIX) ───
 
   const [liveStats, setLiveStats] = useState<any>(null);
   const [isFetchingLive, setIsFetchingLive] = useState(false);
@@ -2529,6 +2545,22 @@ export function RangeEngine() {
 
   return (
     <div className="min-h-screen bg-[#07070c] text-white font-mono flex flex-col text-sm select-none">
+      {tab === "football" && (
+        <div style={{ position: "fixed", inset: 0, background: "#0a0a0a", color: "#fff", zIndex: 9998, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "20px", overflowY: "auto" }}>
+          <h1 style={{ color: "#ffaa00", fontSize: "3rem", margin: 0, textAlign: "center" }}>⚽ Football Section</h1>
+          <h2 style={{ color: "#888", fontWeight: "normal", marginBottom: "30px", textAlign: "center" }}>Coming Soon</h2>
+          <div style={{ background: "#111", padding: "20px", borderRadius: "12px", border: "1px solid #333", maxWidth: "600px", textAlign: "left", lineHeight: "1.6" }}>
+            <p style={{ color: "#ff4444", fontWeight: "bold" }}>🚨 Paradigm Shift Architecture Initialized</p>
+            <ul style={{ color: "#aaa", fontSize: "0.95rem", paddingLeft: "20px" }}>
+              <li>xG Variance Models & Temporal Degradation</li>
+              <li>Momentum Collapse Detection</li>
+              <li>Low-Block Penetration Analysis</li>
+              <li>90-Minute Pacing Variance Sync</li>
+            </ul>
+          </div>
+          <button onClick={() => setTab("analyzer")} style={{ marginTop: "40px", padding: "12px 30px", background: "#ffaa00", color: "#000", fontWeight: "bold", border: "none", borderRadius: "8px", cursor: "pointer" }}>Return to Matrix</button>
+        </div>
+      )}
       {/* ─── Header ─────────────────────────────────────────────────────────── */}
       <div className="border-b border-white/[0.06] px-5 py-3 flex flex-col items-center justify-center bg-black/80 flex-shrink-0">
         <SplendorLogo />
@@ -2561,6 +2593,14 @@ export function RangeEngine() {
           )}
         </div>
       </div>
+
+      {IS_OWNER && (
+        <div style={{ display: "flex", justifyContent: "center", marginTop: "12px", marginBottom: "16px", width: "100%" }}>
+          <button onClick={() => setTab("football")} style={{ background: "linear-gradient(90deg, #1a1a1a, #333)", color: "#ffaa00", padding: "8px 24px", borderRadius: "20px", fontWeight: "bold", border: "1px solid #ffaa00", cursor: "pointer", boxShadow: "0 4px 15px rgba(255, 170, 0, 0.3)", display: "flex", gap: "8px", alignItems: "center", fontSize: "0.9rem" }}>
+            ⚽ Football Section
+          </button>
+        </div>
+      )}
 
       {/* ─── HISTORY TAB ────────────────────────────────────────────────────── */}
 
