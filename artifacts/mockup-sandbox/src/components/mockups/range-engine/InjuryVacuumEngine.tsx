@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 
 // Strict Type Definitions for 100% Data Accuracy Mapping
 interface Player {
