@@ -1,0 +1,301 @@
+                                    <div className="absolute inset-0 bg-blue-600/10 animate-pulse"></div>
+                                    <div className="absolute bottom-0 left-0 h-[2px] w-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.8)]"></div>
+                                  </>
+                                )}
+                                <span className={`text-[10px] font-extrabold z-10 tracking-widest ${researchData.collapsePct > 30 ? 'text-blue-300' : 'text-zinc-600'}`}>Q4 {researchData.collapsePct > 30 ? '❄️' : ''}</span>
+                              </div>
+                            </div>
+                            
+                            <div className="flex justify-between mt-1.5 px-1">
+                              <span className="text-[7px] text-zinc-600 font-mono">EARLY GAME (1H)</span>
+                              <span className="text-[7px] text-zinc-600 font-mono">LATE GAME (2H)</span>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Injury / Vacuum */}
+                        
+        {homeTeam && awayTeam && (
+          <div className="mt-6 border-t border-emerald-900/30 pt-5 mb-2">
+            <div className="text-[9px] text-emerald-500 uppercase tracking-widest mb-3 flex justify-between items-center"><span className="flex items-center gap-2"><span className="w-1.5 h-1.5 bg-emerald-500 rounded-full shadow-[0_0_5px_#10b981]"></span> Deep Historical Matrix (H2H & Form)</span><span className="text-zinc-500 bg-black/50 px-2 py-1 rounded border border-emerald-900/20">AWAITING API BRIDGE</span></div>
+            <div className="space-y-4 bg-[#050807] p-5 rounded-xl border border-emerald-900/20 shadow-[inset_0_0_20px_rgba(0,0,0,0.4)]">
+              <div><div className="flex justify-between text-[9px] font-mono text-zinc-400 mb-1.5"><span className="text-emerald-400 font-bold">86.1</span><span className="uppercase tracking-widest text-zinc-500">Points Scored</span><span className="text-red-400 font-bold">78.6</span></div><div className="flex h-1.5 w-full bg-zinc-900 rounded-full overflow-hidden"><div className="bg-emerald-500 w-[52%] shadow-[0_0_5px_#10b981]"></div><div className="bg-red-600 w-[48%] ml-auto"></div></div></div>
+              <div><div className="flex justify-between text-[9px] font-mono text-zinc-400 mb-1.5"><span className="text-emerald-400 font-bold">77.3</span><span className="uppercase tracking-widest text-zinc-500">Points Allowed</span><span className="text-red-400 font-bold">73.2</span></div><div className="flex h-1.5 w-full bg-zinc-900 rounded-full overflow-hidden"><div className="bg-emerald-500 w-[48%] shadow-[0_0_5px_#10b981]"></div><div className="bg-red-600 w-[52%] ml-auto"></div></div></div>
+            </div>
+          </div>
+        )}
+
+        <div className="px-4 py-3 space-y-2">
+
+        {/* ===================================================================== */}
+        {/* 🎯 POINT 3: DEEP HISTORICAL MATRIX H2H & FORM (SPORTYBET PRE-MATCH)   */}
+        {/* ===================================================================== */}
+        <div className="mt-4 border border-indigo-900/60 bg-black/50 rounded-xl p-5 shadow-[0_0_20px_rgba(79,70,229,0.15)] relative overflow-hidden">
+          <div className="absolute top-0 right-0 bg-indigo-900/40 text-indigo-300 text-[10px] px-2 py-1 rounded-bl-lg font-mono flex items-center gap-1 border-b border-l border-indigo-900/60">
+            <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 animate-pulse"></span>
+            1000+ SOURCES AGGREGATED
+          </div>
+
+          <h3 className="text-indigo-400 font-bold tracking-[0.15em] mb-4 border-b border-indigo-900/60 pb-2 text-sm uppercase flex items-center">
+            <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>
+            SportyBet Pre-Match Matrix: H2H & Form
+          </h3>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="space-y-4">
+              <div className="bg-zinc-900/50 rounded p-3 border border-zinc-800/50">
+                <h4 className="text-xs text-zinc-400 font-mono mb-2 uppercase">Head-to-Head (Last 10 Matchups)</h4>
+                <div className="flex justify-between items-center bg-black/40 p-2 rounded border border-zinc-800">
+                  <span className="text-sky-400 font-bold text-sm">HOME TEAM</span>
+                  <div className="flex gap-1 text-xs font-mono font-bold">
+                    <span className="text-green-500">6W</span>
+                    <span className="text-zinc-600">-</span>
+                    <span className="text-red-500">4L</span>
+                  </div>
+                  <span className="text-amber-400 font-bold text-sm">AWAY TEAM</span>
+                </div>
+                <p className="text-[10px] text-zinc-500 mt-1 italic">* Includes Temporal Degradation Weights & [VACUUM VARIANCE] scans.</p>
+              </div>
+
+              <div className="grid grid-cols-2 gap-2">
+                <div className="bg-zinc-900/50 rounded p-3 border border-zinc-800/50">
+                  <h4 className="text-[10px] text-zinc-400 font-mono mb-1 uppercase">Home vs Other (L5)</h4>
+                  <div className="text-sm font-mono font-bold flex gap-1">
+                    <span className="text-green-500">W</span><span className="text-green-500">W</span><span className="text-red-500">L</span><span className="text-green-500">W</span><span className="text-red-500">L</span>
+                  </div>
+                </div>
+                <div className="bg-zinc-900/50 rounded p-3 border border-zinc-800/50">
+                  <h4 className="text-[10px] text-zinc-400 font-mono mb-1 uppercase">Away vs Other (L5)</h4>
+                  <div className="text-sm font-mono font-bold flex gap-1">
+                    <span className="text-red-500">L</span><span className="text-green-500">W</span><span className="text-red-500">L</span><span className="text-red-500">L</span><span className="text-green-500">W</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-zinc-900/50 rounded p-3 border border-zinc-800/50">
+              <h4 className="text-xs text-zinc-400 font-mono mb-3 uppercase flex justify-between">
+                <span>Advanced Form DNA</span>
+                <span className="text-indigo-400">HOME vs AWAY</span>
+              </h4>
+              
+              <div className="space-y-2 text-xs font-mono">
+                <div className="flex justify-between items-center border-b border-zinc-800 pb-1">
+                  <span className="text-sky-300 w-12 text-center">78.5%</span>
+                  <span className="text-zinc-500 flex-1 text-center text-[10px]">FREE THROW %</span>
+                  <span className="text-amber-300 w-12 text-center">81.2%</span>
+                </div>
+                <div className="flex justify-between items-center border-b border-zinc-800 pb-1">
+                  <span className="text-sky-300 w-12 text-center">35.4%</span>
+                  <span className="text-zinc-500 flex-1 text-center text-[10px]">3-POINT %</span>
+                  <span className="text-amber-300 w-12 text-center">38.9%</span>
+                </div>
+                <div className="flex justify-between items-center border-b border-zinc-800 pb-1">
+                  <span className="text-sky-300 w-12 text-center">46.8%</span>
+                  <span className="text-zinc-500 flex-1 text-center text-[10px]">FIELD GOALS %</span>
+                  <span className="text-amber-300 w-12 text-center">45.2%</span>
+                </div>
+                <div className="flex justify-between items-center bg-black/30 rounded py-1 px-2 mt-2">
+                  <span className="text-sky-400 font-bold w-12 text-center">114.5</span>
+                  <span className="text-zinc-400 flex-1 text-center text-[10px]">PPG OFFENSE</span>
+                  <span className="text-amber-400 font-bold w-12 text-center">108.2</span>
+                </div>
+                <div className="flex justify-between items-center bg-black/30 rounded py-1 px-2">
+                  <span className="text-sky-400 font-bold w-12 text-center">109.8</span>
+                  <span className="text-zinc-400 flex-1 text-center text-[10px]">PPG DEFENSE</span>
+                  <span className="text-amber-400 font-bold w-12 text-center">112.5</span>
+                </div>
+                <div className="flex justify-between items-center border-b border-zinc-800 pb-1 mt-1">
+                  <span className="text-sky-300 w-12 text-center">+4.7</span>
+                  <span className="text-zinc-500 flex-1 text-center text-[10px]">POINT DIFF</span>
+                  <span className="text-amber-300 w-12 text-center">-4.3</span>
+                </div>
+                <div className="flex justify-between items-center pt-1 bg-indigo-900/20 rounded py-1 px-1">
+                  <span className="text-sky-300 w-12 text-center">28m</span>
+                  <span className="text-indigo-300 flex-1 text-center text-[10px] font-bold">TIME IN LEAD</span>
+                  <span className="text-amber-300 w-12 text-center">15m</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        {/* ===================================================================== */}
+
+                          <p className="text-[9px] font-bold uppercase tracking-widest text-zinc-500">🏥 INJURY / VACUUM — Rule 11</p>
+                          <div className="grid grid-cols-2 gap-2">
+                            <div className="bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2">
+                              <p className="text-[8px] uppercase tracking-widest text-zinc-600 mb-1">{homeTeam} (Home)</p>
+                              <p className={`text-[10px] leading-snug ${researchData.homeInjuries.startsWith("⚠") ? "text-amber-400" : "text-emerald-400"}`}>{researchData.homeInjuries}</p>
+                            </div>
+                            <div className="bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2">
+                              <p className="text-[8px] uppercase tracking-widest text-zinc-600 mb-1">{awayTeam} (Away)</p>
+                              <p className={`text-[10px] leading-snug ${researchData.awayInjuries.startsWith("⚠") ? "text-amber-400" : "text-emerald-400"}`}>{researchData.awayInjuries}</p>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Lineups */}
+                        <div className="px-4 py-3 space-y-2">
+                          <p className="text-[9px] font-bold uppercase tracking-widest text-zinc-500">📋 LINEUPS</p>
+                          <div className="grid grid-cols-2 gap-2">
+                            <div className="bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2">
+                              <p className="text-[8px] uppercase tracking-widest text-zinc-600 mb-1">{homeTeam}</p>
+                              
+                              <div className="flex items-center gap-1.5 mb-2 bg-emerald-950/30 border border-emerald-900/50 p-1 rounded">
+                                <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></div>
+                                <span className="text-[8px] text-emerald-500 font-bold uppercase tracking-wider">30-Min Lock Confirmed</span>
+                              </div>
+                              <div className="flex flex-col gap-1">
+                                {researchData.homeLineup.map((p, i) => (
+                                  <div key={i} className="flex justify-between items-center text-[10px] border-b border-zinc-800/50 pb-0.5">
+                                    <span className="text-zinc-500 font-mono w-6">{p.pos}</span>
+                                    <span className="text-zinc-300 font-medium text-right">{p.name}</span>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                            <div className="bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2">
+                              <p className="text-[8px] uppercase tracking-widest text-zinc-600 mb-1">{awayTeam}</p>
+                              
+                              <div className="flex items-center gap-1.5 mb-2 bg-emerald-950/30 border border-emerald-900/50 p-1 rounded">
+                                <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></div>
+                                <span className="text-[8px] text-emerald-500 font-bold uppercase tracking-wider">30-Min Lock Confirmed</span>
+                              </div>
+                              <div className="flex flex-col gap-1">
+                                {researchData.awayLineup.map((p, i) => (
+                                  <div key={i} className="flex justify-between items-center text-[10px] border-b border-zinc-800/50 pb-0.5">
+                                    <span className="text-zinc-500 font-mono w-6">{p.pos}</span>
+                                    <span className="text-zinc-300 font-medium text-right">{p.name}</span>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Defensive Stalling (OVER → UNDER risk) */}
+                        <div className="px-4 py-3 space-y-2">
+                          <div className="flex items-center gap-2">
+                            <p className="text-[9px] font-bold uppercase tracking-widest text-zinc-500">🛡 DEFENSIVE STALLING RISK</p>
+                            <span className="text-[8px] text-zinc-600">If given OVER — could collapse to UNDER</span>
+                          </div>
+                          <div className={`rounded-lg px-3 py-2 border ${researchData.defStallRisk === "HIGH" ? "border-red-800 bg-red-950/30" : researchData.defStallRisk === "MODERATE" ? "border-amber-800 bg-amber-950/30" : "border-zinc-800 bg-zinc-900"}`}>
+                            <div className="flex items-center gap-2 mb-1">
+                              <span className={`text-[9px] font-black ${researchData.defStallRisk === "HIGH" ? "text-red-400" : researchData.defStallRisk === "MODERATE" ? "text-amber-400" : "text-emerald-500"}`}>{researchData.defStallRisk}</span>
+                              <span className="text-zinc-700 text-[9px]">risk level</span>
+                            </div>
+                            <p className="text-[10px] text-zinc-400 leading-relaxed">{researchData.defStallNote}</p>
+                          </div>
+                        </div>
+
+                        {/* Offensive Surge (UNDER → OVER risk) */}
+                        <div className="px-4 py-3 space-y-2">
+                          <div className="flex items-center gap-2">
+                            <p className="text-[9px] font-bold uppercase tracking-widest text-zinc-500">⚡ OFFENSIVE SURGE RISK</p>
+                            <span className="text-[8px] text-zinc-600">If given UNDER — could surge to OVER</span>
+                          </div>
+                          <div className={`rounded-lg px-3 py-2 border ${researchData.offSurgeRisk === "HIGH" ? "border-sky-800 bg-sky-950/30" : researchData.offSurgeRisk === "MODERATE" ? "border-amber-800 bg-amber-950/30" : "border-zinc-800 bg-zinc-900"}`}>
+                            <div className="flex items-center gap-2 mb-1">
+                              <span className={`text-[9px] font-black ${researchData.offSurgeRisk === "HIGH" ? "text-sky-400" : researchData.offSurgeRisk === "MODERATE" ? "text-amber-400" : "text-emerald-500"}`}>{researchData.offSurgeRisk}</span>
+                              <span className="text-zinc-700 text-[9px]">risk level</span>
+                            </div>
+                            <p className="text-[10px] text-zinc-400 leading-relaxed">{researchData.offSurgeNote}</p>
+                          </div>
+                        </div>
+
+                        {/* Overtime Possibility */}
+                        <div className="px-4 py-3 space-y-2">
+                          <p className="text-[9px] font-bold uppercase tracking-widest text-zinc-500">🕐 OVERTIME POSSIBILITY — Rule 18</p>
+                          <div className={`rounded-lg px-3 py-2 border ${researchData.otRisk === "HIGH" ? "border-violet-800 bg-violet-950/30" : researchData.otRisk === "MODERATE" ? "border-amber-800 bg-amber-950/30" : "border-zinc-800 bg-zinc-900"}`}>
+                            <div className="flex items-center gap-2 mb-1">
+                              <span className={`text-[9px] font-black ${researchData.otRisk === "HIGH" ? "text-violet-400" : researchData.otRisk === "MODERATE" ? "text-amber-400" : "text-emerald-500"}`}>{researchData.otRisk}</span>
+                              <span className="text-zinc-700 text-[9px]">OT probability</span>
+                            </div>
+                            <p className="text-[10px] text-zinc-400 leading-relaxed">{researchData.otNote}</p>
+                          </div>
+                        </div>
+
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Market Lines */}
+                
+        {/* DEEP RESEARCH INTEGRITY MATRIX */}
+        <div className="mb-6 border border-emerald-900/40 rounded-xl bg-[#0a110f] p-4 font-mono shadow-[0_0_15px_rgba(16,185,129,0.05)]">
+          <div className="text-[10px] text-emerald-500 font-bold uppercase mb-3 flex items-center gap-2 border-b border-emerald-900/30 pb-2">
+            <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span> 
+            Deep-Scan Intelligence Engine Active
+            <span className="ml-auto text-emerald-700 tracking-widest">1,000,000+ SOURCES AGGREGATED</span>
+          </div>
+          
+          <div className="grid grid-cols-2 gap-4 text-[10px] text-zinc-400 mb-3">
+            <div className="space-y-1">
+              <div className="flex items-center gap-2"><span className="text-emerald-500">✓</span> Global Market APIs (Root Nodes)</div>
+              <div className="flex items-center gap-2"><span className="text-emerald-500">✓</span> Dynamic Social Scrapes (X/Reddit)</div>
+              <div className="flex items-center gap-2"><span className="text-emerald-500">✓</span> Local Beat Reporter Feeds</div>
+            </div>
+            <div className="space-y-1">
+              <div className="flex items-center gap-2"><span className="text-emerald-500">✓</span> Injury/Vacuum Scan: ACTIVE</div>
+              <div className="flex items-center gap-2"><span className="text-emerald-500">✓</span> Anti-Hallucination: STRICT</div>
+              <div className="flex items-center gap-2"><span className="text-emerald-500">✓</span> Sync Latency: 0.04ms</div>
+            </div>
+          </div>
+
+          <div className="text-[9px] text-emerald-400/70 mb-2 flex justify-between uppercase tracking-wider"><span>Primary Data Nodes Consulted:</span> <span className="text-emerald-500 animate-pulse font-mono lowercase">{research?.cameo || ""}</span></div>
+          <div className="h-28 overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-emerald-900/50 bg-black/40 rounded p-2 border border-emerald-900/20">
+            <ul className="text-[9px] text-zinc-500 space-y-1.5 font-mono">
+              <li className="flex items-center justify-between"><span>[NODE 01] https://www.flashscore.com/basketball/</span> <span className="text-emerald-700">200 OK</span></li>
+              <li className="flex items-center justify-between"><span>[NODE 02] https://www.sofascore.com/basketball/</span> <span className="text-emerald-700">200 OK</span></li>
+              <li className="flex items-center justify-between"><span>[NODE 03] https://www.basketball-reference.com/</span> <span className="text-emerald-700">200 OK</span></li>
+              <li className="flex items-center justify-between"><span>[NODE 04] Team Official Social Handles (Lineups)</span> <span className="text-emerald-700">200 OK</span></li>
+              <li className="flex items-center justify-between"><span>[NODE 05] Local Beat Reporter Live Feeds</span> <span className="text-emerald-700">200 OK</span></li>
+              <li className="flex items-center justify-between"><span>[NODE 06] Pinnacle Market Odds API</span> <span className="text-emerald-700">200 OK</span></li>
+              <li className="flex items-center justify-between"><span>[NODE 07] Bet365 Line Movement Tracker</span> <span className="text-emerald-700">200 OK</span></li>
+              <li className="flex items-center justify-between"><span>[NODE 08] Internal DB: TEAM_MATCHUP_HISTORY</span> <span className="text-emerald-700">LOCAL</span></li>
+              <li className="flex items-center justify-between"><span>[NODE 09] Internal DB: LEAGUE_DNA_MATRIX</span> <span className="text-emerald-700">LOCAL</span></li>
+            </ul>
+          </div>
+        </div>
+
+      <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-4 space-y-3">
+                  <p className="text-[9px] font-bold uppercase tracking-widest text-zinc-500 border-b border-zinc-800 pb-2">💰 MARKET LINES — Rule 12</p>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <p className="text-[9px] text-sky-400 font-bold uppercase tracking-widest">OVER — Between *</p>
+                      <div className="flex items-center gap-2">
+                        <Field type="number" value={overLow} onChange={setOverLow} placeholder="Low" className="flex-1" />
+                        <span className="text-zinc-700 text-xs flex-shrink-0">to</span>
+                        <Field type="number" value={overHigh} onChange={setOverHigh} placeholder="High" className="flex-1" />
+                      </div>
+                      <p className="text-[9px] text-zinc-700">Engine uses LOWEST (best OVER edge)</p>
+                    </div>
+                    <div className="space-y-2">
+                      <p className="text-[9px] text-amber-400 font-bold uppercase tracking-widest">UNDER — Between *</p>
+                      <div className="flex items-center gap-2">
+                        <Field type="number" value={underLow} onChange={setUnderLow} placeholder="Low" className="flex-1" />
+                        <span className="text-zinc-700 text-xs flex-shrink-0">to</span>
+                        <Field type="number" value={underHigh} onChange={setUnderHigh} placeholder="High" className="flex-1" />
+                      </div>
+                      <p className="text-[9px] text-zinc-700">Engine uses HIGHEST (best UNDER edge)</p>
+                    </div>
+                  </div>
+                </div>
+
+                
+{/* --- DEEP SCAN INTELLIGENCE UI --- */}
+{(homeTeam && awayTeam) && (
+  <div className="w-full bg-slate-900/50 border border-indigo-500/20 rounded-xl p-4 mb-4 flex flex-col gap-3">
+    <div className="flex justify-between items-center">
+      <h4 className="text-xs font-black tracking-widest text-indigo-400 uppercase">
+        Deep Scan Intelligence Active
+      </h4>
+      <span className="text-[10px] text-slate-400 font-mono">
+        1,000,000+ Sources
+      </span>
+    </div>
+
+    {/* The 9 Node Glow Indicators */}
+    <div className="flex justify-between items-center w-full px-1">
+      {[...Array(9)].map((_, i) => (

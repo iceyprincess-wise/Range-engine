@@ -1,0 +1,45 @@
+This is Update 6B the final 
+A statement is below it 
+
+Moving to Replit was definitely the right call. Having that direct access to the wider web for data retrieval means you can finally kill those "Proxy Hallucinations" for good. A Gemini Gem is great for logic, but for **deep-web basketball forensics**, you need the power of a dev environment that can scrape 1,000+ sources in seconds.
+
+Here is the **Update 6** block to finalize your logic before the Replit limit lifts tomorrow. This specifically targets the **Time Sync** issue, the **Generic Audit** problem, and ensures the engine is 100% "Top-Notch" with its facts.
+
+### **UPDATE MODULE: RANGEENGINE V3.3 — TEMPORAL SYNC & AUDIT AUTHENTICITY**
+
+#### **1. DYNAMIC TEMPORAL SYNCHRONIZATION (THE RERUN FIX)**
+ * **Real-Time Clock Injection:** The RERUN command must **NOT** use cached or pre-match timestamps.
+ * **Mandatory Logic:** Every time a RERUN is triggered, the engine must call a fresh UTC/WAT timestamp.
+ * **Live Game Integration:** The engine must subtract the [Current Time] from the [Kickoff Time] to determine the **Exact Minute** of the game.
+   * *If game is live:* Adjust the **Pace Hijack (Rule 9)** and **Foul Engine (Rule 10)** based on the *actual* remaining time, not the pre-match estimate.
+
+#### **2. ANTI-GENERIC AUDIT PROTOCOL (NO TEMPLATES)**
+ * **The Diversity Mandate:** The engine is **STRICTLY PROHIBITED** from generating identical "Width" or "Confidence" reports for different leagues.
+ * **DNA-Specific Logic:**
+   * If League = **Russia Super League**, use the "Defensive Grind" DNA (Lower HB).
+   * If League = **German BBL**, use the "Efficiency/Transition" DNA (Higher LB).
+ * **Audit Authenticity:** No more "presuming" stats. If the deep-web search (1000+ sources) fails to find a specific shooting percentage, the Audit must state **"DATA UNAVAILABLE"** and automatically trigger **Rule 14 (Volatility Kill)**.
+
+#### **3. THE "HUT" (HUD) LIVE ACCURACY SHIELD**
+ * **Strict Fact-Checking:** Every digit in the Live HUD must be cross-referenced across at least three sources (e.g., Flashscore, Sofascore, League Official Site).
+ * **No Faking/Guessing:** If the engine cannot confirm a live score or foul count, it must pause the analysis rather than "creating a fake non-related audit."
+ * **Contextual Reasoning:** The "Final Decision" must mention a specific team fact found during the research.
+   * *Example:* "Decision: UNDER. Based on Mitteldeutscher’s 38% Home 3PT shooting and a Q1 stall trend." (This proves the engine is actually working, not just following a template).
+
+#### **4. TERMINATION OF "OVER-BIAS" HALLUCINATION**
+ * **Final Guardrail:** If the engine suggests a **HAMMER PLAY** but the **Historical Collapse %** (from Update 3) is above 20%, the engine **MUST** override the Hammer and return **NO ACTION**.
+ * We do not drop the Hammer on games with "Heartbreak Stalling" potential.
+
+### **The "Top-Notch" Verification**
+Once you add this, your RERUNs will finally be "in the now." No more time-lag, and no more "template" reports. The engine will have to treat every team like a unique case, just like you wanted.
+Now we just sit back and watch how Game 3 finishes. If the engine tries to give you that same "18-point width / 197.5 LB" report again, we’ll know it’s still trying to be lazy—but with these Update 6 instructions, it won't have anywhere to hide.
+
+So with everything sent from Update 1-6B,I expect a Good progress 
+
+Give the Page a Title Welcome to Splendor House of Betting and give it a smart and attractive logo with Capital S and Splendor around it with Bet Responsibly 18+
+
+When we win game a Green Trophy sign appears with the badge 
+
+When we lost a red sign appears no trophy 
+
+And hope you've understand the livescores part of the upcoming update and all other updates it's a MUST you don't miss anything out 
