@@ -1,30 +1,17 @@
 // Splendor V3 - Live API Data Bridge
-// Connected to: BasketAPI by REcodeX (RapidAPI)
+// Proxying BasketAPI through the backend service for secure hosting
 
-const API_KEY = import.meta.env.VITE_RAPIDAPI_KEY;
-const HOST = import.meta.env.VITE_RAPIDAPI_HOST;
+const API_BASE = import.meta.env.VITE_API_BASE || "";
 
 export const fetchLiveMatches = async () => {
-    if (!API_KEY) {
-        console.error("🔒 SECURITY LOCK: API Key missing from .env file");
-        return null;
+  try {
+    const response = await fetch(`${API_BASE}/api/basket/live`);
+    if (!response.ok) {
+      throw new Error(`Backend live fetch failed: ${response.status}`);
     }
-
-    const url = `https://${HOST}/events/live`;
-
-    try {
-        const response = await fetch(url, {
-            method: 'GET',
-            headers: {
-                'x-rapidapi-key': API_KEY,
-                'x-rapidapi-host': HOST
-            }
-        });
-        
-        const data = await response.json();
-        return data;
-    } catch (error) {
-        console.error("📡 API BRIDGE ERROR:", error);
-        return null;
-    }
+    return response.json();
+  } catch (error) {
+    console.error("📡 API BRIDGE ERROR:", error);
+    return null;
+  }
 };

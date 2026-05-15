@@ -1746,6 +1746,7 @@ export function RangeEngine() {
   const [liveStats, setLiveStats] = useState<any>(null);
   const [isFetchingLive, setIsFetchingLive] = useState(false);
   const [apiError, setApiError] = useState("");
+  const API_BASE = import.meta.env.VITE_API_BASE || "";
 
   const triggerLiveSync = async () => {
     setIsFetchingLive(true);
@@ -1760,55 +1761,23 @@ export function RangeEngine() {
         );
       }
 
-      // Step 1: Global Radar Scan
-      const radarRes = await fetch(
-        "https://basketapi1.p.rapidapi.com/api/basketball/matches/live",
-        {
-          headers: {
-            "x-rapidapi-key":
-              "f0f8830be9msh33c27594430acdbp174a46jsn212686e527a0",
-            "x-rapidapi-host": "basketapi1.p.rapidapi.com",
-          },
-        },
-      );
-      const radarText = await radarRes.text();
-      if (!radarRes.ok) throw new Error(`Radar Error: ${radarRes.status}`);
-      if (!radarText)
-        throw new Error("API empty: No games are live globally right now.");
+      const syncUrl = `${API_BASE}/api/v1/sync?league=${encodeURIComponent(
+        league || "",
+      )}&homeTeam=${encodeURIComponent(homeTeam)}&awayTeam=${encodeURIComponent(
+        awayTeam,
+      )}`;
 
-      const radarData = JSON.parse(radarText);
-
-      // Target Lock (Fuzzy Match)
-      const target = (radarData.events || []).find(
-        (e: any) =>
-          e.homeTeam.name.toLowerCase().includes(hSearch) ||
-          e.awayTeam.name.toLowerCase().includes(aSearch) ||
-          hSearch.includes(e.homeTeam.name.toLowerCase()),
-      );
-
-      if (!target)
+      const response = await fetch(syncUrl);
+      if (!response.ok) {
+        const payload = await response.json().catch(() => null);
         throw new Error(
-          `Target Lost: "${homeTeam}" vs "${awayTeam}" is not actively playing right now.`,
+          payload?.error || `Backend sync failed with status ${response.status}`,
         );
+      }
 
-      // Step 2: Deep-Dive Statistics Extraction
-      const statsRes = await fetch(
-        `https://basketapi1.p.rapidapi.com/api/basketball/match/${target.id}/statistics`,
-        {
-          headers: {
-            "x-rapidapi-key":
-              "f0f8830be9msh33c27594430acdbp174a46jsn212686e527a0",
-            "x-rapidapi-host": "basketapi1.p.rapidapi.com",
-          },
-        },
-      );
-      const statsText = await statsRes.text();
-      if (!statsRes.ok) throw new Error(`Stats Error: ${statsRes.status}`);
-
-      const statsData = JSON.parse(statsText);
-
-      setLiveStats({ radar: target, stats: statsData });
-      console.log("🔥 Live Matrix Connected & Mapped");
+      const syncData = await response.json();
+      setLiveStats({ radar: syncData, stats: syncData.statistics || null });
+      console.log("🔥 Live Matrix Connected & Mapped via backend proxy");
     } catch (err: any) {
       setApiError(err.message || "API Connection Failed");
       console.error(err);
