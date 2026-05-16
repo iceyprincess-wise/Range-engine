@@ -13,7 +13,7 @@ export const LiveMatrixHub: React.FC<LiveMatrixHubProps> = ({ history, setHistor
   const [syncing, setSyncing] = useState<Record<string, boolean>>({});
   const [globalLoading, setGlobalLoading] = useState(false);
   const [apiReferenceMap, setApiReferenceMap] = useState<Record<string, any>>({}); // Maps history IDs to API data
-  const API_BASE = import.meta.env.VITE_API_BASE || "";
+  const API_BASE = import.meta.env.VITE_API_BASE || "/";
 
   // ONLY show games that you have analyzed and are waiting for results
   const pendingGames = history.filter(h => h.outcome === "PENDING");
