@@ -566,11 +566,14 @@ function lookupTeam(
 // ─── Smart Paste Auto-Correct Engine ──────────────────────────────────────────
 function autoCorrectTeamName(input: string): string {
   const corrections: Record<string, string> = {
-    "LAL": "Los Angeles Lakers",
-    "Fener": "Fenerbahce Istanbul",
-    "GS": "Galatasaray",
-    "BJK": "Besiktas JK",
-    // Add more as needed
+    LAL: "Los Angeles Lakers",
+    Fener: "Fenerbahce Istanbul",
+    GS: "Galatasaray",
+    BJK: "Besiktas JK",
+    "Zonkeys de Ti": "Zonkeys de Tijuana",
+    "Halcones de C": "Halcones de Ciudad Victoria",
+    Mavs: "Dallas Mavericks",
+    "76ers": "Philadelphia 76ers",
   };
   const trimmed = input.trim();
   return corrections[trimmed] || trimmed;
@@ -756,20 +759,34 @@ function generateResearch(
         ]
       : "✓ No confirmed injuries — full squad available";
 
-  const homeLineup = [
-    { pos: "PG", name: "J. Brunson" },
-    { pos: "SG", name: "D. DiVincenzo" },
-    { pos: "SF", name: "J. Hart" },
-    { pos: "PF", name: "J. Randle" },
-    { pos: "C", name: "I. Hartenstein" },
+  // Generate simple seeded lineups to avoid repeated static placeholders
+  const positions = ["PG", "SG", "SF", "PF", "C"];
+  const sampleNames = [
+    "J. Adams",
+    "M. Brooks",
+    "S. Carter",
+    "D. Edwards",
+    "R. Flores",
+    "L. Gomez",
+    "P. Hernandez",
+    "T. Irwin",
+    "K. Johnson",
+    "N. King",
+    "O. Lopez",
+    "B. Martin",
+    "C. Nelson",
+    "R. Ortiz",
+    "S. Perez",
   ];
-  const awayLineup = [
-    { pos: "PG", name: "T. Maxey" },
-    { pos: "SG", name: "K. Oubre Jr." },
-    { pos: "SF", name: "T. Harris" },
-    { pos: "PF", name: "N. Batum" },
-    { pos: "C", name: "J. Embiid" },
-  ];
+
+  const homeLineup = positions.map((pos, i) => ({
+    pos,
+    name: `${homeTeam.split(" ")[0] || "Home"} ${sampleNames[(hs + i) % sampleNames.length]}`,
+  }));
+  const awayLineup = positions.map((pos, i) => ({
+    pos,
+    name: `${awayTeam.split(" ")[0] || "Away"} ${sampleNames[(as_ + i) % sampleNames.length]}`,
+  }));
 
   const defRoll = seededVal(cs, 12, 0, 100, 0);
   const defStallRisk: "LOW" | "MODERATE" | "HIGH" =
@@ -2078,6 +2095,10 @@ export function RangeEngine() {
   const [overHigh, setOverHigh] = useState("");
   const [underLow, setUnderLow] = useState("");
   const [underHigh, setUnderHigh] = useState("");
+  // Alternative market line picker options (expandable)
+  const ALT_LINE_OPTIONS = [160, 164, 168, 172, 176, 180, 184, 188, 192, 196, 200];
+  const [activeLinePreset, setActiveLinePreset] = useState<number | null>(null);
+  const [activeQuarter, setActiveQuarter] = useState<string>("Q1");
   // --- MARKET LINES AUTO-SYNC ---
   useEffect(() => {
     if (overLow && overLow !== underLow) setUnderLow(overLow);
@@ -2918,18 +2939,21 @@ export function RangeEngine() {
                   <p className="text-[9px] font-bold uppercase tracking-widest text-zinc-500 border-b border-zinc-800 pb-2">
                     ⏱ 
     <datalist id="leagues">
-        <option value="Turkiye - Super Lig" />
-        <option value="USA - NBA Regular Season" />
-        <option value="Russia - Super League" />
-        <option value="EuroLeague Basketball" />
-        <option value="England - Premier League (Football)" />
+      <option value="Turkiye - Super Lig" />
+      <option value="USA - NBA Regular Season" />
+      <option value="Russia - Super League" />
+      <option value="EuroLeague Basketball" />
+      <option value="England - Premier League (Football)" />
+      <option value="Mexico - CIBACOPA" />
     </datalist>
     <datalist id="teams">
-        <option value="Fenerbahce Istanbul" />
-        <option value="Besiktas JK" />
-        <option value="Los Angeles Lakers" />
-        <option value="Khimki" />
-        <option value="Lokomotiv" />
+      <option value="Fenerbahce Istanbul" />
+      <option value="Besiktas JK" />
+      <option value="Los Angeles Lakers" />
+      <option value="Khimki" />
+      <option value="Lokomotiv" />
+      <option value="Zonkeys de Tijuana" />
+      <option value="Halcones de Ciudad Victoria" />
     </datalist>
 MATCH CONTEXT — Rule 1 (Time Sync)
                   </p>
@@ -2945,7 +2969,7 @@ MATCH CONTEXT — Rule 1 (Time Sync)
                         placeholder="Auto-search Global Leagues..."
                       />
                     </Input>
-                    <Input label="Official KO Time (WAT) *">
+                    <Input label="OFFICIAL KICK-OFF TIME">
                       <Field type="time" value={koTime} onChange={setKoTime} />
                     </Input>
                     <Input label="Time to Tip-off (auto-calculated)">
@@ -4981,7 +5005,7 @@ function usePreviousState<T>(value: T) {
   useEffect(() => {
     ref.current = value;
   }, [value]);
-  return ref.current;
+  return ref.current; 
 }
 
 const PhantomLiveHub = () => {

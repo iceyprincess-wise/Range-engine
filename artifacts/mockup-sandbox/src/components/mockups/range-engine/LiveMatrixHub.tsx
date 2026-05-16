@@ -15,8 +15,10 @@ export const LiveMatrixHub: React.FC<LiveMatrixHubProps> = ({ history, setHistor
   const [apiReferenceMap, setApiReferenceMap] = useState<Record<string, any>>({}); // Maps history IDs to API data
   const API_BASE = import.meta.env.VITE_API_BASE || "/";
 
+  // Safety: ensure history is an array before filtering
+  const safeHistory = Array.isArray(history) ? history : [];
   // ONLY show games that you have analyzed and are waiting for results
-  const pendingGames = history.filter(h => h.outcome === "PENDING");
+  const pendingGames = safeHistory.filter((h) => h && h.outcome === "PENDING");
 
   // 📡 THE REFRESH BOARD ALGORITHM (Lightweight Sync + Auto-Full-Time Push)
   const fetchGlobalLive = async () => {
@@ -156,10 +158,18 @@ export const LiveMatrixHub: React.FC<LiveMatrixHubProps> = ({ history, setHistor
       </div>
 
       <div className="space-y-4">
+        {!safeHistory.length && (
+          <div className="text-center p-8 bg-[#111] border border-gray-800 rounded-lg text-gray-500 font-bold tracking-widest uppercase text-sm">
+            Awaiting Active Match Streams
+            <br />
+            <span className="text-xs font-normal opacity-50 mt-2 block">Server returned no history — check API bridge or create an analyzed fixture in Analyzer.</span>
+          </div>
+        )}
+
         {pendingGames.map(game => {
           const isExpanded = expandedMatch === game.id;
           const apiMatchData = apiReferenceMap[game.id]; // The live data from the API
-          const isLive = !!apiMatchData;
+          const isLive = !!(apiMatchData && Object.keys(apiMatchData).length > 0);
           
           const stats = matchStats[game.id];
           const stall = stallStatus[game.id];
@@ -171,8 +181,8 @@ export const LiveMatrixHub: React.FC<LiveMatrixHubProps> = ({ history, setHistor
                 className="flex justify-between items-center p-4 cursor-pointer hover:bg-gray-900 transition-colors"
                 onClick={() => setExpandedMatch(isExpanded ? null : game.id)}
               >
-                <div className="flex flex-col">
-                  <span className="font-bold text-lg text-white tracking-wide">{(game.fixture || "Unknown vs Match").replace("vs", "")} <span className="text-purple-600 font-black px-1">VS</span></span>
+                  <div className="flex flex-col">
+                  <span className="font-bold text-lg text-white tracking-wide">{isLive ? `${apiMatchData.homeTeam?.name || 'Home'} vs ${apiMatchData.awayTeam?.name || 'Away'}` : (game.fixture || "Unknown vs Match")} <span className="text-purple-600 font-black px-1">VS</span></span>
                   <div className="flex items-center gap-3 mt-1">
                     <span className={`text-[10px] font-black px-2 py-1 rounded border uppercase tracking-widest ${isLive ? 'bg-green-900/40 text-green-400 border-green-800/50' : 'bg-gray-800 text-gray-500 border-gray-700'}`}>
                       {isLive ? apiMatchData.periods?.current || "LIVE" : "AWAITING KICKOFF"}
