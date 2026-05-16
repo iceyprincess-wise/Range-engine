@@ -35,7 +35,8 @@ export const LiveMatrixHub: React.FC<LiveMatrixHubProps> = ({ history, setHistor
 
       pendingGames.forEach(game => {
         // Parse the fixture name (e.g., "Lakers vs Warriors")
-        const [homePart, awayPart] = game.fixture.split(" vs ");
+        const fixture = String(game.fixture || "");
+        const [homePart, awayPart] = fixture.split(" vs ");
         const safeHome = homePart?.trim().toLowerCase() || "";
         const safeAway = awayPart?.trim().toLowerCase() || "";
 
@@ -84,11 +85,11 @@ export const LiveMatrixHub: React.FC<LiveMatrixHubProps> = ({ history, setHistor
     setGlobalLoading(false);
   };
 
-  // Run a lightweight check when the component mounts
+  // Run a lightweight check whenever pending matches appear or change
   useEffect(() => {
     if (pendingGames.length > 0) fetchGlobalLive();
     // eslint-disable-next-line
-  }, []);
+  }, [pendingGames.length]);
 
   // ⚡ DEEP LIVE SYNC ALGORITHM (Heavy Statistics Hunt for Specific Game)
   const handleManualSync = async (historyId: string, apiMatchId: string | undefined) => {
@@ -182,7 +183,12 @@ export const LiveMatrixHub: React.FC<LiveMatrixHubProps> = ({ history, setHistor
                 onClick={() => setExpandedMatch(isExpanded ? null : game.id)}
               >
                   <div className="flex flex-col">
-                  <span className="font-bold text-lg text-white tracking-wide">{isLive ? `${apiMatchData.homeTeam?.name || 'Home'} vs ${apiMatchData.awayTeam?.name || 'Away'}` : (game.fixture || "Unknown vs Match")} <span className="text-purple-600 font-black px-1">VS</span></span>
+                  <span className="font-bold text-lg text-white tracking-wide">
+                    {isLive
+                      ? `${apiMatchData.homeTeam?.name || 'Home'} vs ${apiMatchData.awayTeam?.name || 'Away'}`
+                      : `${game.homeTeam || String(game.fixture || "").split(' vs ')[0] || 'Home'} vs ${game.awayTeam || String(game.fixture || "").split(' vs ')[1] || 'Away'}`}
+                    <span className="text-purple-600 font-black px-1">VS</span>
+                  </span>
                   <div className="flex items-center gap-3 mt-1">
                     <span className={`text-[10px] font-black px-2 py-1 rounded border uppercase tracking-widest ${isLive ? 'bg-green-900/40 text-green-400 border-green-800/50' : 'bg-gray-800 text-gray-500 border-gray-700'}`}>
                       {isLive ? apiMatchData.periods?.current || "LIVE" : "AWAITING KICKOFF"}
