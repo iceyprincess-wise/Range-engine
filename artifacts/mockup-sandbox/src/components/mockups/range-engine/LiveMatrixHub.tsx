@@ -84,6 +84,33 @@ export const LiveMatrixHub: React.FC<LiveMatrixHubProps> = ({ history, setHistor
     setGlobalLoading(false);
   };
 
+  // Hydrate any pending games from persisted global state if needed.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const stored = localStorage.getItem("rangeEngineHistory");
+    if (!stored) return;
+
+    try {
+      const parsed = JSON.parse(stored);
+      if (!Array.isArray(parsed)) return;
+
+      const pendingStored = parsed.filter(
+        (item: any) => item && item.outcome === "PENDING",
+      );
+      const missingPending = pendingStored.filter(
+        (item: any) => !safeHistory.some((h) => h.id === item.id),
+      );
+
+      if (missingPending.length > 0) {
+        const merged = [...missingPending, ...safeHistory];
+        setHistory(merged);
+        saveHistory(merged);
+      }
+    } catch (error) {
+      console.warn("Unable to parse persisted history", error);
+    }
+  }, []);
+
   // Run a lightweight check when the component mounts
   useEffect(() => {
     if (pendingGames.length > 0) fetchGlobalLive();
@@ -182,7 +209,16 @@ export const LiveMatrixHub: React.FC<LiveMatrixHubProps> = ({ history, setHistor
                 onClick={() => setExpandedMatch(isExpanded ? null : game.id)}
               >
                   <div className="flex flex-col">
-                  <span className="font-bold text-lg text-white tracking-wide">{isLive ? `${apiMatchData.homeTeam?.name || 'Home'} vs ${apiMatchData.awayTeam?.name || 'Away'}` : (game.fixture || "Unknown vs Match")} <span className="text-purple-600 font-black px-1">VS</span></span>
+                  {(() => {
+                    const matchLabel = isLive
+                      ? `${apiMatchData.homeTeam?.name || apiMatchData.homeTeam?.shortName || 'Home'} vs ${apiMatchData.awayTeam?.name || apiMatchData.awayTeam?.shortName || 'Away'}`
+                      : game.fixture || "Pending Match";
+                    return (
+                      <span className="font-bold text-lg text-white tracking-wide">
+                        {matchLabel} <span className="text-purple-600 font-black px-1">VS</span>
+                      </span>
+                    );
+                  })()}
                   <div className="flex items-center gap-3 mt-1">
                     <span className={`text-[10px] font-black px-2 py-1 rounded border uppercase tracking-widest ${isLive ? 'bg-green-900/40 text-green-400 border-green-800/50' : 'bg-gray-800 text-gray-500 border-gray-700'}`}>
                       {isLive ? apiMatchData.periods?.current || "LIVE" : "AWAITING KICKOFF"}

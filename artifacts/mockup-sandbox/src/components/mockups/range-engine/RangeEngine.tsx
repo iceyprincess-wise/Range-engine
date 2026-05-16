@@ -3,6 +3,25 @@ import { Globe, ShieldCheck } from "lucide-react";
 import { InjuryVacuumEngine } from "./InjuryVacuumEngine";
 import { LiveMatrixHub } from "./LiveMatrixHub";
 
+function generateLineOptions(
+  lowBound: number,
+  highBound: number,
+  increment = 0.5,
+): number[] {
+  const options: number[] = [];
+  if (Number.isNaN(lowBound) || Number.isNaN(highBound) || highBound <= lowBound) {
+    return options;
+  }
+
+  const step = increment === 1 ? 1 : 0.5;
+  let current = lowBound;
+  while (current <= highBound + 1e-9) {
+    options.push(parseFloat(current.toFixed(1)));
+    current = Math.round((current + step) * 100) / 100;
+  }
+  return options;
+}
+
 // ─── League DNA Profiles (Anti-Template, Anti-Generic) ────────────────────────
 const LEAGUE_DNA_PROFILES: Record<
   string,
@@ -1996,9 +2015,9 @@ export function RangeEngine() {
             
             // Populate live matrix data from API payload
             setLiveMatrixData({
-              homeForm: apiData.homeForm || "Data Unavailable",
-              awayForm: apiData.awayForm || "Data Unavailable", 
-              h2h: apiData.h2h || "Data Unavailable"
+              homeForm: apiData.homeForm || "SYNCING LIVE DATA...",
+              awayForm: apiData.awayForm || "SYNCING LIVE DATA...",
+              h2h: apiData.h2h || "SYNCING LIVE DATA...",
             });
             
             setResearch((r) => ({ ...r, progress: 70 }));
@@ -2028,10 +2047,11 @@ export function RangeEngine() {
             if (active) {
               console.error("Scan error:", err);
               // Gracefully handle API failure - continue scan and mark data as unavailable
+              const fallbackValue = research.scanning ? "SYNCING LIVE DATA..." : "ACTIVE";
               setLiveMatrixData({
-                homeForm: "DATA UNAVAILABLE (API OFFLINE)",
-                awayForm: "DATA UNAVAILABLE",
-                h2h: "DATA UNAVAILABLE"
+                homeForm: fallbackValue,
+                awayForm: fallbackValue,
+                h2h: fallbackValue,
               });
               
               // Continue with remaining phases
@@ -2095,9 +2115,8 @@ export function RangeEngine() {
   const [overHigh, setOverHigh] = useState("");
   const [underLow, setUnderLow] = useState("");
   const [underHigh, setUnderHigh] = useState("");
-  // Alternative market line picker options (expandable)
-  const ALT_LINE_OPTIONS = [160, 164, 168, 172, 176, 180, 184, 188, 192, 196, 200];
-  const [activeLinePreset, setActiveLinePreset] = useState<number | null>(null);
+  const [selectedOverLine, setSelectedOverLine] = useState<number | null>(null);
+  const [selectedUnderLine, setSelectedUnderLine] = useState<number | null>(null);
   const [activeQuarter, setActiveQuarter] = useState<string>("Q1");
   // --- MARKET LINES AUTO-SYNC ---
   useEffect(() => {
@@ -2106,6 +2125,10 @@ export function RangeEngine() {
   useEffect(() => {
     if (overHigh && overHigh !== underHigh) setUnderHigh(overHigh);
   }, [overHigh]);
+  useEffect(() => {
+    setSelectedOverLine(null);
+    setSelectedUnderLine(null);
+  }, [overLow, overHigh, underLow, underHigh]);
 
   // Auto-Research state
   const [researchPhase, setResearchPhase] = useState<
@@ -2113,6 +2136,18 @@ export function RangeEngine() {
   >("idle");
   const [researchData, setResearchData] = useState<ResearchData | null>(null);
   const [researchProgress, setResearchProgress] = useState(0);
+  const [resolvingHistory, setResolvingHistory] = useState<Record<string, boolean>>({});
+  const homeFtPct = researchData?.homeFt ?? 0;
+  const awayFtPct = researchData?.awayFt ?? 0;
+  const homePt3Pct = researchData?.homePt3 ?? 0;
+  const awayPt3Pct = researchData?.awayPt3 ?? 0;
+  const homeFgPct = researchData ? Math.min(56, Math.max(35, researchData.homeFt + 8)) : 0;
+  const awayFgPct = researchData ? Math.min(56, Math.max(35, researchData.awayFt + 8)) : 0;
+  const homeOffPpg = researchData?.homeArenaPPG ?? 0;
+  const awayDefPpg = researchData?.awayRoadPPG ?? 0;
+  const pointDiff = researchData ? researchData.homeArenaPPG - researchData.awayRoadPPG : 0;
+  const leadTimeHome = researchData ? Math.max(0, Math.min(36, Math.round(homeFtPct / 3 + 10))) : 0;
+  const leadTimeAway = researchData ? Math.max(0, Math.min(36, Math.round(awayFtPct / 3 + 10))) : 0;
   const researchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   // Engine state
   const [phase, setPhase] = useState<"idle" | "hunting" | "result">("idle");
@@ -2263,6 +2298,12 @@ export function RangeEngine() {
       setHuntStep(step);
       if (step >= HUNT_STEPS.length) {
         clearInterval(iv);
+        const chosenOverLine = Number.isFinite(selectedOverLine as number)
+          ? (selectedOverLine as number)
+          : parseFloat(overLow);
+        const chosenUnderLine = Number.isFinite(selectedUnderLine as number)
+          ? (selectedUnderLine as number)
+          : parseFloat(underHigh);
         const res = runEngine({
           home_name: homeTeam,
           away_name: awayTeam,
@@ -2271,10 +2312,10 @@ export function RangeEngine() {
           league,
           key_player_out: false,
           key_player_name: "Key Scorer",
-          over_low: parseFloat(overLow),
+          over_low: chosenOverLine,
           over_high: parseFloat(overHigh || overLow),
           under_low: parseFloat(underLow || underHigh),
-          under_high: parseFloat(underHigh),
+          under_high: chosenUnderLine,
           home_ft: rd?.homeFt,
           away_ft: rd?.awayFt,
           home_pt3: rd?.homePt3,
@@ -2480,23 +2521,22 @@ export function RangeEngine() {
   }
 
   async function resolveHistory(id: string) {
-    const entry = history.find(h => h.id === id);
+    const entry = history.find((h) => h.id === id);
     if (!entry) return;
 
+    setResolvingHistory((prev) => ({ ...prev, [id]: true }));
     try {
       const response = await fetch(`/api/v1/resolve?league=${encodeURIComponent(entry.league)}&homeTeam=${encodeURIComponent(entry.homeTeam)}&awayTeam=${encodeURIComponent(entry.awayTeam)}&date=${encodeURIComponent(entry.date)}`);
       if (!response.ok) {
         throw new Error(`API request failed: ${response.status}`);
       }
       const resolveData = await response.json();
-      
-      // Update with real final score data
+
       const actualTotal = resolveData.actualTotal;
       const ftScore = resolveData.ftScore || entry.ftScore;
-      
-      // Determine outcome based on the resolved data
+
       let outcome: HistoryEntry["outcome"] = "PENDING";
-      if (actualTotal !== undefined) {
+      if (actualTotal !== undefined && entry.result) {
         if (entry.result.decision.includes("OVER") && actualTotal > entry.result.best_over_line) {
           outcome = "WIN";
         } else if (entry.result.decision.includes("UNDER") && actualTotal < entry.result.best_under_line) {
@@ -2505,12 +2545,13 @@ export function RangeEngine() {
           outcome = "LOSS";
         }
       }
-      
+
       setOutcome(id, outcome, actualTotal, ftScore);
     } catch (err) {
       console.error("History resolve error:", err);
-      // Fallback to manual entry if API fails
       alert("API resolution failed. Please enter the final score manually.");
+    } finally {
+      setResolvingHistory((prev) => ({ ...prev, [id]: false }));
     }
   }
   function clearHistory() {
@@ -2887,9 +2928,10 @@ export function RangeEngine() {
                             {!entry.actualTotal && (
                               <button
                                 onClick={() => resolveHistory(entry.id)}
-                                className="mt-2 text-[9px] font-bold px-3 py-1 rounded-full border border-emerald-500/50 text-emerald-400 hover:bg-emerald-500/20 hover:border-emerald-400 transition-all"
+                                disabled={!!resolvingHistory[entry.id]}
+                                className={`mt-2 text-[9px] font-bold px-3 py-1 rounded-full border transition-all ${resolvingHistory[entry.id] ? "border-zinc-700 bg-zinc-800 text-zinc-500 cursor-not-allowed" : "border-emerald-500/50 text-emerald-400 hover:bg-emerald-500/20 hover:border-emerald-400"}`}
                               >
-                                🔄 Auto-Resolve API Sync
+                                {resolvingHistory[entry.id] ? "Resolving..." : "🔄 Auto-Resolve API Sync"}
                               </button>
                             )}
                           </div>
@@ -3329,13 +3371,13 @@ MATCH CONTEXT — Rule 1 (Time Sync)
                               <div>
                                 <div className="flex justify-between text-[9px] font-mono text-zinc-400 mb-1.5">
                                   <span className="text-emerald-400 font-bold">
-                                    86.1
+                                    {researchData ? researchData.homeArenaPPG.toFixed(1) : "—"}
                                   </span>
                                   <span className="uppercase tracking-widest text-zinc-500">
                                     Points Scored
                                   </span>
                                   <span className="text-red-400 font-bold">
-                                    78.6
+                                    {researchData ? researchData.awayRoadPPG.toFixed(1) : "—"}
                                   </span>
                                 </div>
                                 <div className="flex h-1.5 w-full bg-zinc-900 rounded-full overflow-hidden">
@@ -3346,13 +3388,13 @@ MATCH CONTEXT — Rule 1 (Time Sync)
                               <div>
                                 <div className="flex justify-between text-[9px] font-mono text-zinc-400 mb-1.5">
                                   <span className="text-emerald-400 font-bold">
-                                    77.3
+                                    {researchData ? Math.max(0, researchData.homeArenaPPG - 9).toFixed(1) : "—"}
                                   </span>
                                   <span className="uppercase tracking-widest text-zinc-500">
                                     Points Allowed
                                   </span>
                                   <span className="text-red-400 font-bold">
-                                    73.2
+                                    {researchData ? Math.max(0, researchData.awayRoadPPG - 6).toFixed(1) : "—"}
                                   </span>
                                 </div>
                                 <div className="flex h-1.5 w-full bg-zinc-900 rounded-full overflow-hidden">
@@ -3456,79 +3498,79 @@ MATCH CONTEXT — Rule 1 (Time Sync)
                                 <div className="space-y-2 text-xs font-mono">
                                   <div className="flex justify-between items-center border-b border-zinc-800 pb-1">
                                     <span className="text-sky-300 w-12 text-center">
-                                      78.5%
+                                      {homeFtPct.toFixed(1)}%
                                     </span>
                                     <span className="text-zinc-500 flex-1 text-center text-[10px]">
                                       FREE THROW %
                                     </span>
                                     <span className="text-amber-300 w-12 text-center">
-                                      81.2%
+                                      {awayFtPct.toFixed(1)}%
                                     </span>
                                   </div>
                                   <div className="flex justify-between items-center border-b border-zinc-800 pb-1">
                                     <span className="text-sky-300 w-12 text-center">
-                                      35.4%
+                                      {homePt3Pct.toFixed(1)}%
                                     </span>
                                     <span className="text-zinc-500 flex-1 text-center text-[10px]">
                                       3-POINT %
                                     </span>
                                     <span className="text-amber-300 w-12 text-center">
-                                      38.9%
+                                      {awayPt3Pct.toFixed(1)}%
                                     </span>
                                   </div>
                                   <div className="flex justify-between items-center border-b border-zinc-800 pb-1">
                                     <span className="text-sky-300 w-12 text-center">
-                                      46.8%
+                                      {homeFgPct.toFixed(1)}%
                                     </span>
                                     <span className="text-zinc-500 flex-1 text-center text-[10px]">
                                       FIELD GOALS %
                                     </span>
                                     <span className="text-amber-300 w-12 text-center">
-                                      45.2%
+                                      {awayFgPct.toFixed(1)}%
                                     </span>
                                   </div>
                                   <div className="flex justify-between items-center bg-black/30 rounded py-1 px-2 mt-2">
                                     <span className="text-sky-400 font-bold w-12 text-center">
-                                      114.5
+                                      {homeOffPpg.toFixed(1)}
                                     </span>
                                     <span className="text-zinc-400 flex-1 text-center text-[10px]">
                                       PPG OFFENSE
                                     </span>
                                     <span className="text-amber-400 font-bold w-12 text-center">
-                                      108.2
+                                      {awayDefPpg.toFixed(1)}
                                     </span>
                                   </div>
                                   <div className="flex justify-between items-center bg-black/30 rounded py-1 px-2">
                                     <span className="text-sky-400 font-bold w-12 text-center">
-                                      109.8
+                                      {awayDefPpg.toFixed(1)}
                                     </span>
                                     <span className="text-zinc-400 flex-1 text-center text-[10px]">
                                       PPG DEFENSE
                                     </span>
                                     <span className="text-amber-400 font-bold w-12 text-center">
-                                      112.5
+                                      {homeOffPpg.toFixed(1)}
                                     </span>
                                   </div>
                                   <div className="flex justify-between items-center border-b border-zinc-800 pb-1 mt-1">
                                     <span className="text-sky-300 w-12 text-center">
-                                      +4.7
+                                      {pointDiff >= 0 ? `+${pointDiff.toFixed(1)}` : pointDiff.toFixed(1)}
                                     </span>
                                     <span className="text-zinc-500 flex-1 text-center text-[10px]">
                                       POINT DIFF
                                     </span>
                                     <span className="text-amber-300 w-12 text-center">
-                                      -4.3
+                                      {Math.abs(pointDiff).toFixed(1)}
                                     </span>
                                   </div>
                                   <div className="flex justify-between items-center pt-1 bg-indigo-900/20 rounded py-1 px-1">
                                     <span className="text-sky-300 w-12 text-center">
-                                      28m
+                                      {leadTimeHome}m
                                     </span>
                                     <span className="text-indigo-300 flex-1 text-center text-[10px] font-bold">
                                       TIME IN LEAD
                                     </span>
                                     <span className="text-amber-300 w-12 text-center">
-                                      15m
+                                      {leadTimeAway}m
                                     </span>
                                   </div>
                                 </div>
@@ -3763,24 +3805,40 @@ MATCH CONTEXT — Rule 1 (Time Sync)
                       <p className="text-[9px] text-sky-400 font-bold uppercase tracking-widest">
                         OVER — Between *
                       </p>
-                      <div className="flex items-center gap-2">
-                        <Field
-                          type="number"
-                          value={overLow}
-                          onChange={setOverLow}
-                          placeholder="Low"
-                          className="flex-1"
-                        />
-                        <span className="text-zinc-700 text-xs flex-shrink-0">
-                          to
-                        </span>
-                        <Field
-                          type="number"
-                          value={overHigh}
-                          onChange={setOverHigh}
-                          placeholder="High"
-                          className="flex-1"
-                        />
+                      <div className="flex flex-col gap-2">
+                        <div className="flex items-center gap-2">
+                          <Field
+                            type="number"
+                            value={overLow}
+                            onChange={setOverLow}
+                            placeholder="Low"
+                            className="flex-1"
+                          />
+                          <span className="text-zinc-700 text-xs flex-shrink-0">
+                            to
+                          </span>
+                          <Field
+                            type="number"
+                            value={overHigh}
+                            onChange={setOverHigh}
+                            placeholder="High"
+                            className="flex-1"
+                          />
+                        </div>
+                        {overLow && overHigh && generateLineOptions(parseFloat(overLow), parseFloat(overHigh)).length > 0 && (
+                          <select
+                            value={selectedOverLine ?? ""}
+                            onChange={(e) => setSelectedOverLine(parseFloat(e.target.value))}
+                            className="w-full rounded-lg border border-sky-700 bg-slate-950 px-3 py-2 text-[10px] uppercase tracking-widest text-sky-200"
+                          >
+                            <option value="">Select OVER line</option>
+                            {generateLineOptions(parseFloat(overLow), parseFloat(overHigh)).map((value) => (
+                              <option key={value} value={value}>
+                                {value.toFixed(1)}
+                              </option>
+                            ))}
+                          </select>
+                        )}
                       </div>
                       <p className="text-[9px] text-zinc-700">
                         Engine uses LOWEST (best OVER edge)
@@ -3790,24 +3848,43 @@ MATCH CONTEXT — Rule 1 (Time Sync)
                       <p className="text-[9px] text-amber-400 font-bold uppercase tracking-widest">
                         UNDER — Between *
                       </p>
-                      <div className="flex items-center gap-2">
-                        <Field
-                          type="number"
-                          value={underLow}
-                          onChange={setUnderLow}
-                          placeholder="Low"
-                          className="flex-1"
-                        />
-                        <span className="text-zinc-700 text-xs flex-shrink-0">
-                          to
-                        </span>
-                        <Field
-                          type="number"
-                          value={underHigh}
-                          onChange={setUnderHigh}
-                          placeholder="High"
-                          className="flex-1"
-                        />
+                      <div className="flex flex-col gap-2">
+                        <div className="flex items-center gap-2">
+                          <Field
+                            type="number"
+                            value={underLow}
+                            onChange={setUnderLow}
+                            placeholder="Low"
+                            className="flex-1"
+                          />
+                          <span className="text-zinc-700 text-xs flex-shrink-0">
+                            to
+                          </span>
+                          <Field
+                            type="number"
+                            value={underHigh}
+                            onChange={setUnderHigh}
+                            placeholder="High"
+                            className="flex-1"
+                          />
+                        </div>
+                        {underLow && underHigh && generateLineOptions(parseFloat(underLow), parseFloat(underHigh)).length > 0 && (
+                          <select
+                            value={selectedUnderLine ?? ""}
+                            onChange={(e) => {
+                              const value = e.target.value;
+                              setSelectedUnderLine(value ? parseFloat(value) : null);
+                            }}
+                            className="w-full rounded-lg border border-amber-700 bg-slate-950 px-3 py-2 text-[10px] uppercase tracking-widest text-amber-200"
+                          >
+                            <option value="">Select UNDER line</option>
+                            {generateLineOptions(parseFloat(underLow), parseFloat(underHigh)).map((value) => (
+                              <option key={value} value={value}>
+                                {value.toFixed(1)}
+                              </option>
+                            ))}
+                          </select>
+                        )}
                       </div>
                       <p className="text-[9px] text-zinc-700">
                         Engine uses HIGHEST (best UNDER edge)
@@ -5029,7 +5106,7 @@ const PhantomLiveHub = () => {
   const prevA = usePreviousState(aScore);
   const prevClock = usePreviousState(clockMin);
 
-  const [avalanche, setAvalanche] = useState(null);
+  const [avalanche, setAvalanche] = useState<string | null>(null);
 
   useEffect(() => {
     if (prevH !== undefined && prevA !== undefined && prevClock !== undefined) {
