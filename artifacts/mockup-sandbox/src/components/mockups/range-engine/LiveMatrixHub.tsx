@@ -13,10 +13,7 @@ export const LiveMatrixHub: React.FC<LiveMatrixHubProps> = ({ history, setHistor
   const [syncing, setSyncing] = useState<Record<string, boolean>>({});
   const [globalLoading, setGlobalLoading] = useState(false);
   const [apiReferenceMap, setApiReferenceMap] = useState<Record<string, any>>({}); // Maps history IDs to API data
-
-  // Securely grab the API Key scanned from your environment
-  const API_KEY = import.meta.env.VITE_RAPIDAPI_KEY || "f0f8830be9msh33c27594430acdbp174a46jsn212686e527a0"; 
-  const HOST = "basketapi1.p.rapidapi.com";
+  const API_BASE = import.meta.env.VITE_API_BASE || "";
 
   // ONLY show games that you have analyzed and are waiting for results
   const pendingGames = history.filter(h => h.outcome === "PENDING");
@@ -25,10 +22,8 @@ export const LiveMatrixHub: React.FC<LiveMatrixHubProps> = ({ history, setHistor
   const fetchGlobalLive = async () => {
     setGlobalLoading(true);
     try {
-      // Fetch the global live matches (costs 1 API call total, highly efficient)
-      const res = await fetch(`https://${HOST}/api/basketball/matches/live`, {
-        headers: { "x-rapidapi-host": HOST, "x-rapidapi-key": API_KEY }
-      });
+      // Fetch the global live matches from the backend proxy
+      const res = await fetch(`${API_BASE}/api/basket/live`);
       const data = await res.json();
       const liveEvents = data?.events || [];
 
@@ -102,9 +97,7 @@ export const LiveMatrixHub: React.FC<LiveMatrixHubProps> = ({ history, setHistor
     
     setSyncing(prev => ({ ...prev, [historyId]: true }));
     try {
-      const res = await fetch(`https://${HOST}/api/basketball/match/${apiMatchId}/statistics`, {
-        headers: { "x-rapidapi-host": HOST, "x-rapidapi-key": API_KEY }
-      });
+      const res = await fetch(`${API_BASE}/api/basket/match/${apiMatchId}/statistics`);
       const data = await res.json();
       
       // Safe parsing to protect React from crashing (Object mapping)
