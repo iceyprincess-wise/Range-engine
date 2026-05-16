@@ -3,14 +3,20 @@ import { Globe, ShieldCheck } from "lucide-react";
 import { InjuryVacuumEngine } from "./InjuryVacuumEngine";
 import { LiveMatrixHub } from "./LiveMatrixHub";
 
+const API_BASE = import.meta.env.VITE_API_BASE || "";
+
 function generateLineOptions(
   lowBound: number,
   highBound: number,
   increment = 0.5,
 ): number[] {
   const options: number[] = [];
-  if (Number.isNaN(lowBound) || Number.isNaN(highBound) || highBound <= lowBound) {
+  if (Number.isNaN(lowBound) || Number.isNaN(highBound)) {
     return options;
+  }
+
+  if (highBound < lowBound) {
+    [lowBound, highBound] = [highBound, lowBound];
   }
 
   const step = increment === 1 ? 1 : 0.5;
@@ -20,6 +26,50 @@ function generateLineOptions(
     current = Math.round((current + step) * 100) / 100;
   }
   return options;
+}
+
+function parseNumber(value: unknown, fallback = 0): number {
+  const n = Number(value);
+  return Number.isFinite(n) ? n : fallback;
+}
+
+function normalizePercent(value: unknown): number {
+  const n = parseNumber(value, 0);
+  if (n > 0 && n <= 1) return parseFloat((n * 100).toFixed(2));
+  return Math.min(100, Math.max(0, parseFloat(n.toFixed(2))));
+}
+
+function parseNumberArray(value: unknown): number[] {
+  if (!Array.isArray(value)) return [];
+  return value.map((item) => parseNumber(item, 0));
+}
+
+function weightedAverage(values: number[]): number {
+  if (!values.length) return 0;
+  const n = values.length;
+  let weightSum = 0;
+  let total = 0;
+  for (let i = 0; i < n; i++) {
+    const weight = (i + 1) / n;
+    total += values[i] * weight;
+    weightSum += weight;
+  }
+  return parseFloat((total / weightSum).toFixed(2));
+}
+
+function getLineupFromPayload(value: unknown): { pos: string; name: string }[] {
+  if (!Array.isArray(value)) return [];
+  return value
+    .slice(0, 5)
+    .map((item: any, idx) => ({
+      pos: item?.pos || ["PG", "SG", "SF", "PF", "C"][idx] || "?",
+      name: item?.name || item?.player || `Player ${idx + 1}`,
+    }));
+}
+
+function formatInjuryNotes(value: unknown, defaultNote: string) {
+  if (typeof value === "string" && value.trim()) return value;
+  return defaultNote;
 }
 
 // ─── League DNA Profiles (Anti-Template, Anti-Generic) ────────────────────────
@@ -658,6 +708,10 @@ interface HistoryEntry {
   outcome?: "WIN" | "LOSS" | "PUSH" | "PENDING";
   actualTotal?: number;
   ftScore?: string;
+  earlyRead?: boolean;
+  revalidationRequested?: boolean;
+  revalidationStatus?: "AWAITING_SYNC" | "CONFIRMED" | "LATE_SHIFT" | "OK";
+  lastRevalidationMsg?: string;
 }
 
 const HISTORY_KEY = "rangengine_v3_history";
@@ -707,15 +761,264 @@ interface ResearchData {
   awayLineup: { pos: string; name: string }[];
   defStallRisk: "LOW" | "MODERATE" | "HIGH";
   defStallNote: string;
-  openingLine?: number;
-  currentLine?: number;
-  bettingPercent?: number;
   offSurgeRisk: "LOW" | "MODERATE" | "HIGH";
   offSurgeNote: string;
   otRisk: "LOW" | "MODERATE" | "HIGH";
   otNote: string;
+  homeFoulRate: number;
+  awayFoulRate: number;
+  homeFtAttempts: number;
+  awayFtAttempts: number;
+  homeFoulWeightedAvg: number;
+  awayFoulWeightedAvg: number;
+  homeFtAttemptWeightedAvg: number;
+  awayFtAttemptWeightedAvg: number;
+  homeRestDays: number;
+  awayRestDays: number;
+  leagueFoulAverage: number;
+  refereeStrictness: number;
+  homeForm50: number[];
+  awayForm50: number[];
+  h2h50: number[];
+  fatigueRisk: "LOW" | "MODERATE" | "HIGH";
+  fatigueNote: string;
+  foulEngineStatus: "SAFE" | "HIGH RISK";
+  foulEngineNote: string;
   sourcesScanned: number;
   researchMs: number;
+}
+
+async function fetchResearchData(
+  homeTeam: string,
+  awayTeam: string,
+  league: string,
+): Promise<ResearchData> {
+  const response = await fetch(
+    `${API_BASE}/api/v1/sync?league=${encodeURIComponent(
+      league,
+    )}&homeTeam=${encodeURIComponent(homeTeam)}&awayTeam=${encodeURIComponent(
+      awayTeam,
+    )}`,
+  );
+
+  if (!response.ok) {
+    const payload = await response.json().catch(() => null);
+    throw new Error(
+      payload?.error || `API request failed with status ${response.status}`,
+    );
+  }
+
+  const apiData = await response.json();
+  const homeForm50 = parseNumberArray(
+    apiData.homeForm50 ?? apiData.home_form_50 ?? apiData.homeForm ?? [],
+  );
+  const awayForm50 = parseNumberArray(
+    apiData.awayForm50 ?? apiData.away_form_50 ?? apiData.awayForm ?? [],
+  );
+  const h2h50 = parseNumberArray(
+    apiData.h2h50 ?? apiData.h2h_50 ?? apiData.h2h50 ?? apiData.h2h ?? [],
+  );
+
+  const homeFoulRate = normalizePercent(
+    apiData.homeFoulRate ?? apiData.home_foul_rate ?? apiData.home_fouls_per_game,
+  );
+  const awayFoulRate = normalizePercent(
+    apiData.awayFoulRate ?? apiData.away_foul_rate ?? apiData.away_fouls_per_game,
+  );
+  const leagueFoulAverage = normalizePercent(
+    apiData.leagueFoulAverage ?? apiData.league_foul_average ?? apiData.leagueFouls,
+  );
+  const refereeStrictness = parseNumber(
+    apiData.refereeStrictness ?? apiData.referee_strictness ?? apiData.referee_score,
+    0,
+  );
+  const homeFtAttempts = parseNumber(
+    apiData.homeFtAttempts ?? apiData.home_ft_attempts ?? apiData.home_fta,
+    0,
+  );
+  const awayFtAttempts = parseNumber(
+    apiData.awayFtAttempts ?? apiData.away_ft_attempts ?? apiData.away_fta,
+    0,
+  );
+  const homeFoulRate50 = parseNumberArray(
+    apiData.homeFoulRate50 ?? apiData.home_foul_rate_50 ?? apiData.homeFoulRates ?? [],
+  );
+  const awayFoulRate50 = parseNumberArray(
+    apiData.awayFoulRate50 ?? apiData.away_foul_rate_50 ?? apiData.awayFoulRates ?? [],
+  );
+  const homeFtAttempts50 = parseNumberArray(
+    apiData.homeFtAttempts50 ?? apiData.home_ft_attempts_50 ?? apiData.homeFta50 ?? [],
+  );
+  const awayFtAttempts50 = parseNumberArray(
+    apiData.awayFtAttempts50 ?? apiData.away_ft_attempts_50 ?? apiData.awayFta50 ?? [],
+  );
+
+  const homeRestDays = parseNumber(
+    apiData.homeRestDays ?? apiData.home_rest_days ?? apiData.home_rest ?? 1,
+    1,
+  );
+  const awayRestDays = parseNumber(
+    apiData.awayRestDays ?? apiData.away_rest_days ?? apiData.away_rest ?? 1,
+    1,
+  );
+
+  const homeFt = normalizePercent(
+    apiData.homeFt ?? apiData.home_ft ?? apiData.homeFreeThrowPct,
+  );
+  const awayFt = normalizePercent(
+    apiData.awayFt ?? apiData.away_ft ?? apiData.awayFreeThrowPct,
+  );
+  const homePt3 = normalizePercent(
+    apiData.homePt3 ?? apiData.home_pt3 ?? apiData.homeThreePtPct,
+  );
+  const awayPt3 = normalizePercent(
+    apiData.awayPt3 ?? apiData.away_pt3 ?? apiData.awayThreePtPct,
+  );
+  const homeArenaPPG = parseNumber(
+    apiData.homeArenaPPG ?? apiData.home_arena_ppg ?? apiData.home_ppg,
+    0,
+  );
+  const awayRoadPPG = parseNumber(
+    apiData.awayRoadPPG ?? apiData.away_road_ppg ?? apiData.away_ppg,
+    0,
+  );
+  const h2hAvgTotal = parseNumber(
+    apiData.h2hAvgTotal ?? apiData.h2h_avg_total ?? apiData.h2h_total,
+    homeArenaPPG + awayRoadPPG,
+  );
+  const collapsePct = parseNumber(
+    apiData.collapsePct ?? apiData.collapse_pct ?? apiData.collapse_probability,
+    0,
+  );
+
+  const seasonHomeInjuries = formatInjuryNotes(
+    apiData.homeInjuries ?? apiData.home_injuries ?? apiData.home_injury_note,
+    "✓ No confirmed injuries — full squad available",
+  );
+  const seasonAwayInjuries = formatInjuryNotes(
+    apiData.awayInjuries ?? apiData.away_injuries ?? apiData.away_injury_note,
+    "✓ No confirmed injuries — full squad available",
+  );
+
+  const homeLineup = getLineupFromPayload(
+    apiData.homeLineup ?? apiData.home_lineup ?? apiData.home_lineup_players,
+  );
+  const awayLineup = getLineupFromPayload(
+    apiData.awayLineup ?? apiData.away_lineup ?? apiData.away_lineup_players,
+  );
+
+  const totalFoulRate = homeFoulRate + awayFoulRate;
+  const totalFtAttempts = homeFtAttempts + awayFtAttempts;
+  const fatiguePoints =
+    (homeRestDays === 0 ? 1 : homeRestDays === 1 ? 0.5 : 0) +
+    (awayRestDays === 0 ? 1 : awayRestDays === 1 ? 0.5 : 0);
+  const leagueFoulHigh = leagueFoulAverage > 40;
+  const refStrict = refereeStrictness >= 7;
+  const highVolatility =
+    totalFtAttempts >= 45 || totalFoulRate >= 42 || leagueFoulHigh || refStrict;
+
+  const fatigueRisk: "LOW" | "MODERATE" | "HIGH" =
+    fatiguePoints >= 1 || leagueFoulHigh ? "HIGH" : totalFoulRate >= 38 ? "MODERATE" : "LOW";
+  const fatigueNote =
+    fatigueRisk === "HIGH"
+      ? `Schedule stress detected: ${homeRestDays}d rest / ${awayRestDays}d rest. Back-to-back / 3-in-4 fatigue is amplifying foul pressure and pace collapse risk.`
+      : fatigueRisk === "MODERATE"
+      ? `Moderate rest imbalance. Monitor warmups and minutes management for late-game fatigue fouls.`
+      : `Schedule profile stable. No critical back-to-back or 3-in-4 fatigue signal detected.`;
+
+  const defStallRisk: "LOW" | "MODERATE" | "HIGH" =
+    fatigueRisk === "HIGH" || totalFoulRate >= 42
+      ? "HIGH"
+      : totalFoulRate >= 36 || totalFtAttempts >= 40
+      ? "MODERATE"
+      : "LOW";
+  const defStallNote =
+    defStallRisk === "HIGH"
+      ? `🚨 DEFENSIVE STALL TRIGGER: ${totalFoulRate.toFixed(1)} foul rate combined, ${totalFtAttempts} FT attempts, ${homeRestDays} / ${awayRestDays} rest. League avg ${leagueFoulAverage} fouls. Late-game clock stoppages likely.`
+      : defStallRisk === "MODERATE"
+      ? `⚠ MODERATE stall risk: team foul pressure elevated and schedules are tight. Live possession management will decide the 4th quarter pace.`
+      : `✓ LOW stall risk: historical pace remains stable and neither team is deep in fatigue territory.`;
+
+  const offSurgeRisk: "LOW" | "MODERATE" | "HIGH" =
+    highVolatility && totalFtAttempts >= 38
+      ? "HIGH"
+      : totalFtAttempts >= 32 || totalFoulRate >= 36
+      ? "MODERATE"
+      : "LOW";
+  const offSurgeNote =
+    offSurgeRisk === "HIGH"
+      ? `High-offense surge risk: heavy free-throw volume and league foul intensity are already above 40 fouls/game. Watch for clock stoppage and artificial point inflation.`
+      : offSurgeRisk === "MODERATE"
+      ? `Moderate surge risk. Free throw volume and team foul rates are elevated enough to keep totals alive late.`
+      : `Scoring surge risk is low. Game shape remains controlled with reasonable foul pacing.`;
+
+  const otRisk: "LOW" | "MODERATE" | "HIGH" =
+    h2h50.length >= 10
+      ? h2h50.filter((value) => Math.abs(value - (homeArenaPPG + awayRoadPPG) / 2) <= 2).length / h2h50.length >= 0.32
+        ? "HIGH"
+        : h2h50.filter((value) => Math.abs(value - (homeArenaPPG + awayRoadPPG) / 2) <= 2).length / h2h50.length >= 0.18
+        ? "MODERATE"
+        : "LOW"
+      : Math.abs(homeArenaPPG - awayRoadPPG) <= 6
+      ? "MODERATE"
+      : "LOW";
+  const otNote =
+    otRisk === "HIGH"
+      ? `High OT probability. Deep H2H body of work shows frequent close finish signatures and tight totals around projected average.`
+      : otRisk === "MODERATE"
+      ? `Moderate OT possibility. Margin and totals suggest a late-game close finish is possible.`
+      : `Low OT probability. Historical spread and pace show a cleaner regulation finish.`;
+
+  const foulEngineStatus: "SAFE" | "HIGH RISK" =
+    highVolatility || fatigueRisk === "HIGH" || leagueFoulHigh || refStrict
+      ? "HIGH RISK"
+      : "SAFE";
+  const foulEngineNote =
+    foulEngineStatus === "HIGH RISK"
+      ? "Extreme free-throw volume detected. Clock stoppage will artificially inflate total points. UNDER bets severely compromised."
+      : "Standard foul pacing. Regulation finish expected.";
+
+  return {
+    homeArenaPPG,
+    awayRoadPPG,
+    h2hAvgTotal,
+    homeFt,
+    awayFt,
+    homePt3,
+    awayPt3,
+    collapsePct,
+    homeInjuries: seasonHomeInjuries,
+    awayInjuries: seasonAwayInjuries,
+    homeLineup,
+    awayLineup,
+    defStallRisk,
+    defStallNote,
+    offSurgeRisk,
+    offSurgeNote,
+    otRisk,
+    otNote,
+    homeFoulRate,
+    awayFoulRate,
+    homeFtAttempts,
+    awayFtAttempts,
+    homeFoulWeightedAvg: weightedAverage(homeFoulRate50),
+    awayFoulWeightedAvg: weightedAverage(awayFoulRate50),
+    homeFtAttemptWeightedAvg: weightedAverage(homeFtAttempts50),
+    awayFtAttemptWeightedAvg: weightedAverage(awayFtAttempts50),
+    homeRestDays,
+    awayRestDays,
+    leagueFoulAverage,
+    refereeStrictness,
+    homeForm50,
+    awayForm50,
+    h2h50,
+    fatigueRisk,
+    fatigueNote,
+    foulEngineStatus,
+    foulEngineNote,
+    sourcesScanned: apiData.sourcesScanned ?? 0,
+    researchMs: apiData.researchMs ?? 0,
+  };
 }
 const INJURY_POOL_HOME = [
   "⚠ Starting PG questionable (knee) — game-time decision",
@@ -838,6 +1141,41 @@ function generateResearch(
         ? `Close finishes in ~${Math.floor(seededVal(cs, 15, 10, 26, 0))}% of recent H2H. OT possible — monitor margin inside Q4.`
         : `Teams show decisive regulation margins in H2H (${Math.floor(seededVal(cs, 15, 6, 18, 0))}% OT rate). Regulation finish expected.`;
 
+  const homeFoulRate = seededVal(hs, 18, 18, 24, 0);
+  const awayFoulRate = seededVal(as_, 19, 18, 24, 0);
+  const homeFtAttempts = Math.round(seededVal(hs, 20, 17, 24, 0));
+  const awayFtAttempts = Math.round(seededVal(as_, 21, 17, 24, 0));
+  const totalFoulRate = homeFoulRate + awayFoulRate;
+  const totalFtAttempts = homeFtAttempts + awayFtAttempts;
+  const homeFoulWeightedAvg = homeFoulRate;
+  const awayFoulWeightedAvg = awayFoulRate;
+  const homeFtAttemptWeightedAvg = homeFtAttempts;
+  const awayFtAttemptWeightedAvg = awayFtAttempts;
+  const homeRestDays = Math.round(seededVal(hs, 22, 0, 2, 0));
+  const awayRestDays = Math.round(seededVal(as_, 23, 0, 2, 0));
+  const leagueFoulAverage = seededVal(cs, 24, 38, 44, 0);
+  const refereeStrictness = seededVal(cs, 25, 4, 8, 0);
+  const fatigueRisk: "LOW" | "MODERATE" | "HIGH" =
+    homeRestDays === 0 || awayRestDays === 0 || leagueFoulAverage > 40
+      ? "HIGH"
+      : homeRestDays === 1 || awayRestDays === 1
+      ? "MODERATE"
+      : "LOW";
+  const fatigueNote =
+    fatigueRisk === "HIGH"
+      ? `Schedule stress detected: ${homeRestDays}d / ${awayRestDays}d rest. Fatigue is amplifying foul volume and stall probability.`
+      : fatigueRisk === "MODERATE"
+      ? `Moderate schedule stress. Watch warmups and late rotations.`
+      : `Rest profile normal. No critical B2B or 3-in-4 signal.`;
+  const foulEngineStatus: "SAFE" | "HIGH RISK" =
+    totalFtAttempts >= 45 || totalFoulRate >= 42 || leagueFoulAverage > 40
+      ? "HIGH RISK"
+      : "SAFE";
+  const foulEngineNote =
+    foulEngineStatus === "HIGH RISK"
+      ? "Extreme free-throw volume detected. Clock stoppage will artificially inflate total points. UNDER bets severely compromised."
+      : "Standard foul pacing. Regulation finish expected.";
+
   return {
     homeArenaPPG,
     awayRoadPPG,
@@ -857,6 +1195,25 @@ function generateResearch(
     offSurgeNote,
     otRisk,
     otNote,
+    homeFoulRate,
+    awayFoulRate,
+    homeFtAttempts,
+    awayFtAttempts,
+    homeFoulWeightedAvg,
+    awayFoulWeightedAvg,
+    homeFtAttemptWeightedAvg,
+    awayFtAttemptWeightedAvg,
+    homeRestDays,
+    awayRestDays,
+    leagueFoulAverage,
+    refereeStrictness,
+    homeForm50: [],
+    awayForm50: [],
+    h2h50: [],
+    fatigueRisk,
+    fatigueNote,
+    foulEngineStatus,
+    foulEngineNote,
     sourcesScanned: Math.floor(seededVal(cs, 16, 2400000, 8600000, 0)),
     researchMs: Math.floor(seededVal(cs, 17, 820, 3400, 0)),
   };
@@ -884,6 +1241,18 @@ function runEngine(opts: {
   away_arena_ppg?: number;
   h2h_avg_total?: number;
   collapse_pct?: number;
+  homeFoulRate?: number;
+  awayFoulRate?: number;
+  homeFtAttempts?: number;
+  awayFtAttempts?: number;
+  homeRestDays?: number;
+  awayRestDays?: number;
+  leagueFoulAverage?: number;
+  refereeStrictness?: number;
+  homeFoulWeightedAvg?: number;
+  awayFoulWeightedAvg?: number;
+  homeFtAttemptWeightedAvg?: number;
+  awayFtAttemptWeightedAvg?: number;
   // Weighted PPG (60/40 if both arena + H2H provided)
   use_weighted?: boolean;
   is_rerun?: boolean;
@@ -1099,17 +1468,32 @@ function runEngine(opts: {
     );
 
   // ── Rule 10 (Foul Engine) + Rule 11 (Injury Vacuum) ──────────────────────
+  const homeFoulRate = opts.homeFoulRate ?? 0;
+  const awayFoulRate = opts.awayFoulRate ?? 0;
+  const totalFoulRate = homeFoulRate + awayFoulRate;
+  const homeFtAttempts = opts.homeFtAttempts ?? 0;
+  const awayFtAttempts = opts.awayFtAttempts ?? 0;
+  const totalFtAttempts = homeFtAttempts + awayFtAttempts;
+  const homeRestDays = opts.homeRestDays ?? 1;
+  const awayRestDays = opts.awayRestDays ?? 1;
+  const leagueFoulAverage = opts.leagueFoulAverage ?? 0;
+  const refereeStrictness = opts.refereeStrictness ?? 0;
+  const fatiguePenalty =
+    (homeRestDays === 0 ? 2 : homeRestDays === 1 ? 1 : 0) +
+    (awayRestDays === 0 ? 2 : awayRestDays === 1 ? 1 : 0);
+  const foulVolumeSignal =
+    totalFtAttempts >= 45 || totalFoulRate >= 42 || leagueFoulAverage > 40;
+  const refereeSignal = refereeStrictness >= 7;
   let r10_hb = 0;
   if (margin <= 6 && avg_ft >= 0.75) r10_hb = Math.round(11 * ws);
-
-  // 🧠 POINT 9: REFEREE WHISTLE-RATE ANOMALY SENSOR
-  // Concept: Dynamically expands High Bound to absorb 'Phantom Free Throws'
-  const isHighFoulRateCrew = true; // ⚠️ Placeholder: Will hook into Python Backend
-  let refereeAnomalyActive = false;
-  if (isHighFoulRateCrew && margin <= 8) {
+  if (foulVolumeSignal) r10_hb += 2;
+  if (refereeSignal && margin <= 8) {
     r10_hb += 2.5;
-    refereeAnomalyActive = true;
   }
+  if (fatiguePenalty > 0) {
+    r10_hb += Math.min(4, fatiguePenalty);
+  }
+
   let r11_lb = 0,
     r11_hb = 0;
   if (key_player_out) {
@@ -1126,7 +1510,10 @@ function runEngine(opts: {
     hb -= stacking_cut;
   }
   const r10note = [
-    `FT%: ${(avg_ft * 100).toFixed(0)}%, 3PT%: ${(avg_pt3 * 100).toFixed(0)}%, Margin: ${margin.toFixed(1)}`,
+    `FT%: ${(avg_ft * 100).toFixed(0)}%, Fouls: ${totalFoulRate.toFixed(1)}%, FTAs: ${totalFtAttempts}`,
+    leagueFoulAverage ? `| League Fouls: ${leagueFoulAverage.toFixed(1)}` : "",
+    refereeSignal ? "| Referee Strictness: Elevated" : "",
+    fatiguePenalty > 0 ? `| Rest Days: ${homeRestDays}/${awayRestDays}` : "",
     key_player_out ? `| ${key_player_name} OUT (Vacuum)` : "",
     stacking_cut > 0 ? `| R9+R10 Stack Cap -${stacking_cut}` : "",
   ]
@@ -1143,7 +1530,7 @@ function runEngine(opts: {
   });
   if (r10_hb > 0)
     triggered.push(
-      `Rule 10 (Foul Engine): HB+${r10_hb}${stacking_cut > 0 ? ` (Stack Cap -${stacking_cut})` : ""} | FT%: ${(avg_ft * 100).toFixed(0)}%${refereeAnomalyActive ? " 🚨 [Phantom FT Adj +2.5]" : ""}`,
+      `Rule 10 (Foul Engine): HB+${r10_hb}${stacking_cut > 0 ? ` (Stack Cap -${stacking_cut})` : ""} | FT%: ${(avg_ft * 100).toFixed(0)}% | Fouls: ${totalFoulRate.toFixed(1)}% | FTAs: ${totalFtAttempts}${refereeSignal ? " 🚨" : ""}`,
     );
   if (key_player_out)
     triggered.push(
@@ -1892,6 +2279,19 @@ export function RangeEngine() {
   const [koTime, setKoTime] = useState("20:00");
   const [currentTime, setCurrentTime] = useState("19:30");
   const [tipOff, setTipOff] = useState(""); // auto-calculated
+  const currentMinutes = currentTime
+    .split(":")
+    .map(Number)
+    .reduce((sum, part, i) => sum + part * (i === 0 ? 60 : 1), 0);
+  const koMinutes = koTime
+    .split(":")
+    .map(Number)
+    .reduce((sum, part, i) => sum + part * (i === 0 ? 60 : 1), 0);
+  const tipOffMinutes = Number.isFinite(currentMinutes)
+    ? koMinutes - currentMinutes
+    : null;
+  const isEarlyPreMatch = tipOffMinutes != null && tipOffMinutes > 45;
+
   useEffect(() => {
     const updateTime = () => {
       const now = new Date();
@@ -2194,6 +2594,80 @@ export function RangeEngine() {
     setHistory(loadHistory());
   }, []);
 
+  const revalidateEarlyEntry = async (entry: HistoryEntry) => {
+    try {
+      const syncUrl = `${API_BASE}/api/v1/sync?league=${encodeURIComponent(
+        entry.league,
+      )}&homeTeam=${encodeURIComponent(entry.homeTeam)}&awayTeam=${encodeURIComponent(
+        entry.awayTeam,
+      )}&final=true`;
+      const response = await fetch(syncUrl);
+      if (!response.ok) throw new Error(`Revalidation failed: ${response.status}`);
+      const payload = await response.json();
+
+      const finalOver = parseNumber(
+        payload.closing_over ?? payload.final_over ?? payload.over_line ?? payload.overLine,
+      );
+      const finalUnder = parseNumber(
+        payload.closing_under ?? payload.final_under ?? payload.under_line ?? payload.underLine,
+      );
+      const finalInjuries = String(
+        payload.lateScratches ?? payload.scratches ?? payload.late_injury_note ?? "",
+      );
+      const lineShift = Math.max(
+        Math.abs(finalOver - parseFloat(entry.overHigh)),
+        Math.abs(finalUnder - parseFloat(entry.underHigh)),
+      );
+      const lateScratch = /scratch|out|questionable|doubtful/i.test(finalInjuries);
+      const lateShiftDetected = lineShift > 2 || lateScratch;
+      const newStatus: HistoryEntry["revalidationStatus"] = lateShiftDetected
+        ? "LATE_SHIFT"
+        : "CONFIRMED";
+      const updatedHistory = history.map((item) => {
+        if (item.id !== entry.id) return item;
+        return {
+          ...item,
+          revalidationRequested: true,
+          revalidationStatus: newStatus,
+          lastRevalidationMsg: lateShiftDetected
+            ? `LATE SHIFT DETECTED – ${lineShift.toFixed(1)}pt move or scratch notice. Recalculate.`
+            : `Final sync complete. No late shift detected.`,
+        };
+      });
+      if (lateShiftDetected) {
+        setLiveAlert({
+          msg: "LATE SHIFT DETECTED - RECALCULATE",
+          hbAdj: 0,
+          level: "danger",
+        });
+      }
+      setHistory(updatedHistory);
+      saveHistory(updatedHistory);
+    } catch (err) {
+      console.error("Pre-match revalidation failed:", err);
+    }
+  };
+
+  useEffect(() => {
+    if (!history.length || !currentTime) return;
+    const now = currentTime.split(":").map(Number);
+    const nowMinutes = now[0] * 60 + now[1];
+    history.forEach((entry) => {
+      if (
+        !entry.earlyRead ||
+        entry.outcome !== "PENDING" ||
+        entry.revalidationRequested
+      ) {
+        return;
+      }
+      const [kH, kM] = entry.koTime.split(":").map(Number);
+      const minutesToTipoff = kH * 60 + kM - nowMinutes;
+      if (minutesToTipoff <= 15 && minutesToTipoff >= 0) {
+        revalidateEarlyEntry(entry);
+      }
+    });
+  }, [history, currentTime]);
+
   // ── Auto Tip-Off Calculation (KO time − current time) ─────────────────────
   useEffect(() => {
     if (!koTime || !currentTime) return;
@@ -2246,8 +2720,8 @@ export function RangeEngine() {
         setResearchProgress(90);
         await new Promise((r) => setTimeout(r, 1000 + Math.random() * 1000));
 
-        // Generate research data (simulating API response processing)
-        const data = generateResearch(homeTeam, awayTeam, league);
+        // Retrieve expanded 50-game analytics from the live telemetry payload
+        const data = await fetchResearchData(homeTeam, awayTeam, league);
         setResearchData(data);
         setResearchProgress(100);
         setResearchPhase("done");
@@ -2323,6 +2797,18 @@ export function RangeEngine() {
           home_arena_ppg: rd?.homeArenaPPG,
           away_arena_ppg: rd?.awayRoadPPG,
           h2h_avg_total: rd?.h2hAvgTotal,
+          homeFoulRate: rd?.homeFoulRate,
+          awayFoulRate: rd?.awayFoulRate,
+          homeFtAttempts: rd?.homeFtAttempts,
+          awayFtAttempts: rd?.awayFtAttempts,
+          leagueFoulAverage: rd?.leagueFoulAverage,
+          refereeStrictness: rd?.refereeStrictness,
+          homeRestDays: rd?.homeRestDays,
+          awayRestDays: rd?.awayRestDays,
+          homeFoulWeightedAvg: rd?.homeFoulWeightedAvg,
+          awayFoulWeightedAvg: rd?.awayFoulWeightedAvg,
+          homeFtAttemptWeightedAvg: rd?.homeFtAttemptWeightedAvg,
+          awayFtAttemptWeightedAvg: rd?.awayFtAttemptWeightedAvg,
           use_weighted: !!(
             rd?.homeArenaPPG &&
             rd?.awayRoadPPG &&
@@ -2333,6 +2819,10 @@ export function RangeEngine() {
         setTimeout(() => {
           setResult(res);
           setPhase("result");
+          const [kH, kM] = koTime.split(":").map(Number);
+          const [cH, cM] = currentTime.split(":").map(Number);
+          const minutesToTipoff = kH * 60 + kM - (cH * 60 + cM);
+          const earlyRead = minutesToTipoff > 45;
           const entry: HistoryEntry = {
             id: Date.now().toString(),
             timestamp: new Date().toLocaleString("en-GB"),
@@ -2347,6 +2837,12 @@ export function RangeEngine() {
             koTime,
             result: res,
             outcome: "PENDING",
+            earlyRead,
+            revalidationRequested: false,
+            revalidationStatus: earlyRead ? "AWAITING_SYNC" : "OK",
+            lastRevalidationMsg: earlyRead
+              ? "EARLY READ: AWAITING FINAL SYNC"
+              : "No pre-match watch needed",
           };
           currentEntryId.current = entry.id;
           const updated = [entry, ...history];
@@ -3028,6 +3524,11 @@ MATCH CONTEXT — Rule 1 (Time Sync)
                       >
                         {tipOff || "Set KO Time + Current Time above →"}
                       </div>
+                      {isEarlyPreMatch && (
+                        <div className="mt-2 px-3 py-2 rounded-lg border border-red-800 bg-red-950/40 text-[10px] font-bold uppercase tracking-widest text-red-300">
+                          EARLY READ: AWAITING FINAL SYNC
+                        </div>
+                      )}
                     </Input>
                     <div className="flex items-end">
                       {league ? (
@@ -3723,6 +4224,43 @@ MATCH CONTEXT — Rule 1 (Time Sync)
                             </div>
                             <p className="text-[10px] text-zinc-400 leading-relaxed">
                               {researchData.offSurgeNote}
+                            </p>
+                          </div>
+                        </div>
+
+                        {/* Rule 10 Foul Engine */}
+                        <div className="px-4 py-3 space-y-2">
+                          <div className="flex items-center gap-2">
+                            <p className={`text-[9px] font-bold uppercase tracking-widest ${researchData.foulEngineStatus === "HIGH RISK" ? "text-red-400" : "text-emerald-400"}`}>
+                              ⚠️ FOUL ENGINE (RULE 10) - PACE KILLER
+                            </p>
+                            <span className="text-[8px] text-zinc-600">
+                              Free throw volume and league whistle context
+                            </span>
+                          </div>
+                          <div className={`rounded-lg px-3 py-2 border ${researchData.foulEngineStatus === "HIGH RISK" ? "border-red-800 bg-red-950/30" : "border-emerald-800 bg-emerald-950/30"}`}>
+                            <div className="flex items-center gap-2 mb-1">
+                              <span className={`text-[9px] font-black ${researchData.foulEngineStatus === "HIGH RISK" ? "text-red-400" : "text-emerald-500"}`}>
+                                {researchData.foulEngineStatus}
+                              </span>
+                              <span className="text-zinc-700 text-[9px]">
+                                status
+                              </span>
+                            </div>
+                            <p className="text-[10px] text-zinc-300 leading-relaxed">
+                              {researchData.foulEngineNote}
+                            </p>
+                          </div>
+                        </div>
+
+                        {/* Fatigue & Schedule Indicator */}
+                        <div className="px-4 py-3 space-y-2">
+                          <p className="text-[9px] font-bold uppercase tracking-widest text-zinc-500">
+                            🛌 FATIGUE & SCHEDULE
+                          </p>
+                          <div className="rounded-lg px-3 py-2 border border-zinc-800 bg-zinc-950/40">
+                            <p className="text-[10px] text-zinc-400 leading-relaxed">
+                              {researchData.fatigueNote} Home rest: {researchData.homeRestDays}d / Away rest: {researchData.awayRestDays}d. This schedule stress directly boosts stall and foul-engine risk.
                             </p>
                           </div>
                         </div>

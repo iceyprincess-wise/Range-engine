@@ -15,6 +15,28 @@ export const LiveMatrixHub: React.FC<LiveMatrixHubProps> = ({ history, setHistor
   const [apiReferenceMap, setApiReferenceMap] = useState<Record<string, any>>({}); // Maps history IDs to API data
   const API_BASE = import.meta.env.VITE_API_BASE || "/";
 
+  const getTipoffMinutes = (koTime: string) => {
+    const [kH, kM] = koTime.split(":").map(Number);
+    const [cH, cM] = new Date()
+      .toTimeString()
+      .slice(0, 5)
+      .split(":")
+      .map(Number);
+    return kH * 60 + kM - (cH * 60 + cM);
+  };
+
+  const getEarlyReadBadge = (game: any) => {
+    const minutes = game.koTime ? getTipoffMinutes(game.koTime) : Infinity;
+    if (game.earlyRead || minutes > 45) {
+      return (
+        <span className="px-2 py-1 rounded-full text-[9px] font-black uppercase tracking-widest text-red-300 bg-red-950/60 border border-red-800">
+          EARLY READ
+        </span>
+      );
+    }
+    return null;
+  };
+
   // Safety: ensure history is an array before filtering
   const safeHistory = Array.isArray(history) ? history : [];
   // ONLY show games that you have analyzed and are waiting for results
@@ -223,6 +245,7 @@ export const LiveMatrixHub: React.FC<LiveMatrixHubProps> = ({ history, setHistor
                     <span className={`text-[10px] font-black px-2 py-1 rounded border uppercase tracking-widest ${isLive ? 'bg-green-900/40 text-green-400 border-green-800/50' : 'bg-gray-800 text-gray-500 border-gray-700'}`}>
                       {isLive ? apiMatchData.periods?.current || "LIVE" : "AWAITING KICKOFF"}
                     </span>
+                    {getEarlyReadBadge(game)}
                     {isLive && (
                        <span className="text-sm font-bold text-gray-400">Score: <span className="text-white">{apiMatchData.homeScore?.current} - {apiMatchData.awayScore?.current}</span></span>
                     )}
