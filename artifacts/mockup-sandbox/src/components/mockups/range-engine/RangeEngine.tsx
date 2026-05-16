@@ -3,7 +3,7 @@ import { Globe, ShieldCheck } from "lucide-react";
 import { InjuryVacuumEngine } from "./InjuryVacuumEngine";
 import { LiveMatrixHub } from "./LiveMatrixHub";
 
-const API_BASE = import.meta.env.VITE_API_BASE || "";
+const API_BASE = import.meta.env.VITE_API_BASE || "/";
 
 function generateLineOptions(
   lowBound: number,
@@ -2219,7 +2219,7 @@ export function RangeEngine() {
   const [liveStats, setLiveStats] = useState<any>(null);
   const [isFetchingLive, setIsFetchingLive] = useState(false);
   const [apiError, setApiError] = useState("");
-  const API_BASE = import.meta.env.VITE_API_BASE || "";
+  const API_BASE = import.meta.env.VITE_API_BASE || "/";
 
   const triggerLiveSync = async () => {
     setIsFetchingLive(true);
@@ -2452,7 +2452,7 @@ export function RangeEngine() {
 
             // ─ Phase 2: Fetching H2H Matrix ─
             setScanPhase("Fetching H2H Matrix...");
-            const response = await fetch(`/api/v1/sync?league=${encodeURIComponent(league)}&homeTeam=${encodeURIComponent(homeTeam)}&awayTeam=${encodeURIComponent(awayTeam)}`);
+            const response = await fetch(`${API_BASE}/api/v1/sync?league=${encodeURIComponent(league)}&homeTeam=${encodeURIComponent(homeTeam)}&awayTeam=${encodeURIComponent(awayTeam)}`);
             if (!response.ok) {
               throw new Error(`API request failed: ${response.status}`);
             }
@@ -2569,9 +2569,25 @@ export function RangeEngine() {
   const [overHigh, setOverHigh] = useState("");
   const [underLow, setUnderLow] = useState("");
   const [underHigh, setUnderHigh] = useState("");
+
+  const MARKET_LINE_LOW_BOUND = 120;
+  const MARKET_LINE_HIGH_BOUND = 240;
+  const [activeLinePreset, setActiveLinePreset] = useState<number | null>(null);
+
+  const renderMarketLineOptions = (lowBound: number, highBound: number) =>
+    generateLineOptions(lowBound, highBound).map((value) => (
+      <option key={value} value={value}>
+        {value.toFixed(1)}
+      </option>
+    ));
+
+  const marketLineOptions = renderMarketLineOptions(
+    MARKET_LINE_LOW_BOUND,
+    MARKET_LINE_HIGH_BOUND,
+  );
+
   // Alternative market line picker options (expandable)
   const ALT_LINE_OPTIONS = [160, 164, 168, 172, 176, 180, 184, 188, 192, 196, 200];
-  const [activeLinePreset, setActiveLinePreset] = useState<number | null>(null);
   const [activeQuarter, setActiveQuarter] = useState<string>("Q1");
   // --- MARKET LINES AUTO-SYNC ---
   useEffect(() => {
@@ -4380,23 +4396,25 @@ MATCH CONTEXT — Rule 1 (Time Sync)
                         OVER — Between *
                       </p>
                       <div className="flex items-center gap-2">
-                        <Field
-                          type="number"
+                        <select
                           value={overLow}
-                          onChange={setOverLow}
-                          placeholder="Low"
-                          className="flex-1"
-                        />
+                          onChange={(event) => setOverLow(event.target.value)}
+                          className="flex-1 rounded border border-zinc-800 bg-zinc-950 px-3 py-2 text-sm text-zinc-100"
+                        >
+                          <option value="">Select low</option>
+                          {marketLineOptions}
+                        </select>
                         <span className="text-zinc-700 text-xs flex-shrink-0">
                           to
                         </span>
-                        <Field
-                          type="number"
+                        <select
                           value={overHigh}
-                          onChange={setOverHigh}
-                          placeholder="High"
-                          className="flex-1"
-                        />
+                          onChange={(event) => setOverHigh(event.target.value)}
+                          className="flex-1 rounded border border-zinc-800 bg-zinc-950 px-3 py-2 text-sm text-zinc-100"
+                        >
+                          <option value="">Select high</option>
+                          {marketLineOptions}
+                        </select>
                       </div>
                       <p className="text-[9px] text-zinc-700">
                         Engine uses LOWEST (best OVER edge)
@@ -4407,23 +4425,25 @@ MATCH CONTEXT — Rule 1 (Time Sync)
                         UNDER — Between *
                       </p>
                       <div className="flex items-center gap-2">
-                        <Field
-                          type="number"
+                        <select
                           value={underLow}
-                          onChange={setUnderLow}
-                          placeholder="Low"
-                          className="flex-1"
-                        />
+                          onChange={(event) => setUnderLow(event.target.value)}
+                          className="flex-1 rounded border border-zinc-800 bg-zinc-950 px-3 py-2 text-sm text-zinc-100"
+                        >
+                          <option value="">Select low</option>
+                          {marketLineOptions}
+                        </select>
                         <span className="text-zinc-700 text-xs flex-shrink-0">
                           to
                         </span>
-                        <Field
-                          type="number"
+                        <select
                           value={underHigh}
-                          onChange={setUnderHigh}
-                          placeholder="High"
-                          className="flex-1"
-                        />
+                          onChange={(event) => setUnderHigh(event.target.value)}
+                          className="flex-1 rounded border border-zinc-800 bg-zinc-950 px-3 py-2 text-sm text-zinc-100"
+                        >
+                          <option value="">Select high</option>
+                          {marketLineOptions}
+                        </select>
                       </div>
                       <p className="text-[9px] text-zinc-700">
                         Engine uses HIGHEST (best UNDER edge)
