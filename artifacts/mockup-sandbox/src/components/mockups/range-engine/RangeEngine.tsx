@@ -994,6 +994,18 @@ async function fetchResearchData(
       ? "Extreme free-throw volume detected. Clock stoppage will artificially inflate total points. UNDER bets severely compromised."
       : "Standard foul pacing. Regulation finish expected.";
 
+  // Additional normalized metrics for compatibility with the UI ResearchData shape
+  const homeFgPct = normalizePercent(apiData.homeFgPct ?? apiData.home_fg_pct ?? apiData.homeFieldGoalPct ?? null);
+  const awayFgPct = normalizePercent(apiData.awayFgPct ?? apiData.away_fg_pct ?? apiData.awayFieldGoalPct ?? null);
+  const homeOffPpg = parseNumber(apiData.homeOffPpg ?? apiData.home_off_ppg ?? apiData.homeOffensePpg ?? homeArenaPPG, 0);
+  const awayOffPpg = parseNumber(apiData.awayOffPpg ?? apiData.away_off_ppg ?? apiData.awayOffensePpg ?? awayRoadPPG, 0);
+  const homeDefPpg = parseNumber(apiData.homeDefPpg ?? apiData.home_def_ppg ?? apiData.homeDefensePpg ?? homeArenaPPG, 0);
+  const awayDefPpg = parseNumber(apiData.awayDefPpg ?? apiData.away_def_ppg ?? apiData.awayDefensePpg ?? awayRoadPPG, 0);
+  const homePointDiff = parseFloat((homeOffPpg - awayDefPpg).toFixed(1));
+  const awayPointDiff = parseFloat((awayOffPpg - homeDefPpg).toFixed(1));
+  const homeLeadTime = apiData.homeLeadTime ?? apiData.home_lead_time ?? `${Math.floor((apiData.homeLeadPct ?? 0))}% in lead`;
+  const awayLeadTime = apiData.awayLeadTime ?? apiData.away_lead_time ?? `${Math.floor((apiData.awayLeadPct ?? 0))}% in lead`;
+
   return {
     homeArenaPPG,
     awayRoadPPG,
@@ -1034,6 +1046,23 @@ async function fetchResearchData(
     foulEngineNote,
     sourcesScanned: apiData.sourcesScanned ?? 0,
     researchMs: apiData.researchMs ?? 0,
+    // Compatibility fields expected by UI
+    homeRecentForm: (apiData.homeRecentForm ?? apiData.home_recent_form) || Array.from({ length: 5 }, (_, i) => (homeForm50[i] ?? 1) > (homeArenaPPG ? homeArenaPPG * 0.95 : 0) ? "W" : "L"),
+    awayRecentForm: (apiData.awayRecentForm ?? apiData.away_recent_form) || Array.from({ length: 5 }, (_, i) => (awayForm50[i] ?? 1) > (awayRoadPPG ? awayRoadPPG * 0.95 : 0) ? "W" : "L"),
+    homeFreeThrowPct: homeFt,
+    awayFreeThrowPct: awayFt,
+    homeThreePtPct: homePt3,
+    awayThreePtPct: awayPt3,
+    homeFgPct: homeFgPct,
+    awayFgPct: awayFgPct,
+    homeOffPpg: homeOffPpg,
+    awayOffPpg: awayOffPpg,
+    homeDefPpg: homeDefPpg,
+    awayDefPpg: awayRoadPPG,
+    homePointDiff: homePointDiff,
+    awayPointDiff: awayPointDiff,
+    homeLeadTime: homeLeadTime,
+    awayLeadTime: awayLeadTime,
   };
 }
 const INJURY_POOL_HOME = [
@@ -5689,7 +5718,7 @@ const PhantomLiveHub = () => {
     };
   }, []);
 
-  const [avalanche, setAvalanche] = useState(null);
+  const [avalanche, setAvalanche] = useState<string | null>(null);
 
   useEffect(() => {
     if (prevH !== undefined && prevA !== undefined && prevClock !== undefined) {

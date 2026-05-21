@@ -56,7 +56,7 @@ export default defineConfig({
     emptyOutDir: true,
     chunkSizeWarningLimit: 2000,
     rollupOptions: {
-      output: {
+        output: {
         manualChunks(id) {
           if (id.includes('node_modules')) {
             if (id.includes('react') || id.includes('react-dom')) return 'vendor-react';
@@ -64,6 +64,7 @@ export default defineConfig({
             if (id.includes('lucide')) return 'vendor-icons';
             return 'vendor-core';
           }
+          return undefined;
         }
       }
     }
