@@ -2250,6 +2250,11 @@ export function RangeEngine() {
 
       const syncData = await response.json();
       setLiveStats({ radar: syncData, stats: syncData.statistics || null });
+      try {
+        // expose live payload for injected / legacy UI hubs
+        (window as any).__LIVE_STATS__ = syncData;
+        window.dispatchEvent(new CustomEvent("liveStatsUpdated", { detail: syncData }));
+      } catch (e) {}
       console.log("🔥 Live Matrix Connected & Mapped via backend proxy");
     } catch (err: any) {
       setApiError(err.message || "API Connection Failed");
@@ -3991,8 +3996,8 @@ MATCH CONTEXT — Rule 1 (Time Sync)
                               <div className="space-y-4">
                                 <div className="bg-zinc-900/50 rounded p-3 border border-zinc-800/50">
                                   <h4 className="text-xs text-zinc-400 font-mono mb-2 uppercase">
-                                    Head-to-Head (Last 10 Matchups)
-                                  </h4>
+                                      Head-to-Head (Last 50 Matchups)
+                                    </h4>
                                   <div className="flex justify-between items-center bg-black/40 p-2 rounded border border-zinc-800">
                                     <span className="text-sky-400 font-bold text-sm">
                                       HOME TEAM
@@ -5631,6 +5636,58 @@ const PhantomLiveHub = () => {
   const prevH = usePreviousState(hScore);
   const prevA = usePreviousState(aScore);
   const prevClock = usePreviousState(clockMin);
+
+  // If the live backend exposes data, map it into the PhantomLiveHub UI.
+  useEffect(() => {
+    let mounted = true;
+    const applyLive = (live: any) => {
+      if (!live || !mounted) return;
+      try {
+        const homeScore = live.homeScore ?? live.home?.score ?? live.stats?.homeScore ?? live.home_score ?? live.score?.home ?? live?.hScore;
+        const awayScore = live.awayScore ?? live.away?.score ?? live.stats?.awayScore ?? live.away_score ?? live.score?.away ?? live?.aScore;
+        const clock = live.clock ?? live.time ?? live.clockMin ?? live.period_clock ?? live?.gameClock ?? null;
+        const quarter = live.quarter ?? live.qtr ?? live.period ?? live.q ?? live?.quarter ?? null;
+        const ft = live.ftPct ?? live.stats?.ftPct ?? live.freeThrowPct ?? null;
+        const pt3 = live.pt3Pct ?? live.stats?.pt3Pct ?? live.threePtPct ?? null;
+        const fg = live.fgPct ?? live.stats?.fgPct ?? live.fieldGoalPct ?? null;
+        const off = live.offPpg ?? live.off_ppg ?? live.offensePpg ?? null;
+        const def = live.defPpg ?? live.def_ppg ?? live.defensePpg ?? null;
+        const lead = live.leadTime ?? live.lead_time ?? live.leadTimeText ?? null;
+        const possession = live.possession ?? live.poss ?? live.pos ?? null;
+
+        if (homeScore != null) setHScore(Number(homeScore) || 0);
+        if (awayScore != null) setAScore(Number(awayScore) || 0);
+        if (clock != null) setClockMin(Math.max(0, Number(clock) || 0));
+        if (quarter != null) setQtr(Number(quarter) || 1);
+        if (ft != null) setFtPct(Number(ft) || 0);
+        if (pt3 != null) setPt3Pct(Number(pt3) || 0);
+        if (fg != null) setFgPct(Number(fg) || 0);
+        if (off != null) setOffPpg(Number(off) || 0);
+        if (def != null) setDefPpg(Number(def) || 0);
+        if (lead != null) setLeadTime(String(lead));
+        if (possession != null) setPoss(String(possession));
+      } catch (e) {
+        // non-fatal mapping issues
+      }
+    };
+
+    // initial apply
+    try {
+      applyLive((window as any).__LIVE_STATS__);
+    } catch (e) {}
+
+    // listen for explicit updates
+    const onUpdate = (e: any) => applyLive(e?.detail ?? (window as any).__LIVE_STATS__);
+    window.addEventListener("liveStatsUpdated", onUpdate);
+
+    // poll as a fallback (every 1s)
+    const iv = setInterval(() => applyLive((window as any).__LIVE_STATS__), 1000);
+    return () => {
+      mounted = false;
+      clearInterval(iv);
+      window.removeEventListener("liveStatsUpdated", onUpdate);
+    };
+  }, []);
 
   const [avalanche, setAvalanche] = useState(null);
 
