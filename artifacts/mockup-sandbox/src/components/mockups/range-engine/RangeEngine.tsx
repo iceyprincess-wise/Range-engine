@@ -747,15 +747,21 @@ function saveHistory(h: HistoryEntry[]) {
 const RESEARCH_CACHE_PREFIX = "rangengine_v3_research_v1:";
 const RESEARCH_CACHE_TTL = 1000 * 60 * 60 * 6; // 6 hours
 
-function makeResearchCacheKey(league: string, home: string, away: string) {
-  return (
-    RESEARCH_CACHE_PREFIX +
-    encodeURIComponent(league.trim().toLowerCase()) +
-    ":" +
-    encodeURIComponent(home.trim().toLowerCase()) +
-    ":" +
-    encodeURIComponent(away.trim().toLowerCase())
-  );
+function makeResearchCacheKey(
+  league: string,
+  home: string,
+  away: string,
+  gameId = "",
+  bookmaker = "",
+) {
+  const parts = [
+    encodeURIComponent(league.trim().toLowerCase()),
+    encodeURIComponent(home.trim().toLowerCase()),
+    encodeURIComponent(away.trim().toLowerCase()),
+  ];
+  if (gameId) parts.push(encodeURIComponent(String(gameId).trim().toLowerCase()));
+  if (bookmaker) parts.push(encodeURIComponent(String(bookmaker).trim().toLowerCase()));
+  return RESEARCH_CACHE_PREFIX + parts.join(":");
 }
 
 function saveResearchCache(key: string, payload: any) {
@@ -862,14 +868,18 @@ async function fetchResearchData(
   homeTeam: string,
   awayTeam: string,
   league: string,
+  gameId?: string,
+  bookmaker?: string,
 ): Promise<ResearchData> {
-  const response = await fetch(
-    `${API_BASE}/api/v1/sync?league=${encodeURIComponent(
-      league,
-    )}&homeTeam=${encodeURIComponent(homeTeam)}&awayTeam=${encodeURIComponent(
-      awayTeam,
-    )}`,
-  );
+  const params = new URLSearchParams({
+    league: league || "",
+    homeTeam: homeTeam || "",
+    awayTeam: awayTeam || "",
+  });
+  if (gameId) params.set("gameId", String(gameId));
+  if (bookmaker) params.set("bookmaker", String(bookmaker));
+
+  const response = await fetch(`${API_BASE}/api/v1/sync?${params.toString()}`);
 
   if (!response.ok) {
     const payload = await response.json().catch(() => null);
@@ -1125,9 +1135,11 @@ async function fetchResearchDataCached(
   homeTeam: string,
   awayTeam: string,
   league: string,
+  gameId: string | undefined = undefined,
+  bookmaker: string | undefined = undefined,
   forceRefresh = false,
 ): Promise<ResearchData> {
-  const key = makeResearchCacheKey(league, homeTeam, awayTeam);
+  const key = makeResearchCacheKey(league, homeTeam, awayTeam, gameId ?? "", bookmaker ?? "");
   if (!forceRefresh) {
     const entry = loadResearchCache(key);
     if (isResearchCacheValid(entry)) {
@@ -1138,8 +1150,7 @@ async function fetchResearchDataCached(
       }
     }
   }
-
-  const fresh = await fetchResearchData(homeTeam, awayTeam, league);
+  const fresh = await fetchResearchData(homeTeam, awayTeam, league, gameId, bookmaker);
   try {
     saveResearchCache(key, fresh);
   } catch (e) {
@@ -2345,13 +2356,15 @@ export function RangeEngine() {
         );
       }
 
-      const syncUrl = `${API_BASE}/api/v1/sync?league=${encodeURIComponent(
-        league || "",
-      )}&homeTeam=${encodeURIComponent(homeTeam)}&awayTeam=${encodeURIComponent(
-        awayTeam,
-      )}`;
+      const params = new URLSearchParams({
+        league: league || "",
+        homeTeam: homeTeam || "",
+        awayTeam: awayTeam || "",
+      });
+      if (gameId) params.set("gameId", gameId);
+      if (bookmaker) params.set("bookmaker", bookmaker);
 
-      const response = await fetch(syncUrl);
+      const response = await fetch(`${API_BASE}/api/v1/sync?${params.toString()}`);
       if (!response.ok) {
         const payload = await response.json().catch(() => null);
         throw new Error(
@@ -2474,6 +2487,8 @@ export function RangeEngine() {
   const [league, setLeague] = useState(""); // universal — no default
   const [homeTeam, setHomeTeam] = useState("");
   const [awayTeam, setAwayTeam] = useState("");
+  const [bookmaker, setBookmaker] = useState<string>("Sportybet");
+  const [gameId, setGameId] = useState<string>("");
   const [matchGender, setMatchGender] = useState<'Men' | 'Women'>('Men');
   const [isLiveMatch, setIsLiveMatch] = useState(false);
   const [research, setResearch] = useState({
@@ -2570,7 +2585,10 @@ export function RangeEngine() {
 
             // ─ Phase 2: Fetching H2H Matrix ─
             setScanPhase("Fetching H2H Matrix...");
-            const response = await fetch(`${API_BASE}/api/v1/sync?league=${encodeURIComponent(league)}&homeTeam=${encodeURIComponent(homeTeam)}&awayTeam=${encodeURIComponent(awayTeam)}`);
+            const params = new URLSearchParams({ league: league || "", homeTeam: homeTeam || "", awayTeam: awayTeam || "" });
+            if (gameId) params.set("gameId", gameId);
+            if (bookmaker) params.set("bookmaker", bookmaker);
+            const response = await fetch(`${API_BASE}/api/v1/sync?${params.toString()}`);
             if (!response.ok) {
               throw new Error(`API request failed: ${response.status}`);
             }
@@ -2738,7 +2756,7 @@ export function RangeEngine() {
         }, 200);
 
         // Force bypass cache and fetch fresh research payload
-        const fresh = await fetchResearchDataCached(homeTeam, awayTeam, league, true);
+        const fresh = await fetchResearchDataCached(homeTeam, awayTeam, league, gameId, bookmaker, true);
 
         // finalize progress
         setReanalysisProgress(100);
@@ -2841,11 +2859,15 @@ export function RangeEngine() {
 
   const revalidateEarlyEntry = async (entry: HistoryEntry) => {
     try {
-      const syncUrl = `${API_BASE}/api/v1/sync?league=${encodeURIComponent(
-        entry.league,
-      )}&homeTeam=${encodeURIComponent(entry.homeTeam)}&awayTeam=${encodeURIComponent(
-        entry.awayTeam,
-      )}&final=true`;
+      const params = new URLSearchParams({
+        league: entry.league,
+        homeTeam: entry.homeTeam,
+        awayTeam: entry.awayTeam,
+        final: "true",
+      });
+      if (gameId) params.set("gameId", gameId);
+      if (bookmaker) params.set("bookmaker", bookmaker);
+      const syncUrl = `${API_BASE}/api/v1/sync?${params.toString()}`;
       const response = await fetch(syncUrl);
       if (!response.ok) throw new Error(`Revalidation failed: ${response.status}`);
       const payload = await response.json();
@@ -2968,7 +2990,7 @@ export function RangeEngine() {
         await new Promise((r) => setTimeout(r, 1000 + Math.random() * 1000));
 
         // Retrieve expanded 50-game analytics from the live telemetry payload
-        const data = await fetchResearchDataCached(homeTeam, awayTeam, league);
+        const data = await fetchResearchDataCached(homeTeam, awayTeam, league, gameId, bookmaker);
         setResearchData(data);
         setResearchError(null);
         setResearchProgress(100);
@@ -3139,7 +3161,7 @@ export function RangeEngine() {
       // Force fresh research payload for reruns (bypass cache)
       let freshResearch: ResearchData | null = null;
       try {
-        freshResearch = await fetchResearchDataCached(homeTeam, awayTeam, league, true);
+        freshResearch = await fetchResearchDataCached(homeTeam, awayTeam, league, gameId, bookmaker, true);
       } catch (e) {
         console.warn("Failed to fetch fresh research for rerun, falling back to cached/recent researchData", e);
         freshResearch = researchData ?? null;
@@ -3762,7 +3784,7 @@ export function RangeEngine() {
     </datalist>
 MATCH CONTEXT — Rule 1 (Time Sync)
                   </p>
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-3 gap-3">
                     <Input label="Date *">
                       <Field type="date" value={date} onChange={setDate} />
                     </Input>
@@ -3773,6 +3795,18 @@ MATCH CONTEXT — Rule 1 (Time Sync)
                         list="leagues"
                         placeholder="Auto-search Global Leagues..."
                       />
+                    </Input>
+                    <Input label="Bookmaker">
+                      <select
+                        value={bookmaker}
+                        onChange={(e) => setBookmaker(e.target.value)}
+                        className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-zinc-500 transition"
+                      >
+                        <option>Sportybet</option>
+                        <option>Bet365</option>
+                        <option>Betway</option>
+                        <option>Other</option>
+                      </select>
                     </Input>
                     <Input label="OFFICIAL KICK-OFF TIME">
                       <Field type="time" value={koTime} onChange={setKoTime} />
@@ -3796,6 +3830,13 @@ MATCH CONTEXT — Rule 1 (Time Sync)
                           EARLY READ: AWAITING FINAL SYNC
                         </div>
                       )}
+                    </Input>
+                    <Input label="Game ID (optional)">
+                      <Field
+                        value={gameId}
+                        onChange={setGameId}
+                        placeholder="Sportybet Game ID or provider ID"
+                      />
                     </Input>
                     <div className="flex items-end">
                       {league ? (
