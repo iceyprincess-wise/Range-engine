@@ -44,6 +44,21 @@ function parseNumberArray(value: unknown): number[] {
   return value.map((item) => parseNumber(item, 0));
 }
 
+function formatDataValue(value: unknown, decimals = 1, fallback = "--"): string {
+  const n = Number(value);
+  if (!Number.isFinite(n)) return fallback;
+  return n.toFixed(decimals);
+}
+
+function formatPercentValue(value: unknown, decimals = 1, fallback = "--"): string {
+  const formatted = formatDataValue(value, decimals, fallback);
+  return formatted === fallback ? fallback : `${formatted}%`;
+}
+
+function safeStringArray(value: unknown): string[] {
+  return Array.isArray(value) ? value.filter((item) => typeof item === "string") : [];
+}
+
 function weightedAverage(values: number[]): number {
   if (!values.length) return 0;
   const n = values.length;
@@ -728,6 +743,45 @@ function saveHistory(h: HistoryEntry[]) {
   } catch {}
 }
 
+// ─── Research Cache Helpers ─────────────────────────────────────────────────
+const RESEARCH_CACHE_PREFIX = "rangengine_v3_research_v1:";
+const RESEARCH_CACHE_TTL = 1000 * 60 * 60 * 6; // 6 hours
+
+function makeResearchCacheKey(league: string, home: string, away: string) {
+  return (
+    RESEARCH_CACHE_PREFIX +
+    encodeURIComponent(league.trim().toLowerCase()) +
+    ":" +
+    encodeURIComponent(home.trim().toLowerCase()) +
+    ":" +
+    encodeURIComponent(away.trim().toLowerCase())
+  );
+}
+
+function saveResearchCache(key: string, payload: any) {
+  try {
+    const entry = { ts: Date.now(), payload };
+    localStorage.setItem(key, JSON.stringify(entry));
+  } catch (e) {
+    console.warn("Failed to save research cache", e);
+  }
+}
+
+function loadResearchCache(key: string): { ts: number; payload: any } | null {
+  try {
+    const raw = localStorage.getItem(key);
+    if (!raw) return null;
+    return JSON.parse(raw);
+  } catch (e) {
+    return null;
+  }
+}
+
+function isResearchCacheValid(entry: { ts: number; payload: any } | null) {
+  if (!entry) return false;
+  return Date.now() - entry.ts < RESEARCH_CACHE_TTL;
+}
+
 // ─── Auto-Research Engine (deterministic seed — consistent per team+league) ──
 function hashStr(s: string): number {
   let h = 5381;
@@ -1064,6 +1118,34 @@ async function fetchResearchData(
     homeLeadTime: homeLeadTime,
     awayLeadTime: awayLeadTime,
   };
+}
+
+// Cache-aware wrapper: checks localStorage first, obeys TTL, and supports forced refresh
+async function fetchResearchDataCached(
+  homeTeam: string,
+  awayTeam: string,
+  league: string,
+  forceRefresh = false,
+): Promise<ResearchData> {
+  const key = makeResearchCacheKey(league, homeTeam, awayTeam);
+  if (!forceRefresh) {
+    const entry = loadResearchCache(key);
+    if (isResearchCacheValid(entry)) {
+      try {
+        return entry!.payload as ResearchData;
+      } catch (e) {
+        // fallthrough to fetching
+      }
+    }
+  }
+
+  const fresh = await fetchResearchData(homeTeam, awayTeam, league);
+  try {
+    saveResearchCache(key, fresh);
+  } catch (e) {
+    console.warn("Failed saving research cache after fetch", e);
+  }
+  return fresh;
 }
 const INJURY_POOL_HOME = [
   "⚠ Starting PG questionable (knee) — game-time decision",
@@ -2636,6 +2718,7 @@ export function RangeEngine() {
     "idle" | "researching" | "done"
   >("idle");
   const [researchData, setResearchData] = useState<ResearchData | null>(null);
+  const [researchError, setResearchError] = useState<string | null>(null);
   const [researchProgress, setResearchProgress] = useState(0);
   const researchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   // Engine state
@@ -2671,6 +2754,13 @@ export function RangeEngine() {
     hbAdj: number;
     level: "warn" | "danger";
   } | null>(null);
+
+  useEffect(() => {
+    if (phase === "result") {
+      setShowLive(true);
+    }
+  }, [phase]);
+
   // History
   const [history, setHistory] = useState<HistoryEntry[]>([]);
   const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -2785,9 +2875,11 @@ export function RangeEngine() {
     if (!homeTeam.trim() || !awayTeam.trim() || !league.trim()) {
       setResearchPhase("idle");
       setResearchData(null);
+      setResearchError(null);
       return;
     }
     setResearchPhase("researching");
+    setResearchError(null);
 
     // Start genuine async research intelligence scan (6-10 seconds)
     const timer = setTimeout(async () => {
@@ -2811,15 +2903,17 @@ export function RangeEngine() {
         await new Promise((r) => setTimeout(r, 1000 + Math.random() * 1000));
 
         // Retrieve expanded 50-game analytics from the live telemetry payload
-        const data = await fetchResearchData(homeTeam, awayTeam, league);
+        const data = await fetchResearchDataCached(homeTeam, awayTeam, league);
         setResearchData(data);
+        setResearchError(null);
         setResearchProgress(100);
         setResearchPhase("done");
-      } catch (err) {
+      } catch (err: any) {
         console.error("Research error:", err);
-        setResearchPhase("idle");
         setResearchData(null);
-        setResearchProgress(0);
+        setResearchError(err?.message || "Research API failed.");
+        setResearchProgress(100);
+        setResearchPhase("done");
       }
     }, 1800);
 
@@ -2975,8 +3069,17 @@ export function RangeEngine() {
       rUnderHigh = nl + 1;
     }
     setRerunPhase("running");
-    setTimeout(() => {
+    setTimeout(async () => {
       const dna = getLeagueDNA(league);
+      // Force fresh research payload for reruns (bypass cache)
+      let freshResearch: ResearchData | null = null;
+      try {
+        freshResearch = await fetchResearchDataCached(homeTeam, awayTeam, league, true);
+      } catch (e) {
+        console.warn("Failed to fetch fresh research for rerun, falling back to cached/recent researchData", e);
+        freshResearch = researchData ?? null;
+      }
+
       const res = runEngine({
         home_name: homeTeam,
         away_name: awayTeam,
@@ -2989,11 +3092,11 @@ export function RangeEngine() {
         over_high: rOverHigh,
         under_low: rUnderLow,
         under_high: rUnderHigh,
-        home_ft: researchData?.homeFt,
-        away_ft: researchData?.awayFt,
-        home_pt3: researchData?.homePt3,
-        away_pt3: researchData?.awayPt3,
-        collapse_pct: researchData?.collapsePct ?? 0,
+        home_ft: freshResearch?.homeFt,
+        away_ft: freshResearch?.awayFt,
+        home_pt3: freshResearch?.homePt3,
+        away_pt3: freshResearch?.awayPt3,
+        collapse_pct: freshResearch?.collapsePct ?? 0,
         is_rerun: true,
         rerun_timestamp: freshTime,
       });
@@ -3746,6 +3849,11 @@ MATCH CONTEXT — Rule 1 (Time Sync)
                             View-only · Cannot be edited
                           </p>
                         )}
+                        {researchPhase === "done" && researchError && (
+                          <p className="text-[8px] text-rose-400 mt-0.5">
+                            API Error: {researchError}
+                          </p>
+                        )}
                       </div>
                       {researchPhase === "researching" ? (
                         <span className="text-[8px] text-violet-500 bg-violet-950/60 px-2 py-1 rounded-full animate-pulse">
@@ -3779,8 +3887,16 @@ MATCH CONTEXT — Rule 1 (Time Sync)
                       </div>
                     )}
 
-                    {researchPhase === "done" && researchData && (
+                    {researchPhase === "done" && (
                       <div className="divide-y divide-zinc-900">
+                        { !researchData && (
+                          <div className="px-4 py-3 rounded-xl border border-amber-700/20 bg-amber-950/10 text-amber-200 text-[10px]">
+                            <p className="font-bold uppercase tracking-widest mb-1">⚠️ Live API Bridge Warning</p>
+                            <p className="text-zinc-400">
+                              The research scan completed, but live API metrics were not available. The dashboard remains visible to preserve analysis flow while the connector is restored.
+                            </p>
+                          </div>
+                        ) }
                         {/* STATISTICAL DNA & THERMAL MOMENTUM TIMELINE (V3 Upgraded) */}
                         <div className="px-4 py-3 space-y-3">
                           <div className="flex items-center justify-between border-b border-zinc-800 pb-1.5">
@@ -3796,17 +3912,17 @@ MATCH CONTEXT — Rule 1 (Time Sync)
                             {[
                               [
                                 "Home Arena PPG",
-                                researchData.homeArenaPPG.toFixed(1),
+                                formatDataValue(researchData?.homeArenaPPG),
                                 "text-sky-300",
                               ],
                               [
                                 "Away Road PPG",
-                                researchData.awayRoadPPG.toFixed(1),
+                                formatDataValue(researchData?.awayRoadPPG),
                                 "text-amber-300",
                               ],
                               [
                                 "H2H Avg Total",
-                                researchData.h2hAvgTotal.toFixed(1),
+                                formatDataValue(researchData?.h2hAvgTotal),
                                 "text-violet-300",
                               ],
                             ].map(([lbl, val, cls]) => (
@@ -3829,22 +3945,22 @@ MATCH CONTEXT — Rule 1 (Time Sync)
                             {[
                               [
                                 "Home FT%",
-                                `${researchData.homeFt}%`,
+                                formatPercentValue(researchData?.homeFt),
                                 "text-zinc-300",
                               ],
                               [
                                 "Away FT%",
-                                `${researchData.awayFt}%`,
+                                formatPercentValue(researchData?.awayFt),
                                 "text-zinc-300",
                               ],
                               [
                                 "Home 3PT%",
-                                `${researchData.homePt3}%`,
+                                formatPercentValue(researchData?.homePt3),
                                 "text-zinc-300",
                               ],
                               [
                                 "Away 3PT%",
-                                `${researchData.awayPt3}%`,
+                                formatPercentValue(researchData?.awayPt3),
                                 "text-zinc-300",
                               ],
                             ].map(([lbl, val, cls]) => (
@@ -3872,10 +3988,10 @@ MATCH CONTEXT — Rule 1 (Time Sync)
                               </p>
                               <div className="flex items-center gap-1.5">
                                 <span
-                                  className={`w-1.5 h-1.5 rounded-full ${researchData.collapsePct > 20 ? "bg-blue-500 shadow-[0_0_5px_rgba(59,130,246,0.8)]" : "bg-emerald-500"}`}
+                                  className={`w-1.5 h-1.5 rounded-full ${(researchData?.collapsePct ?? 0) > 20 ? "bg-blue-500 shadow-[0_0_5px_rgba(59,130,246,0.8)]" : "bg-emerald-500"}`}
                                 ></span>
                                 <span className="text-[8px] text-zinc-500">
-                                  {researchData.collapsePct}% Risk Detected
+                                  {researchData?.collapsePct ?? 0}% Risk Detected
                                 </span>
                               </div>
                             </div>
@@ -3897,35 +4013,35 @@ MATCH CONTEXT — Rule 1 (Time Sync)
 
                               {/* Q3: Dynamic Thermal State */}
                               <div
-                                className={`relative h-7 rounded border flex items-center justify-center overflow-hidden transition-all duration-300 ${researchData.collapsePct > 20 ? "bg-blue-950/40 border-blue-800/80 shadow-[inset_0_0_10px_rgba(30,58,138,0.3)]" : "bg-zinc-900 border-zinc-800"}`}
+                                className={`relative h-7 rounded border flex items-center justify-center overflow-hidden transition-all duration-300 ${(researchData?.collapsePct ?? 0) > 20 ? "bg-blue-950/40 border-blue-800/80 shadow-[inset_0_0_10px_rgba(30,58,138,0.3)]" : "bg-zinc-900 border-zinc-800"}`}
                               >
-                                {researchData.collapsePct > 20 && (
+                                {(researchData?.collapsePct ?? 0) > 20 && (
                                   <>
                                     <div className="absolute inset-0 bg-blue-600/10 animate-pulse"></div>
                                     <div className="absolute bottom-0 left-0 h-[2px] w-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.8)]"></div>
                                   </>
                                 )}
                                 <span
-                                  className={`text-[10px] font-extrabold z-10 tracking-widest ${researchData.collapsePct > 20 ? "text-blue-300" : "text-zinc-600"}`}
+                                  className={`text-[10px] font-extrabold z-10 tracking-widest ${(researchData?.collapsePct ?? 0) > 20 ? "text-blue-300" : "text-zinc-600"}`}
                                 >
-                                  Q3 {researchData.collapsePct > 20 ? "❄️" : ""}
+                                  Q3 {(researchData?.collapsePct ?? 0) > 20 ? "❄️" : ""}
                                 </span>
                               </div>
 
                               {/* Q4: Dynamic Thermal State */}
                               <div
-                                className={`relative h-7 rounded border flex items-center justify-center overflow-hidden transition-all duration-300 ${researchData.collapsePct > 30 ? "bg-blue-950/40 border-blue-800/80 shadow-[inset_0_0_10px_rgba(30,58,138,0.3)]" : "bg-zinc-900 border-zinc-800"}`}
+                                className={`relative h-7 rounded border flex items-center justify-center overflow-hidden transition-all duration-300 ${(researchData?.collapsePct ?? 0) > 30 ? "bg-blue-950/40 border-blue-800/80 shadow-[inset_0_0_10px_rgba(30,58,138,0.3)]" : "bg-zinc-900 border-zinc-800"}`}
                               >
-                                {researchData.collapsePct > 30 && (
+                                {(researchData?.collapsePct ?? 0) > 30 && (
                                   <>
                                     <div className="absolute inset-0 bg-blue-600/10 animate-pulse"></div>
                                     <div className="absolute bottom-0 left-0 h-[2px] w-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.8)]"></div>
                                   </>
                                 )}
                                 <span
-                                  className={`text-[10px] font-extrabold z-10 tracking-widest ${researchData.collapsePct > 30 ? "text-blue-300" : "text-zinc-600"}`}
+                                  className={`text-[10px] font-extrabold z-10 tracking-widest ${(researchData?.collapsePct ?? 0) > 30 ? "text-blue-300" : "text-zinc-600"}`}
                                 >
-                                  Q4 {researchData.collapsePct > 30 ? "❄️" : ""}
+                                  Q4 {(researchData?.collapsePct ?? 0) > 30 ? "❄️" : ""}
                                 </span>
                               </div>
                             </div>
@@ -4032,9 +4148,9 @@ MATCH CONTEXT — Rule 1 (Time Sync)
                                       HOME TEAM
                                     </span>
                                     <div className="flex gap-1 text-xs font-mono font-bold">
-                                      <span className="text-green-500">{researchData?.homeRecentForm.filter((v) => v === "W").length ?? 0}W</span>
+                                      <span className="text-green-500">{(safeStringArray(researchData?.homeRecentForm).filter((v) => v === "W").length)}W</span>
                                       <span className="text-zinc-600">-</span>
-                                      <span className="text-red-500">{researchData?.homeRecentForm.filter((v) => v === "L").length ?? 0}L</span>
+                                      <span className="text-red-500">{(safeStringArray(researchData?.homeRecentForm).filter((v) => v === "L").length)}L</span>
                                     </div>
                                     <span className="text-amber-400 font-bold text-sm">
                                       AWAY TEAM
@@ -4085,35 +4201,35 @@ MATCH CONTEXT — Rule 1 (Time Sync)
                                 <div className="space-y-2 text-xs font-mono">
                                   <div className="flex justify-between items-center border-b border-zinc-800 pb-1">
                                     <span className="text-sky-300 w-12 text-center">
-                                      {researchData?.homeFreeThrowPct.toFixed(1) ?? "--"}%
+                                      {formatPercentValue(researchData?.homeFreeThrowPct)}
                                     </span>
                                     <span className="text-zinc-500 flex-1 text-center text-[10px]">
                                       FREE THROW %
                                     </span>
                                     <span className="text-amber-300 w-12 text-center">
-                                      {researchData?.awayFreeThrowPct.toFixed(1) ?? "--"}%
+                                      {formatPercentValue(researchData?.awayFreeThrowPct)}
                                     </span>
                                   </div>
                                   <div className="flex justify-between items-center border-b border-zinc-800 pb-1">
                                     <span className="text-sky-300 w-12 text-center">
-                                      {researchData?.homeThreePtPct.toFixed(1) ?? "--"}%
+                                      {formatPercentValue(researchData?.homeThreePtPct)}
                                     </span>
                                     <span className="text-zinc-500 flex-1 text-center text-[10px]">
                                       3-POINT %
                                     </span>
                                     <span className="text-amber-300 w-12 text-center">
-                                      {researchData?.awayThreePtPct.toFixed(1) ?? "--"}%
+                                      {formatPercentValue(researchData?.awayThreePtPct)}
                                     </span>
                                   </div>
                                   <div className="flex justify-between items-center border-b border-zinc-800 pb-1">
                                     <span className="text-sky-300 w-12 text-center">
-                                      {researchData?.homeFgPct.toFixed(1) ?? "--"}%
+                                      {formatPercentValue(researchData?.homeFgPct)}
                                     </span>
                                     <span className="text-zinc-500 flex-1 text-center text-[10px]">
                                       FIELD GOALS %
                                     </span>
                                     <span className="text-amber-300 w-12 text-center">
-                                      {researchData?.awayFgPct.toFixed(1) ?? "--"}%
+                                      {formatPercentValue(researchData?.awayFgPct)}
                                     </span>
                                   </div>
                                   <div className="flex justify-between items-center bg-black/30 rounded py-1 px-2 mt-2">
@@ -4140,13 +4256,21 @@ MATCH CONTEXT — Rule 1 (Time Sync)
                                   </div>
                                   <div className="flex justify-between items-center border-b border-zinc-800 pb-1 mt-1">
                                     <span className="text-sky-300 w-12 text-center">
-                                      {researchData?.homePointDiff > 0 ? `+${researchData.homePointDiff.toFixed(1)}` : researchData?.homePointDiff.toFixed(1) ?? "--"}
+                                      {researchData?.homePointDiff != null
+                                        ? researchData.homePointDiff > 0
+                                          ? `+${researchData.homePointDiff.toFixed(1)}`
+                                          : researchData.homePointDiff.toFixed(1)
+                                        : "--"}
                                     </span>
                                     <span className="text-zinc-500 flex-1 text-center text-[10px]">
                                       POINT DIFF
                                     </span>
                                     <span className="text-amber-300 w-12 text-center">
-                                      {researchData?.awayPointDiff > 0 ? `+${researchData.awayPointDiff.toFixed(1)}` : researchData?.awayPointDiff.toFixed(1) ?? "--"}
+                                      {researchData?.awayPointDiff != null
+                                        ? researchData.awayPointDiff > 0
+                                          ? `+${researchData.awayPointDiff.toFixed(1)}`
+                                          : researchData.awayPointDiff.toFixed(1)
+                                        : "--"}
                                     </span>
                                   </div>
                                   <div className="flex justify-between items-center pt-1 bg-indigo-900/20 rounded py-1 px-1">
@@ -4175,9 +4299,9 @@ MATCH CONTEXT — Rule 1 (Time Sync)
                                 {homeTeam} (Home)
                               </p>
                               <p
-                                className={`text-[10px] leading-snug ${researchData.homeInjuries.startsWith("⚠") ? "text-amber-400" : "text-emerald-400"}`}
+                                className={`text-[10px] leading-snug ${researchData?.homeInjuries?.startsWith("⚠") ? "text-amber-400" : "text-emerald-400"}`}
                               >
-                                {researchData.homeInjuries}
+                                {researchData?.homeInjuries ?? "Live API data unavailable"}
                               </p>
                             </div>
                             <div className="bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2">
@@ -4185,9 +4309,9 @@ MATCH CONTEXT — Rule 1 (Time Sync)
                                 {awayTeam} (Away)
                               </p>
                               <p
-                                className={`text-[10px] leading-snug ${researchData.awayInjuries.startsWith("⚠") ? "text-amber-400" : "text-emerald-400"}`}
+                                className={`text-[10px] leading-snug ${researchData?.awayInjuries?.startsWith("⚠") ? "text-amber-400" : "text-emerald-400"}`}
                               >
-                                {researchData.awayInjuries}
+                                {researchData?.awayInjuries ?? "Live API data unavailable"}
                               </p>
                             </div>
                           </div>
@@ -4211,7 +4335,7 @@ MATCH CONTEXT — Rule 1 (Time Sync)
                                 </span>
                               </div>
                               <div className="flex flex-col gap-1">
-                                {researchData.homeLineup.map((p, i) => (
+                                {researchData?.homeLineup?.map((p, i) => (
                                   <div
                                     key={i}
                                     className="flex justify-between items-center text-[10px] border-b border-zinc-800/50 pb-0.5"
@@ -4238,7 +4362,7 @@ MATCH CONTEXT — Rule 1 (Time Sync)
                                 </span>
                               </div>
                               <div className="flex flex-col gap-1">
-                                {researchData.awayLineup.map((p, i) => (
+                                {researchData?.awayLineup?.map((p, i) => (
                                   <div
                                     key={i}
                                     className="flex justify-between items-center text-[10px] border-b border-zinc-800/50 pb-0.5"
@@ -4267,20 +4391,20 @@ MATCH CONTEXT — Rule 1 (Time Sync)
                             </span>
                           </div>
                           <div
-                            className={`rounded-lg px-3 py-2 border ${researchData.defStallRisk === "HIGH" ? "border-red-800 bg-red-950/30" : researchData.defStallRisk === "MODERATE" ? "border-amber-800 bg-amber-950/30" : "border-zinc-800 bg-zinc-900"}`}
+                            className={`rounded-lg px-3 py-2 border ${researchData?.defStallRisk === "HIGH" ? "border-red-800 bg-red-950/30" : researchData?.defStallRisk === "MODERATE" ? "border-amber-800 bg-amber-950/30" : "border-zinc-800 bg-zinc-900"}`}
                           >
                             <div className="flex items-center gap-2 mb-1">
                               <span
-                                className={`text-[9px] font-black ${researchData.defStallRisk === "HIGH" ? "text-red-400" : researchData.defStallRisk === "MODERATE" ? "text-amber-400" : "text-emerald-500"}`}
+                                className={`text-[9px] font-black ${researchData?.defStallRisk === "HIGH" ? "text-red-400" : researchData?.defStallRisk === "MODERATE" ? "text-amber-400" : "text-emerald-500"}`}
                               >
-                                {researchData.defStallRisk}
+                                {researchData?.defStallRisk ?? "LOW"}
                               </span>
                               <span className="text-zinc-700 text-[9px]">
                                 risk level
                               </span>
                             </div>
                             <p className="text-[10px] text-zinc-400 leading-relaxed">
-                              {researchData.defStallNote}
+                              {researchData?.defStallNote ?? "Live API data unavailable."}
                             </p>
                           </div>
                         </div>
@@ -4296,20 +4420,20 @@ MATCH CONTEXT — Rule 1 (Time Sync)
                             </span>
                           </div>
                           <div
-                            className={`rounded-lg px-3 py-2 border ${researchData.offSurgeRisk === "HIGH" ? "border-sky-800 bg-sky-950/30" : researchData.offSurgeRisk === "MODERATE" ? "border-amber-800 bg-amber-950/30" : "border-zinc-800 bg-zinc-900"}`}
+                            className={`rounded-lg px-3 py-2 border ${researchData?.offSurgeRisk === "HIGH" ? "border-sky-800 bg-sky-950/30" : researchData?.offSurgeRisk === "MODERATE" ? "border-amber-800 bg-amber-950/30" : "border-zinc-800 bg-zinc-900"}`}
                           >
                             <div className="flex items-center gap-2 mb-1">
                               <span
-                                className={`text-[9px] font-black ${researchData.offSurgeRisk === "HIGH" ? "text-sky-400" : researchData.offSurgeRisk === "MODERATE" ? "text-amber-400" : "text-emerald-500"}`}
+                                className={`text-[9px] font-black ${researchData?.offSurgeRisk === "HIGH" ? "text-sky-400" : researchData?.offSurgeRisk === "MODERATE" ? "text-amber-400" : "text-emerald-500"}`}
                               >
-                                {researchData.offSurgeRisk}
+                                {researchData?.offSurgeRisk ?? "LOW"}
                               </span>
                               <span className="text-zinc-700 text-[9px]">
                                 risk level
                               </span>
                             </div>
                             <p className="text-[10px] text-zinc-400 leading-relaxed">
-                              {researchData.offSurgeNote}
+                              {researchData?.offSurgeNote ?? "Live API data unavailable."}
                             </p>
                           </div>
                         </div>
@@ -4317,24 +4441,24 @@ MATCH CONTEXT — Rule 1 (Time Sync)
                         {/* Rule 10 Foul Engine */}
                         <div className="px-4 py-3 space-y-2">
                           <div className="flex items-center gap-2">
-                            <p className={`text-[9px] font-bold uppercase tracking-widest ${researchData.foulEngineStatus === "HIGH RISK" ? "text-red-400" : "text-emerald-400"}`}>
+                            <p className={`text-[9px] font-bold uppercase tracking-widest ${researchData?.foulEngineStatus === "HIGH RISK" ? "text-red-400" : "text-emerald-400"}`}>
                               ⚠️ FOUL ENGINE (RULE 10) - PACE KILLER
                             </p>
                             <span className="text-[8px] text-zinc-600">
                               Free throw volume and league whistle context
                             </span>
                           </div>
-                          <div className={`rounded-lg px-3 py-2 border ${researchData.foulEngineStatus === "HIGH RISK" ? "border-red-800 bg-red-950/30" : "border-emerald-800 bg-emerald-950/30"}`}>
+                          <div className={`rounded-lg px-3 py-2 border ${researchData?.foulEngineStatus === "HIGH RISK" ? "border-red-800 bg-red-950/30" : "border-emerald-800 bg-emerald-950/30"}`}>
                             <div className="flex items-center gap-2 mb-1">
-                              <span className={`text-[9px] font-black ${researchData.foulEngineStatus === "HIGH RISK" ? "text-red-400" : "text-emerald-500"}`}>
-                                {researchData.foulEngineStatus}
+                              <span className={`text-[9px] font-black ${researchData?.foulEngineStatus === "HIGH RISK" ? "text-red-400" : "text-emerald-500"}`}>
+                                {researchData?.foulEngineStatus ?? "SAFE"}
                               </span>
                               <span className="text-zinc-700 text-[9px]">
                                 status
                               </span>
                             </div>
                             <p className="text-[10px] text-zinc-300 leading-relaxed">
-                              {researchData.foulEngineNote}
+                              {researchData?.foulEngineNote ?? "Live API data unavailable."}
                             </p>
                           </div>
                         </div>
@@ -4346,7 +4470,7 @@ MATCH CONTEXT — Rule 1 (Time Sync)
                           </p>
                           <div className="rounded-lg px-3 py-2 border border-zinc-800 bg-zinc-950/40">
                             <p className="text-[10px] text-zinc-400 leading-relaxed">
-                              {researchData.fatigueNote} Home rest: {researchData.homeRestDays}d / Away rest: {researchData.awayRestDays}d. This schedule stress directly boosts stall and foul-engine risk.
+                              {researchData?.fatigueNote ?? "Live API data unavailable."} Home rest: {researchData?.homeRestDays ?? 0}d / Away rest: {researchData?.awayRestDays ?? 0}d. This schedule stress directly boosts stall and foul-engine risk.
                             </p>
                           </div>
                         </div>
@@ -4357,20 +4481,20 @@ MATCH CONTEXT — Rule 1 (Time Sync)
                             🕐 OVERTIME POSSIBILITY — Rule 18
                           </p>
                           <div
-                            className={`rounded-lg px-3 py-2 border ${researchData.otRisk === "HIGH" ? "border-violet-800 bg-violet-950/30" : researchData.otRisk === "MODERATE" ? "border-amber-800 bg-amber-950/30" : "border-zinc-800 bg-zinc-900"}`}
+                            className={`rounded-lg px-3 py-2 border ${researchData?.otRisk === "HIGH" ? "border-violet-800 bg-violet-950/30" : researchData?.otRisk === "MODERATE" ? "border-amber-800 bg-amber-950/30" : "border-zinc-800 bg-zinc-900"}`}
                           >
                             <div className="flex items-center gap-2 mb-1">
                               <span
-                                className={`text-[9px] font-black ${researchData.otRisk === "HIGH" ? "text-violet-400" : researchData.otRisk === "MODERATE" ? "text-amber-400" : "text-emerald-500"}`}
+                                className={`text-[9px] font-black ${researchData?.otRisk === "HIGH" ? "text-violet-400" : researchData?.otRisk === "MODERATE" ? "text-amber-400" : "text-emerald-500"}`}
                               >
-                                {researchData.otRisk}
+                                {researchData?.otRisk ?? "LOW"}
                               </span>
                               <span className="text-zinc-700 text-[9px]">
                                 OT probability
                               </span>
                             </div>
                             <p className="text-[10px] text-zinc-400 leading-relaxed">
-                              {researchData.otNote}
+                              {researchData?.otNote ?? "Live API data unavailable."}
                             </p>
                           </div>
                         </div>
@@ -4413,6 +4537,36 @@ MATCH CONTEXT — Rule 1 (Time Sync)
                           </svg>
                           View Verified Source Report
                         </button>
+                      </div>
+                    )}
+                    {researchPhase === "done" && !researchData && (
+                      <div className="px-4 py-6 space-y-4 border-t border-zinc-900 bg-zinc-950/70">
+                        <div className="rounded-xl border border-rose-700 bg-rose-950/30 p-4 text-center">
+                          <p className="text-sm font-bold text-rose-300">
+                            Live research data is unavailable.
+                          </p>
+                          <p className="text-[10px] text-zinc-400 mt-2">
+                            The research scan completed, but the API bridge did not return live payloads. Confirm the backend connection or retry with a real live data source.
+                          </p>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                          <div className="rounded-xl border border-zinc-800 bg-zinc-900 p-4">
+                            <p className="text-[9px] uppercase tracking-widest text-zinc-500 mb-2">
+                              🧬 Statistical DNA
+                            </p>
+                            <p className="text-[10px] text-zinc-500">
+                              No live metrics available until a genuine API source is connected.
+                            </p>
+                          </div>
+                          <div className="rounded-xl border border-zinc-800 bg-zinc-900 p-4">
+                            <p className="text-[9px] uppercase tracking-widest text-zinc-500 mb-2">
+                              🕐 Overtime Risk
+                            </p>
+                            <p className="text-[10px] text-zinc-500">
+                              Overtime and fatigue models are pending real API payloads.
+                            </p>
+                          </div>
+                        </div>
                       </div>
                     )}
                   </div>
@@ -5413,7 +5567,6 @@ MATCH CONTEXT — Rule 1 (Time Sync)
                       <button
                         onClick={applyLiveMonitor}
                         className="w-full bg-zinc-700 hover:bg-zinc-600 text-white text-xs font-bold rounded-lg py-2 tracking-widest uppercase transition"
-                        style={{ display: "none" }}
                       >
                         Apply Stall Sensor →
                       </button>
