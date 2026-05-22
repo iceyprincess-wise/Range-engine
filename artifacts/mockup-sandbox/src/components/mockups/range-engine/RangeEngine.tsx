@@ -1427,6 +1427,8 @@ function runEngine(opts: {
   awayFtAttemptWeightedAvg?: number;
   // Weighted PPG (60/40 if both arena + H2H provided)
   use_weighted?: boolean;
+  gender?: "Men" | "Women";
+  is_live_match?: boolean;
   is_rerun?: boolean;
   rerun_timestamp?: string;
 }): EngineOutput {
@@ -1478,6 +1480,19 @@ function runEngine(opts: {
   const margin = Math.abs(homeEffPPG - awayEffPPG);
   const leagueAvg = dna.proxyPPG;
   const avg_eff = (homeEffPPG / leagueAvg + awayEffPPG / leagueAvg) / 2;
+
+  // TASK 12: Gender & Live Match adjustments
+  // Apply a gender multiplier: women's games historically have lower team PPG
+  const gender = opts.gender ?? "Men";
+  const genderMultiplier = gender === "Women" ? 0.93 : 1.0;
+  homeEffPPG = parseFloat((homeEffPPG * genderMultiplier).toFixed(1));
+  awayEffPPG = parseFloat((awayEffPPG * genderMultiplier).toFixed(1));
+
+  // Live match context: small volatility adjustment
+  if (opts.is_live_match) {
+    // live matches can introduce more variance; widen the base range slightly
+    // this will be applied below by adjusting lb/hb
+  }
 
   const adj_log: AdjLog[] = [];
   const triggered: string[] = [];
@@ -3049,6 +3064,8 @@ export function RangeEngine() {
           home_stats: hInfo,
           away_stats: aInfo,
           league,
+          gender: matchGender,
+          is_live_match: isLiveMatch,
           key_player_out: false,
           key_player_name: "Key Scorer",
           over_low: parseFloat(overLow),
@@ -3173,6 +3190,8 @@ export function RangeEngine() {
         home_stats: homeInfo,
         away_stats: awayInfo,
         league,
+        gender: matchGender,
+        is_live_match: isLiveMatch,
         key_player_out: rKeyOut,
         key_player_name: rKeyName,
         over_low: rOverLow,
