@@ -2712,6 +2712,8 @@ export function RangeEngine() {
   const [overHigh, setOverHigh] = useState("");
   const [underLow, setUnderLow] = useState("");
   const [underHigh, setUnderHigh] = useState("");
+  const [showAltLines, setShowAltLines] = useState(false);
+  const [altLines, setAltLines] = useState<number[]>([]);
 
   const MARKET_LINE_LOW_BOUND = 120;
   const MARKET_LINE_HIGH_BOUND = 240;
@@ -4716,7 +4718,7 @@ MATCH CONTEXT — Rule 1 (Time Sync)
                   <p className="text-[9px] font-bold uppercase tracking-widest text-zinc-500 border-b border-zinc-800 pb-2">
                     💰 MARKET LINES — Rule 12
                   </p>
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <p className="text-[9px] text-sky-400 font-bold uppercase tracking-widest">
                         OVER — Between *
@@ -4724,15 +4726,15 @@ MATCH CONTEXT — Rule 1 (Time Sync)
                       <div className="flex items-center gap-2">
                         <select
                           value={overLow}
-                          onChange={(event) => setOverLow(event.target.value)}
+                          onChange={(event) => {
+                            setOverLow(event.target.value);
+                          }}
                           className="flex-1 rounded border border-zinc-800 bg-zinc-950 px-3 py-2 text-sm text-zinc-100"
                         >
                           <option value="">Select low</option>
                           {marketLineOptions}
                         </select>
-                        <span className="text-zinc-700 text-xs flex-shrink-0">
-                          to
-                        </span>
+                        <span className="text-zinc-700 text-xs flex-shrink-0">to</span>
                         <select
                           value={overHigh}
                           onChange={(event) => setOverHigh(event.target.value)}
@@ -4742,6 +4744,64 @@ MATCH CONTEXT — Rule 1 (Time Sync)
                           {marketLineOptions}
                         </select>
                       </div>
+                      <div className="flex items-center justify-between mt-2">
+                        <p className="text-[9px] text-zinc-700">Engine uses LOWEST (best OVER edge)</p>
+                        <button
+                          onClick={() => {
+                            // toggle alt-lines
+                            setShowAltLines((s) => !s);
+                            // generate alt lines immediately when opening
+                            if (!showAltLines) {
+                              const low = parseFloat(overLow || "NaN");
+                              const high = parseFloat(overHigh || "NaN");
+                              const list: number[] = [];
+                              if (!isNaN(low) && !isNaN(high) && low < high) {
+                                for (let v = low + 0.5; v < high; v += 0.5) {
+                                  // include only x.5 increments for compactness
+                                  if (Math.abs(v % 1 - 0.5) < 1e-9) list.push(parseFloat(v.toFixed(1)));
+                                }
+                              }
+                              setAltLines(list);
+                            }
+                          }}
+                          className="text-[10px] px-2 py-1 rounded border border-zinc-800 text-zinc-300 bg-zinc-900"
+                        >
+                          {showAltLines ? "Hide alternatives" : "Show alternatives"}
+                        </button>
+                      </div>
+                      {showAltLines && altLines.length > 0 && (
+                        <div className="mt-2 grid grid-cols-3 sm:grid-cols-5 gap-2">
+                          {altLines.map((val) => (
+                            <div key={val} className="flex items-center gap-2 text-[11px]">
+                              <span className="w-6 h-6 rounded border border-zinc-800 flex items-center justify-center text-zinc-300">[ ]</span>
+                              <div className="flex-1">
+                                <div className="text-zinc-200 font-mono">{val.toFixed(1)}</div>
+                                <div className="text-[10px] text-zinc-500 flex gap-2 mt-0.5">
+                                  <button
+                                    onClick={() => {
+                                      // set over to this exact value (narrow to point)
+                                      setOverLow(String(val));
+                                      setOverHigh(String(val));
+                                    }}
+                                    className="px-1 py-0.5 rounded border border-emerald-700 text-emerald-300"
+                                  >
+                                    O
+                                  </button>
+                                  <button
+                                    onClick={() => {
+                                      setUnderLow(String(val));
+                                      setUnderHigh(String(val));
+                                    }}
+                                    className="px-1 py-0.5 rounded border border-amber-700 text-amber-300"
+                                  >
+                                    U
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
                       <p className="text-[9px] text-zinc-700">
                         Engine uses LOWEST (best OVER edge)
                       </p>
@@ -4759,9 +4819,7 @@ MATCH CONTEXT — Rule 1 (Time Sync)
                           <option value="">Select low</option>
                           {marketLineOptions}
                         </select>
-                        <span className="text-zinc-700 text-xs flex-shrink-0">
-                          to
-                        </span>
+                        <span className="text-zinc-700 text-xs flex-shrink-0">to</span>
                         <select
                           value={underHigh}
                           onChange={(event) => setUnderHigh(event.target.value)}
