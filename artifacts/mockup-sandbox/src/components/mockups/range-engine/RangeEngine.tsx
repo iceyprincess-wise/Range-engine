@@ -2492,16 +2492,18 @@ export function RangeEngine() {
   const [analysisHistory, setAnalysisHistory] = useState<any[]>([]);
   // --- Auto-Refresh Sync Timer ---
   const [refreshCountdown, setRefreshCountdown] = useState(60);
+  const [isReanalyzing, setIsReanalyzing] = useState(false);
+  const [reanalysisProgress, setReanalysisProgress] = useState(0);
+  const [reanalysisMessage, setReanalysisMessage] = useState<string | null>(null);
 
   // --- POINT 11: TOP NOTCH AUTO-SYNC ENGINE TIMER (SURGICALLY INJECTED) ---
   // This is the single, bulletproof source of truth for the 60s countdown.
   useEffect(() => {
     const mainSyncTimer = setInterval(() => {
       setRefreshCountdown((prev) => {
-        if (prev <= 1) {
-          return 60; // Auto-resets. Future integration: Trigger auto-analyze here.
-        }
-        return prev - 1;
+        const next = prev - 1;
+        if (next < 0) return 60; // wrap-around after hitting 0
+        return next;
       });
     }, 1000);
 
@@ -2671,15 +2673,7 @@ export function RangeEngine() {
   // ─────────────────────────────────────────────────────────────────────────
 
   // 2. LIVE SYNC TICKER (60s loop)
-  useEffect(() => {
-    if (refreshCountdown > 0) {
-      /* ❌ NEUTRALIZED: Conflicting setTimeout ticker (Point 11 Fix) */
-      // return () => clearTimeout(ticker); // ✅ FIXED: Removed undefined ticker reference from Point 11
-    } else {
-      // Background sync triggers here
-      /* ❌ NEUTRALIZED: Conflicting hard reset (Point 11 Fix) */
-    }
-  }, [refreshCountdown]);
+  // (Reanalysis effect relocated below after researchData state declaration)
 
   const [overLow, setOverLow] = useState("");
   const [overHigh, setOverHigh] = useState("");
@@ -2721,6 +2715,77 @@ export function RangeEngine() {
   const [researchError, setResearchError] = useState<string | null>(null);
   const [researchProgress, setResearchProgress] = useState(0);
   const researchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // When the countdown reaches 0 we must run a final bypassing re-analysis
+  useEffect(() => {
+    let progressInterval: ReturnType<typeof setInterval> | null = null;
+
+    async function performFinalReanalysis() {
+      if (!homeTeam || !awayTeam || !league) {
+        // Nothing to reanalyse
+        setRefreshCountdown(60);
+        return;
+      }
+
+      try {
+        setIsReanalyzing(true);
+        setReanalysisProgress(1);
+        setReanalysisMessage("Reanalyzing (final sweep)");
+
+        // Start a faux-progress spinner while we fetch fresh data
+        progressInterval = setInterval(() => {
+          setReanalysisProgress((p) => Math.min(95, p + Math.floor(Math.random() * 6) + 1));
+        }, 200);
+
+        // Force bypass cache and fetch fresh research payload
+        const fresh = await fetchResearchDataCached(homeTeam, awayTeam, league, true);
+
+        // finalize progress
+        setReanalysisProgress(100);
+        if (progressInterval) {
+          clearInterval(progressInterval);
+          progressInterval = null;
+        }
+
+        // Compare with existing researchData and apply if updates present
+        try {
+          const prev = researchData ?? null;
+          const prevJson = prev ? JSON.stringify(prev) : null;
+          const freshJson = JSON.stringify(fresh);
+          if (prevJson !== freshJson) {
+            setResearchData(fresh);
+            setReanalysisMessage("Updates applied");
+          } else {
+            setReanalysisMessage("No updates applied");
+          }
+        } catch (e) {
+          // if compare fails, just apply fresh
+          setResearchData(fresh);
+          setReanalysisMessage("Updates applied");
+        }
+      } catch (err) {
+        console.error("Final reanalysis failed:", err);
+        setReanalysisMessage("Reanalysis failed — network or API error");
+      } finally {
+        // keep the status visible briefly before reset
+        setTimeout(() => {
+          setIsReanalyzing(false);
+          setReanalysisProgress(0);
+          setTimeout(() => setReanalysisMessage(null), 1200);
+          // Restart 60s countdown
+          setRefreshCountdown(60);
+        }, 800);
+      }
+    }
+
+    if (refreshCountdown === 0) {
+      performFinalReanalysis();
+    }
+
+    return () => {
+      if (progressInterval) clearInterval(progressInterval);
+    };
+  }, [refreshCountdown, homeTeam, awayTeam, league, researchData]);
   // Engine state
   const [phase, setPhase] = useState<"idle" | "hunting" | "result">("idle");
   const [huntStep, setHuntStep] = useState(0);
@@ -3657,7 +3722,20 @@ export function RangeEngine() {
                     </span>
                   </div>
                   <div className="text-xs font-mono text-amber-400 font-bold">
-                    00:{refreshCountdown.toString().padStart(2, "0")}
+                    {isReanalyzing ? (
+                      <div className="flex items-center gap-3">
+                        <div className="text-[11px] font-bold text-emerald-300">Reanalyzing</div>
+                        <div className="w-28 bg-zinc-900 rounded overflow-hidden h-2">
+                          <div
+                            className="bg-emerald-500 h-2 transition-all"
+                            style={{ width: `${reanalysisProgress}%` }}
+                          />
+                        </div>
+                        <div className="text-[10px] font-mono text-amber-400">{reanalysisProgress}%</div>
+                      </div>
+                    ) : (
+                      `00:${refreshCountdown.toString().padStart(2, "0")}`
+                    )}
                   </div>
                 </div>
 
@@ -4993,7 +5071,9 @@ MATCH CONTEXT — Rule 1 (Time Sync)
                     !underHigh ||
                     !tipOff ||
                     research.scanning ||
-                    !research.done
+                    !research.done ||
+                    isReanalyzing ||
+                    (refreshCountdown <= 60 && refreshCountdown >= 0)
                   }
                   className="w-full bg-violet-600 hover:bg-violet-500 disabled:opacity-20 disabled:cursor-not-allowed text-white font-black text-xs rounded-xl py-3.5 tracking-widest uppercase transition"
                 >
