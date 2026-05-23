@@ -29,19 +29,19 @@ jobs:
           java-version: '17'
           
       - name: Install Dependencies
-        working-directory: ./Range-Engine-Logic/artifacts/mockup-sandbox
+        working-directory: ./artifacts/mockup-sandbox
         run: pnpm install --no-frozen-lockfile
         
       - name: Build Web Assets
-        working-directory: ./Range-Engine-Logic/artifacts/mockup-sandbox
+        working-directory: ./artifacts/mockup-sandbox
         run: pnpm run build
         
       - name: Sync Capacitor Android
-        working-directory: ./Range-Engine-Logic/artifacts/mockup-sandbox
+        working-directory: ./artifacts/mockup-sandbox
         run: pnpm exec cap sync android
         
       - name: Compile APK (Android Studio Build)
-        working-directory: ./Range-Engine-Logic/artifacts/mockup-sandbox/android
+        working-directory: ./artifacts/mockup-sandbox/android
         run: |
           chmod +x gradlew
           ./gradlew assembleDebug
@@ -50,4 +50,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: Splendor-Hub-App
-          path: Range-Engine-Logic/artifacts/mockup-sandbox/android/app/build/outputs/apk/debug/app-debug.apk
+          path: artifacts/mockup-sandbox/android/app/build/outputs/apk/debug/app-debug.apk
