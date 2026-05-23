@@ -22,7 +22,7 @@ jobs:
         with:
           version: 8
           
-      - name: Setup Java JDK (Android Requirement)
+      - name: Setup Java JDK
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
@@ -40,7 +40,7 @@ jobs:
         working-directory: ./artifacts/mockup-sandbox
         run: pnpm exec cap sync android
         
-      - name: Compile APK (Android Studio Build)
+      - name: Compile APK
         working-directory: ./artifacts/mockup-sandbox/android
         run: |
           chmod +x gradlew
