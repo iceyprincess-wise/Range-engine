@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import { Globe, ShieldCheck } from "lucide-react";
 import { InjuryVacuumEngine } from "./InjuryVacuumEngine";
 import { LiveMatrixHub } from "./LiveMatrixHub";
@@ -724,12 +724,29 @@ interface HistoryEntry {
   actualTotal?: number;
   ftScore?: string;
   earlyRead?: boolean;
+  bookmaker?: string;
   revalidationRequested?: boolean;
   revalidationStatus?: "AWAITING_SYNC" | "CONFIRMED" | "LATE_SHIFT" | "OK";
   lastRevalidationMsg?: string;
 }
 
+interface AnalysisArchiveEntry {
+  id: string;
+  date: string;
+  timestamp: string;
+  teams: string;
+  league: string;
+  finalRange: string;
+  midpoint: string;
+  bookmaker: string;
+  decision: string;
+  outcome: string;
+  confidence: string;
+}
+
 const HISTORY_KEY = "rangengine_v3_history";
+const ARCHIVE_KEY = "splendor_analysis_archive";
+
 function loadHistory(): HistoryEntry[] {
   try {
     return JSON.parse(localStorage.getItem(HISTORY_KEY) ?? "[]");
@@ -737,10 +754,38 @@ function loadHistory(): HistoryEntry[] {
     return [];
   }
 }
+
+function loadAnalysisArchive(): AnalysisArchiveEntry[] {
+  try {
+    return JSON.parse(localStorage.getItem(ARCHIVE_KEY) ?? "[]");
+  } catch {
+    return [];
+  }
+}
+
 function saveHistory(h: HistoryEntry[]) {
   try {
-    localStorage.setItem(HISTORY_KEY, JSON.stringify(h.slice(0, 50)));
-  } catch {}
+    const trimmed = h.slice(0, 50);
+    localStorage.setItem(HISTORY_KEY, JSON.stringify(trimmed));
+
+    const archiveReceipts = trimmed.map((entry) => ({
+      id: entry.id,
+      date: entry.date,
+      timestamp: entry.timestamp,
+      teams: `${entry.homeTeam} vs ${entry.awayTeam}`,
+      league: entry.league,
+      finalRange: `${entry.result.lb.toFixed(1)} - ${entry.result.hb.toFixed(1)}`,
+      midpoint: entry.result.midpoint.toFixed(1),
+      bookmaker: entry.bookmaker || "Sportybet",
+      decision: entry.result.decision,
+      outcome: entry.outcome || "PENDING",
+      confidence: entry.result.confidence,
+    }));
+
+    localStorage.setItem(ARCHIVE_KEY, JSON.stringify(archiveReceipts));
+  } catch (e) {
+    console.warn("Failed to save analysis archive", e);
+  }
 }
 
 // ─── Research Cache Helpers ─────────────────────────────────────────────────
@@ -2334,14 +2379,14 @@ function SmallField({
 function SplendorLogo() {
   return (
     <div className="flex items-center gap-3 flex-shrink-0">
-      <div className="relative flex items-center justify-center w-16 h-16 bg-gradient-to-br from-purple-600 to-indigo-600 rounded-full shadow-lg">
-        <Globe className="w-8 h-8 text-white" />
-        <ShieldCheck className="w-4 h-4 text-yellow-400 absolute bottom-1 right-1" />
+      <div className="relative flex items-center justify-center w-16 h-16 bg-gradient-to-br from-purple-600 to-indigo-600 rounded-full shadow-2xl drop-shadow-2xl">
+        <Globe className="w-8 h-8 text-white drop-shadow-xl" />
+        <ShieldCheck className="w-4 h-4 text-yellow-300 absolute bottom-1 right-1 drop-shadow-lg" />
       </div>
       <div className="text-left">
-        <h1 className="text-xl font-black text-white">SPLENDOR HUB</h1>
-        <p className="text-sm text-zinc-400">House of Betting</p>
-        <p className="text-xs text-zinc-500">18+ Bet Responsibly</p>
+        <h1 className="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-300 via-indigo-300 to-cyan-300 drop-shadow-xl" style={{ textShadow: '0 0 30px rgba(168, 85, 247, 0.6), 0 0 60px rgba(99, 102, 241, 0.4)' }}>SPLENDOR HUB</h1>
+        <p className="text-sm text-zinc-300">Premium Sportsbook Suite</p>
+        <p className="text-xs text-zinc-400">18+ Bet Responsibly</p>
       </div>
     </div>
   );
@@ -3122,6 +3167,7 @@ export function RangeEngine() {
             result: res,
             outcome: "PENDING",
             earlyRead,
+            bookmaker,
             revalidationRequested: false,
             revalidationStatus: earlyRead ? "AWAITING_SYNC" : "OK",
             lastRevalidationMsg: earlyRead
@@ -3354,13 +3400,14 @@ export function RangeEngine() {
 
   const s = result ? decisionStyle(result.decision) : null;
   const rs = rerunResult ? decisionStyle(rerunResult.decision) : null;
+  const archiveEntries = useMemo(() => loadAnalysisArchive(), [history]);
+
   const histStats = {
-    total: history.length,
-    wins: history.filter((h) => h.outcome === "WIN").length,
-    losses: history.filter((h) => h.outcome === "LOSS").length,
-    hammers: history.filter((h) => h.result.hammer || h.rerunResult?.hammer)
-      .length,
-    pending: history.filter((h) => h.outcome === "PENDING").length,
+    total: archiveEntries.length,
+    wins: archiveEntries.filter((entry) => entry.outcome === "WIN").length,
+    losses: archiveEntries.filter((entry) => entry.outcome === "LOSS").length,
+    hammers: 0,
+    pending: archiveEntries.filter((entry) => entry.outcome === "PENDING").length,
   };
   const winRate =
     histStats.wins + histStats.losses > 0
@@ -3368,63 +3415,66 @@ export function RangeEngine() {
       : null;
 
   return (
-    <div className="min-h-screen bg-[#07070c] text-white font-mono flex flex-col text-sm select-none">
+    <div className="min-h-screen bg-slate-950 text-white font-mono flex flex-col text-sm select-none" style={{ background: 'linear-gradient(135deg, #020617 0%, #0f172a 50%, #1a1a2e 100%)' }}>
       {tab === "football" && (
-        <div style={{ position: "fixed", inset: 0, background: "#0a0a0a", color: "#fff", zIndex: 9998, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "20px", overflowY: "auto" }}>
-          <h1 style={{ color: "#ffaa00", fontSize: "3rem", margin: 0, textAlign: "center" }}>⚽ Football Section</h1>
-          <h2 style={{ color: "#888", fontWeight: "normal", marginBottom: "30px", textAlign: "center" }}>Coming Soon</h2>
-          <div style={{ background: "#111", padding: "20px", borderRadius: "12px", border: "1px solid #333", maxWidth: "600px", textAlign: "left", lineHeight: "1.6" }}>
-            <p style={{ color: "#ff4444", fontWeight: "bold" }}>🚨 Paradigm Shift Architecture Initialized</p>
-            <ul style={{ color: "#aaa", fontSize: "0.95rem", paddingLeft: "20px" }}>
-              <li>xG Variance Models & Temporal Degradation</li>
-              <li>Momentum Collapse Detection</li>
-              <li>Low-Block Penetration Analysis</li>
-              <li>90-Minute Pacing Variance Sync</li>
+        <div className="fixed inset-0 bg-slate-950/95 backdrop-blur-md z-9998 flex flex-col items-center justify-center p-6 overflow-y-auto border border-emerald-500/20" style={{ background: 'rgba(2, 6, 23, 0.95)', backdropFilter: 'blur(12px)' }}>
+          <h1 className="text-4xl font-black text-center mb-4 text-transparent bg-clip-text bg-gradient-to-r from-emerald-300 to-cyan-300" style={{ textShadow: '0 0 30px rgba(16, 185, 129, 0.4)' }}>⚽ Football Analyser</h1>
+          <h2 className="text-zinc-400 font-normal mb-8 text-center text-lg">Coming Soon — Premier Soccer Integration</h2>
+          <div className="bg-zinc-900/40 backdrop-blur-sm p-6 rounded-xl border border-zinc-700/50 max-w-xl text-left leading-relaxed">
+            <p className="text-emerald-400 font-bold mb-3">🚀 Advanced Soccer Analysis Engine</p>
+            <ul className="text-zinc-300 text-sm space-y-2">
+              <li>✓ xG & Post-Shot xG Models</li>
+              <li>✓ Momentum & Defensive Pressure Analysis</li>
+              <li>✓ Tactical Formation Detection</li>
+              <li>✓ Live 90-Minute Pacing Dynamics</li>
             </ul>
           </div>
-          <button onClick={() => setTab("analyzer")} style={{ marginTop: "40px", padding: "12px 30px", background: "#ffaa00", color: "#000", fontWeight: "bold", border: "none", borderRadius: "8px", cursor: "pointer" }}>Return to Matrix</button>
+          <button onClick={() => setTab("analyzer")} className="mt-8 px-8 py-3 bg-gradient-to-r from-emerald-600 to-cyan-600 text-white font-bold rounded-lg hover:from-emerald-500 hover:to-cyan-500 transition shadow-lg">Return to Basketball</button>
         </div>
       )}
-      {/* ─── Header ─────────────────────────────────────────────────────────── */}
-      <div className="border-b border-white/[0.06] px-5 py-3 flex flex-col items-center justify-center bg-black/80 flex-shrink-0">
+      {/* ─── Premium Header with Global Navigation ─────────────────────────────────────── */}
+      <div className="border-b border-emerald-500/10 px-5 py-4 flex flex-col items-center justify-center bg-zinc-950/60 backdrop-blur-md flex-shrink-0" style={{ background: 'rgba(24, 23, 37, 0.6)', backdropFilter: 'blur(12px)', borderImage: 'linear-gradient(90deg, transparent, rgba(16, 185, 129, 0.2), transparent) 1' }}>
         <SplendorLogo />
-        <div className="flex items-center gap-2 mt-3">
-          {["analyzer", "live", "history"].map((t) => (
+        <div className="flex items-center gap-3 mt-4 flex-wrap justify-center">
+          {[
+            { key: "analyzer", label: "Basketball Analyser 🏀" },
+            { key: "football", label: "Football Analyser ⚽" },
+            { key: "history", label: "Analysis Archive 🗄️" }
+          ].map((item) => (
             <button
-              key={t}
-              onClick={() => setTab(t as typeof tab)}
-              className={`text-[10px] px-3 py-1.5 rounded-lg font-bold uppercase tracking-widest transition border ${tab === t ? "bg-white text-black border-white" : "text-zinc-500 border-zinc-800 hover:border-zinc-600 hover:text-white"}`}
+              key={item.key}
+              onClick={() => setTab(item.key as typeof tab)}
+              className={`text-[10px] px-4 py-2 rounded-lg font-bold uppercase tracking-widest transition border backdrop-blur-sm ${
+                tab === item.key
+                  ? "bg-gradient-to-r from-emerald-600 to-cyan-600 text-white border-emerald-400 shadow-lg shadow-emerald-500/50"
+                  : item.key === "football"
+                  ? "text-zinc-300 border-emerald-600/30 hover:border-emerald-500 hover:text-emerald-300 bg-emerald-950/20"
+                  : "text-zinc-400 border-zinc-700 hover:border-zinc-500 hover:text-white bg-zinc-900/30"
+              }`}
+              title={item.key === "football" ? "Coming Soon" : ""}
             >
-              {t === "history" ? (
-                `${t} (${histStats.total})`
-              ) : t === "live" ? (
-                <span className="flex items-center gap-1.5">
-                  LIVE{" "}
-                  <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></span>
-                </span>
-              ) : (
-                t
-              )}
+              {item.label}
+              {item.key === "history" ? ` (${histStats.total})` : ""}
             </button>
           ))}
           {tab === "analyzer" && phase !== "idle" && (
             <button
               onClick={handleReset}
-              className="text-[10px] text-zinc-600 hover:text-white border border-zinc-800 hover:border-zinc-600 rounded-lg px-2.5 py-1.5 transition"
+              className="text-[10px] text-zinc-400 hover:text-white border border-zinc-600 hover:border-zinc-400 rounded-lg px-3 py-2 transition bg-zinc-900/30 backdrop-blur-sm"
             >
-              ← New
+              ← New Analysis
             </button>
           )}
         </div>
-      </div>
-
-      {IS_OWNER && (
-        <div style={{ display: "flex", justifyContent: "center", marginTop: "12px", marginBottom: "16px", width: "100%" }}>
-          <button onClick={() => setTab("football")} style={{ background: "linear-gradient(90deg, #1a1a1a, #333)", color: "#ffaa00", padding: "8px 24px", borderRadius: "20px", fontWeight: "bold", border: "1px solid #ffaa00", cursor: "pointer", boxShadow: "0 4px 15px rgba(255, 170, 0, 0.3)", display: "flex", gap: "8px", alignItems: "center", fontSize: "0.9rem" }}>
-            ⚽ Football Section
-          </button>
+        {/* Battery Pill - Telemetry Node */}
+        <div className="mt-3 px-4 py-2 rounded-full border border-emerald-500/40 bg-emerald-950/30 backdrop-blur-sm flex items-center gap-2">
+          <span className="text-emerald-400 font-bold text-xs uppercase tracking-widest">System Status</span>
+          <div className="w-6 h-3 rounded border border-emerald-400 flex items-center px-0.5 bg-emerald-950/50">
+            <div className="w-full h-full bg-emerald-500 rounded-sm"></div>
+          </div>
+          <span className="text-emerald-300 font-black text-xs">100/100</span>
         </div>
-      )}
+      </div>
 
       {/* ─── HISTORY TAB ────────────────────────────────────────────────────── */}
 
@@ -3440,7 +3490,7 @@ export function RangeEngine() {
         </div>
       ) : null}
 
-      {/* ─── HISTORY TAB ────────────────────────────────────────────────────── */}
+      {/* ─── ANALYSIS ARCHIVE TAB ─────────────────────────────────────────────── */}
       {tab === "history" && (
         <div className="flex-1 overflow-y-auto px-5 py-4">
           <div className="w-full max-w-none space-y-4">
@@ -3450,7 +3500,7 @@ export function RangeEngine() {
                   ["Analyses", histStats.total, "text-white"],
                   ["Wins", histStats.wins, "text-emerald-400"],
                   ["Losses", histStats.losses, "text-red-400"],
-                  ["Hammer", histStats.hammers, "text-yellow-400"],
+                  ["Pending", histStats.pending, "text-amber-300"],
                   [
                     "Win Rate",
                     winRate !== null ? `${winRate}%` : "—",
@@ -3462,277 +3512,75 @@ export function RangeEngine() {
               ).map(([lbl, val, cls]) => (
                 <div
                   key={String(lbl)}
-                  className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-3 text-center"
+                  className="bg-zinc-950/40 backdrop-blur-md border border-emerald-500/20 rounded-xl p-3 text-center hover:border-emerald-500/40 transition shadow-lg shadow-emerald-500/10"
+                  style={{ background: "rgba(24, 23, 37, 0.4)", backdropFilter: "blur(8px)" }}
                 >
                   <p className={`text-lg font-black ${cls}`}>{val}</p>
-                  <p className="text-[9px] uppercase tracking-widest text-zinc-600 mt-0.5">
+                  <p className="text-[9px] uppercase tracking-widest text-zinc-500 mt-0.5">
                     {lbl}
                   </p>
                 </div>
               ))}
             </div>
 
-            {history.length === 0 ? (
+            <div className="flex items-center justify-between">
+              <p className="text-[9px] uppercase tracking-widest text-zinc-600">
+                Local Archive — {histStats.total} receipts
+              </p>
+              <button
+                onClick={clearHistory}
+                className="text-[9px] text-red-400 hover:text-red-300 transition"
+              >
+                Clear all
+              </button>
+            </div>
+
+            {archiveEntries.length === 0 ? (
               <div className="text-center py-16 space-y-2">
                 <p className="text-4xl">📋</p>
-                <p className="text-xs text-zinc-500">
-                  No analyses yet — run your first match in the Analyzer tab.
+                <p className="text-xs text-zinc-400">
+                  No local archive entries yet. Complete an analysis to populate this tab.
                 </p>
               </div>
             ) : (
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <p className="text-[9px] uppercase tracking-widest text-zinc-600">
-                    Match Record — {histStats.total} entries
-                  </p>
-                  <button
-                    onClick={clearHistory}
-                    className="text-[9px] text-red-700 hover:text-red-400 transition"
+              <div className="space-y-3">
+                {archiveEntries.map((entry) => (
+                  <div
+                    key={entry.id}
+                    className="border border-emerald-500/20 rounded-xl bg-zinc-950/60 backdrop-blur-md p-4 shadow-lg shadow-emerald-500/5"
                   >
-                    Clear all
-                  </button>
-                </div>
-                {history.map((entry) => {
-                  const st = decisionStyle(entry.result.decision);
-                  const expanded = expandedId === entry.id;
-                  return (
-                    <div
-                      key={entry.id}
-                      className={`border rounded-xl overflow-hidden transition-all w-full ${st.border} bg-zinc-950/80`}
-                    >
-                      <div
-                        className="flex items-center gap-3 px-4 py-3 cursor-pointer"
-                        onClick={() =>
-                          setExpandedId(expanded ? null : entry.id)
-                        }
-                      >
-                        <OutcomeBadge outcome={entry.outcome} />
-                        <div className="flex-1 min-w-0">
-                          <p className="text-xs font-bold text-white truncate">
-                            {entry.homeTeam} vs {entry.awayTeam}
-                          </p>
-                          <p className="text-[10px] text-zinc-600">
-                            {entry.league} · {entry.date}
-                          </p>
-                          {entry.result.whyNote && (
-                            <p className="text-[10px] text-zinc-700 truncate mt-0.5">
-                              Why: {entry.result.whyNote}
-                            </p>
-                          )}
-                        </div>
-                        <div className="text-right flex-shrink-0 space-y-0.5">
-                          <p className={`text-xs font-black ${st.text}`}>
-                            {entry.result.decision}
-                          </p>
-                          <p className="text-[10px] text-zinc-600">
-                            {entry.result.lb} – {entry.result.hb}
-                          </p>
-                        </div>
-                        <span className="text-zinc-700 text-xs flex-shrink-0">
-                          {expanded ? "▲" : "▼"}
-                        </span>
+                    <div className="flex flex-wrap items-center justify-between gap-4">
+                      <div>
+                        <p className="text-sm font-black text-white">{entry.teams}</p>
+                        <p className="text-[10px] uppercase tracking-widest text-zinc-500 mt-1">
+                          {entry.league} · {entry.date}
+                        </p>
                       </div>
-                      {expanded && (
-                        <div className="border-t border-zinc-800 px-4 py-3 space-y-3 bg-zinc-950/60">
-                          <div className="grid grid-cols-3 gap-2 text-[10px]">
-                            <div>
-                              <span className="text-zinc-600">Range: </span>
-                              <span className="text-white font-bold">
-                                {entry.result.lb} – {entry.result.hb}
-                              </span>
-                            </div>
-                            <div>
-                              <span className="text-zinc-600">Width: </span>
-                              <span className="text-zinc-300">
-                                {entry.result.range_width} pts
-                              </span>
-                            </div>
-                            <div>
-                              <span className="text-zinc-600">
-                                Reliability:{" "}
-                              </span>
-                              <span
-                                className={
-                                  entry.result.reliability === "Strong"
-                                    ? "text-emerald-400"
-                                    : entry.result.reliability === "Moderate"
-                                      ? "text-amber-400"
-                                      : "text-red-400"
-                                }
-                              >
-                                {entry.result.reliability}
-                              </span>
-                            </div>
-                            <div>
-                              <span className="text-zinc-600">DNA: </span>
-                              <span className="text-zinc-400">
-                                {entry.result.leagueDNAName}
-                              </span>
-                            </div>
-                            <div>
-                              <span className="text-zinc-600">Proxy Cap: </span>
-                              <span
-                                className={
-                                  entry.result.proxyCapped
-                                    ? "text-amber-400"
-                                    : "text-emerald-700"
-                                }
-                              >
-                                {entry.result.proxyCapped
-                                  ? `YES — ${entry.result.capValue} PPG`
-                                  : "No"}
-                              </span>
-                            </div>
-                            <div>
-                              <span className="text-zinc-600">OT Hazard: </span>
-                              <span
-                                className={
-                                  entry.result.otHazard
-                                    ? "text-amber-400"
-                                    : "text-zinc-700"
-                                }
-                              >
-                                {entry.result.otHazard ? "+8 HB" : "N/A"}
-                              </span>
-                            </div>
-                          </div>
-                          {/* The Why */}
-                          <div className="bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 space-y-1">
-                            <p className="text-[9px] uppercase tracking-widest text-zinc-600">
-                              📖 The Why
-                            </p>
-                            <p className="text-[10px] text-zinc-400">
-                              {entry.result.whyNote}
-                            </p>
-                            <p className="text-[9px] text-zinc-600">
-                              ⚠ Might Fail:{" "}
-                              <span className="text-zinc-500">
-                                {entry.result.whyMightFail}
-                              </span>
-                            </p>
-                          </div>
-                          {entry.result.lean !== "NONE" && (
-                            <p className="text-[10px] text-zinc-500">
-                              Lean: {entry.result.lean}
-                            </p>
-                          )}
-                          {entry.rerunResult && (
-                            <div className="bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2">
-                              <p className="text-[9px] uppercase tracking-widest text-zinc-600 mb-1">
-                                🔁 RERUN · "{entry.rerunCmd}"
-                              </p>
-                              <p
-                                className={`text-xs font-bold ${decisionStyle(entry.rerunResult.decision).text}`}
-                              >
-                                {entry.rerunResult.decision}
-                              </p>
-                              <p className="text-[10px] text-zinc-600">
-                                Range: {entry.rerunResult.lb} –{" "}
-                                {entry.rerunResult.hb} ·{" "}
-                                {entry.rerunResult.confidence}
-                              </p>
-                            </div>
-                          )}
-                          {/* Outcome Recorder */}
-                          <div className="border-t border-zinc-800 pt-3 space-y-2">
-                            <p className="text-[9px] uppercase tracking-widest text-zinc-600">
-                              Record Outcome
-                            </p>
-                            <div className="flex items-center gap-2 flex-wrap">
-                              {(
-                                ["WIN", "LOSS", "PUSH", "PENDING"] as const
-                              ).map((o) => (
-                                <button
-                                  key={o}
-                                  onClick={() => setOutcome(entry.id, o)}
-                                  className={`text-[10px] font-bold px-3 py-1 rounded-full border transition ${entry.outcome === o ? outcomeStyle(o) + " font-black" : "border-zinc-800 text-zinc-600 hover:border-zinc-600 hover:text-white"}`}
-                                >
-                                  {o}
-                                </button>
-                              ))}
-                            </div>
-                            <div className="flex gap-2">
-                              <input
-                                value={
-                                  editingId === entry.id
-                                    ? editActual
-                                    : (entry.actualTotal?.toString() ?? "")
-                                }
-                                onClick={() => setEditingId(entry.id)}
-                                onChange={(e) => setEditActual(e.target.value)}
-                                onBlur={() => {
-                                  if (editActual) {
-                                    const n = parseFloat(editActual);
-                                    if (!isNaN(n)) {
-                                      const o =
-                                        entry.result.decision.includes(
-                                          "OVER",
-                                        ) && n > entry.result.best_over_line
-                                          ? "WIN"
-                                          : entry.result.decision.includes(
-                                                "UNDER",
-                                              ) &&
-                                              n < entry.result.best_under_line
-                                            ? "WIN"
-                                            : entry.result.decision !==
-                                                "NO ACTION"
-                                              ? "LOSS"
-                                              : "PENDING";
-                                      setOutcome(entry.id, o, n, editFtScore);
-                                    }
-                                  }
-                                }}
-                                placeholder="Actual O/U total"
-                                type="number"
-                                step="0.5"
-                                className="w-32 bg-zinc-900 border border-zinc-700 rounded-lg px-2 py-1 text-xs text-white focus:outline-none focus:border-zinc-500 placeholder:text-zinc-700"
-                              />
-                              <input
-                                value={
-                                  editingId === entry.id
-                                    ? editFtScore
-                                    : (entry.ftScore ?? "")
-                                }
-                                onClick={() => setEditingId(entry.id)}
-                                onChange={(e) => setEditFtScore(e.target.value)}
-                                onBlur={() => {
-                                  if (editFtScore && editingId === entry.id)
-                                    setOutcome(
-                                      entry.id,
-                                      entry.outcome,
-                                      entry.actualTotal,
-                                      editFtScore,
-                                    );
-                                }}
-                                placeholder="FT Score e.g. 82-99"
-                                className="flex-1 bg-zinc-900 border border-zinc-700 rounded-lg px-2 py-1 text-xs text-white focus:outline-none focus:border-zinc-500 placeholder:text-zinc-700"
-                              />
-                            </div>
-                            {(entry.actualTotal || entry.ftScore) && (
-                              <p className="text-[10px] text-zinc-500">
-                                {entry.ftScore && (
-                                  <span>FT: {entry.ftScore} &nbsp;</span>
-                                )}
-                                {entry.actualTotal && (
-                                  <span>O/U Total: {entry.actualTotal}</span>
-                                )}
-                              </p>
-                            )}
-                            {!entry.actualTotal && (
-                              <button
-                                onClick={() => resolveHistory(entry.id)}
-                                disabled={resolvingId === entry.id}
-                                className={`mt-2 text-[9px] font-bold px-3 py-1 rounded-full border transition-all ${resolvingId === entry.id ? 'border-zinc-700 bg-zinc-900 text-zinc-500 cursor-not-allowed' : 'border-emerald-500/50 text-emerald-400 hover:bg-emerald-500/20 hover:border-emerald-400'}`}
-                              >
-                                {resolvingId === entry.id ? 'Resolving...' : '🔄 Auto-Resolve API Sync'}
-                              </button>
-                            )}
-                          </div>
-                        </div>
-                      )}
+                      <div className="text-right">
+                        <p className="text-[10px] uppercase tracking-widest text-zinc-500">Final Range</p>
+                        <p className="text-sm font-bold text-emerald-300">{entry.finalRange}</p>
+                      </div>
                     </div>
-                  );
-                })}
+                    <div className="mt-3 grid grid-cols-2 gap-3 text-[11px]">
+                      <div className="rounded-lg border border-zinc-800/70 bg-zinc-950/40 px-3 py-2">
+                        <span className="block text-[9px] uppercase tracking-widest text-zinc-500">Bookmaker</span>
+                        <span className="text-zinc-200 font-bold">{entry.bookmaker}</span>
+                      </div>
+                      <div className="rounded-lg border border-zinc-800/70 bg-zinc-950/40 px-3 py-2">
+                        <span className="block text-[9px] uppercase tracking-widest text-zinc-500">Decision</span>
+                        <span className="text-emerald-300 font-bold">{entry.decision}</span>
+                      </div>
+                      <div className="rounded-lg border border-zinc-800/70 bg-zinc-950/40 px-3 py-2">
+                        <span className="block text-[9px] uppercase tracking-widest text-zinc-500">Outcome</span>
+                        <span className="text-zinc-200 font-bold">{entry.outcome}</span>
+                      </div>
+                      <div className="rounded-lg border border-zinc-800/70 bg-zinc-950/40 px-3 py-2">
+                        <span className="block text-[9px] uppercase tracking-widest text-zinc-500">Confidence</span>
+                        <span className="text-cyan-300 font-bold">{entry.confidence}</span>
+                      </div>
+                    </div>
+                  </div>
+                ))}
               </div>
             )}
           </div>
