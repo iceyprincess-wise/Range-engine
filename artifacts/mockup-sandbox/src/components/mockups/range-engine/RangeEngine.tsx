@@ -3,7 +3,7 @@ import { Globe, ShieldCheck } from "lucide-react";
 import { InjuryVacuumEngine } from "./InjuryVacuumEngine";
 import { LiveMatrixHub } from "./LiveMatrixHub";
 
-const API_BASE = import.meta.env.VITE_API_BASE || "/";
+const API_BASE = import.meta.env.VITE_API_BASE || "";
 
 function generateLineOptions(
   lowBound: number,
@@ -2401,7 +2401,7 @@ export function RangeEngine() {
   const [liveStats, setLiveStats] = useState<any>(null);
   const [isFetchingLive, setIsFetchingLive] = useState(false);
   const [apiError, setApiError] = useState("");
-  const API_BASE = import.meta.env.VITE_API_BASE || "/";
+  const API_BASE = import.meta.env.VITE_API_BASE || "";
 
   const triggerLiveSync = async () => {
     setIsFetchingLive(true);
