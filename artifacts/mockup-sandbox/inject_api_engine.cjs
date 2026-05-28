@@ -20,7 +20,7 @@ const stateInjection = `
     setApiError("");
     try {
       // NOTE: Replace YOUR_API_KEY_HERE with your actual RapidAPI key
-      const response = await fetch('https://basketapi1.p.rapidapi.com/api/basketball/match/live', {
+      const response = await fetch('https://basketapi1.p.rapidapi.com/api/basketball/matches/live', {
         method: 'GET',
         headers: {
           'x-rapidapi-key': 'f0f8830be9msh33c27594430acdbp174a46jsn212686e527a0', 
