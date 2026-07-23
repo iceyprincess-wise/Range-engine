@@ -1,3 +1,4 @@
+import { nextCountdownSec } from "./engine/syncScheduler";
 import { useState, useRef, useEffect, useMemo } from "react";
 import { Globe, ShieldCheck } from "lucide-react";
 import { InjuryVacuumEngine } from "./InjuryVacuumEngine";
@@ -481,21 +482,6 @@ export function RangeEngine() {
     return () => clearInterval(mainSyncTimer);
   }, []);
 
-  // --- POINT 1: TOP NOTCH AUTO-SYNC ENGINE TIMER ---
-  useEffect(() => {
-    const syncEngine = setInterval(() => {
-      /* ❌ NEUTRALIZED: Conflicting syncEngine setter (Point 11 Fix) */
-    }, 1000);
-    return () => clearInterval(syncEngine);
-  }, []);
-  useEffect(() => {
-    // Only tick if on analyzer and NOT currently scanning or done
-    if (tab !== "analyzer" || research?.done || research?.scanning) return;
-    const timer = setInterval(() => {
-      /* ❌ NEUTRALIZED: Conflicting syncEngine setter (Point 11 Fix) */
-    }, 1000);
-    return () => clearInterval(timer);
-  }, [tab, research?.done, research?.scanning]);
 
   // ─── Truth Protocol: Realistic Multi-Phase Scanning Engine ────────────────
   useEffect(() => {
@@ -698,7 +684,7 @@ export function RangeEngine() {
     async function performFinalReanalysis() {
       if (!homeTeam || !awayTeam || !league) {
         // Nothing to reanalyse
-        setRefreshCountdown(60);
+        setRefreshCountdown(nextCountdownSec(koTime, currentTime) ?? 60);
         return;
       }
 
@@ -748,13 +734,18 @@ export function RangeEngine() {
           setReanalysisProgress(0);
           setTimeout(() => setReanalysisMessage(null), 1200);
           // Restart 60s countdown
-          setRefreshCountdown(60);
+          setRefreshCountdown(nextCountdownSec(koTime, currentTime) ?? 60);
         }, 800);
       }
     }
 
     if (refreshCountdown === 0) {
-      performFinalReanalysis();
+      const delaySec = nextCountdownSec(koTime, currentTime);
+      if (delaySec === null) {
+        setRefreshCountdown(60); // IDLE/FINAL: keep the display clock alive, spend nothing
+      } else {
+        performFinalReanalysis();
+      }
     }
 
     return () => {
@@ -1520,7 +1511,7 @@ export function RangeEngine() {
                         <div className="text-[10px] font-mono text-amber-400">{reanalysisProgress}%</div>
                       </div>
                     ) : (
-                      `00:${refreshCountdown.toString().padStart(2, "0")}`
+                      `${Math.floor(refreshCountdown / 60)}:${(refreshCountdown % 60).toString().padStart(2, "0")}`
                     )}
                   </div>
                 </div>
@@ -2934,7 +2925,7 @@ MATCH CONTEXT — Rule 1 (Time Sync)
                     research.scanning ||
                     !research.done ||
                     isReanalyzing ||
-                    (refreshCountdown <= 60 && refreshCountdown >= 0)
+                    (refreshCountdown <= 600 && refreshCountdown >= 0)
                   }
                   className="w-full bg-violet-600 hover:bg-violet-500 disabled:opacity-20 disabled:cursor-not-allowed text-white font-black text-xs rounded-xl py-3.5 tracking-widest uppercase transition"
                 >
