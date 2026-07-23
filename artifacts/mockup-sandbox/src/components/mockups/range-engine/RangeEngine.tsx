@@ -529,7 +529,7 @@ export function RangeEngine() {
             const params = new URLSearchParams({ league: league || "", homeTeam: homeTeam || "", awayTeam: awayTeam || "" });
             if (gameId) params.set("gameId", gameId);
             if (bookmaker) params.set("bookmaker", bookmaker);
-            const response = await fetch(`${API_BASE}/api/v1/sync?${params.toString()}`);
+            const response = await fetch(`${API_BASE}/api/v1/prematch?homeTeam=${encodeURIComponent(homeTeam || "")}&awayTeam=${encodeURIComponent(awayTeam || "")}`);
             if (!response.ok) {
               throw new Error(`API request failed: ${response.status}`);
             }
@@ -542,9 +542,9 @@ export function RangeEngine() {
             
             // Populate live matrix data from API payload
             setLiveMatrixData({
-              homeForm: apiData.homeForm || "Data Unavailable",
-              awayForm: apiData.awayForm || "Data Unavailable",
-              h2h: apiData.h2h || "Data Unavailable",
+              homeForm: apiData.home?.formLast5 || "Data Unavailable",
+              awayForm: apiData.away?.formLast5 || "Data Unavailable",
+              h2h: apiData.h2h?.meetings ? `${apiData.h2h.meetings} meeting(s) · avg total ${Math.round(apiData.h2h.avgTotal)}` : "No recent H2H found",
               sourceNodes:
                 Array.isArray(apiData.sourceNodes) && apiData.sourceNodes.length > 0
                   ? apiData.sourceNodes

@@ -289,8 +289,8 @@ export async function fetchResearchData(
     sourcesScanned: apiData.sourcesScanned ?? 0,
     researchMs: apiData.researchMs ?? 0,
     // Compatibility fields expected by UI
-    homeRecentForm: (apiData.homeRecentForm ?? apiData.home_recent_form) || Array.from({ length: 5 }, (_, i) => (homeForm50[i] ?? 1) > (homeArenaPPG ? homeArenaPPG * 0.95 : 0) ? "W" : "L"),
-    awayRecentForm: (apiData.awayRecentForm ?? apiData.away_recent_form) || Array.from({ length: 5 }, (_, i) => (awayForm50[i] ?? 1) > (awayRoadPPG ? awayRoadPPG * 0.95 : 0) ? "W" : "L"),
+    homeRecentForm: apiData.homeFormString ? String(apiData.homeFormString).split("") : (apiData.homeRecentForm ?? apiData.home_recent_form) || Array.from({ length: 5 }, (_, i) => (homeForm50[i] ?? 1) > (homeArenaPPG ? homeArenaPPG * 0.95 : 0) ? "W" : "L"),
+    awayRecentForm: apiData.awayFormString ? String(apiData.awayFormString).split("") : (apiData.awayRecentForm ?? apiData.away_recent_form) || Array.from({ length: 5 }, (_, i) => (awayForm50[i] ?? 1) > (awayRoadPPG ? awayRoadPPG * 0.95 : 0) ? "W" : "L"),
     homeFreeThrowPct: homeFt,
     awayFreeThrowPct: awayFt,
     homeThreePtPct: homePt3,
