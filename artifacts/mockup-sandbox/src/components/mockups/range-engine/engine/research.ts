@@ -36,16 +36,37 @@ export async function fetchResearchData(
   if (gameId) params.set("gameId", String(gameId));
   if (bookmaker) params.set("bookmaker", String(bookmaker));
 
-  const response = await fetch(`${API_BASE}/api/v1/sync?${params.toString()}`);
-
-  if (!response.ok) {
-    const payload = await response.json().catch(() => null);
-    throw new Error(
-      payload?.error || `API request failed with status ${response.status}`,
-    );
+  let preData: any = null;
+  try {
+    const preParams = new URLSearchParams({
+      homeTeam: homeTeam || "",
+      awayTeam: awayTeam || "",
+    });
+    const preResponse = await fetch(`${API_BASE}/api/v1/prematch?${preParams.toString()}`);
+    if (preResponse.ok) preData = await preResponse.json();
+  } catch (e) {
+    preData = null;
   }
 
-  const apiData = await response.json();
+  const response = await fetch(`${API_BASE}/api/v1/sync?${params.toString()}`).catch(() => null);
+
+  if ((!response || !response.ok) && !preData) {
+    throw new Error(`API request failed${response ? ` with status ${response.status}` : ""}`);
+  }
+
+  const apiData: any = response && response.ok ? await response.json() : {};
+
+  if (preData) {
+    apiData.provenance = "real";
+    apiData.homeArenaPPG = preData.home?.homeArenaPPG ?? apiData.homeArenaPPG;
+    apiData.awayRoadPPG = preData.away?.awayRoadPPG ?? apiData.awayRoadPPG;
+    apiData.h2hAvgTotal = preData.h2h?.avgTotal ?? apiData.h2hAvgTotal;
+    if (Array.isArray(preData.h2h?.totals) && preData.h2h.totals.length) {
+      apiData.h2h = preData.h2h.totals;
+    }
+    apiData.homeFormString = preData.home?.formLast5 ?? apiData.homeFormString;
+    apiData.awayFormString = preData.away?.formLast5 ?? apiData.awayFormString;
+  }
   const homeForm50 = parseNumberArray(
     apiData.homeForm50 ?? apiData.home_form_50 ?? apiData.homeForm ?? [],
   );
