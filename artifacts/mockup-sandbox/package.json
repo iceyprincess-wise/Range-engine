@@ -75,5 +75,10 @@
     "@capacitor/android": "^8.3.4",
     "@capacitor/cli": "^8.3.4",
     "@capacitor/core": "^8.3.4"
+  },
+  "optionalDependencies": {
+    "@rollup/rollup-android-arm64": "4.59.0",
+    "@tailwindcss/oxide-android-arm64": "4.2.1",
+    "lightningcss-android-arm64": "1.31.1"
   }
 }
