@@ -2924,8 +2924,7 @@ MATCH CONTEXT — Rule 1 (Time Sync)
                     !tipOff ||
                     research.scanning ||
                     !research.done ||
-                    isReanalyzing ||
-                    (refreshCountdown <= 600 && refreshCountdown >= 0)
+                    isReanalyzing
                   }
                   className="w-full bg-violet-600 hover:bg-violet-500 disabled:opacity-20 disabled:cursor-not-allowed text-white font-black text-xs rounded-xl py-3.5 tracking-widest uppercase transition"
                 >
