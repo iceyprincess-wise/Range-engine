@@ -1856,61 +1856,35 @@ MATCH CONTEXT — Rule 1 (Time Sync)
                                   className={`w-1.5 h-1.5 rounded-full ${(researchData?.collapsePct ?? 0) > 20 ? "bg-blue-500 shadow-[0_0_5px_rgba(59,130,246,0.8)]" : "bg-emerald-500"}`}
                                 ></span>
                                 <span className="text-[8px] text-zinc-500">
-                                  {researchData?.collapsePct ?? 0}% Risk Detected
+                                  {researchData?.collapsePct ?? 0}% peak · {(researchData?.homeQuarters?.gamesWithQuarters ?? 0) + (researchData?.awayQuarters?.gamesWithQuarters ?? 0)} games studied
                                 </span>
                               </div>
                             </div>
 
                             <div className="grid grid-cols-4 gap-1.5">
-                              {/* Q1 */}
-                              <div className="relative h-7 bg-zinc-900 rounded border border-zinc-800 flex items-center justify-center overflow-hidden">
-                                <span className="text-[10px] font-bold text-zinc-600 z-10">
-                                  Q1
-                                </span>
-                              </div>
-
-                              {/* Q2 */}
-                              <div className="relative h-7 bg-zinc-900 rounded border border-zinc-800 flex items-center justify-center overflow-hidden">
-                                <span className="text-[10px] font-bold text-zinc-600 z-10">
-                                  Q2
-                                </span>
-                              </div>
-
-                              {/* Q3: Dynamic Thermal State */}
-                              <div
-                                className={`relative h-7 rounded border flex items-center justify-center overflow-hidden transition-all duration-300 ${(researchData?.collapsePct ?? 0) > 20 ? "bg-blue-950/40 border-blue-800/80 shadow-[inset_0_0_10px_rgba(30,58,138,0.3)]" : "bg-zinc-900 border-zinc-800"}`}
-                              >
-                                {(researchData?.collapsePct ?? 0) > 20 && (
-                                  <>
-                                    <div className="absolute inset-0 bg-blue-600/10 animate-pulse"></div>
-                                    <div className="absolute bottom-0 left-0 h-[2px] w-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.8)]"></div>
-                                  </>
-                                )}
-                                <span
-                                  className={`text-[10px] font-extrabold z-10 tracking-widest ${(researchData?.collapsePct ?? 0) > 20 ? "text-blue-300" : "text-zinc-600"}`}
-                                >
-                                  Q3 {(researchData?.collapsePct ?? 0) > 20 ? "❄️" : ""}
-                                </span>
-                              </div>
-
-                              {/* Q4: Dynamic Thermal State */}
-                              <div
-                                className={`relative h-7 rounded border flex items-center justify-center overflow-hidden transition-all duration-300 ${(researchData?.collapsePct ?? 0) > 30 ? "bg-blue-950/40 border-blue-800/80 shadow-[inset_0_0_10px_rgba(30,58,138,0.3)]" : "bg-zinc-900 border-zinc-800"}`}
-                              >
-                                {(researchData?.collapsePct ?? 0) > 30 && (
-                                  <>
-                                    <div className="absolute inset-0 bg-blue-600/10 animate-pulse"></div>
-                                    <div className="absolute bottom-0 left-0 h-[2px] w-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.8)]"></div>
-                                  </>
-                                )}
-                                <span
-                                  className={`text-[10px] font-extrabold z-10 tracking-widest ${(researchData?.collapsePct ?? 0) > 30 ? "text-blue-300" : "text-zinc-600"}`}
-                                >
-                                  Q4 {(researchData?.collapsePct ?? 0) > 30 ? "❄️" : ""}
-                                </span>
-                              </div>
+                              {(["q1", "q2", "q3", "q4"] as const).map((qk, qi) => {
+                                const hq = researchData?.homeQuarters?.collapsePct?.[qk] ?? null;
+                                const aq = researchData?.awayQuarters?.collapsePct?.[qk] ?? null;
+                                const risk = hq == null && aq == null ? null : Math.max(hq ?? 0, aq ?? 0);
+                                const hot = (risk ?? 0) > 20;
+                                return (
+                                  <div
+                                    key={qk}
+                                    className={`relative h-7 rounded border flex items-center justify-center overflow-hidden transition-all duration-300 ${hot ? "bg-blue-950/40 border-blue-800/80 shadow-[inset_0_0_10px_rgba(30,58,138,0.3)]" : "bg-zinc-900 border-zinc-800"}`}
+                                  >
+                                    {hot && (
+                                      <>
+                                        <div className="absolute inset-0 bg-blue-600/10 animate-pulse"></div>
+                                        <div className="absolute bottom-0 left-0 h-[2px] w-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.8)]"></div>
+                                      </>
+                                    )}
+                                    <span className={`text-[10px] font-extrabold z-10 tracking-widest ${hot ? "text-blue-300" : "text-zinc-600"}`}>
+                                      Q{qi + 1}{risk != null ? ` ${risk}%` : ""}{hot ? " ❄️" : ""}
+                                    </span>
+                                  </div>
+                                );
+                              })}
                             </div>
-
                             <div className="flex justify-between mt-1.5 px-1">
                               <span className="text-[7px] text-zinc-600 font-mono">
                                 EARLY GAME (1H)
