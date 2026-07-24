@@ -369,7 +369,7 @@ export function lookupTeam(
   dna: ReturnType<typeof getLeagueDNA>,
 ): {
   stats: (typeof TEAM_DB)[string];
-  source: "DB" | "PROXY";
+  source: "DB" | "PROXY" | "WAREHOUSE";
   proxyCapped: boolean;
   capValue: number;
 } {

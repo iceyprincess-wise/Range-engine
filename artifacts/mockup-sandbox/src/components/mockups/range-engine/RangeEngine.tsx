@@ -1,3 +1,4 @@
+import { upgradeWithWarehouse } from "./engine/warehouseUpgrade";
 import { nextCountdownSec } from "./engine/syncScheduler";
 import { useState, useRef, useEffect, useMemo } from "react";
 import { Globe, ShieldCheck } from "lucide-react";
@@ -952,8 +953,8 @@ export function RangeEngine() {
   function handleAnalyze() {
     if (!homeTeam || !awayTeam || !overLow || !underHigh || !tipOff) return;
     const dna = getLeagueDNA(league);
-    const hInfo = lookupTeam(homeTeam, dna);
-    const aInfo = lookupTeam(awayTeam, dna);
+    const hInfo = upgradeWithWarehouse(lookupTeam(homeTeam, dna), "home", researchData);
+    const aInfo = upgradeWithWarehouse(lookupTeam(awayTeam, dna), "away", researchData);
     setHomeInfo(hInfo);
     setAwayInfo(aInfo);
     setPhase("hunting");
