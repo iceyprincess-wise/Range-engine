@@ -1984,7 +1984,7 @@ MATCH CONTEXT — Rule 1 (Time Sync)
                           <div className="mt-4 border border-indigo-900/60 bg-black/50 rounded-xl p-5 shadow-[0_0_20px_rgba(79,70,229,0.15)] relative overflow-hidden">
                             <div className="absolute top-0 right-0 bg-indigo-900/40 text-indigo-300 text-[10px] px-2 py-1 rounded-bl-lg font-mono flex items-center gap-1 border-b border-l border-indigo-900/60">
                               <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 animate-pulse"></span>
-                              1000+ SOURCES AGGREGATED
+                              REAL DATA · WAREHOUSE + NEWS
                             </div>
 
                             <h3 className="text-indigo-400 font-bold tracking-[0.15em] mb-4 border-b border-indigo-900/60 pb-2 text-sm uppercase flex items-center">
@@ -2399,20 +2399,13 @@ MATCH CONTEXT — Rule 1 (Time Sync)
                       <div className="px-4 py-3 border-t border-zinc-800">
                         <button
                           onClick={() => {
-                            alert(`VERIFIED SOURCE REPORT - RESEARCH INTELLIGENCE SCAN COMPLETE
+                            alert(`SOURCE REPORT — REAL DATA ONLY
 
-🔍 API Endpoints Scanned:
-• Live Football API → ${league}
-• SofaScore Database → ${homeTeam} & ${awayTeam} Form Analysis
-• FlashScore H2H Matrix → Head-to-Head Records
-• League DNA Registry → ${league} Statistical Profile
-• Team Performance Archive → Historical PPG Data
-
-📊 Data Sources Verified:
-• ${researchData.sourcesScanned.toLocaleString()} total sources cross-referenced
-• ${researchData.researchMs.toLocaleString()}ms processing time
-• Anti-hallucination protocols active
-• Real-time data integrity confirmed`);
+Warehouse history: ${(researchData?.homeQuarters?.gamesWithQuarters ?? 0) + (researchData?.awayQuarters?.gamesWithQuarters ?? 0)} stored games (quarter-level)
+News scan: ${homeNews.length + awayNews.length} reports — ${[...new Set([...homeNews, ...awayNews].map((n) => n.source))].slice(0, 5).join(", ") || "no outlets found"}
+H2H: ${researchData?.h2hAvgTotal ? `avg total ${researchData.h2hAvgTotal}` : "no recent meetings found"}
+Feeds: BasketAPI + Google News index
+Unavailable data is labeled — never invented.`);
                           }}
                           className="w-full py-2 bg-violet-600/20 hover:bg-violet-600/40 border border-violet-500/50 rounded text-[10px] text-violet-300 font-bold tracking-widest uppercase transition-all duration-300 flex justify-center items-center gap-2"
                         >
@@ -2702,7 +2695,7 @@ MATCH CONTEXT — Rule 1 (Time Sync)
 
                       {research.node >= 0 && (
                         <div className="text-[9px] text-right text-indigo-400/70 font-mono mt-1">
-                          CONFIDENCE INTERVAL:{" "}
+                          SCAN COMPLETION:{" "}
                           <span
                             className={
                               research.progress >= 98
@@ -2749,7 +2742,7 @@ MATCH CONTEXT — Rule 1 (Time Sync)
                     {research.done && (
                       <button
                         onClick={() => {
-                          alert(`AUTHENTICITY VERIFIED.\n\nData fetched from:\n1. https://www.flashscore.com/search/?q=${encodeURIComponent(homeTeam)}\n2. https://www.sofascore.com/search?q=${encodeURIComponent(awayTeam)}\n3. Live Sync API: ${league} DB Endpoint.`);
+                          alert(`LIVE SYNC SOURCE: BasketAPI live feed — match found and connected. No third-party scrapers used.`);
                           setIsReportOpen(true);
                         }}
                         className="mt-3 w-full py-2 bg-indigo-600/20 hover:bg-indigo-600/40 border border-indigo-500/50 rounded text-[10px] text-indigo-300 font-bold tracking-widest uppercase transition-all duration-300 flex justify-center items-center gap-2"
@@ -2786,7 +2779,7 @@ MATCH CONTEXT — Rule 1 (Time Sync)
                             Post-Scan Extraction Report
                           </h3>
                           <p className="text-[9px] text-zinc-500 font-mono mt-1">
-                            1,000,000+ SOURCES (VERIFIED API ENDPOINTS) COMPUTED // 100% ACCURACY LOCK
+                            REAL-DATA REPORT — warehouse history + live news index · nothing simulated
                           </p>
                         </div>
                         <button
