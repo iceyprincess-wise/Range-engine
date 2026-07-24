@@ -151,11 +151,11 @@ export async function fetchResearchData(
 
   const seasonHomeInjuries = formatInjuryNotes(
     apiData.homeInjuries ?? apiData.home_injuries ?? apiData.home_injury_note,
-    "✓ No confirmed injuries — full squad available",
+    "No injury data — awaiting news scan or manual entry",
   );
   const seasonAwayInjuries = formatInjuryNotes(
     apiData.awayInjuries ?? apiData.away_injuries ?? apiData.away_injury_note,
-    "✓ No confirmed injuries — full squad available",
+    "No injury data — awaiting news scan or manual entry",
   );
 
   const homeLineup = getLineupFromPayload(
@@ -398,18 +398,18 @@ export function generateResearch(
 
   const injRollH = seededVal(hs, 9, 0, 100, 0);
   const homeInjuries =
-    injRollH < 28
+    false
       ? INJURY_POOL_HOME[
           Math.floor(seededVal(hs, 10, 0, INJURY_POOL_HOME.length - 0.01, 0))
         ]
-      : "✓ No confirmed injuries — full squad available";
+      : "No injury data — awaiting news scan or manual entry";
   const injRollA = seededVal(as_, 9, 0, 100, 0);
   const awayInjuries =
-    injRollA < 28
+    false
       ? INJURY_POOL_AWAY[
           Math.floor(seededVal(as_, 10, 0, INJURY_POOL_AWAY.length - 0.01, 0))
         ]
-      : "✓ No confirmed injuries — full squad available";
+      : "No injury data — awaiting news scan or manual entry";
 
   // Generate simple seeded lineups to avoid repeated static placeholders
   const positions = ["PG", "SG", "SF", "PF", "C"];
