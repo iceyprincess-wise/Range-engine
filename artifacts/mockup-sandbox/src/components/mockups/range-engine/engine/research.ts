@@ -66,6 +66,12 @@ export async function fetchResearchData(
     }
     apiData.homeFormString = preData.home?.formLast5 ?? apiData.homeFormString;
     apiData.awayFormString = preData.away?.formLast5 ?? apiData.awayFormString;
+    apiData.homeQuarters = preData.home?.quarters ?? null;
+    apiData.awayQuarters = preData.away?.quarters ?? null;
+    const qc = [preData.home?.quarters?.collapsePct, preData.away?.quarters?.collapsePct].filter(Boolean);
+    if (qc.length) {
+      apiData.collapsePct = Math.max(...qc.flatMap((c: any) => [c.q1, c.q2, c.q3, c.q4]));
+    }
   }
   const homeForm50 = parseNumberArray(
     apiData.homeForm50 ?? apiData.home_form_50 ?? apiData.homeForm ?? [],
@@ -279,6 +285,8 @@ export async function fetchResearchData(
     awayRestDays,
     leagueFoulAverage,
     refereeStrictness,
+    homeQuarters: apiData.homeQuarters ?? null,
+    awayQuarters: apiData.awayQuarters ?? null,
     homeForm50,
     awayForm50,
     h2h50,

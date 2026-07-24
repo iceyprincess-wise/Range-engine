@@ -125,6 +125,8 @@ export interface ResearchData {
   awayRestDays: number;
   leagueFoulAverage: number;
   refereeStrictness: number;
+  homeQuarters?: any;
+  awayQuarters?: any;
   homeForm50: number[];
   awayForm50: number[];
   h2h50: number[];
