@@ -1,80 +1,92 @@
 import { Router, type Request, type Response } from "express";
+import fs from "node:fs";
+import path from "node:path";
 
 const router = Router();
 const RAPIDAPI_KEY = process.env.RAPIDAPI_KEY;
 const RAPIDAPI_HOST = process.env.RAPIDAPI_HOST || "basketapi1.p.rapidapi.com";
 
-// ---- quota tracking (read from RapidAPI response headers) ----
+// ---------- permanent warehouse (finished games never change) ----------
+const DATA_DIR = path.join(process.cwd(), "data");
+const STORE_PATH = path.join(DATA_DIR, "store.json");
+
+type StoredTeam = { id: number; name: string };
+type Store = { teams: Record<string, StoredTeam>; games: Record<string, any> };
+
+const loadStore = (): Store => {
+  try { return JSON.parse(fs.readFileSync(STORE_PATH, "utf8")); }
+  catch { return { teams: {}, games: {} }; }
+};
+const store: Store = loadStore();
+let dirty = false;
+const persist = () => {
+  if (!dirty) return;
+  try {
+    fs.mkdirSync(DATA_DIR, { recursive: true });
+    fs.writeFileSync(STORE_PATH, JSON.stringify(store));
+    dirty = false;
+  } catch (err) { console.error("warehouse persist failed:", err); }
+};
+setInterval(persist, 30_000).unref();
+
+// ---------- quota tracking ----------
 let quota: { limit: number | null; remaining: number | null; updatedAt: number | null } = {
-  limit: null,
-  remaining: null,
-  updatedAt: null,
+  limit: null, remaining: null, updatedAt: null,
 };
 
-const apiFetch = async (path: string) => {
-  const response = await fetch("https" + "://" + RAPIDAPI_HOST + path, {
-    headers: {
-      "x-rapidapi-key": RAPIDAPI_KEY ?? "",
-      "x-rapidapi-host": RAPIDAPI_HOST,
-    },
+const apiFetch = async (p: string) => {
+  const response = await fetch("https" + "://" + RAPIDAPI_HOST + p, {
+    headers: { "x-rapidapi-key": RAPIDAPI_KEY ?? "", "x-rapidapi-host": RAPIDAPI_HOST },
   });
   const lim = response.headers.get("x-ratelimit-requests-limit");
   const rem = response.headers.get("x-ratelimit-requests-remaining");
   if (rem !== null) {
-    quota = {
-      limit: lim !== null ? Number(lim) : quota.limit,
-      remaining: Number(rem),
-      updatedAt: Date.now(),
-    };
+    quota = { limit: lim !== null ? Number(lim) : quota.limit, remaining: Number(rem), updatedAt: Date.now() };
   }
-  if (!response.ok) {
-    throw new Error(`BasketAPI ${response.status}: ${await response.text()}`);
-  }
+  if (!response.ok) throw new Error("BasketAPI " + response.status + ": " + (await response.text()));
   return response.json();
 };
 
-// ---- 6h cache: pre-match research is stable ----
-const TTL = 6 * 60 * 60 * 1000;
-const cache = new Map<string, { expiresAt: number; value: any }>();
-
-// ---- helpers ----
-const searchTeam = async (name: string) => {
-  const data = await apiFetch(`/api/basketball/search/${encodeURIComponent(name)}`);
-  const hit = (data?.results || []).find((r: any) => r.type === "team");
-  if (!hit) throw new Error(`No team found for "${name}"`);
-  return { id: hit.entity.id as number, name: hit.entity.name as string };
-};
-
-const PREV_SHAPES = [
-  (id: number, page: number) => `/api/basketball/team/${id}/matches/previous/${page}`,
-  (id: number, page: number) => `/api/basketball/team/${id}/events/previous/${page}`,
-];
-let prevShape: ((id: number, page: number) => string) | null = null;
-
-const fetchPrevious = async (id: number, page: number) => {
-  if (prevShape) return apiFetch(prevShape(id, page));
-  let lastErr: unknown = null;
-  for (const shape of PREV_SHAPES) {
-    try {
-      const data = await apiFetch(shape(id, page));
-      prevShape = shape;
-      return data;
-    } catch (err) {
-      lastErr = err;
-    }
-  }
-  throw lastErr;
-};
-
+// ---------- helpers ----------
 const isFinished = (e: any) => e?.status?.type === "finished";
-const pts = (e: any, side: "home" | "away") => e?.[`${side}Score`]?.current ?? null;
+const pts = (e: any, side: "home" | "away") => e?.[side + "Score"]?.current ?? null;
 
-const summarize = (events: any[], teamId: number) => {
-  const games = events
-    .filter(isFinished)
-    .filter((e) => pts(e, "home") != null && pts(e, "away") != null)
-    .sort((a, b) => (b.startTimestamp ?? 0) - (a.startTimestamp ?? 0)); // newest first
+const rememberGames = (events: any[]) => {
+  for (const e of events) {
+    if (!e?.id || !isFinished(e)) continue;
+    if (!store.games[e.id]) { store.games[e.id] = e; dirty = true; }
+  }
+};
 
+const searchTeam = async (name: string) => {
+  const key = name.trim().toLowerCase();
+  if (store.teams[key]) return store.teams[key];
+  const data = await apiFetch("/api/basketball/search/" + encodeURIComponent(name));
+  const hit = (data?.results || []).find((r: any) => r.type === "team");
+  if (!hit) throw new Error("No team found for \"" + name + "\"");
+  const team = { id: hit.entity.id as number, name: hit.entity.name as string };
+  store.teams[key] = team;
+  dirty = true;
+  return team;
+};
+
+const lastFetch: Record<number, number> = {};
+const FRESH_MS = 6 * 60 * 60 * 1000;
+
+const refreshTeam = async (id: number) => {
+  const data = await apiFetch("/api/basketball/team/" + id + "/matches/previous/0");
+  rememberGames(data?.events || []);
+  lastFetch[id] = Date.now();
+};
+
+const gamesForTeam = (teamId: number) =>
+  Object.values(store.games)
+    .filter((g: any) => g.homeTeam?.id === teamId || g.awayTeam?.id === teamId)
+    .filter((g: any) => pts(g, "home") != null && pts(g, "away") != null)
+    .sort((a: any, b: any) => (b.startTimestamp ?? 0) - (a.startTimestamp ?? 0))
+    .slice(0, 50);
+
+const summarize = (games: any[], teamId: number) => {
   const homePts: number[] = [];
   const roadPts: number[] = [];
   const totals: number[] = [];
@@ -89,14 +101,11 @@ const summarize = (events: any[], teamId: number) => {
   }
   const avg = (a: number[]) => (a.length ? a.reduce((s, v) => s + v, 0) / a.length : null);
   return {
-    summary: {
-      gamesAnalyzed: games.length,
-      formLast5: form.join(""),
-      homeArenaPPG: avg(homePts),
-      awayRoadPPG: avg(roadPts),
-      avgTotal: avg(totals),
-    },
-    games,
+    gamesAnalyzed: games.length,
+    formLast5: form.join(""),
+    homeArenaPPG: avg(homePts),
+    awayRoadPPG: avg(roadPts),
+    avgTotal: avg(totals),
   };
 };
 
@@ -109,43 +118,33 @@ router.get("/v1/prematch", async (req: Request, res: Response) => {
     return res.status(500).json({ error: "Missing RAPIDAPI_KEY environment variable" });
   }
 
-  const cacheKey = `prematch-${homeTeam.toLowerCase()}-${awayTeam.toLowerCase()}`;
-  const hit = cache.get(cacheKey);
-  if (hit && hit.expiresAt > Date.now()) return res.json(hit.value);
-
   try {
     const [home, away] = await Promise.all([searchTeam(homeTeam), searchTeam(awayTeam)]);
-    const [homePrev, awayPrev] = await Promise.all([
-      fetchPrevious(home.id, 0),
-      fetchPrevious(away.id, 0),
-    ]);
-    const homeAll = summarize(homePrev?.events || [], home.id);
-    const awayAll = summarize(awayPrev?.events || [], away.id);
+    const now = Date.now();
+    const stale = [home.id, away.id].filter((id) => now - (lastFetch[id] ?? 0) > FRESH_MS);
+    let apiOk = true;
+    try { await Promise.all(stale.map(refreshTeam)); } catch (e) { apiOk = false; console.error("refresh failed, serving warehouse:", e); }
 
-    // H2H: meetings between the two ids found in either team's history
-    const seen = new Set<number>();
-    const h2hGames = [...homeAll.games, ...awayAll.games].filter((e: any) => {
+    const homeGames = gamesForTeam(home.id);
+    const awayGames = gamesForTeam(away.id);
+
+    const h2hGames = Object.values(store.games).filter((e: any) => {
       const ids = [e.homeTeam?.id, e.awayTeam?.id];
-      const duel = ids.includes(home.id) && ids.includes(away.id);
-      if (!duel || seen.has(e.id)) return false;
-      seen.add(e.id);
-      return true;
+      return ids.includes(home.id) && ids.includes(away.id);
     });
     const h2hTotals = h2hGames.map((e: any) => (pts(e, "home") ?? 0) + (pts(e, "away") ?? 0));
-    const h2hAvgTotal = h2hTotals.length
-      ? h2hTotals.reduce((s, v) => s + v, 0) / h2hTotals.length
-      : null;
+    const h2hAvgTotal = h2hTotals.length ? h2hTotals.reduce((s, v) => s + v, 0) / h2hTotals.length : null;
 
-    const payload = {
-      provenance: "real",
+    persist();
+    res.json({
+      provenance: apiOk ? "real" : "warehouse-stale",
       fetchedAt: new Date().toISOString(),
-      home: { id: home.id, name: home.name, ...homeAll.summary },
-      away: { id: away.id, name: away.name, ...awayAll.summary },
+      home: { id: home.id, name: home.name, ...summarize(homeGames, home.id) },
+      away: { id: away.id, name: away.name, ...summarize(awayGames, away.id) },
       h2h: { meetings: h2hGames.length, avgTotal: h2hAvgTotal, totals: h2hTotals },
+      warehouse: { storedGames: Object.keys(store.games).length, storedTeams: Object.keys(store.teams).length },
       quota,
-    };
-    cache.set(cacheKey, { expiresAt: Date.now() + TTL, value: payload });
-    res.json(payload);
+    });
   } catch (error) {
     console.error("/api/v1/prematch error:", error);
     res.status(502).json({ error: error instanceof Error ? error.message : "prematch fetch failed" });

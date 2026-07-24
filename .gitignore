@@ -50,3 +50,5 @@ Thumbs.db
 audit.txt
 **/.env
 audit.txt
+artifacts/api-server/data/
+artifacts/api-server/*.json
