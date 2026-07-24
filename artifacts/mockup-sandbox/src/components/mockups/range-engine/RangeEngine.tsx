@@ -450,6 +450,25 @@ export function RangeEngine() {
   // ─── Truth Protocol: Scanner Authenticity & Dynamic Data ───────────────────
   const [scanPhase, setScanPhase] = useState("Awaiting Target...");
   const [liveMatrixData, setLiveMatrixData] = useState<{ homeForm: string; awayForm: string; h2h: string; sourceNodes: string[] }>({ homeForm: "", awayForm: "", h2h: "", sourceNodes: [] });
+  // ── News Scout: real injury/lineup headlines per team ─────────────────────
+  const [homeNews, setHomeNews] = useState<{ title: string; source: string; published: string }[]>([]);
+  const [awayNews, setAwayNews] = useState<{ title: string; source: string; published: string }[]>([]);
+  const [homeManualOut, setHomeManualOut] = useState("");
+  const [awayManualOut, setAwayManualOut] = useState("");
+  useEffect(() => {
+    if (!homeTeam || !awayTeam) { setHomeNews([]); setAwayNews([]); return; }
+    const t = setTimeout(async () => {
+      try {
+        const [h, a] = await Promise.all([
+          fetch(`${API_BASE}/api/v1/news?team=${encodeURIComponent(homeTeam)}`).then((r) => (r.ok ? r.json() : { items: [] })),
+          fetch(`${API_BASE}/api/v1/news?team=${encodeURIComponent(awayTeam)}`).then((r) => (r.ok ? r.json() : { items: [] })),
+        ]);
+        setHomeNews(h.items || []);
+        setAwayNews(a.items || []);
+      } catch { /* news is best-effort */ }
+    }, 2500);
+    return () => clearTimeout(t);
+  }, [homeTeam, awayTeam]);
   // ─────────────────────────────────────────────────────────────────────────
   const [isReportOpen, setIsReportOpen] = useState(false);
   const [analysisHistory, setAnalysisHistory] = useState<any[]>([]);
@@ -950,6 +969,15 @@ export function RangeEngine() {
     };
   }, [homeTeam, awayTeam, league]);
 
+  // ── Auto Key-Player-Out detection: manual override first, else strong signals in real headlines ──
+  const detectKeyOut = () => {
+    const manual = (homeManualOut || awayManualOut).trim();
+    if (manual) return { out: true, name: manual };
+    const strong = /(ruled out|will miss|out for the season|out indefinitely|sidelined|undergoes? surgery)/i;
+    const hit = [...homeNews, ...awayNews].find((n) => strong.test(n.title));
+    if (hit) return { out: true, name: hit.title.slice(0, 60) + " (auto-detected from news)" };
+    return { out: false, name: "" };
+  };
   function handleAnalyze() {
     if (!homeTeam || !awayTeam || !overLow || !underHigh || !tipOff) return;
     const dna = getLeagueDNA(league);
@@ -991,8 +1019,8 @@ export function RangeEngine() {
           league,
           gender: matchGender,
           is_live_match: isLiveMatch,
-          key_player_out: false,
-          key_player_name: "Key Scorer",
+          key_player_out: detectKeyOut().out,
+          key_player_name: detectKeyOut().name || "Key Scorer",
           over_low: parseFloat(overLow),
           over_high: parseFloat(overHigh || overLow),
           under_low: parseFloat(underLow || underHigh),
@@ -2136,23 +2164,49 @@ MATCH CONTEXT — Rule 1 (Time Sync)
                           <div className="grid grid-cols-2 gap-2">
                             <div className="bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2">
                               <p className="text-[8px] uppercase tracking-widest text-zinc-600 mb-1">
-                                {homeTeam} (Home)
+                                {homeTeam} (Home) · News Scout
                               </p>
-                              <p
-                                className={`text-[10px] leading-snug ${researchData?.homeInjuries?.startsWith("⚠") ? "text-amber-400" : "text-emerald-400"}`}
-                              >
-                                {researchData?.homeInjuries ?? "Live API data unavailable"}
-                              </p>
+                              {homeNews.length === 0 ? (
+                                <p className="text-[10px] text-zinc-500 mb-2">No injury reports found yet</p>
+                              ) : (
+                                <div className="flex flex-col gap-1 mb-2">
+                                  {homeNews.slice(0, 3).map((n, i) => (
+                                    <p key={i} className="text-[9px] leading-snug text-zinc-300">
+                                      {n.title}
+                                      <span className="text-zinc-500"> — {n.source}{n.published ? ` · ${n.published.slice(0, 16)}` : ""}</span>
+                                    </p>
+                                  ))}
+                                </div>
+                              )}
+                              <input
+                                value={homeManualOut}
+                                onChange={(e) => setHomeManualOut(e.target.value)}
+                                placeholder="CONFIRMED OUT (you verify) — e.g. J. Smith"
+                                className="w-full bg-zinc-950 border border-zinc-800 rounded px-2 py-1 text-[10px] text-amber-300 placeholder:text-zinc-600"
+                              />
                             </div>
                             <div className="bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2">
                               <p className="text-[8px] uppercase tracking-widest text-zinc-600 mb-1">
-                                {awayTeam} (Away)
+                                {awayTeam} (Away) · News Scout
                               </p>
-                              <p
-                                className={`text-[10px] leading-snug ${researchData?.awayInjuries?.startsWith("⚠") ? "text-amber-400" : "text-emerald-400"}`}
-                              >
-                                {researchData?.awayInjuries ?? "Live API data unavailable"}
-                              </p>
+                              {awayNews.length === 0 ? (
+                                <p className="text-[10px] text-zinc-500 mb-2">No injury reports found yet</p>
+                              ) : (
+                                <div className="flex flex-col gap-1 mb-2">
+                                  {awayNews.slice(0, 3).map((n, i) => (
+                                    <p key={i} className="text-[9px] leading-snug text-zinc-300">
+                                      {n.title}
+                                      <span className="text-zinc-500"> — {n.source}{n.published ? ` · ${n.published.slice(0, 16)}` : ""}</span>
+                                    </p>
+                                  ))}
+                                </div>
+                              )}
+                              <input
+                                value={awayManualOut}
+                                onChange={(e) => setAwayManualOut(e.target.value)}
+                                placeholder="CONFIRMED OUT (you verify) — e.g. J. Smith"
+                                className="w-full bg-zinc-950 border border-zinc-800 rounded px-2 py-1 text-[10px] text-amber-300 placeholder:text-zinc-600"
+                              />
                             </div>
                           </div>
                         </div>
