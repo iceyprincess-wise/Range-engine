@@ -109,6 +109,37 @@ const summarize = (games: any[], teamId: number) => {
   };
 };
 
+const qpts = (e: any, side: "home" | "away", q: number) => e?.[side + "Score"]?.["period" + q] ?? null;
+
+const quarterProfile = (games: any[]) => {
+  const combined: number[][] = [[], [], [], []];
+  const collapse = [0, 0, 0, 0];
+  let counted = 0;
+  for (const g of games) {
+    const qs: number[] = [];
+    for (let q = 1; q <= 4; q++) {
+      const h = qpts(g, "home", q);
+      const a = qpts(g, "away", q);
+      if (h == null || a == null) break;
+      qs.push(h + a);
+    }
+    if (qs.length !== 4) continue;
+    counted++;
+    const gameQuarterAvg = qs.reduce((s, v) => s + v, 0) / 4;
+    qs.forEach((v, i) => {
+      combined[i].push(v);
+      if (v < 0.75 * gameQuarterAvg) collapse[i]++;
+    });
+  }
+  const avg = (a: number[]) => (a.length ? +(a.reduce((s, v) => s + v, 0) / a.length).toFixed(1) : null);
+  return {
+    gamesWithQuarters: counted,
+    avgCombined: { q1: avg(combined[0]), q2: avg(combined[1]), q3: avg(combined[2]), q4: avg(combined[3]) },
+    collapsePct: counted
+      ? { q1: Math.round((collapse[0] / counted) * 100), q2: Math.round((collapse[1] / counted) * 100), q3: Math.round((collapse[2] / counted) * 100), q4: Math.round((collapse[3] / counted) * 100) }
+      : null,
+  };
+};
 router.get("/v1/prematch", async (req: Request, res: Response) => {
   const { homeTeam, awayTeam } = req.query as Record<string, string>;
   if (!homeTeam || !awayTeam) {
@@ -139,8 +170,8 @@ router.get("/v1/prematch", async (req: Request, res: Response) => {
     res.json({
       provenance: apiOk ? "real" : "warehouse-stale",
       fetchedAt: new Date().toISOString(),
-      home: { id: home.id, name: home.name, ...summarize(homeGames, home.id) },
-      away: { id: away.id, name: away.name, ...summarize(awayGames, away.id) },
+      home: { id: home.id, name: home.name, ...summarize(homeGames, home.id), quarters: quarterProfile(homeGames) },
+      away: { id: away.id, name: away.name, ...summarize(awayGames, away.id), quarters: quarterProfile(awayGames) },
       h2h: { meetings: h2hGames.length, avgTotal: h2hAvgTotal, totals: h2hTotals },
       warehouse: { storedGames: Object.keys(store.games).length, storedTeams: Object.keys(store.teams).length },
       quota,
