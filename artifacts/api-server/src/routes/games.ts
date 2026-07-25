@@ -32,13 +32,15 @@ router.get("/v1/games/tournaments", async (_req: Request, res: Response) => {
   if (hit) return res.json(hit);
 
   try {
+    const results = await Promise.all(
+      [1, 2, 3, 4, 5, 6].map((page) =>
+        apiFetch("/api/basketball/scheduled-tournaments/" + seg + "/page/" + page).catch(() => null)
+      )
+    );
     const tours: { id: number; name: string; country: string }[] = [];
     const seen = new Set<number>();
-    for (let page = 1; page <= 6; page++) {
-      const data = await apiFetch("/api/basketball/scheduled-tournaments/" + seg + "/page/" + page);
-      const list = data?.scheduled || [];
-      if (!list.length) break;
-      for (const s of list) {
+    for (const data of results) {
+      for (const s of data?.scheduled || []) {
         const uid = s?.tournament?.uniqueTournament?.id;
         if (!uid || seen.has(uid)) continue;
         seen.add(uid);

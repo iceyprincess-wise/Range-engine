@@ -462,6 +462,12 @@ export function RangeEngine() {
   const [gSel, setGSel] = useState<{ id: number; name: string; country: string } | null>(null);
   const [gLoading, setGLoading] = useState(false);
   const [quotaInfo, setQuotaInfo] = useState<{ limit: number | null; remaining: number | null }>({ limit: null, remaining: null });
+  useEffect(() => {
+    fetch(`${API_BASE}/api/v1/quota`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((q) => { if (q) setQuotaInfo({ limit: (q as any).limit ?? null, remaining: (q as any).remaining ?? null }); })
+      .catch(() => {});
+  }, []);
 
   const openGames = async () => {
     setShowGames(true);
@@ -484,7 +490,7 @@ export function RangeEngine() {
     setGLoading(true);
     try {
       const d = await fetch(`${API_BASE}/api/v1/games/schedule?tid=${t.id}`).then((r) => (r.ok ? r.json() : { games: [] }));
-      setGGames(d.games || []);
+      setGGames((d.games || []).slice().sort((x: any, y: any) => (x.startTimestamp ?? 0) - (y.startTimestamp ?? 0)));
     } catch {
       setGGames([]);
     } finally {
@@ -1414,7 +1420,7 @@ export function RangeEngine() {
                   <div key={g.id} className="bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 flex items-center justify-between gap-2">
                     <div>
                       <p className="text-xs text-zinc-200">{g.home} vs {g.away}</p>
-                      <p className="text-[10px] text-zinc-500">{g.startTimestamp ? new Date(g.startTimestamp * 1000).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "TBD"} your time · {g.status}</p>
+                      <p className="text-[10px] text-zinc-500">{g.startTimestamp ? new Date(g.startTimestamp * 1000).toLocaleString([], { weekday: "short", hour: "2-digit", minute: "2-digit" }) : "TBD"} · {g.status}</p>
                     </div>
                     <button onClick={() => betFill(g)} className="bg-violet-600 hover:bg-violet-500 text-white text-[10px] font-black px-3 py-1.5 rounded uppercase">Bet</button>
                   </div>
