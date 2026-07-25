@@ -1,4 +1,4 @@
-import type { HistoryEntry, AnalysisArchiveEntry } from "./types";
+import type { HistoryEntry, AnalysisArchiveEntry } from "@workspace/range-engine";
 export const HISTORY_KEY = "rangengine_v3_history";
 export const ARCHIVE_KEY = "splendor_analysis_archive";
 
