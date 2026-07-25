@@ -1,4 +1,5 @@
 import { Router, type Request, type Response } from "express";
+import { quota, updateQuotaFromResponse } from "../lib/quotaTracker";
 import fs from "node:fs";
 import path from "node:path";
 
@@ -31,19 +32,12 @@ const persist = () => {
 setInterval(persist, 30_000).unref();
 
 // ---------- quota tracking ----------
-let quota: { limit: number | null; remaining: number | null; updatedAt: number | null } = {
-  limit: null, remaining: null, updatedAt: null,
-};
 
 const apiFetch = async (p: string) => {
   const response = await fetch("https" + "://" + RAPIDAPI_HOST + p, {
     headers: { "x-rapidapi-key": RAPIDAPI_KEY ?? "", "x-rapidapi-host": RAPIDAPI_HOST },
   });
-  const lim = response.headers.get("x-ratelimit-requests-limit");
-  const rem = response.headers.get("x-ratelimit-requests-remaining");
-  if (rem !== null) {
-    quota = { limit: lim !== null ? Number(lim) : quota.limit, remaining: Number(rem), updatedAt: Date.now() };
-  }
+  updateQuotaFromResponse(response);
   if (!response.ok) throw new Error("BasketAPI " + response.status + ": " + (await response.text()));
   return response.json();
 };

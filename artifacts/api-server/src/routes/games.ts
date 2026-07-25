@@ -1,4 +1,5 @@
 import { Router, type Request, type Response } from "express";
+import { updateQuotaFromResponse } from "../lib/quotaTracker";
 
 const router = Router();
 const RAPIDAPI_KEY = process.env.RAPIDAPI_KEY;
@@ -8,6 +9,7 @@ const apiFetch = async (p: string) => {
   const response = await fetch("https" + "://" + RAPIDAPI_HOST + p, {
     headers: { "x-rapidapi-key": RAPIDAPI_KEY ?? "", "x-rapidapi-host": RAPIDAPI_HOST },
   });
+  updateQuotaFromResponse(response);
   if (response.status === 204) return null; // valid route, nothing scheduled — not an error
   if (!response.ok) throw new Error("BasketAPI " + response.status + ": " + (await response.text()));
   return response.json();
