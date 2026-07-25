@@ -171,7 +171,7 @@ const teamShooting = (games: any[], teamId: number) => {
     const isHome = g.homeTeam?.id === teamId;
     const pick = (k: string) => { const it = s[k]; return it ? (isHome ? { m: it.hv, a: it.ht } : { m: it.av, a: it.at }) : null; };
     const ft = pick("freeThrowsScored"), p3 = pick("threePointersScored"), fg = pick("fieldGoalsScored");
-    const fl = s["fouls"] ? (isHome ? s["fouls"].hv : s["fouls"].av) : null;
+    const fl = s["totalFouls"] ? (isHome ? s["totalFouls"].hv : s["totalFouls"].av) : null;
     if (!ft && !p3 && !fg) continue;
     n++;
     if (ft?.a) { ftM += ft.m; ftA += ft.a; }

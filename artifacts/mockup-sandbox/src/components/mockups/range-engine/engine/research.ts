@@ -68,6 +68,16 @@ export async function fetchResearchData(
     apiData.awayFormString = preData.away?.formLast5 ?? apiData.awayFormString;
     apiData.homeQuarters = preData.home?.quarters ?? null;
     apiData.awayQuarters = preData.away?.quarters ?? null;
+    apiData.homeFt = preData.home?.shooting?.ftPct ?? apiData.homeFt;
+    apiData.awayFt = preData.away?.shooting?.ftPct ?? apiData.awayFt;
+    apiData.homePt3 = preData.home?.shooting?.pt3Pct ?? apiData.homePt3;
+    apiData.awayPt3 = preData.away?.shooting?.pt3Pct ?? apiData.awayPt3;
+    apiData.homeFgPct = preData.home?.shooting?.fgPct ?? apiData.homeFgPct;
+    apiData.awayFgPct = preData.away?.shooting?.fgPct ?? apiData.awayFgPct;
+    apiData.homeFtAttempts = preData.home?.shooting?.ftAttemptsPerGame ?? apiData.homeFtAttempts;
+    apiData.awayFtAttempts = preData.away?.shooting?.ftAttemptsPerGame ?? apiData.awayFtAttempts;
+    apiData.homeFoulRate = preData.home?.shooting?.foulsPerGame ?? apiData.homeFoulRate;
+    apiData.awayFoulRate = preData.away?.shooting?.foulsPerGame ?? apiData.awayFoulRate;
     const qc = [preData.home?.quarters?.collapsePct, preData.away?.quarters?.collapsePct].filter(Boolean);
     if (qc.length) {
       apiData.collapsePct = Math.max(...qc.flatMap((c: any) => [c.q1, c.q2, c.q3, c.q4]));
