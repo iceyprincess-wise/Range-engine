@@ -11,13 +11,14 @@ const DATA_DIR = path.join(process.cwd(), "data");
 const STORE_PATH = path.join(DATA_DIR, "store.json");
 
 type StoredTeam = { id: number; name: string };
-type Store = { teams: Record<string, StoredTeam>; games: Record<string, any> };
+type Store = { teams: Record<string, StoredTeam>; games: Record<string, any>; stats: Record<string, any> };
 
 const loadStore = (): Store => {
   try { return JSON.parse(fs.readFileSync(STORE_PATH, "utf8")); }
-  catch { return { teams: {}, games: {} }; }
+  catch { return { teams: {}, games: {}, stats: {} }; }
 };
 const store: Store = loadStore();
+if (!store.stats) store.stats = {};
 let dirty = false;
 const persist = () => {
   if (!dirty) return;
@@ -140,6 +141,54 @@ const quarterProfile = (games: any[]) => {
       : null,
   };
 };
+const parseStatItems = (payload: any) => {
+  const out: Record<string, any> = {};
+  for (const g of payload?.statistics?.[0]?.groups || [])
+    for (const it of g.statisticsItems || [])
+      out[it.key] = { hv: it.homeValue ?? null, ht: it.homeTotal ?? null, av: it.awayValue ?? null, at: it.awayTotal ?? null };
+  return out;
+};
+
+// Fetch stats for up to `max` stored games that lack them. Skipped when quota is low —
+// the analysis itself always outranks enrichment.
+const enrichStats = async (games: any[], max: number) => {
+  if (quota.remaining !== null && quota.remaining < 10) return;
+  const todo = games.filter((g) => !store.stats[g.id]).slice(0, max);
+  for (const g of todo) {
+    try {
+      const data = await apiFetch("/api/basketball/match/" + g.id + "/statistics");
+      store.stats[g.id] = parseStatItems(data);
+      dirty = true;
+    } catch { break; }
+  }
+};
+
+const teamShooting = (games: any[], teamId: number) => {
+  let ftM = 0, ftA = 0, p3M = 0, p3A = 0, fgM = 0, fgA = 0, fouls = 0, foulN = 0, n = 0;
+  for (const g of games) {
+    const s = store.stats[g.id];
+    if (!s) continue;
+    const isHome = g.homeTeam?.id === teamId;
+    const pick = (k: string) => { const it = s[k]; return it ? (isHome ? { m: it.hv, a: it.ht } : { m: it.av, a: it.at }) : null; };
+    const ft = pick("freeThrowsScored"), p3 = pick("threePointersScored"), fg = pick("fieldGoalsScored");
+    const fl = s["fouls"] ? (isHome ? s["fouls"].hv : s["fouls"].av) : null;
+    if (!ft && !p3 && !fg) continue;
+    n++;
+    if (ft?.a) { ftM += ft.m; ftA += ft.a; }
+    if (p3?.a) { p3M += p3.m; p3A += p3.a; }
+    if (fg?.a) { fgM += fg.m; fgA += fg.a; }
+    if (fl != null) { fouls += fl; foulN++; }
+  }
+  const pct = (m: number, a: number) => (a ? +((m / a) * 100).toFixed(1) : null);
+  return {
+    statGames: n,
+    ftPct: pct(ftM, ftA),
+    pt3Pct: pct(p3M, p3A),
+    fgPct: pct(fgM, fgA),
+    ftAttemptsPerGame: n ? +(ftA / n).toFixed(1) : null,
+    foulsPerGame: foulN ? +(fouls / foulN).toFixed(1) : null,
+  };
+};
 router.get("/v1/prematch", async (req: Request, res: Response) => {
   const { homeTeam, awayTeam } = req.query as Record<string, string>;
   if (!homeTeam || !awayTeam) {
@@ -159,6 +208,8 @@ router.get("/v1/prematch", async (req: Request, res: Response) => {
     const homeGames = gamesForTeam(home.id);
     const awayGames = gamesForTeam(away.id);
 
+    await enrichStats([...homeGames, ...awayGames], 3);
+
     const h2hGames = Object.values(store.games).filter((e: any) => {
       const ids = [e.homeTeam?.id, e.awayTeam?.id];
       return ids.includes(home.id) && ids.includes(away.id);
@@ -170,8 +221,8 @@ router.get("/v1/prematch", async (req: Request, res: Response) => {
     res.json({
       provenance: apiOk ? "real" : "warehouse-stale",
       fetchedAt: new Date().toISOString(),
-      home: { id: home.id, name: home.name, ...summarize(homeGames, home.id), quarters: quarterProfile(homeGames) },
-      away: { id: away.id, name: away.name, ...summarize(awayGames, away.id), quarters: quarterProfile(awayGames) },
+      home: { id: home.id, name: home.name, ...summarize(homeGames, home.id), quarters: quarterProfile(homeGames), shooting: teamShooting(homeGames, home.id) },
+      away: { id: away.id, name: away.name, ...summarize(awayGames, away.id), quarters: quarterProfile(awayGames), shooting: teamShooting(awayGames, away.id) },
       h2h: { meetings: h2hGames.length, avgTotal: h2hAvgTotal, totals: h2hTotals },
       warehouse: { storedGames: Object.keys(store.games).length, storedTeams: Object.keys(store.teams).length },
       quota,
