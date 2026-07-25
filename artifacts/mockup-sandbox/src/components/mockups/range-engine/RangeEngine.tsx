@@ -455,6 +455,53 @@ export function RangeEngine() {
   const [awayNews, setAwayNews] = useState<{ title: string; source: string; published: string }[]>([]);
   const [homeManualOut, setHomeManualOut] = useState("");
   const [awayManualOut, setAwayManualOut] = useState("");
+  // ── Games Browser (STATUS panel): today's covered tournaments & fixtures ──
+  const [showGames, setShowGames] = useState(false);
+  const [gTours, setGTours] = useState<{ id: number; name: string; country: string }[]>([]);
+  const [gGames, setGGames] = useState<any[]>([]);
+  const [gSel, setGSel] = useState<{ id: number; name: string; country: string } | null>(null);
+  const [gLoading, setGLoading] = useState(false);
+  const [quotaInfo, setQuotaInfo] = useState<{ limit: number | null; remaining: number | null }>({ limit: null, remaining: null });
+
+  const openGames = async () => {
+    setShowGames(true);
+    setGSel(null);
+    setGGames([]);
+    try {
+      const [t, q] = await Promise.all([
+        fetch(`${API_BASE}/api/v1/games/tournaments`).then((r) => (r.ok ? r.json() : { tournaments: [] })),
+        fetch(`${API_BASE}/api/v1/quota`).then((r) => (r.ok ? r.json() : {})),
+      ]);
+      setGTours(t.tournaments || []);
+      setQuotaInfo({ limit: (q as any).limit ?? null, remaining: (q as any).remaining ?? null });
+    } catch {
+      setGTours([]);
+    }
+  };
+
+  const openTournament = async (t: { id: number; name: string; country: string }) => {
+    setGSel(t);
+    setGLoading(true);
+    try {
+      const d = await fetch(`${API_BASE}/api/v1/games/schedule?tid=${t.id}`).then((r) => (r.ok ? r.json() : { games: [] }));
+      setGGames(d.games || []);
+    } catch {
+      setGGames([]);
+    } finally {
+      setGLoading(false);
+    }
+  };
+
+  const betFill = (g: any) => {
+    setHomeTeam(g.home);
+    setAwayTeam(g.away);
+    setLeague(`${g.country} - ${g.tournament}`);
+    if (g.startTimestamp) {
+      const d = new Date(g.startTimestamp * 1000);
+      setKoTime(String(d.getHours()).padStart(2, "0") + ":" + String(d.getMinutes()).padStart(2, "0"));
+    }
+    setShowGames(false);
+  };
   useEffect(() => {
     if (!homeTeam || !awayTeam) { setHomeNews([]); setAwayNews([]); return; }
     const t = setTimeout(async () => {
@@ -1338,6 +1385,45 @@ export function RangeEngine() {
           <button onClick={() => setTab("analyzer")} className="mt-8 px-8 py-3 bg-gradient-to-r from-emerald-600 to-cyan-600 text-white font-bold rounded-lg hover:from-emerald-500 hover:to-cyan-500 transition shadow-lg">Return to Basketball</button>
         </div>
       )}
+      {/* ── GAMES BROWSER — today's covered games (STATUS panel) ── */}
+      {showGames && (
+        <div className="fixed inset-0 bg-slate-950/95 backdrop-blur-md flex flex-col p-4 overflow-y-auto" style={{ zIndex: 9999 }}>
+          <div className="flex items-center justify-between mb-3">
+            <p className="text-emerald-400 font-black text-sm uppercase tracking-widest">📡 Covered Games — Today</p>
+            <button onClick={() => setShowGames(false)} className="text-zinc-400 text-xl px-2">✕</button>
+          </div>
+          <p className="text-[10px] text-zinc-500 mb-3">API quota: {quotaInfo.remaining ?? "—"}/{quotaInfo.limit ?? "—"} remaining · schedules cached till midnight</p>
+          {!gSel ? (
+            <div className="space-y-1.5">
+              {gTours.length === 0 && <p className="text-zinc-500 text-xs">Loading tournaments… (if this stays empty, nothing is scheduled today)</p>}
+              {gTours.map((t) => (
+                <button key={t.id} onClick={() => openTournament(t)} className="w-full text-left bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 hover:border-emerald-700 transition">
+                  <span className="text-xs text-zinc-200 font-bold">{t.name}</span>
+                  <span className="text-[10px] text-zinc-500 ml-2">{t.country}</span>
+                </button>
+              ))}
+            </div>
+          ) : (
+            <div>
+              <button onClick={() => { setGSel(null); setGGames([]); }} className="text-[10px] text-emerald-400 mb-2">← All tournaments</button>
+              <p className="text-xs text-zinc-300 font-bold mb-2">{gSel.country} - {gSel.name}</p>
+              {gLoading && <p className="text-zinc-500 text-xs">Loading fixtures…</p>}
+              {!gLoading && gGames.length === 0 && <p className="text-zinc-500 text-xs">No fixtures returned for today.</p>}
+              <div className="space-y-1.5">
+                {gGames.map((g) => (
+                  <div key={g.id} className="bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 flex items-center justify-between gap-2">
+                    <div>
+                      <p className="text-xs text-zinc-200">{g.home} vs {g.away}</p>
+                      <p className="text-[10px] text-zinc-500">{g.startTimestamp ? new Date(g.startTimestamp * 1000).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "TBD"} your time · {g.status}</p>
+                    </div>
+                    <button onClick={() => betFill(g)} className="bg-violet-600 hover:bg-violet-500 text-white text-[10px] font-black px-3 py-1.5 rounded uppercase">Bet</button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
       {/* ─── Premium Header with Global Navigation ─────────────────────────────────────── */}
       <div className="border-b border-emerald-500/10 px-5 py-4 flex flex-col items-center justify-center bg-zinc-950/60 backdrop-blur-md flex-shrink-0" style={{ background: 'rgba(24, 23, 37, 0.6)', backdropFilter: 'blur(12px)', borderImage: 'linear-gradient(90deg, transparent, rgba(16, 185, 129, 0.2), transparent) 1' }}>
         <SplendorLogo />
@@ -1374,11 +1460,11 @@ export function RangeEngine() {
         </div>
         {/* Battery Pill - Telemetry Node */}
         <div className="mt-3 px-4 py-2 rounded-full border border-emerald-500/40 bg-emerald-950/30 backdrop-blur-sm flex items-center gap-2">
-          <span className="text-emerald-400 font-bold text-xs uppercase tracking-widest">System Status</span>
+          <span onClick={openGames} className="text-emerald-400 font-bold text-xs uppercase tracking-widest cursor-pointer">System Status</span>
           <div className="w-6 h-3 rounded border border-emerald-400 flex items-center px-0.5 bg-emerald-950/50">
             <div className="w-full h-full bg-emerald-500 rounded-sm"></div>
           </div>
-          <span className="text-emerald-300 font-black text-xs">100/100</span>
+          <span onClick={openGames} className="text-emerald-300 font-black text-xs cursor-pointer">{quotaInfo.remaining ?? 100}/{quotaInfo.limit ?? 100}</span>
         </div>
       </div>
 
