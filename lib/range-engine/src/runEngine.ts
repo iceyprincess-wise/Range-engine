@@ -98,12 +98,6 @@ export function runEngine(opts: {
   homeEffPPG = parseFloat((homeEffPPG * genderMultiplier).toFixed(1));
   awayEffPPG = parseFloat((awayEffPPG * genderMultiplier).toFixed(1));
 
-  // Live match context: small volatility adjustment
-  if (opts.is_live_match) {
-    // live matches can introduce more variance; widen the base range slightly
-    // this will be applied below by adjusting lb/hb
-  }
-
   const adj_log: AdjLog[] = [];
   const triggered: string[] = [];
   const collapsePct = opts.collapse_pct ?? 0;
@@ -140,6 +134,11 @@ export function runEngine(opts: {
   let hb = homeEffPPG + awayEffPPG + 6;
   const base_lb = lb;
   const base_hb = hb;
+  if (opts.is_live_match) {
+    hb += 3;
+    triggered.push("Live Match: HB +3 — in-game variance widening (momentum swings, foul games, garbage time)");
+    adj_log.push({ rule: "Live Match Variance", lb_adj: 0, hb_adj: 3, note: "Live volatility — HB widened +3, LB stays grounded in regulation math", status: "triggered" });
+  }
   adj_log.push({
     rule: "Rule 4 — Base Range",
     lb_adj: 0,
