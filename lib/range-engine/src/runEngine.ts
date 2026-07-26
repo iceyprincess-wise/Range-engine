@@ -336,7 +336,7 @@ export function runEngine(opts: {
 
   // ── Rule 18 (OT Hazard — tight margin adds HB only) ──────────────────────
   let r18_hb = 0;
-  const otHazard = margin <= 5;
+  const otHazard = margin <= 5 && !dna.noOT;
   if (otHazard) {
     r18_hb = 8;
     hb += r18_hb;
@@ -345,7 +345,7 @@ export function runEngine(opts: {
     rule: "Rule 18 — OT Hazard",
     lb_adj: 0,
     hb_adj: r18_hb,
-    note: `Margin: ${margin.toFixed(1)} pts${otHazard ? ` ≤5 → OT Risk → HB+8 (HB ONLY — LB stays grounded)` : " >5 — no OT hazard"}`,
+    note: `Margin: ${margin.toFixed(1)} pts${otHazard ? ` ≤5 → OT Risk → HB+8 (HB ONLY — LB stays grounded)` : (dna.noOT ? " — format has NO overtime → Rule 18 stands down" : " >5 — no OT hazard")}`,
     status: otHazard ? "triggered" : "checked",
   });
   if (otHazard)

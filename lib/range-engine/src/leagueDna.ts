@@ -127,6 +127,8 @@ export const LEAGUE_DNA_PROFILES: Record<
 
 export function getLeagueDNA(league: string) {
   const lg = league.toUpperCase();
+  if (lg.includes("TBT") || lg.includes("BASKETBALL TOURNAMENT"))
+    return { ...LEAGUE_DNA_PROFILES.TBT, key: "TBT" };
   if (lg.includes("NBA")) return { ...LEAGUE_DNA_PROFILES.NBA, key: "NBA" };
   if (
     lg.includes("EUROLEAGUE") ||
