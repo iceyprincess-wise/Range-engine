@@ -27,12 +27,12 @@ const daySegments = () => {
 };
 
 // Level 1: which tournaments have games today (walk pages until 204/empty, max 6)
-router.get("/v1/games/tournaments", async (_req: Request, res: Response) => {
+router.get("/v1/games/tournaments", async (req: Request, res: Response) => {
   if (!RAPIDAPI_KEY) return res.status(500).json({ error: "Missing RAPIDAPI_KEY" });
   const seg = daySegments();
   const key = "tours-" + seg;
   const hit = getC(key);
-  if (hit) return res.json(hit);
+  if (hit && req.query.force !== "1") return res.json(hit);
 
   try {
     const results = await Promise.all(
@@ -55,7 +55,7 @@ router.get("/v1/games/tournaments", async (_req: Request, res: Response) => {
       }
     }
     const payload = { date: seg, count: tours.length, tournaments: tours };
-    cache.set(key, { expiresAt: midnight(), value: payload });
+    if (tours.length > 0) cache.set(key, { expiresAt: midnight(), value: payload });
     return res.json(payload);
   } catch (error) {
     console.error("/v1/games/tournaments error:", error);
@@ -70,7 +70,7 @@ router.get("/v1/games/schedule", async (req: Request, res: Response) => {
   const seg = daySegments();
   const key = "sched-" + tid + "-" + seg;
   const hit = getC(key);
-  if (hit) return res.json(hit);
+  if (hit && req.query.force !== "1") return res.json(hit);
 
   try {
     const data = await apiFetch("/api/basketball/tournament/" + tid + "/schedules/" + seg);
@@ -86,7 +86,7 @@ router.get("/v1/games/schedule", async (req: Request, res: Response) => {
       country: e.tournament?.category?.name ?? "",
     }));
     const payload = { tid, date: seg, count: games.length, games };
-    cache.set(key, { expiresAt: midnight(), value: payload });
+    if (games.length > 0) cache.set(key, { expiresAt: midnight(), value: payload });
     return res.json(payload);
   } catch (error) {
     console.error("/v1/games/schedule error:", error);

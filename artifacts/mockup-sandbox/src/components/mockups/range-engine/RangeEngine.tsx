@@ -470,6 +470,24 @@ export function RangeEngine() {
       .catch(() => {});
   }, []);
 
+  // ── MASTER REFRESH: re-pull quota, force-refresh games list, clear research cache ──
+  const refreshAll = async () => {
+    try {
+      Object.keys(localStorage)
+        .filter((k) => k.startsWith("rangengine_v3_research_v1:"))
+        .forEach((k) => localStorage.removeItem(k));
+    } catch { /* best-effort */ }
+    try {
+      const q = await fetch(`${API_BASE}/api/v1/quota`).then((r) => (r.ok ? r.json() : null));
+      if (q) setQuotaInfo({ limit: (q as any).limit ?? null, remaining: (q as any).remaining ?? null });
+    } catch { /* best-effort */ }
+    try {
+      const t = await fetch(`${API_BASE}/api/v1/games/tournaments?force=1`).then((r) => (r.ok ? r.json() : { tournaments: [] }));
+      setGTours(t.tournaments || []);
+      setGSel(null);
+      setGGames([]);
+    } catch { /* best-effort */ }
+  };
   const openGames = async () => {
     setShowGames(true);
     setGSel(null);
@@ -1445,7 +1463,7 @@ export function RangeEngine() {
         <div className="fixed inset-0 bg-black/95 flex flex-col p-4 overflow-y-auto" style={{ zIndex: 9999 }}>
           <div className="flex items-center justify-between mb-3">
             <p className="text-yellow-400 font-black text-sm uppercase tracking-widest">📡 Covered Games — Today</p>
-            <button onClick={() => setShowGames(false)} className="text-zinc-400 text-xl px-2">✕</button>
+            <span className="flex items-center gap-2"><button onClick={() => refreshAll()} className="text-yellow-300 text-[10px] font-black px-2 py-1 rounded border border-yellow-700 bg-yellow-950/40 uppercase">⟳ Refresh</button><button onClick={() => setShowGames(false)} className="text-zinc-400 text-xl px-2">✕</button></span>
           </div>
           <p className="text-[10px] text-zinc-500 mb-3">API quota: {quotaInfo.remaining ?? "—"}/{quotaInfo.limit ?? "—"} remaining · schedules cached till midnight</p>
           {!gSel ? (
@@ -1515,7 +1533,7 @@ export function RangeEngine() {
         </div>
         {/* Battery Pill - Telemetry Node */}
         <div className="mt-3 px-4 py-2 rounded-full border border-yellow-500/40 bg-yellow-950/30 flex items-center gap-2">
-          <span onClick={openGames} className="text-yellow-400 font-bold text-xs uppercase tracking-widest cursor-pointer">System Status</span>
+          <span onClick={openGames} className="text-yellow-400 font-bold text-xs uppercase tracking-widest cursor-pointer">System Status</span><span onClick={() => refreshAll()} className="ml-2 text-yellow-300 font-black text-xs cursor-pointer border border-yellow-700 rounded px-1.5 py-0.5">⟳</span>
           <div className="w-6 h-3 rounded border border-yellow-400 flex items-center px-0.5 bg-yellow-950/50">
             <div className="w-full h-full bg-yellow-500 rounded-sm"></div>
           </div>

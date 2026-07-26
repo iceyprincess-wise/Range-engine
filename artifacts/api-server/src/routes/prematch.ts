@@ -24,16 +24,27 @@ const apiFetch = async (p: string): Promise<any> => {
 const pts = (e: any, side: "home" | "away") => e?.[side + "Score"]?.current ?? null;
 
 
+const searchOnce = async (q: string) => {
+  const data = await apiFetch("/api/basketball/search/" + encodeURIComponent(q));
+  const hit = (data?.results || []).find((r: any) => r.type === "team");
+  return hit ? { id: hit.entity.id as number, name: hit.entity.name as string } : null;
+};
+
 const searchTeam = async (name: string) => {
   const key = name.trim().toLowerCase();
   if (store.teams[key]) return store.teams[key];
-  const data = await apiFetch("/api/basketball/search/" + encodeURIComponent(name));
-  const hit = (data?.results || []).find((r: any) => r.type === "team");
-  if (!hit) throw new Error("No team found for \"" + name + "\"");
-  const team = { id: hit.entity.id as number, name: hit.entity.name as string };
-  store.teams[key] = team;
-  markDirty();
-  return team;
+  const base = name.replace(/\(.*?\)/g, " ").replace(/[._]/g, " ").replace(/\s+/g, " ").trim();
+  const words = base.split(" ");
+  const candidates = [...new Set([
+    base,
+    words.slice(0, 2).join(" "),
+    words.length > 1 ? words[words.length - 1] : "",
+  ].filter((c) => c && c.length >= 3))].slice(0, 3);
+  for (const q of candidates) {
+    const team = await searchOnce(q);
+    if (team) { store.teams[key] = team; markDirty(); return team; }
+  }
+  throw new Error('Team not found in provider: "' + name + '" — check spelling or use the games browser tap-to-fill (exact names)');
 };
 
 const lastFetch: Record<number, number> = {};

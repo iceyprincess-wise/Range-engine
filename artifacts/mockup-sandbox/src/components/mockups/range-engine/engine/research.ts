@@ -37,6 +37,7 @@ export async function fetchResearchData(
   if (bookmaker) params.set("bookmaker", String(bookmaker));
 
   let preData: any = null;
+  let preErr: string | null = null;
   try {
     const preParams = new URLSearchParams({
       homeTeam: homeTeam || "",
@@ -44,6 +45,7 @@ export async function fetchResearchData(
     });
     const preResponse = await fetch(`${API_BASE}/api/v1/prematch?${preParams.toString()}`);
     if (preResponse.ok) preData = await preResponse.json();
+    else { try { preErr = (await preResponse.json())?.error ?? null; } catch { /* ignore */ } }
   } catch (e) {
     preData = null;
   }
@@ -51,7 +53,7 @@ export async function fetchResearchData(
   const response = await fetch(`${API_BASE}/api/v1/sync?${params.toString()}`).catch(() => null);
 
   if ((!response || !response.ok) && !preData) {
-    throw new Error(`API request failed${response ? ` with status ${response.status}` : ""}`);
+    throw new Error(preErr ?? `API request failed${response ? ` with status ${response.status}` : ""}`);
   }
 
   const apiData: any = response && response.ok ? await response.json() : {};
