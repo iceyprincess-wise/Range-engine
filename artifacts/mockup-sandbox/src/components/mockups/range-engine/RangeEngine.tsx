@@ -2074,44 +2074,39 @@ MATCH CONTEXT — Rule 1 (Time Sync)
                                 Deep Historical Matrix (H2H & Form)
                               </span>
                               <span className="text-zinc-500 bg-black/50 px-2 py-1 rounded border border-yellow-900/20">
-                                AWAITING API BRIDGE
+                                WAREHOUSE FEED
                               </span>
                             </div>
                             <div className="space-y-4 bg-[#050807] p-5 rounded-xl border border-yellow-900/20 shadow-[inset_0_0_20px_rgba(0,0,0,0.4)]">
-                              <div>
-                                <div className="flex justify-between text-[9px] font-mono text-zinc-400 mb-1.5">
-                                  <span className="text-yellow-400 font-bold">
-                                    86.1
-                                  </span>
-                                  <span className="uppercase tracking-widest text-zinc-500">
-                                    Points Scored
-                                  </span>
-                                  <span className="text-red-400 font-bold">
-                                    78.6
-                                  </span>
-                                </div>
-                                <div className="flex h-1.5 w-full bg-zinc-900 rounded-full overflow-hidden">
-                                  <div className="bg-yellow-500 w-[52%] shadow-[0_0_5px_#10b981]"></div>
-                                  <div className="bg-red-600 w-[48%] ml-auto"></div>
-                                </div>
-                              </div>
-                              <div>
-                                <div className="flex justify-between text-[9px] font-mono text-zinc-400 mb-1.5">
-                                  <span className="text-yellow-400 font-bold">
-                                    77.3
-                                  </span>
-                                  <span className="uppercase tracking-widest text-zinc-500">
-                                    Points Allowed
-                                  </span>
-                                  <span className="text-red-400 font-bold">
-                                    73.2
-                                  </span>
-                                </div>
-                                <div className="flex h-1.5 w-full bg-zinc-900 rounded-full overflow-hidden">
-                                  <div className="bg-yellow-500 w-[48%] shadow-[0_0_5px_#10b981]"></div>
-                                  <div className="bg-red-600 w-[52%] ml-auto"></div>
-                                </div>
-                              </div>
+                              {(() => {
+                                const hs = researchData?.homeArenaPPG ?? null;
+                                const asc = researchData?.awayRoadPPG ?? null;
+                                const ha = (researchData as any)?.homeDefPpg ?? null;
+                                const aa = (researchData as any)?.awayDefPpg ?? null;
+                                if (hs == null || asc == null) {
+                                  return <p className="text-[10px] text-zinc-500">No warehouse scoring history for these teams — matrix declines. Nothing invented.</p>;
+                                }
+                                const pct = (l: number, r: number) => Math.round((l / (l + r)) * 100);
+                                const rows: [string, number | null, number | null][] = [
+                                  ["Points Scored", hs, asc],
+                                  ["Points Allowed", ha, aa],
+                                ];
+                                return rows.map(([lbl, l, r]) =>
+                                  l == null || r == null ? null : (
+                                    <div key={lbl}>
+                                      <div className="flex justify-between text-[9px] font-mono text-zinc-400 mb-1.5">
+                                        <span className="text-yellow-400 font-bold">{l.toFixed(1)}</span>
+                                        <span className="uppercase tracking-widest text-zinc-500">{lbl}</span>
+                                        <span className="text-red-400 font-bold">{r.toFixed(1)}</span>
+                                      </div>
+                                      <div className="flex h-1.5 w-full bg-zinc-900 rounded-full overflow-hidden">
+                                        <div className="bg-yellow-500" style={{ width: `${pct(l, r)}%` }}></div>
+                                        <div className="bg-red-600 ml-auto" style={{ width: `${100 - pct(l, r)}%` }}></div>
+                                      </div>
+                                    </div>
+                                  ),
+                                );
+                              })()}
                             </div>
                           </div>
                         )}
@@ -2430,14 +2425,14 @@ MATCH CONTEXT — Rule 1 (Time Sync)
                               <span
                                 className={`text-[9px] font-black ${researchData?.defStallRisk === "HIGH" ? "text-red-400" : researchData?.defStallRisk === "MODERATE" ? "text-yellow-400" : "text-yellow-500"}`}
                               >
-                                {researchData?.defStallRisk ?? "LOW"}
+                                {researchData?.defStallRisk ?? "—"}
                               </span>
                               <span className="text-zinc-700 text-[9px]">
                                 risk level
                               </span>
                             </div>
                             <p className="text-[10px] text-zinc-400 leading-relaxed">
-                              {researchData?.defStallNote ?? "Live API data unavailable."}
+                              {researchData?.defStallNote ?? "No warehouse quarter data — risk not assessed. Nothing invented."}
                             </p>
                           </div>
                         </div>
@@ -2459,14 +2454,14 @@ MATCH CONTEXT — Rule 1 (Time Sync)
                               <span
                                 className={`text-[9px] font-black ${researchData?.offSurgeRisk === "HIGH" ? "text-yellow-400" : researchData?.offSurgeRisk === "MODERATE" ? "text-yellow-400" : "text-yellow-500"}`}
                               >
-                                {researchData?.offSurgeRisk ?? "LOW"}
+                                {researchData?.offSurgeRisk ?? "—"}
                               </span>
                               <span className="text-zinc-700 text-[9px]">
                                 risk level
                               </span>
                             </div>
                             <p className="text-[10px] text-zinc-400 leading-relaxed">
-                              {researchData?.offSurgeNote ?? "Live API data unavailable."}
+                              {researchData?.offSurgeNote ?? "No warehouse quarter data — risk not assessed. Nothing invented."}
                             </p>
                           </div>
                         </div>

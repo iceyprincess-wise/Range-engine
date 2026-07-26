@@ -78,6 +78,19 @@ export async function fetchResearchData(
     apiData.awayFtAttempts = preData.away?.shooting?.ftAttemptsPerGame ?? apiData.awayFtAttempts;
     apiData.homeFoulRate = preData.home?.shooting?.foulsPerGame ?? apiData.homeFoulRate;
     apiData.awayFoulRate = preData.away?.shooting?.foulsPerGame ?? apiData.awayFoulRate;
+    apiData.homeRestDays = preData.home?.restDays ?? apiData.homeRestDays;
+    apiData.awayRestDays = preData.away?.restDays ?? apiData.awayRestDays;
+    const qf = (q: any) => (q?.q1 != null ? +((q.q1 + q.q2) - (q.q3 + q.q4)).toFixed(1) : null);
+    const fadeH = qf(preData.home?.quarters?.avgCombined);
+    const fadeA = qf(preData.away?.quarters?.avgCombined);
+    if (fadeH != null || fadeA != null) {
+      const worstFade = Math.max(fadeH ?? -999, fadeA ?? -999);
+      const bestSurge = Math.min(fadeH ?? 999, fadeA ?? 999);
+      apiData.defStallRisk = worstFade > 6 ? "HIGH" : worstFade > 3 ? "MODERATE" : "LOW";
+      apiData.defStallNote = `Warehouse quarter history: 2nd-half fade — home ${fadeH ?? "n/a"} pts, away ${fadeA ?? "n/a"} pts vs 1st half. Peak collapse ${apiData.collapsePct ?? 0}%.`;
+      apiData.offSurgeRisk = bestSurge < -4 ? "HIGH" : bestSurge < -1.5 ? "MODERATE" : "LOW";
+      apiData.offSurgeNote = `2nd-half uptick — home ${fadeH != null ? -fadeH : "n/a"} pts, away ${fadeA != null ? -fadeA : "n/a"} pts. Computed from stored quarters, not simulated.`;
+    }
     const qc = [preData.home?.quarters?.collapsePct, preData.away?.quarters?.collapsePct].filter(Boolean);
     if (qc.length) {
       apiData.collapsePct = Math.max(...qc.flatMap((c: any) => [c.q1, c.q2, c.q3, c.q4]));
