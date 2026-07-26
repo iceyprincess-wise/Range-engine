@@ -1,7 +1,7 @@
 export function generateLineOptions(
   lowBound: number,
   highBound: number,
-  increment = 0.5,
+  increment = 1,
 ): number[] {
   const options: number[] = [];
   if (Number.isNaN(lowBound) || Number.isNaN(highBound)) {

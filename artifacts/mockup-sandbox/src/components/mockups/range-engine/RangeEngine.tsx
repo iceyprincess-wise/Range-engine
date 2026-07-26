@@ -14,7 +14,7 @@ import {
   RESEARCH_CACHE_PREFIX, RESEARCH_CACHE_TTL, makeResearchCacheKey,
   saveResearchCache, loadResearchCache, isResearchCacheValid,
   hashStr, seededVal, INJURY_POOL_HOME, INJURY_POOL_AWAY,
-  generateResearch, runEngine, fetchResearchDataCached, API_BASE,
+  runEngine, fetchResearchDataCached, API_BASE,
 } from "./engine/core";
 import type { AdjLog, EngineOutput, HistoryEntry, AnalysisArchiveEntry, ResearchData } from "./engine/core";
 
@@ -706,8 +706,8 @@ export function RangeEngine() {
   const [showAltLines, setShowAltLines] = useState(false);
   const [altLines, setAltLines] = useState<number[]>([]);
 
-  const MARKET_LINE_LOW_BOUND = 120;
-  const MARKET_LINE_HIGH_BOUND = 240;
+  const MARKET_LINE_LOW_BOUND = 120.5;
+  const MARKET_LINE_HIGH_BOUND = 300.5;
   const [activeLinePreset, setActiveLinePreset] = useState<number | null>(null);
 
   const renderMarketLineOptions = (lowBound: number, highBound: number) =>
@@ -1158,6 +1158,37 @@ export function RangeEngine() {
     }, 400);
   }
 
+  // ── AUTO-RECONFIRM: silent cold recompute the moment a verdict lands ──
+  const [reconfirm, setReconfirm] = useState<"pending" | "match" | "variance" | null>(null);
+  useEffect(() => {
+    if (phase !== "result" || !result || !homeInfo || !awayInfo) { setReconfirm(null); return; }
+    setReconfirm("pending");
+    const t = setTimeout(() => {
+      try {
+        const res = runEngine({
+          home_name: homeTeam, away_name: awayTeam,
+          home_stats: homeInfo, away_stats: awayInfo,
+          league, gender: matchGender, is_live_match: isLiveMatch,
+          key_player_out: detectKeyOut().out,
+          key_player_name: detectKeyOut().name || "Key Scorer",
+          over_low: parseFloat(overLow), over_high: parseFloat(overHigh || overLow),
+          under_low: parseFloat(underLow || underHigh), under_high: parseFloat(underHigh),
+          home_ft: researchData?.homeFt, away_ft: researchData?.awayFt,
+          home_pt3: researchData?.homePt3, away_pt3: researchData?.awayPt3,
+          home_arena_ppg: researchData?.homeArenaPPG, away_arena_ppg: researchData?.awayRoadPPG,
+          h2h_avg_total: researchData?.h2hAvgTotal, use_weighted: true,
+          collapse_pct: researchData?.collapsePct ?? 0,
+          is_rerun: true,
+          rerun_timestamp: new Date().toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", second: "2-digit" }),
+        });
+        setRerunResult(res);
+        setRerunPhase("done");
+        const same = res.decision.split("★")[0].trim() === result.decision.split("★")[0].trim();
+        setReconfirm(same ? "match" : "variance");
+      } catch { setReconfirm(null); }
+    }, 900);
+    return () => clearTimeout(t);
+  }, [result, phase]);
   function handleRerun() {
     if (!rerunCmd.trim() || !homeInfo || !awayInfo) return;
     const freshTime = new Date().toLocaleTimeString("en-GB", {
@@ -1667,7 +1698,7 @@ export function RangeEngine() {
     </datalist>
 MATCH CONTEXT — Rule 1 (Time Sync)
                   </p>
-                  <div className="grid grid-cols-3 gap-3">
+                  <div className="grid grid-cols-2 gap-3">
                     <Input label="Date *">
                       <Field type="date" value={date} onChange={setDate} />
                     </Input>
@@ -2333,7 +2364,7 @@ MATCH CONTEXT — Rule 1 (Time Sync)
                               <div className="flex items-center gap-1.5 mb-2 bg-yellow-950/30 border border-yellow-900/50 p-1 rounded">
                                 <div className="w-1.5 h-1.5 rounded-full bg-yellow-500 animate-pulse"></div>
                                 <span className="text-[8px] text-yellow-500 font-bold uppercase tracking-wider">
-                                  30-Min Lock Confirmed
+                                  No lineup feed — unverified
                                 </span>
                               </div>
                               <div className="flex flex-col gap-1">
@@ -2360,7 +2391,7 @@ MATCH CONTEXT — Rule 1 (Time Sync)
                               <div className="flex items-center gap-1.5 mb-2 bg-yellow-950/30 border border-yellow-900/50 p-1 rounded">
                                 <div className="w-1.5 h-1.5 rounded-full bg-yellow-500 animate-pulse"></div>
                                 <span className="text-[8px] text-yellow-500 font-bold uppercase tracking-wider">
-                                  30-Min Lock Confirmed
+                                  No lineup feed — unverified
                                 </span>
                               </div>
                               <div className="flex flex-col gap-1">
@@ -2625,7 +2656,7 @@ Unavailable data is labeled — never invented.`);
                         </button>
                       </div>
                       {showAltLines && altLines.length > 0 && (
-                        <div className="mt-2 grid grid-cols-3 sm:grid-cols-5 gap-2">
+                        <div className="mt-2 grid grid-cols-4 gap-2">
                           {altLines.map((val) => (
                             <div key={val} className="flex items-center gap-2 text-[11px]">
                               <span className="w-6 h-6 rounded border border-yellow-950 flex items-center justify-center text-zinc-300">[ ]</span>
@@ -3429,6 +3460,11 @@ Unavailable data is labeled — never invented.`);
                       </span>
                       &nbsp;|&nbsp; Lean:{" "}
                       <span className="text-yellow-400 font-bold">
+                  {reconfirm && (
+                    <p className={`text-[10px] font-bold mb-2 ${reconfirm === "match" ? "text-yellow-400" : reconfirm === "variance" ? "text-red-400" : "text-zinc-500"}`}>
+                      {reconfirm === "pending" ? "⟳ Auto-reconfirm running…" : reconfirm === "match" ? "✓ RECONFIRMED — cold recompute agrees (Heavy-Adj limits enforced)" : "⚠ VARIANCE — recompute disagrees. Review audit before staking."}
+                    </p>
+                  )}
                   {result.alt_line_note && (
                     <div className="bg-yellow-950/30 border border-yellow-700/60 rounded-lg px-3 py-2 mb-2">
                       <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-yellow-500 mb-1">
@@ -3508,159 +3544,43 @@ Unavailable data is labeled — never invented.`);
                   </div>
                 </div>
 
-                {/* ── Live Monitor ── */}
-                <div className="bg-black/60 border border-yellow-900 rounded-xl overflow-hidden">
-                  <button
-                    onClick={() => setShowLive(!showLive)}
-                    className="w-full flex items-center justify-between px-4 py-3 hover:bg-zinc-800/20 transition"
-                  >
-                    {/* ⚡ LEGACY STALL SENSOR UI EXTRACTED & MIGRATED TO LiveMonitorHub.tsx */}
-
-                    <span className="text-zinc-600 text-xs">
-                      {showLive ? "▲" : "▼"}
-                    </span>
-                  </button>
-                  {showLive && (
-                    <div className="border-t border-yellow-950 px-4 py-4 space-y-4">
-                      <div className="grid grid-cols-3 gap-3">
-                        <SmallField
-                          value={liveHome}
-                          onChange={setLiveHome}
-                          placeholder="—"
-                          label={`${homeTeam || "Home"} live`}
-                        />
-                        <div className="flex items-end justify-center pb-1.5">
-                          <span className="text-zinc-600 font-black text-lg">
-                            –
-                          </span>
-                        </div>
-                        <SmallField
-                          value={liveAway}
-                          onChange={setLiveAway}
-                          placeholder="—"
-                          label={`${awayTeam || "Away"} live`}
-                        />
-                      </div>
-                      <div>
-                        <p className="text-[9px] uppercase tracking-widest text-zinc-600 mb-2">
-                          Quarter Scores (Home | Away)
+                {/* ── HYBRID PRE-MATCH STALL SENSOR — fully automated ── */}
+                <div className="bg-black/60 border border-yellow-900 rounded-xl px-4 py-3">
+                  <p className="text-[9px] font-bold uppercase tracking-widest text-zinc-400 mb-2">
+                    🧊 Hybrid Stall Sensor — Automated (warehouse quarter history)
+                  </p>
+                  {(() => {
+                    const hq = researchData?.homeQuarters?.avgCombined;
+                    const aq = researchData?.awayQuarters?.avgCombined;
+                    const hn = researchData?.homeQuarters?.gamesWithQuarters ?? 0;
+                    const an = researchData?.awayQuarters?.gamesWithQuarters ?? 0;
+                    if (!hq?.q1 || !aq?.q1) {
+                      return <p className="text-[10px] text-zinc-500">No quarter history in warehouse for these teams — sensor declines. Nothing invented.</p>;
+                    }
+                    const fadeH = +((hq.q1 + hq.q2) - (hq.q3 + hq.q4)).toFixed(1);
+                    const fadeA = +((aq.q1 + aq.q2) - (aq.q3 + aq.q4)).toFixed(1);
+                    const worst = Math.max(fadeH, fadeA);
+                    const level = worst > 6 ? "HIGH" : worst > 3 ? "MODERATE" : "LOW";
+                    return (
+                      <div className="space-y-1">
+                        <p className="text-[10px] text-zinc-300">2nd-half fade: {homeTeam} {fadeH > 0 ? `-${fadeH}` : `+${Math.abs(fadeH)}`} pts ({hn}g) · {awayTeam} {fadeA > 0 ? `-${fadeA}` : `+${Math.abs(fadeA)}`} pts ({an}g)</p>
+                        <p className={`text-[10px] font-bold ${level === "HIGH" ? "text-red-400" : level === "MODERATE" ? "text-yellow-400" : "text-zinc-400"}`}>
+                          STALL RISK: {level} — fused with Collapse % {researchData?.collapsePct ?? 0}% feeding Rule 7 automatically.
                         </p>
-                        <div className="grid grid-cols-4 gap-2">
-                          {(
-                            [
-                              ["Q1", q1H, setQ1H, q1A, setQ1A],
-                              ["Q2", q2H, setQ2H, q2A, setQ2A],
-                              ["Q3", q3H, setQ3H, q3A, setQ3A],
-                              ["Q4", q4H, setQ4H, q4A, setQ4A],
-                            ] as [
-                              string,
-                              string,
-                              (v: string) => void,
-                              string,
-                              (v: string) => void,
-                            ][]
-                          ).map(([lbl, hv, hs, av, as_]) => (
-                            <div key={lbl} className="space-y-1">
-                              <p className="text-[8px] text-center text-zinc-600 uppercase tracking-widest">
-                                {lbl}
-                              </p>
-                              <input
-                                type="number"
-                                value={hv}
-                                onChange={(e) => hs(e.target.value)}
-                                placeholder="H"
-                                className="w-full bg-zinc-900 border border-yellow-950 rounded-md px-1.5 py-1 text-[11px] text-white text-center focus:outline-none focus:border-yellow-700"
-                              />
-                              <input
-                                type="number"
-                                value={av}
-                                onChange={(e) => as_(e.target.value)}
-                                placeholder="A"
-                                className="w-full bg-zinc-900 border border-yellow-950 rounded-md px-1.5 py-1 text-[11px] text-white text-center focus:outline-none focus:border-yellow-700"
-                              />
-                              {(parseFloat(hv) || 0) + (parseFloat(av) || 0) >
-                                0 && (
-                                <p
-                                  className={`text-[8px] text-center font-bold ${(parseFloat(hv) || 0) + (parseFloat(av) || 0) < 30 ? "text-red-400" : "text-zinc-600"}`}
-                                >
-                                  {(parseFloat(hv) || 0) +
-                                    (parseFloat(av) || 0)}{" "}
-                                  {(parseFloat(hv) || 0) +
-                                    (parseFloat(av) || 0) <
-                                  30
-                                    ? "⚠"
-                                    : "✓"}
-                                </p>
-                              )}
-                            </div>
-                          ))}
-                        </div>
                       </div>
-                      <button
-                        onClick={applyLiveMonitor}
-                        className="w-full bg-zinc-700 hover:bg-zinc-600 text-white text-xs font-bold rounded-lg py-2 tracking-widest uppercase transition"
-                      >
-                        Apply Stall Sensor →
-                      </button>
-                      {liveAlert && (
-                        <div
-                          className={`rounded-lg px-4 py-3 border ${liveAlert.level === "danger" ? "bg-red-950/50 border-red-700" : liveAlert.hbAdj < 0 ? "bg-yellow-950/50 border-yellow-700" : "bg-yellow-950/30 border-yellow-800"}`}
-                        >
-                          <p
-                            className={`text-[11px] font-bold leading-relaxed ${liveAlert.level === "danger" ? "text-red-300" : liveAlert.hbAdj < 0 ? "text-yellow-300" : "text-yellow-400"}`}
-                          >
-                            {liveAlert.msg}
-                          </p>
-                          {liveAlert.hbAdj !== 0 && result && (
-                            <p className="text-[10px] text-zinc-500 mt-1">
-                              Adjusted HB:{" "}
-                              <span className="font-bold text-white">
-                                {(result.hb + liveAlert.hbAdj).toFixed(1)}
-                              </span>{" "}
-                              (was {result.hb}) | Adjusted Range:{" "}
-                              {result.lb.toFixed(1)} –{" "}
-                              {(result.hb + liveAlert.hbAdj).toFixed(1)}
-                            </p>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  )}
+                    );
+                  })()}
                 </div>
 
                 {/* ─── RERUN ── */}
                 <div className="bg-black/70 border border-yellow-900 rounded-xl overflow-hidden">
                   <div className="px-4 py-3 border-b border-yellow-950">
                     <p className="text-[9px] font-bold uppercase tracking-widest text-zinc-400">
-                      🔁 RERUN — SPLENDOR ENGINE V3 · COLD RECOMPUTE
+                      🔁 AUTO-RECONFIRM — COLD RECOMPUTE · AUTOMATIC
                     </p>
                     <p className="text-[9px] text-zinc-700 mt-0.5">
-                      Fresh timestamp on each RERUN · Heavy Adj Limit active ·
+                      Runs itself after every verdict · fresh timestamp · Heavy Adj Limit active ·
                       Hammer: {result.hammer_edge_used}pt threshold
-                    </p>
-                  </div>
-                  <div className="p-4 space-y-2">
-                    <div className="flex gap-2">
-                      <input
-                        value={rerunCmd}
-                        onChange={(e) => setRerunCmd(e.target.value)}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter") handleRerun();
-                        }}
-                        placeholder={`"Tatum out"  ·  "line to 228"  ·  "no injury"  ·  "adjust total 157.5"`}
-                        className="flex-1 bg-zinc-900 border border-yellow-900 rounded-lg px-3 py-2 text-xs text-white placeholder:text-zinc-700 focus:outline-none focus:border-zinc-500 transition font-mono"
-                      />
-                      <button
-                        onClick={handleRerun}
-                        disabled={!rerunCmd.trim() || rerunPhase === "running"}
-                        className="bg-yellow-700 hover:bg-yellow-600 disabled:opacity-30 text-white text-xs font-bold px-4 rounded-lg transition whitespace-nowrap"
-                      >
-                        {rerunPhase === "running" ? "…" : "RERUN →"}
-                      </button>
-                    </div>
-                    <p className="text-[9px] text-zinc-700 font-mono">
-                      Each RERUN captures a fresh timestamp · Collapse% + DNA
-                      preserved · Enter or click RERUN
                     </p>
                   </div>
 
