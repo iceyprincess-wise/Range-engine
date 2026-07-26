@@ -2656,17 +2656,17 @@ Unavailable data is labeled — never invented.`);
                         <div className="mt-2 grid grid-cols-4 gap-2">
                           {altLines.map((val) => (
                             <div key={val} className="flex items-center gap-2 text-[11px]">
-                              <span className="w-6 h-6 rounded border border-yellow-950 flex items-center justify-center text-zinc-300">[ ]</span>
+                              
                               <div className="flex-1">
-                                <div className="text-zinc-200 font-mono">{val.toFixed(1)}</div>
-                                <div className="text-[10px] text-zinc-500 flex gap-2 mt-0.5">
+                                <div className="text-zinc-100 font-mono text-center text-xs bg-zinc-900 rounded-md py-1.5 border border-yellow-950">{val.toFixed(1)}</div>
+                                <div className="text-[10px] flex gap-1.5 mt-1">
                                   <button
                                     onClick={() => {
                                       // set over to this exact value (narrow to point)
                                       setOverLow(String(val));
                                       setOverHigh(String(val));
                                     }}
-                                    className="px-1 py-0.5 rounded border border-yellow-700 text-yellow-300"
+                                    className="flex-1 py-1.5 rounded-md bg-yellow-950/40 border border-yellow-700 text-yellow-300 font-bold text-center"
                                   >
                                     O
                                   </button>
@@ -2675,7 +2675,7 @@ Unavailable data is labeled — never invented.`);
                                       setUnderLow(String(val));
                                       setUnderHigh(String(val));
                                     }}
-                                    className="px-1 py-0.5 rounded border border-yellow-700 text-yellow-300"
+                                    className="flex-1 py-1.5 rounded-md bg-yellow-950/40 border border-yellow-700 text-yellow-300 font-bold text-center"
                                   >
                                     U
                                   </button>
@@ -2738,12 +2738,12 @@ Unavailable data is labeled — never invented.`);
                         <div className="mt-2 grid grid-cols-4 gap-2">
                           {altLinesU.map((val) => (
                             <div key={val} className="flex items-center gap-2 text-[11px]">
-                              <span className="w-6 h-6 rounded border border-yellow-950 flex items-center justify-center text-zinc-300">[ ]</span>
+                              
                               <div className="flex-1">
-                                <div className="text-zinc-200 font-mono">{val.toFixed(1)}</div>
-                                <div className="text-[10px] text-zinc-500 flex gap-2 mt-0.5">
-                                  <button onClick={() => { setOverLow(String(val)); setOverHigh(String(val)); }} className="px-1 py-0.5 rounded border border-yellow-700 text-yellow-300">O</button>
-                                  <button onClick={() => { setUnderLow(String(val)); setUnderHigh(String(val)); }} className="px-1 py-0.5 rounded border border-yellow-700 text-yellow-300">U</button>
+                                <div className="text-zinc-100 font-mono text-center text-xs bg-zinc-900 rounded-md py-1.5 border border-yellow-950">{val.toFixed(1)}</div>
+                                <div className="text-[10px] flex gap-1.5 mt-1">
+                                  <button onClick={() => { setOverLow(String(val)); setOverHigh(String(val)); }} className="flex-1 py-1.5 rounded-md bg-yellow-950/40 border border-yellow-700 text-yellow-300 font-bold text-center">O</button>
+                                  <button onClick={() => { setUnderLow(String(val)); setUnderHigh(String(val)); }} className="flex-1 py-1.5 rounded-md bg-yellow-950/40 border border-yellow-700 text-yellow-300 font-bold text-center">U</button>
                                 </div>
                               </div>
                             </div>

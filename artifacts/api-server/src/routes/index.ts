@@ -5,6 +5,7 @@ import prematchRouter from "./prematch";
 import newsRouter from "./news";
 import gamesRouter from "./games";
 import backtestRouter from "./backtest";
+import resultsRouter from "./results";
 
 const router: IRouter = Router();
 
@@ -14,5 +15,6 @@ router.use(prematchRouter);
 router.use(newsRouter);
 router.use(gamesRouter);
 router.use(backtestRouter);
+router.use(resultsRouter);
 
 export default router;
