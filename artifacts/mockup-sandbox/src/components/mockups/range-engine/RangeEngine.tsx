@@ -267,12 +267,13 @@ function SmallField({
 function SplendorLogo() {
   return (
     <div className="flex items-center gap-3 flex-shrink-0">
-      <div className="relative flex items-center justify-center w-16 h-16 bg-gradient-to-br from-purple-600 to-yellow-600 rounded-full shadow-2xl drop-shadow-2xl">
-        <Globe className="w-8 h-8 text-white drop-shadow-xl" />
-        <ShieldCheck className="w-4 h-4 text-yellow-300 absolute bottom-1 right-1 drop-shadow-lg" />
-      </div>
+      <img
+        src="/logo.png"
+        alt="Splendor Hub"
+        className="w-16 h-16 rounded-full object-cover shadow-2xl border border-red-900/60"
+      />
       <div className="text-left">
-        <h1 className="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-300 via-yellow-300 to-yellow-300 drop-shadow-xl" style={{ textShadow: '0 0 30px rgba(168, 85, 247, 0.6), 0 0 60px rgba(99, 102, 241, 0.4)' }}>SPLENDOR HUB</h1>
+        <h1 className="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-red-500 via-red-400 to-yellow-400" style={{ textShadow: '0 0 30px rgba(220, 38, 38, 0.55)' }}>SPLENDOR HUB</h1>
         <p className="text-sm text-zinc-300">Premium Sportsbook Suite</p>
         <p className="text-xs text-zinc-400">18+ Bet Responsibly</p>
       </div>
@@ -1031,6 +1032,21 @@ export function RangeEngine() {
     if (hit) return { out: true, name: hit.title.slice(0, 60) + " (auto-detected from news)" };
     return { out: false, name: "" };
   };
+  // ── HUNT step receipts: real numbers per step (no theater) ──
+  function huntDetail(i: number): string {
+    const hg = researchData?.homeQuarters?.gamesWithQuarters ?? 0;
+    const ag = researchData?.awayQuarters?.gamesWithQuarters ?? 0;
+    const news = homeNews.length + awayNews.length;
+    switch (i) {
+      case 0: return `KO ${koTime} · ${tipOff || "syncing"}`;
+      case 1: return hg + ag > 0 ? `${hg + ag} warehouse games loaded` : "awaiting warehouse data";
+      case 2: return researchData?.homeFt ? `FT ${researchData.homeFt}% · 3PT ${researchData.homePt3 ?? "—"}% (home side)` : "shooting splits pending";
+      case 4: return `peak collapse ${researchData?.collapsePct ?? 0}% across ${hg + ag} studied games`;
+      case 5: return `${getLeagueDNA(league).name} · width cap ${getLeagueDNA(league).maxWidth} pts`;
+      case 6: return news > 0 ? `${news} real news reports scanned${detectKeyOut().out ? " · KEY-OUT SIGNAL" : ""}` : "no injury reports found — nothing invented";
+      default: return "";
+    }
+  }
   function handleAnalyze() {
     if (!homeTeam || !awayTeam || !overLow || !underHigh || !tipOff) return;
     const dna = getLeagueDNA(league);
@@ -3039,6 +3055,7 @@ Unavailable data is labeled — never invented.`);
                         className={`text-[11px] flex-1 leading-tight ${active ? "text-white" : "text-zinc-600"}`}
                       >
                         {st.label}
+                        {(done || active) && huntDetail(i) ? (<span className="block text-[9px] text-yellow-600/80 mt-0.5 font-mono">{huntDetail(i)}</span>) : null}
                       </span>
                       {done && (
                         <span className="text-yellow-500 text-[10px] flex-shrink-0">
