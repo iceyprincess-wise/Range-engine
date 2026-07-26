@@ -213,31 +213,31 @@ export async function fetchResearchData(
       ? `Moderate rest imbalance. Monitor warmups and minutes management for late-game fatigue fouls.`
       : `Schedule profile stable. No critical back-to-back or 3-in-4 fatigue signal detected.`;
 
-  const defStallRisk: "LOW" | "MODERATE" | "HIGH" =
+  const defStallRisk: "LOW" | "MODERATE" | "HIGH" = apiData.defStallRisk ?? (
     fatigueRisk === "HIGH" || totalFoulRate >= 42
       ? "HIGH"
       : totalFoulRate >= 36 || totalFtAttempts >= 40
       ? "MODERATE"
-      : "LOW";
-  const defStallNote =
+      : "LOW");
+  const defStallNote = apiData.defStallNote ?? (
     defStallRisk === "HIGH"
       ? `🚨 DEFENSIVE STALL TRIGGER: ${totalFoulRate.toFixed(1)} foul rate combined, ${totalFtAttempts} FT attempts, ${homeRestDays} / ${awayRestDays} rest. League avg ${leagueFoulAverage} fouls. Late-game clock stoppages likely.`
       : defStallRisk === "MODERATE"
       ? `⚠ MODERATE stall risk: team foul pressure elevated and schedules are tight. Live possession management will decide the 4th quarter pace.`
-      : `✓ LOW stall risk: historical pace remains stable and neither team is deep in fatigue territory.`;
+      : `✓ LOW stall risk: historical pace remains stable and neither team is deep in fatigue territory.`);
 
-  const offSurgeRisk: "LOW" | "MODERATE" | "HIGH" =
+  const offSurgeRisk: "LOW" | "MODERATE" | "HIGH" = apiData.offSurgeRisk ?? (
     highVolatility && totalFtAttempts >= 38
       ? "HIGH"
       : totalFtAttempts >= 32 || totalFoulRate >= 36
       ? "MODERATE"
-      : "LOW";
-  const offSurgeNote =
+      : "LOW");
+  const offSurgeNote = apiData.offSurgeNote ?? (
     offSurgeRisk === "HIGH"
       ? `High-offense surge risk: heavy free-throw volume and league foul intensity are already above 40 fouls/game. Watch for clock stoppage and artificial point inflation.`
       : offSurgeRisk === "MODERATE"
       ? `Moderate surge risk. Free throw volume and team foul rates are elevated enough to keep totals alive late.`
-      : `Scoring surge risk is low. Game shape remains controlled with reasonable foul pacing.`;
+      : `Scoring surge risk is low. Game shape remains controlled with reasonable foul pacing.`);
 
   const otRisk: "LOW" | "MODERATE" | "HIGH" =
     h2h50.length >= 10
@@ -379,225 +379,5 @@ export const INJURY_POOL_AWAY = [
   "⚠ Main scorer — game-time decision (knee)",
   "⚠ Key PF limited (ankle) — reduced minutes",
 ];
-export function generateResearch(
-  homeTeam: string,
-  awayTeam: string,
-  league: string,
-): ResearchData {
-  const dna = getLeagueDNA(league);
-  const hs = hashStr((homeTeam + league).toLowerCase());
-  const as_ = hashStr((awayTeam + league).toLowerCase());
-  const cs = hashStr((homeTeam + awayTeam + league).toLowerCase());
-  const base = dna.proxyPPG;
-
-  const homeArenaPPG = seededVal(hs, 1, base - 9, base + 9);
-  const awayRoadPPG = seededVal(as_, 2, base - 13, base + 5);
-  const h2hAvgTotal = parseFloat(
-    ((homeArenaPPG + awayRoadPPG) * seededVal(cs, 3, 0.91, 1.09)).toFixed(1),
-  );
-  const homeFt = seededVal(hs, 4, dna.grind ? 63 : 69, dna.grind ? 75 : 83, 0);
-  const awayFt = seededVal(as_, 5, dna.grind ? 63 : 69, dna.grind ? 75 : 83, 0);
-  const homePt3 = seededVal(hs, 6, dna.grind ? 28 : 32, dna.grind ? 37 : 41, 0);
-  const awayPt3 = seededVal(
-    as_,
-    7,
-    dna.grind ? 28 : 32,
-    dna.grind ? 37 : 41,
-    0,
-  );
-  const homeFgPct = seededVal(hs, 8, 43, 46, 0);
-  const awayFgPct = seededVal(as_, 9, 41, 45, 0);
-  const homeFreeThrowPct = seededVal(hs, 10, 67, 82, 0);
-  const awayFreeThrowPct = seededVal(as_, 11, 65, 80, 0);
-  const homeThreePtPct = seededVal(hs, 12, 31, 39, 0);
-  const awayThreePtPct = seededVal(as_, 13, 29, 37, 0);
-  const homeOffPpg = parseFloat(seededVal(hs, 14, base - 5, base + 3).toFixed(1));
-  const awayOffPpg = parseFloat(seededVal(as_, 15, base - 7, base + 1).toFixed(1));
-  const homeDefPpg = parseFloat(seededVal(hs, 16, base - 8, base + 4).toFixed(1));
-  const awayDefPpg = parseFloat(seededVal(as_, 17, base - 10, base + 2).toFixed(1));
-  const homePointDiff = parseFloat((homeOffPpg - awayDefPpg).toFixed(1));
-  const awayPointDiff = parseFloat((awayOffPpg - homeDefPpg).toFixed(1));
-  const homeLeadTime = `${Math.floor(seededVal(hs, 18, 18, 42, 0))}% in lead`;
-  const awayLeadTime = `${Math.floor(seededVal(as_, 18, 16, 38, 0))}% in lead`;
-  const collapsePct = seededVal(
-    cs,
-    19,
-    dna.grind ? 18 : 5,
-    dna.grind ? 48 : 32,
-    0,
-  );
-
-  const injRollH = seededVal(hs, 9, 0, 100, 0);
-  const homeInjuries =
-    false
-      ? INJURY_POOL_HOME[
-          Math.floor(seededVal(hs, 10, 0, INJURY_POOL_HOME.length - 0.01, 0))
-        ]
-      : "No injury data — awaiting news scan or manual entry";
-  const injRollA = seededVal(as_, 9, 0, 100, 0);
-  const awayInjuries =
-    false
-      ? INJURY_POOL_AWAY[
-          Math.floor(seededVal(as_, 10, 0, INJURY_POOL_AWAY.length - 0.01, 0))
-        ]
-      : "No injury data — awaiting news scan or manual entry";
-
-  // Generate simple seeded lineups to avoid repeated static placeholders
-  const positions = ["PG", "SG", "SF", "PF", "C"];
-  const sampleNames = [
-    "J. Adams",
-    "M. Brooks",
-    "S. Carter",
-    "D. Edwards",
-    "R. Flores",
-    "L. Gomez",
-    "P. Hernandez",
-    "T. Irwin",
-    "K. Johnson",
-    "N. King",
-    "O. Lopez",
-    "B. Martin",
-    "C. Nelson",
-    "R. Ortiz",
-    "S. Perez",
-  ];
-
-  const homeLineup = positions.map((pos, i) => ({
-    pos,
-    name: `${homeTeam.split(" ")[0] || "Home"} ${sampleNames[(hs + i) % sampleNames.length]}`,
-  }));
-  const awayLineup = positions.map((pos, i) => ({
-    pos,
-    name: `${awayTeam.split(" ")[0] || "Away"} ${sampleNames[(as_ + i) % sampleNames.length]}`,
-  }));
-
-  const defRoll = seededVal(cs, 12, 0, 100, 0);
-  const defStallRisk: "LOW" | "MODERATE" | "HIGH" =
-    defRoll > 65 ? "HIGH" : defRoll > 35 ? "MODERATE" : "LOW";
-  const defStallNote =
-    defStallRisk === "HIGH"
-      ? `🚨 PACE-DROP STALL SENSOR TRIGGERED: Historical data shows severe pace deceleration in the 2nd half. High probability of Foul-Induced Stalling (Key initiators picking up 4th/5th fouls). ${dna.grind ? "Grind-league DNA amplifies this structural collapse." : "Half-court isolation traps expected."} UNDER ALERT issued if early OVER trajectory stalls.`
-      : defStallRisk === "MODERATE"
-        ? `⚠ MODERATE STALL RISK: Vulnerable to 3rd-quarter foul trouble causing artificial pace drops. If the primary PG sits, expect transition scoring to die. Watch live possessions.`
-        : `✓ LOW STALL RISK: Transition basketball is structurally embedded here. Rotation depth absorbs foul trouble well. Late-game isolation stalling is historically improbable.`;
-
-  const offRoll = seededVal(cs, 13, 0, 100, 0);
-  const offSurgeRisk: "LOW" | "MODERATE" | "HIGH" =
-    offRoll > 65 ? "HIGH" : offRoll > 35 ? "MODERATE" : "LOW";
-  const offSurgeNote =
-    offSurgeRisk === "HIGH"
-      ? `High-tempo patterns detected. Late foul accumulation + FT shooting volume likely to inflate final total. If backing UNDER — Q4 surge risk is real.`
-      : offSurgeRisk === "MODERATE"
-        ? `Moderate surge risk. Potential late FT volume in Q4. Monitor if UNDER-backing and game is tight inside last 2 min.`
-        : `Scoring trajectory consistent and contained. Low UNDER-to-OVER blowout risk from historical data.`;
-
-  const otRoll = seededVal(cs, 14, 0, 100, 0);
-  const otRisk: "LOW" | "MODERATE" | "HIGH" =
-    otRoll > 68 ? "HIGH" : otRoll > 38 ? "MODERATE" : "LOW";
-  const otClosePct = Math.floor(seededVal(cs, 15, 18, 46, 0));
-  const otNote =
-    otRisk === "HIGH"
-      ? `H2H data shows ~${otClosePct}% of meetings decided by ≤5 pts. OT probability elevated — Rule 18 HB+8 applied. Expect 8–15 pts added if OT triggered.`
-      : otRisk === "MODERATE"
-        ? `Close finishes in ~${Math.floor(seededVal(cs, 15, 10, 26, 0))}% of recent H2H. OT possible — monitor margin inside Q4.`
-        : `Teams show decisive regulation margins in H2H (${Math.floor(seededVal(cs, 15, 6, 18, 0))}% OT rate). Regulation finish expected.`;
-
-  const homeFoulRate = seededVal(hs, 18, 18, 24, 0);
-  const awayFoulRate = seededVal(as_, 19, 18, 24, 0);
-  const homeFtAttempts = Math.round(seededVal(hs, 20, 17, 24, 0));
-  const awayFtAttempts = Math.round(seededVal(as_, 21, 17, 24, 0));
-  const totalFoulRate = homeFoulRate + awayFoulRate;
-  const totalFtAttempts = homeFtAttempts + awayFtAttempts;
-  const homeFoulWeightedAvg = homeFoulRate;
-  const awayFoulWeightedAvg = awayFoulRate;
-  const homeFtAttemptWeightedAvg = homeFtAttempts;
-  const awayFtAttemptWeightedAvg = awayFtAttempts;
-  const homeRestDays = Math.round(seededVal(hs, 22, 0, 2, 0));
-  const awayRestDays = Math.round(seededVal(as_, 23, 0, 2, 0));
-  const leagueFoulAverage = seededVal(cs, 24, 38, 44, 0);
-  const refereeStrictness = seededVal(cs, 25, 4, 8, 0);
-  const fatigueRisk: "LOW" | "MODERATE" | "HIGH" =
-    homeRestDays === 0 || awayRestDays === 0 || leagueFoulAverage > 40
-      ? "HIGH"
-      : homeRestDays === 1 || awayRestDays === 1
-      ? "MODERATE"
-      : "LOW";
-  const fatigueNote =
-    fatigueRisk === "HIGH"
-      ? `Schedule stress detected: ${homeRestDays}d / ${awayRestDays}d rest. Fatigue is amplifying foul volume and stall probability.`
-      : fatigueRisk === "MODERATE"
-      ? `Moderate schedule stress. Watch warmups and late rotations.`
-      : `Rest profile normal. No critical B2B or 3-in-4 signal.`;
-  const foulEngineStatus: "SAFE" | "HIGH RISK" =
-    totalFtAttempts >= 45 || totalFoulRate >= 42 || leagueFoulAverage > 40
-      ? "HIGH RISK"
-      : "SAFE";
-  const foulEngineNote =
-    foulEngineStatus === "HIGH RISK"
-      ? "Extreme free-throw volume detected. Clock stoppage will artificially inflate total points. UNDER bets severely compromised."
-      : "Standard foul pacing. Regulation finish expected.";
-
-  return {
-    homeArenaPPG,
-    awayRoadPPG,
-    h2hAvgTotal,
-    homeFt,
-    awayFt,
-    homePt3,
-    awayPt3,
-    homeFgPct,
-    awayFgPct,
-    homeFreeThrowPct,
-    awayFreeThrowPct,
-    homeThreePtPct,
-    awayThreePtPct,
-    homeOffPpg,
-    awayOffPpg,
-    homeDefPpg,
-    awayDefPpg,
-    homePointDiff,
-    awayPointDiff,
-    homeLeadTime,
-    awayLeadTime,
-    collapsePct,
-    homeInjuries,
-    awayInjuries,
-    homeRecentForm: Array.from({ length: 5 }, (_, i) =>
-      seededVal(hs, 20 + i, 0, 1, 0) > 0.5 ? "W" : "L",
-    ),
-    awayRecentForm: Array.from({ length: 5 }, (_, i) =>
-      seededVal(as_, 20 + i, 0, 1, 0) > 0.5 ? "W" : "L",
-    ),
-    homeLineup,
-    awayLineup,
-    defStallRisk,
-    defStallNote,
-    offSurgeRisk,
-    offSurgeNote,
-    otRisk,
-    otNote,
-    homeFoulRate,
-    awayFoulRate,
-    homeFtAttempts,
-    awayFtAttempts,
-    homeFoulWeightedAvg,
-    awayFoulWeightedAvg,
-    homeFtAttemptWeightedAvg,
-    awayFtAttemptWeightedAvg,
-    homeRestDays,
-    awayRestDays,
-    leagueFoulAverage,
-    refereeStrictness,
-    homeForm50: [],
-    awayForm50: [],
-    h2h50: [],
-    fatigueRisk,
-    fatigueNote,
-    foulEngineStatus,
-    foulEngineNote,
-    sourcesScanned: Math.floor(seededVal(cs, 16, 2400000, 8600000, 0)),
-    researchMs: Math.floor(seededVal(cs, 17, 820, 3400, 0)),
-  };
-}
 
 // ─── Master Rulebook V3 Engine (Rules 1–18, Anti-Template, Anti-Hallucination) ─
