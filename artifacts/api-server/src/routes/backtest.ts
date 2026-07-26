@@ -121,7 +121,7 @@ router.get("/v1/backtest", (_req: Request, res: Response) => {
     .map(([rule, v]) => ({ rule, fired: v.fired, withinPct: +((v.within / v.fired) * 100).toFixed(0), avgAbsErr: +(v.absErrSum / v.fired).toFixed(1) }))
     .sort((a, b) => b.fired - a.fired);
 
-  res.json({
+  return res.json({
     note: "Range graded vs actual totals from warehouse history, anti-lookahead enforced (MIN_PRIOR=" + MIN_PRIOR + "). bias>0 = engine predicts too LOW (under-lean); bias<0 = too HIGH. Decisions vs real lines need Archive data.",
     summary,
     rules,

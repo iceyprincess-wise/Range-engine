@@ -1,11 +1,12 @@
 import { Router, type Request, type Response } from "express";
 import { updateQuotaFromResponse } from "../lib/quotaTracker";
+import { rememberGames, persist } from "../lib/warehouse";
 
 const router = Router();
 const RAPIDAPI_KEY = process.env.RAPIDAPI_KEY;
 const RAPIDAPI_HOST = process.env.RAPIDAPI_HOST || "basketapi1.p.rapidapi.com";
 
-const apiFetch = async (p: string) => {
+const apiFetch = async (p: string): Promise<any> => {
   const response = await fetch("https" + "://" + RAPIDAPI_HOST + p, {
     headers: { "x-rapidapi-key": RAPIDAPI_KEY ?? "", "x-rapidapi-host": RAPIDAPI_HOST },
   });
@@ -55,10 +56,10 @@ router.get("/v1/games/tournaments", async (_req: Request, res: Response) => {
     }
     const payload = { date: seg, count: tours.length, tournaments: tours };
     cache.set(key, { expiresAt: midnight(), value: payload });
-    res.json(payload);
+    return res.json(payload);
   } catch (error) {
     console.error("/v1/games/tournaments error:", error);
-    res.status(502).json({ error: error instanceof Error ? error.message : "discovery failed" });
+    return res.status(502).json({ error: error instanceof Error ? error.message : "discovery failed" });
   }
 });
 
@@ -73,6 +74,8 @@ router.get("/v1/games/schedule", async (req: Request, res: Response) => {
 
   try {
     const data = await apiFetch("/api/basketball/tournament/" + tid + "/schedules/" + seg);
+    rememberGames(data?.events || []);
+    persist();
     const games = (data?.events || []).map((e: any) => ({
       id: e.id,
       home: e.homeTeam?.name ?? "?",
@@ -84,10 +87,10 @@ router.get("/v1/games/schedule", async (req: Request, res: Response) => {
     }));
     const payload = { tid, date: seg, count: games.length, games };
     cache.set(key, { expiresAt: midnight(), value: payload });
-    res.json(payload);
+    return res.json(payload);
   } catch (error) {
     console.error("/v1/games/schedule error:", error);
-    res.status(502).json({ error: error instanceof Error ? error.message : "schedule fetch failed" });
+    return res.status(502).json({ error: error instanceof Error ? error.message : "schedule fetch failed" });
   }
 });
 

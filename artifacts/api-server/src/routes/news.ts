@@ -34,10 +34,10 @@ router.get("/v1/news", async (req: Request, res: Response) => {
 
     const payload = { provenance: "news-rss", team, fetchedAt: new Date().toISOString(), items };
     cache.set(key, { expiresAt: Date.now() + TTL, value: payload });
-    res.json(payload);
+    return res.json(payload);
   } catch (error) {
     console.error("/api/v1/news error:", error);
-    res.status(502).json({ error: "news fetch failed", items: [] });
+    return res.status(502).json({ error: "news fetch failed", items: [] });
   }
 });
 

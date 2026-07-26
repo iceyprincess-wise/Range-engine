@@ -275,6 +275,7 @@ export function runEngine(opts: {
   const awayRestDays = opts.awayRestDays ?? 1;
   const leagueFoulAverage = opts.leagueFoulAverage ?? 0;
   const refereeStrictness = opts.refereeStrictness ?? 0;
+  const restDataProvided = opts.homeRestDays != null || opts.awayRestDays != null;
   const fatiguePenalty =
     (homeRestDays === 0 ? 2 : homeRestDays === 1 ? 1 : 0) +
     (awayRestDays === 0 ? 2 : awayRestDays === 1 ? 1 : 0);
@@ -287,7 +288,7 @@ export function runEngine(opts: {
   if (refereeSignal && margin <= 8) {
     r10_hb += 2.5;
   }
-  if (fatiguePenalty > 0) {
+  if (restDataProvided && fatiguePenalty > 0) {
     r10_hb += Math.min(4, fatiguePenalty);
   }
 

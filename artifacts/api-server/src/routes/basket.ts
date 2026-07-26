@@ -22,7 +22,7 @@ const setCache = (cacheKey: string, value: any, ttl = 15_000) => {
   cache.set(cacheKey, { value, expiresAt: Date.now() + ttl });
 };
 
-const basketFetch = async (path: string) => {
+const basketFetch = async (path: string): Promise<any> => {
   const url = `https://${RAPIDAPI_HOST}${path}`;
   const response = await fetch(url, {
     headers: {
@@ -183,7 +183,7 @@ router.get("/basket/match/:id/statistics", async (req: Request, res: Response) =
       return res.json(cached);
     }
 
-    const response = await basketFetch(`/api/basketball/match/${encodeURIComponent(id)}/statistics`);
+    const response = await basketFetch(`/api/basketball/match/${encodeURIComponent(String(id))}/statistics`);
     setCache(cacheKey, response, 15_000);
     return res.json(response);
   } catch (error: any) {

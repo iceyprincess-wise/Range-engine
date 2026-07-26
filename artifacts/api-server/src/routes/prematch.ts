@@ -1,5 +1,6 @@
 import { Router, type Request, type Response } from "express";
 import { quota, updateQuotaFromResponse } from "../lib/quotaTracker";
+import { store, persist, markDirty, rememberGames } from "../lib/warehouse";
 import fs from "node:fs";
 import path from "node:path";
 
@@ -7,33 +8,10 @@ const router = Router();
 const RAPIDAPI_KEY = process.env.RAPIDAPI_KEY;
 const RAPIDAPI_HOST = process.env.RAPIDAPI_HOST || "basketapi1.p.rapidapi.com";
 
-// ---------- permanent warehouse (finished games never change) ----------
-const DATA_DIR = path.join(process.cwd(), "data");
-const STORE_PATH = path.join(DATA_DIR, "store.json");
-
-type StoredTeam = { id: number; name: string };
-type Store = { teams: Record<string, StoredTeam>; games: Record<string, any>; stats: Record<string, any> };
-
-const loadStore = (): Store => {
-  try { return JSON.parse(fs.readFileSync(STORE_PATH, "utf8")); }
-  catch { return { teams: {}, games: {}, stats: {} }; }
-};
-const store: Store = loadStore();
-if (!store.stats) store.stats = {};
-let dirty = false;
-const persist = () => {
-  if (!dirty) return;
-  try {
-    fs.mkdirSync(DATA_DIR, { recursive: true });
-    fs.writeFileSync(STORE_PATH, JSON.stringify(store));
-    dirty = false;
-  } catch (err) { console.error("warehouse persist failed:", err); }
-};
-setInterval(persist, 30_000).unref();
 
 // ---------- quota tracking ----------
 
-const apiFetch = async (p: string) => {
+const apiFetch = async (p: string): Promise<any> => {
   const response = await fetch("https" + "://" + RAPIDAPI_HOST + p, {
     headers: { "x-rapidapi-key": RAPIDAPI_KEY ?? "", "x-rapidapi-host": RAPIDAPI_HOST },
   });
@@ -43,15 +21,8 @@ const apiFetch = async (p: string) => {
 };
 
 // ---------- helpers ----------
-const isFinished = (e: any) => e?.status?.type === "finished";
 const pts = (e: any, side: "home" | "away") => e?.[side + "Score"]?.current ?? null;
 
-const rememberGames = (events: any[]) => {
-  for (const e of events) {
-    if (!e?.id || !isFinished(e)) continue;
-    if (!store.games[e.id]) { store.games[e.id] = e; dirty = true; }
-  }
-};
 
 const searchTeam = async (name: string) => {
   const key = name.trim().toLowerCase();
@@ -61,7 +32,7 @@ const searchTeam = async (name: string) => {
   if (!hit) throw new Error("No team found for \"" + name + "\"");
   const team = { id: hit.entity.id as number, name: hit.entity.name as string };
   store.teams[key] = team;
-  dirty = true;
+  markDirty();
   return team;
 };
 
@@ -152,7 +123,7 @@ const enrichStats = async (games: any[], max: number) => {
     try {
       const data = await apiFetch("/api/basketball/match/" + g.id + "/statistics");
       store.stats[g.id] = parseStatItems(data);
-      dirty = true;
+      markDirty();
     } catch { break; }
   }
 };
@@ -212,7 +183,7 @@ router.get("/v1/prematch", async (req: Request, res: Response) => {
     const h2hAvgTotal = h2hTotals.length ? h2hTotals.reduce((s, v) => s + v, 0) / h2hTotals.length : null;
 
     persist();
-    res.json({
+    return res.json({
       provenance: apiOk ? "real" : "warehouse-stale",
       fetchedAt: new Date().toISOString(),
       home: { id: home.id, name: home.name, ...summarize(homeGames, home.id), quarters: quarterProfile(homeGames), shooting: teamShooting(homeGames, home.id) },
@@ -223,7 +194,7 @@ router.get("/v1/prematch", async (req: Request, res: Response) => {
     });
   } catch (error) {
     console.error("/api/v1/prematch error:", error);
-    res.status(502).json({ error: error instanceof Error ? error.message : "prematch fetch failed" });
+    return res.status(502).json({ error: error instanceof Error ? error.message : "prematch fetch failed" });
   }
 });
 
