@@ -1470,7 +1470,7 @@ export function RangeEngine() {
           <div className="w-6 h-3 rounded border border-emerald-400 flex items-center px-0.5 bg-emerald-950/50">
             <div className="w-full h-full bg-emerald-500 rounded-sm"></div>
           </div>
-          <span onClick={openGames} className="text-emerald-300 font-black text-xs cursor-pointer">{quotaInfo.remaining ?? 100}/{quotaInfo.limit ?? 100}</span>
+          <span onClick={openGames} className="text-emerald-300 font-black text-xs cursor-pointer">{Math.max(0, quotaInfo.remaining ?? 100)}/{quotaInfo.limit ?? 100}</span>
         </div>
       </div>
 
