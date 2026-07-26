@@ -94,7 +94,7 @@ export function runEngine(opts: {
   // TASK 12: Gender & Live Match adjustments
   // Apply a gender multiplier: women's games historically have lower team PPG
   const gender = opts.gender ?? "Men";
-  const genderMultiplier = gender === "Women" ? 0.93 : 1.0;
+  const genderMultiplier = gender === "Women" && proxyUsed ? 0.93 : 1.0;
   homeEffPPG = parseFloat((homeEffPPG * genderMultiplier).toFixed(1));
   awayEffPPG = parseFloat((awayEffPPG * genderMultiplier).toFixed(1));
 
