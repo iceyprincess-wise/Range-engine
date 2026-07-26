@@ -50,6 +50,15 @@ export async function fetchResearchData(
     preData = null;
   }
 
+  let leagueDnaMeasured: any = null;
+  try {
+    const ldRes = await fetch(`${API_BASE}/api/v1/league-dna?league=${encodeURIComponent(league || "")}`);
+    if (ldRes.ok) {
+      const ld = await ldRes.json();
+      if (ld?.measured) leagueDnaMeasured = { games: ld.games, avgTotal: ld.avgTotal, sd: ld.sd };
+    }
+  } catch { leagueDnaMeasured = null; }
+
   const response = await fetch(`${API_BASE}/api/v1/sync?${params.toString()}`).catch(() => null);
 
   if ((!response || !response.ok) && !preData) {
@@ -310,6 +319,7 @@ export async function fetchResearchData(
     awayRestDays,
     leagueFoulAverage,
     refereeStrictness,
+    leagueDnaMeasured: leagueDnaMeasured ?? null,
     homeQuarters: apiData.homeQuarters ?? null,
     awayQuarters: apiData.awayQuarters ?? null,
     homeForm50,

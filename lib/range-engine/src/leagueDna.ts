@@ -12,6 +12,16 @@ export const LEAGUE_DNA_PROFILES: Record<
     noOT?: boolean;
   }
 > = {
+  WNBA: {
+    name: "WNBA (women's pro)",
+    proxyPPG: 81,
+    hbDNA: 0,
+    lbDNA: 0,
+    maxWidth: 18,
+    hammerEdge: 8,
+    buffer: 2.0,
+    grind: false,
+  },
   TBT: {
     name: "TBT Elam Ending (36-min)",
     proxyPPG: 68,
@@ -129,6 +139,8 @@ export function getLeagueDNA(league: string) {
   const lg = league.toUpperCase();
   if (lg.includes("TBT") || lg.includes("BASKETBALL TOURNAMENT"))
     return { ...LEAGUE_DNA_PROFILES.TBT, key: "TBT" };
+  if (lg.includes("WNBA"))
+    return { ...LEAGUE_DNA_PROFILES.WNBA, key: "WNBA" };
   if (lg.includes("NBA")) return { ...LEAGUE_DNA_PROFILES.NBA, key: "NBA" };
   if (
     lg.includes("EUROLEAGUE") ||

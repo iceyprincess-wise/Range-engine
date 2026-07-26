@@ -23,6 +23,7 @@ export function runEngine(opts: {
   away_arena_ppg?: number;
   h2h_avg_total?: number;
   collapse_pct?: number;
+  league_measured?: { games: number; avgTotal: number } | null;
   homeFoulRate?: number;
   awayFoulRate?: number;
   homeFtAttempts?: number;
@@ -88,7 +89,8 @@ export function runEngine(opts: {
   const home_def = H.def_rating;
   const away_def = A.def_rating;
   const margin = Math.abs(homeEffPPG - awayEffPPG);
-  const leagueAvg = dna.proxyPPG;
+  const leagueMeasuredActive = !!(opts.league_measured && opts.league_measured.games >= 15);
+  const leagueAvg = leagueMeasuredActive ? +(opts.league_measured!.avgTotal / 2).toFixed(1) : dna.proxyPPG;
   const avg_eff = (homeEffPPG / leagueAvg + awayEffPPG / leagueAvg) / 2;
 
   // TASK 12: Gender & Live Match adjustments
@@ -700,7 +702,7 @@ export function runEngine(opts: {
     alt_line_note,
     proxyCapped,
     capValue,
-    leagueDNAName: dna.name,
+    leagueDNAName: leagueMeasuredActive ? `${dna.name} · warehouse-measured (${opts.league_measured!.games}g, avg ${opts.league_measured!.avgTotal})` : dna.name,
     whyNote,
     whyMightFail,
     otHazard,

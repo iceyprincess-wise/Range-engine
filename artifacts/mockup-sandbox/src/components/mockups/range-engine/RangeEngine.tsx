@@ -1200,6 +1200,7 @@ export function RangeEngine() {
             rd?.h2hAvgTotal
           ),
           collapse_pct: rd?.collapsePct ?? 0,
+          league_measured: rd?.leagueDnaMeasured ?? null,
         });
         setTimeout(() => {
           setResult(res);
@@ -1261,6 +1262,7 @@ export function RangeEngine() {
           home_arena_ppg: researchData?.homeArenaPPG, away_arena_ppg: researchData?.awayRoadPPG,
           h2h_avg_total: researchData?.h2hAvgTotal, use_weighted: true,
           collapse_pct: researchData?.collapsePct ?? 0,
+          league_measured: researchData?.leagueDnaMeasured ?? null,
           is_rerun: true,
           rerun_timestamp: new Date().toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", second: "2-digit" }),
         });
@@ -1340,6 +1342,7 @@ export function RangeEngine() {
         home_pt3: freshResearch?.homePt3,
         away_pt3: freshResearch?.awayPt3,
         collapse_pct: freshResearch?.collapsePct ?? 0,
+        league_measured: freshResearch?.leagueDnaMeasured ?? null,
         is_rerun: true,
         rerun_timestamp: freshTime,
       });
