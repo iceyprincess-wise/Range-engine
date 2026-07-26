@@ -909,8 +909,8 @@ export function RangeEngine() {
     const dna = getLeagueDNA(lg);
     setHomeTeam(hist.homeTeam ?? "");
     setAwayTeam(hist.awayTeam ?? "");
-    setHomeInfo(lookupTeam(hist.homeTeam ?? "", dna));
-    setAwayInfo(lookupTeam(hist.awayTeam ?? "", dna));
+    setHomeInfo(hist.homeInfoSnap ?? lookupTeam(hist.homeTeam ?? "", dna));
+    setAwayInfo(hist.awayInfoSnap ?? lookupTeam(hist.awayTeam ?? "", dna));
     setRerunResult(hist.rerunResult ?? null);
     setRerunPhase(hist.rerunResult ? "done" : "idle");
     setResult(hist.result);
@@ -1222,6 +1222,8 @@ export function RangeEngine() {
             koTime,
             result: res,
             outcome: "PENDING",
+          homeInfoSnap: hInfo,
+          awayInfoSnap: aInfo,
             earlyRead,
             bookmaker,
             revalidationRequested: false,

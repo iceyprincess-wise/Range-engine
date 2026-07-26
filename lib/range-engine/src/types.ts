@@ -43,6 +43,8 @@ export interface EngineOutput {
 }
 
 export interface HistoryEntry {
+  homeInfoSnap?: any;
+  awayInfoSnap?: any;
   id: string;
   timestamp: string;
   date: string;

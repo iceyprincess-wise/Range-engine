@@ -9,8 +9,20 @@ export const LEAGUE_DNA_PROFILES: Record<
     hammerEdge: number;
     buffer: number;
     grind: boolean;
+    noOT?: boolean;
   }
 > = {
+  TBT: {
+    name: "TBT Elam Ending (36-min)",
+    proxyPPG: 68,
+    hbDNA: 0,
+    lbDNA: 0,
+    maxWidth: 16,
+    hammerEdge: 8,
+    buffer: 2.0,
+    grind: true,
+    noOT: true,
+  },
   NBA: {
     name: "High-Octane NBA",
     proxyPPG: 113.8,
