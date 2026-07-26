@@ -705,6 +705,8 @@ export function RangeEngine() {
   const [underHigh, setUnderHigh] = useState("");
   const [showAltLines, setShowAltLines] = useState(false);
   const [altLines, setAltLines] = useState<number[]>([]);
+  const [showAltLinesU, setShowAltLinesU] = useState(false);
+  const [altLinesU, setAltLinesU] = useState<number[]>([]);
 
   const MARKET_LINE_LOW_BOUND = 120.5;
   const MARKET_LINE_HIGH_BOUND = 300.5;
@@ -2515,14 +2517,14 @@ MATCH CONTEXT — Rule 1 (Time Sync)
                               <span
                                 className={`text-[9px] font-black ${researchData?.otRisk === "HIGH" ? "text-yellow-400" : researchData?.otRisk === "MODERATE" ? "text-yellow-400" : "text-yellow-500"}`}
                               >
-                                {researchData?.otRisk ?? "LOW"}
+                                {researchData?.otRisk ?? "—"}
                               </span>
                               <span className="text-zinc-700 text-[9px]">
                                 OT probability
                               </span>
                             </div>
                             <p className="text-[10px] text-zinc-400 leading-relaxed">
-                              {researchData?.otNote ?? "Live API data unavailable."}
+                              {researchData?.otNote ?? "Needs ≥10 H2H meetings in warehouse — OT risk not assessed. Nothing invented."}
                             </p>
                           </div>
                         </div>
@@ -2683,9 +2685,6 @@ Unavailable data is labeled — never invented.`);
                           ))}
                         </div>
                       )}
-                      <p className="text-[9px] text-zinc-700">
-                        Engine uses LOWEST (best OVER edge)
-                      </p>
                     </div>
                     <div className="space-y-2">
                       <p className="text-[9px] text-yellow-400 font-bold uppercase tracking-widest">
@@ -2713,6 +2712,44 @@ Unavailable data is labeled — never invented.`);
                       <p className="text-[9px] text-zinc-700">
                         Engine uses HIGHEST (best UNDER edge)
                       </p>
+                      <div className="flex items-center justify-between mt-2">
+                        <p className="text-[9px] text-zinc-700">Alternates auto-fill from your window</p>
+                        <button
+                          onClick={() => {
+                            setShowAltLinesU((s) => !s);
+                            if (!showAltLinesU) {
+                              const low = parseFloat(underLow || "NaN");
+                              const high = parseFloat(underHigh || "NaN");
+                              const list: number[] = [];
+                              if (!isNaN(low) && !isNaN(high) && low < high) {
+                                for (let v = low + 0.5; v < high; v += 0.5) {
+                                  if (Math.abs(v % 1 - 0.5) < 1e-9) list.push(parseFloat(v.toFixed(1)));
+                                }
+                              }
+                              setAltLinesU(list);
+                            }
+                          }}
+                          className="text-[10px] px-2 py-1 rounded border border-yellow-950 text-zinc-300 bg-zinc-900"
+                        >
+                          {showAltLinesU ? "Hide alternatives" : "Show alternatives"}
+                        </button>
+                      </div>
+                      {showAltLinesU && altLinesU.length > 0 && (
+                        <div className="mt-2 grid grid-cols-4 gap-2">
+                          {altLinesU.map((val) => (
+                            <div key={val} className="flex items-center gap-2 text-[11px]">
+                              <span className="w-6 h-6 rounded border border-yellow-950 flex items-center justify-center text-zinc-300">[ ]</span>
+                              <div className="flex-1">
+                                <div className="text-zinc-200 font-mono">{val.toFixed(1)}</div>
+                                <div className="text-[10px] text-zinc-500 flex gap-2 mt-0.5">
+                                  <button onClick={() => { setOverLow(String(val)); setOverHigh(String(val)); }} className="px-1 py-0.5 rounded border border-yellow-700 text-yellow-300">O</button>
+                                  <button onClick={() => { setUnderLow(String(val)); setUnderHigh(String(val)); }} className="px-1 py-0.5 rounded border border-yellow-700 text-yellow-300">U</button>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>

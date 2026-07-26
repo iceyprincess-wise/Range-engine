@@ -605,10 +605,11 @@ export function runEngine(opts: {
   let alt_line_under: number | null = null;
   let alt_line_note = "";
   if (decision === "NO ACTION") {
-    const uT = hb + underBuf;
+    const relCushion = reliability === "Strong" ? 0 : 5;
+    const uT = hb + underBuf + relCushion;
     let uCand = Math.floor(uT) + 0.5;
     if (uCand < uT) uCand += 1;
-    const oT = lb - overBuf;
+    const oT = lb - overBuf - relCushion;
     let oCand = Math.ceil(oT) - 0.5;
     if (oCand > oT) oCand -= 1;
     alt_line_under = +uCand.toFixed(1);
@@ -617,7 +618,7 @@ export function runEngine(opts: {
     const primary = leanSide === "OVER" && alt_line_over
       ? `OVER ${alt_line_over}`
       : `UNDER ${alt_line_under}`;
-    alt_line_note = `Watch-line: ${primary} clears the ±${hook_buffer} buffer${leanSide ? ` (lean: ${leanSide})` : ""}. If the market (live spike or alt menu) offers it, the edge is real — stake there, not at the blocked line.`;
+    alt_line_note = `Watch-line: ${primary} clears the ±${hook_buffer} buffer${relCushion ? ` + ${relCushion}pt reliability cushion` : ""}${leanSide ? ` (lean: ${leanSide})` : ""}. If the market (live spike or alt menu) offers it, the edge is real — stake there, not at the blocked line.`;
     triggered.push(`Alt-Line Reco: ${alt_line_note}`);
   }
   const line_position: "Below" | "Inside" | "Above" | "Mixed" =
