@@ -97,7 +97,7 @@ router.get("/v1/backtest", (_req: Request, res: Response) => {
     const actual = (pts(g, "home") as number) + (pts(g, "away") as number);
     const within = actual >= out.lb && actual <= out.hb;
     const err = +(actual - out.midpoint).toFixed(1);
-    rows.push({ match: `${g.homeTeam.name} vs ${g.awayTeam.name}`, actual, lb: out.lb, hb: out.hb, midpoint: out.midpoint, within, err });
+    rows.push({ league, match: `${g.homeTeam.name} vs ${g.awayTeam.name}`, actual, lb: out.lb, hb: out.hb, midpoint: out.midpoint, within, err });
 
     for (const r of out.triggered_rules || []) {
       ruleTable[r] = ruleTable[r] || { fired: 0, within: 0, absErrSum: 0 };
@@ -117,6 +117,24 @@ router.get("/v1/backtest", (_req: Request, res: Response) => {
       }
     : { gamesTested: 0 };
 
+  const byLeague: Record<string, { n: number; within: number; errSum: number; absErrSum: number }> = {};
+  for (const r of rows) {
+    const k = r.league || "Unknown";
+    byLeague[k] = byLeague[k] || { n: 0, within: 0, errSum: 0, absErrSum: 0 };
+    byLeague[k].n++;
+    if (r.within) byLeague[k].within++;
+    byLeague[k].errSum += r.err;
+    byLeague[k].absErrSum += Math.abs(r.err);
+  }
+  const perLeague = Object.entries(byLeague)
+    .map(([lg, v]) => ({
+      league: lg,
+      games: v.n,
+      withinRangePct: +((v.within / v.n) * 100).toFixed(1),
+      mae: +(v.absErrSum / v.n).toFixed(1),
+      bias: +(v.errSum / v.n).toFixed(1),
+    }))
+    .sort((a, b) => b.games - a.games);
   const rules = Object.entries(ruleTable)
     .map(([rule, v]) => ({ rule, fired: v.fired, withinPct: +((v.within / v.fired) * 100).toFixed(0), avgAbsErr: +(v.absErrSum / v.fired).toFixed(1) }))
     .sort((a, b) => b.fired - a.fired);
@@ -124,6 +142,7 @@ router.get("/v1/backtest", (_req: Request, res: Response) => {
   return res.json({
     note: "Range graded vs actual totals from warehouse history, anti-lookahead enforced (MIN_PRIOR=" + MIN_PRIOR + "). bias>0 = engine predicts too LOW (under-lean); bias<0 = too HIGH. Decisions vs real lines need Archive data.",
     summary,
+    perLeague,
     rules,
     games: rows,
   });
