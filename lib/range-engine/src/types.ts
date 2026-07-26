@@ -28,6 +28,9 @@ export interface EngineOutput {
   best_over_line: number;
   best_under_line: number;
   line_position: "Below" | "Inside" | "Above" | "Mixed";
+  alt_line_over: number | null;
+  alt_line_under: number | null;
+  alt_line_note: string;
   proxyCapped: boolean;
   capValue: number;
   leagueDNAName: string;

@@ -600,6 +600,26 @@ export function runEngine(opts: {
   const all_lines = [best_over_line, best_under_line];
   const below = all_lines.filter((l) => l < lb).length;
   const above = all_lines.filter((l) => l > hb).length;
+  // ── Alt-Line Watch Recommender: NO ACTION must never be empty-handed ─────
+  let alt_line_over: number | null = null;
+  let alt_line_under: number | null = null;
+  let alt_line_note = "";
+  if (decision === "NO ACTION") {
+    const uT = hb + underBuf;
+    let uCand = Math.floor(uT) + 0.5;
+    if (uCand < uT) uCand += 1;
+    const oT = lb - overBuf;
+    let oCand = Math.ceil(oT) - 0.5;
+    if (oCand > oT) oCand -= 1;
+    alt_line_under = +uCand.toFixed(1);
+    alt_line_over = oCand > 0 ? +oCand.toFixed(1) : null;
+    const leanSide = lean.includes("UNDER") ? "UNDER" : lean.includes("OVER") ? "OVER" : null;
+    const primary = leanSide === "OVER" && alt_line_over
+      ? `OVER ${alt_line_over}`
+      : `UNDER ${alt_line_under}`;
+    alt_line_note = `Watch-line: ${primary} clears the ±${hook_buffer} buffer${leanSide ? ` (lean: ${leanSide})` : ""}. If the market (live spike or alt menu) offers it, the edge is real — stake there, not at the blocked line.`;
+    triggered.push(`Alt-Line Reco: ${alt_line_note}`);
+  }
   const line_position: "Below" | "Inside" | "Above" | "Mixed" =
     below === 2
       ? "Below"
@@ -675,6 +695,9 @@ export function runEngine(opts: {
     best_over_line,
     best_under_line,
     line_position,
+    alt_line_over,
+    alt_line_under,
+    alt_line_note,
     proxyCapped,
     capValue,
     leagueDNAName: dna.name,
