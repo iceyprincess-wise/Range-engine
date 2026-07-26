@@ -168,15 +168,15 @@ export const LiveMatrixHub: React.FC<LiveMatrixHubProps> = ({ history, setHistor
   };
 
   return (
-    <div className="p-5 bg-gradient-to-b from-slate-950 to-zinc-950 rounded-2xl shadow-2xl border border-emerald-500/10" style={{ background: 'linear-gradient(180deg, rgba(24, 23, 37, 0.6) 0%, rgba(24, 23, 37, 0.4) 100%)', backdropFilter: 'blur(12px)' }}>
-      <div className="flex justify-between items-center mb-6 border-b border-emerald-500/20 pb-4">
-        <h2 className="text-xl font-black uppercase tracking-widest text-transparent bg-clip-text bg-gradient-to-r from-emerald-300 to-cyan-300">
+    <div className="p-5 bg-gradient-to-b from-slate-950 to-zinc-950 rounded-2xl shadow-2xl border border-yellow-500/10" style={{ background: 'linear-gradient(180deg, rgba(24, 23, 37, 0.6) 0%, rgba(24, 23, 37, 0.4) 100%)', backdropFilter: 'blur(12px)' }}>
+      <div className="flex justify-between items-center mb-6 border-b border-yellow-500/20 pb-4">
+        <h2 className="text-xl font-black uppercase tracking-widest text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-yellow-300">
           <span className="text-white">📡 Global</span> Live Matrix
         </h2>
         <button 
           onClick={fetchGlobalLive} 
           disabled={globalLoading}
-          className="px-5 py-2 bg-gradient-to-r from-emerald-600 to-cyan-600 hover:from-emerald-500 hover:to-cyan-500 text-white font-bold rounded-lg shadow-lg border border-emerald-400/50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+          className="px-5 py-2 bg-gradient-to-r from-yellow-600 to-yellow-600 hover:from-yellow-500 hover:to-yellow-500 text-white font-bold rounded-lg shadow-lg border border-yellow-400/50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {globalLoading ? "Scanning Feed..." : "Refresh Board"}
         </button>
@@ -184,7 +184,7 @@ export const LiveMatrixHub: React.FC<LiveMatrixHubProps> = ({ history, setHistor
 
       <div className="space-y-4">
         {!safeHistory.length && (
-          <div className="text-center p-8 bg-zinc-950/40 backdrop-blur-sm border border-emerald-500/20 rounded-xl text-zinc-400 font-bold tracking-widest uppercase text-sm">
+          <div className="text-center p-8 bg-black/40 backdrop-blur-sm border border-yellow-500/20 rounded-xl text-zinc-400 font-bold tracking-widest uppercase text-sm">
             Awaiting Active Match Streams
             <br />
             <span className="text-xs font-normal opacity-50 mt-2 block">Server returned no history — check API bridge or create an analyzed fixture in Analyzer.</span>
@@ -201,39 +201,39 @@ export const LiveMatrixHub: React.FC<LiveMatrixHubProps> = ({ history, setHistor
           const isSyncing = syncing[game.id];
 
           return (
-            <div key={game.id} className="border border-emerald-500/20 rounded-lg bg-zinc-950/40 backdrop-blur-sm overflow-hidden shadow-md hover:border-emerald-500/40 transition-all">
+            <div key={game.id} className="border border-yellow-500/20 rounded-lg bg-black/40 backdrop-blur-sm overflow-hidden shadow-md hover:border-yellow-500/40 transition-all">
               <div 
                 className="flex justify-between items-center p-4 cursor-pointer hover:bg-zinc-900/50 transition-colors"
                 onClick={() => setExpandedMatch(isExpanded ? null : game.id)}
               >
                   <div className="flex flex-col">
-                  <span className="font-bold text-lg text-emerald-300 tracking-wide">
+                  <span className="font-bold text-lg text-yellow-300 tracking-wide">
                     {isLive
                       ? `${apiMatchData.homeTeam?.name || 'Home'} vs ${apiMatchData.awayTeam?.name || 'Away'}`
                       : `${game.homeTeam || String(game.fixture || "").split(' vs ')[0] || 'Home'} vs ${game.awayTeam || String(game.fixture || "").split(' vs ')[1] || 'Away'}`}
-                    <span className="text-cyan-400 font-black px-1">VS</span>
+                    <span className="text-yellow-400 font-black px-1">VS</span>
                   </span>
                   <div className="flex items-center gap-3 mt-1">
-                    <span className={`text-[10px] font-black px-2 py-1 rounded border uppercase tracking-widest ${isLive ? 'bg-emerald-900/40 text-emerald-300 border-emerald-500/50' : 'bg-zinc-800/40 text-zinc-400 border-zinc-600/50'}`}>
+                    <span className={`text-[10px] font-black px-2 py-1 rounded border uppercase tracking-widest ${isLive ? 'bg-yellow-900/40 text-yellow-300 border-yellow-500/50' : 'bg-zinc-800/40 text-zinc-400 border-zinc-600/50'}`}>
                       {isLive ? apiMatchData.periods?.current || "LIVE" : "AWAITING KICKOFF"}
                     </span>
                     {getEarlyReadBadge(game)}
                     {isLive && (
-                       <span className="text-sm font-bold text-zinc-300">Score: <span className="text-emerald-300">{apiMatchData.homeScore?.current} - {apiMatchData.awayScore?.current}</span></span>
+                       <span className="text-sm font-bold text-zinc-300">Score: <span className="text-yellow-300">{apiMatchData.homeScore?.current} - {apiMatchData.awayScore?.current}</span></span>
                     )}
                   </div>
                 </div>
-                <div className="text-xl text-emerald-400">{isExpanded ? "▲" : "▼"}</div>
+                <div className="text-xl text-yellow-400">{isExpanded ? "▲" : "▼"}</div>
               </div>
 
               {isExpanded && (
-                <div className="p-5 border-t border-emerald-500/20 bg-black/30 backdrop-blur-sm">
+                <div className="p-5 border-t border-yellow-500/20 bg-black/30 backdrop-blur-sm">
                   <div className="flex justify-between items-center mb-5">
                     <h3 className="font-bold text-zinc-300 uppercase tracking-wider text-sm">Deep Telemetry & Sensor Output</h3>
                     <button 
                       onClick={() => handleManualSync(game.id, apiMatchData?.id)}
                       disabled={isSyncing || !isLive}
-                      className={`px-4 py-2 font-black uppercase text-xs rounded-md shadow-lg border transition-all ${(isSyncing || !isLive) ? 'bg-zinc-800/30 text-zinc-500 border-zinc-600/30 opacity-50 cursor-not-allowed' : 'bg-gradient-to-r from-emerald-600 to-cyan-600 text-white border-emerald-400/50 hover:from-emerald-500 hover:to-cyan-500 hover:shadow-emerald-500/20'}`}
+                      className={`px-4 py-2 font-black uppercase text-xs rounded-md shadow-lg border transition-all ${(isSyncing || !isLive) ? 'bg-zinc-800/30 text-zinc-500 border-zinc-600/30 opacity-50 cursor-not-allowed' : 'bg-gradient-to-r from-yellow-600 to-yellow-600 text-white border-yellow-400/50 hover:from-yellow-500 hover:to-yellow-500 hover:shadow-yellow-500/20'}`}
                     >
                       {isSyncing ? "Syncing..." : "⚡ LIVE SYNC"}
                     </button>
@@ -241,25 +241,25 @@ export const LiveMatrixHub: React.FC<LiveMatrixHubProps> = ({ history, setHistor
 
                   {stats ? (
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                      <div className="p-3 bg-zinc-950/40 backdrop-blur-sm rounded-lg border border-emerald-500/20 text-center"><strong className="text-zinc-400 text-xs block mb-1">POSSESSION</strong> <span className="text-emerald-400">H: {stats.possession.home}</span> <span className="text-zinc-600 mx-1">|</span> <span className="text-emerald-400">A: {stats.possession.away}</span></div>
-                      <div className="p-3 bg-zinc-950/40 backdrop-blur-sm rounded-lg border border-emerald-500/20 text-center"><strong className="text-zinc-400 text-xs block mb-1">FIELD GOALS</strong> <span className="text-emerald-400">H: {stats.fgPercent.home}</span> <span className="text-zinc-600 mx-1">|</span> <span className="text-emerald-400">A: {stats.fgPercent.away}</span></div>
-                      <div className="p-3 bg-zinc-950/40 backdrop-blur-sm rounded-lg border border-emerald-500/20 text-center"><strong className="text-zinc-400 text-xs block mb-1">3PT %</strong> <span className="text-emerald-400">H: {stats.threePtPercent.home}</span> <span className="text-zinc-600 mx-1">|</span> <span className="text-emerald-400">A: {stats.threePtPercent.away}</span></div>
-                      <div className="p-3 bg-zinc-950/40 backdrop-blur-sm rounded-lg border border-emerald-500/20 text-center"><strong className="text-zinc-400 text-xs block mb-1">FT %</strong> <span className="text-emerald-400">H: {stats.ftPercent.home}</span> <span className="text-zinc-600 mx-1">|</span> <span className="text-emerald-400">A: {stats.ftPercent.away}</span></div>
+                      <div className="p-3 bg-black/40 backdrop-blur-sm rounded-lg border border-yellow-500/20 text-center"><strong className="text-zinc-400 text-xs block mb-1">POSSESSION</strong> <span className="text-yellow-400">H: {stats.possession.home}</span> <span className="text-zinc-600 mx-1">|</span> <span className="text-yellow-400">A: {stats.possession.away}</span></div>
+                      <div className="p-3 bg-black/40 backdrop-blur-sm rounded-lg border border-yellow-500/20 text-center"><strong className="text-zinc-400 text-xs block mb-1">FIELD GOALS</strong> <span className="text-yellow-400">H: {stats.fgPercent.home}</span> <span className="text-zinc-600 mx-1">|</span> <span className="text-yellow-400">A: {stats.fgPercent.away}</span></div>
+                      <div className="p-3 bg-black/40 backdrop-blur-sm rounded-lg border border-yellow-500/20 text-center"><strong className="text-zinc-400 text-xs block mb-1">3PT %</strong> <span className="text-yellow-400">H: {stats.threePtPercent.home}</span> <span className="text-zinc-600 mx-1">|</span> <span className="text-yellow-400">A: {stats.threePtPercent.away}</span></div>
+                      <div className="p-3 bg-black/40 backdrop-blur-sm rounded-lg border border-yellow-500/20 text-center"><strong className="text-zinc-400 text-xs block mb-1">FT %</strong> <span className="text-yellow-400">H: {stats.ftPercent.home}</span> <span className="text-zinc-600 mx-1">|</span> <span className="text-yellow-400">A: {stats.ftPercent.away}</span></div>
                       
-                      <div className="p-3 bg-zinc-950/40 backdrop-blur-sm rounded-lg border border-emerald-500/20 text-center"><strong className="text-zinc-400 text-xs block mb-1">FOULS</strong> <span className="text-emerald-400">H: {stats.fouls.home}</span> <span className="text-zinc-600 mx-1">|</span> <span className="text-emerald-400">A: {stats.fouls.away}</span></div>
-                      <div className="p-3 bg-zinc-950/40 backdrop-blur-sm rounded-lg border border-emerald-500/20 text-center"><strong className="text-zinc-400 text-xs block mb-1">REBOUNDS</strong> <span className="text-emerald-400">H: {stats.rebounds.home}</span> <span className="text-zinc-600 mx-1">|</span> <span className="text-emerald-400">A: {stats.rebounds.away}</span></div>
-                      <div className="p-3 bg-zinc-950/40 backdrop-blur-sm rounded-lg border border-emerald-500/20 text-center"><strong className="text-zinc-400 text-xs block mb-1">PPG ALLOWED</strong> <span className="text-emerald-400">H: {stats.ppgAllowed.home}</span> <span className="text-zinc-600 mx-1">|</span> <span className="text-emerald-400">A: {stats.ppgAllowed.away}</span></div>
-                      <div className="p-3 bg-zinc-950/40 backdrop-blur-sm rounded-lg border border-emerald-500/20 text-center"><strong className="text-zinc-400 text-xs block mb-1">TIMEOUTS</strong> <span className="text-emerald-400">H: {stats.timeouts.home}</span> <span className="text-zinc-600 mx-1">|</span> <span className="text-emerald-400">A: {stats.timeouts.away}</span></div>
+                      <div className="p-3 bg-black/40 backdrop-blur-sm rounded-lg border border-yellow-500/20 text-center"><strong className="text-zinc-400 text-xs block mb-1">FOULS</strong> <span className="text-yellow-400">H: {stats.fouls.home}</span> <span className="text-zinc-600 mx-1">|</span> <span className="text-yellow-400">A: {stats.fouls.away}</span></div>
+                      <div className="p-3 bg-black/40 backdrop-blur-sm rounded-lg border border-yellow-500/20 text-center"><strong className="text-zinc-400 text-xs block mb-1">REBOUNDS</strong> <span className="text-yellow-400">H: {stats.rebounds.home}</span> <span className="text-zinc-600 mx-1">|</span> <span className="text-yellow-400">A: {stats.rebounds.away}</span></div>
+                      <div className="p-3 bg-black/40 backdrop-blur-sm rounded-lg border border-yellow-500/20 text-center"><strong className="text-zinc-400 text-xs block mb-1">PPG ALLOWED</strong> <span className="text-yellow-400">H: {stats.ppgAllowed.home}</span> <span className="text-zinc-600 mx-1">|</span> <span className="text-yellow-400">A: {stats.ppgAllowed.away}</span></div>
+                      <div className="p-3 bg-black/40 backdrop-blur-sm rounded-lg border border-yellow-500/20 text-center"><strong className="text-zinc-400 text-xs block mb-1">TIMEOUTS</strong> <span className="text-yellow-400">H: {stats.timeouts.home}</span> <span className="text-zinc-600 mx-1">|</span> <span className="text-yellow-400">A: {stats.timeouts.away}</span></div>
                       
                       {stall && (
-                        <div className={`col-span-2 md:col-span-4 p-4 mt-2 border rounded-lg font-semibold flex flex-col justify-center ${stall.risk === 'HIGH' ? 'bg-red-950/30 border-red-600/50 text-red-300' : stall.risk === 'MODERATE' ? 'bg-amber-950/30 border-amber-600/50 text-amber-300' : 'bg-emerald-950/30 border-emerald-600/50 text-emerald-300'}`}>
+                        <div className={`col-span-2 md:col-span-4 p-4 mt-2 border rounded-lg font-semibold flex flex-col justify-center ${stall.risk === 'HIGH' ? 'bg-red-950/30 border-red-600/50 text-red-300' : stall.risk === 'MODERATE' ? 'bg-yellow-950/30 border-yellow-600/50 text-yellow-300' : 'bg-yellow-950/30 border-yellow-600/50 text-yellow-300'}`}>
                            <span className="block mb-1">{stall.note}</span> 
                            <span className="text-[10px] font-black opacity-70 uppercase tracking-widest">VERIFIED SYNC: {stall.verifiedAt}</span>
                         </div>
                       )}
                     </div>
                   ) : (
-                    <div className="text-center text-zinc-400 py-8 bg-zinc-950/40 rounded-lg border border-zinc-700/30 border-dashed">
+                    <div className="text-center text-zinc-400 py-8 bg-black/40 rounded-lg border border-zinc-700/30 border-dashed">
                        <span className="block mb-2 text-2xl">📡</span>
                        <span className="text-sm font-bold uppercase tracking-wide">Tap "LIVE SYNC" to execute real-time authentic API data hunt</span>
                        <span className="block text-xs mt-1 opacity-50">Match must be LIVE to pull Deep Telemetry.</span>
@@ -271,7 +271,7 @@ export const LiveMatrixHub: React.FC<LiveMatrixHubProps> = ({ history, setHistor
           );
         })}
         {pendingGames.length === 0 && (
-           <div className="text-center p-8 bg-zinc-950/40 backdrop-blur-sm border border-emerald-500/20 rounded-lg text-zinc-400 font-bold tracking-widest uppercase text-sm">
+           <div className="text-center p-8 bg-black/40 backdrop-blur-sm border border-yellow-500/20 rounded-lg text-zinc-400 font-bold tracking-widest uppercase text-sm">
              No Pending Analyzed Games.<br/>
              <span className="text-xs font-normal opacity-50 mt-2 block">Go to the Analyzer tab to predict a match, and it will automatically slot in here for Live Tracking.</span>
            </div>

@@ -21,30 +21,30 @@ import type { AdjLog, EngineOutput, HistoryEntry, AnalysisArchiveEntry, Research
 function decisionStyle(d: string) {
   if (d.includes("HAMMER"))
     return {
-      border: "border-emerald-400",
-      bg: "bg-emerald-950/60",
-      text: "text-emerald-300",
-      badge: "bg-emerald-500 text-black",
-      dot: "bg-emerald-400",
+      border: "border-yellow-400",
+      bg: "bg-yellow-950/60",
+      text: "text-yellow-300",
+      badge: "bg-yellow-500 text-black",
+      dot: "bg-yellow-400",
     };
   if (d.includes("OVER"))
     return {
-      border: "border-sky-500",
-      bg: "bg-sky-950/60",
-      text: "text-sky-300",
-      badge: "bg-sky-500 text-black",
-      dot: "bg-sky-400",
+      border: "border-yellow-500",
+      bg: "bg-yellow-950/60",
+      text: "text-yellow-300",
+      badge: "bg-yellow-500 text-black",
+      dot: "bg-yellow-400",
     };
   if (d.includes("UNDER"))
     return {
-      border: "border-amber-500",
-      bg: "bg-amber-950/60",
-      text: "text-amber-300",
-      badge: "bg-amber-500 text-black",
-      dot: "bg-amber-400",
+      border: "border-yellow-500",
+      bg: "bg-yellow-950/60",
+      text: "text-yellow-300",
+      badge: "bg-yellow-500 text-black",
+      dot: "bg-yellow-400",
     };
   return {
-    border: "border-zinc-700",
+    border: "border-yellow-900",
     bg: "bg-zinc-900/60",
     text: "text-zinc-400",
     badge: "bg-zinc-700 text-zinc-300",
@@ -53,10 +53,10 @@ function decisionStyle(d: string) {
 }
 function outcomeStyle(o?: string) {
   if (o === "WIN")
-    return "text-emerald-400 border-emerald-800 bg-emerald-950/40";
+    return "text-yellow-400 border-yellow-800 bg-yellow-950/40";
   if (o === "LOSS") return "text-red-400 border-red-800 bg-red-950/40";
-  if (o === "PUSH") return "text-zinc-400 border-zinc-700 bg-zinc-900/40";
-  return "text-zinc-600 border-zinc-800 bg-zinc-900/20";
+  if (o === "PUSH") return "text-zinc-400 border-yellow-900 bg-zinc-900/40";
+  return "text-zinc-600 border-yellow-950 bg-zinc-900/20";
 }
 function OutcomeBadge({ outcome }: { outcome?: string }) {
   if (outcome === "WIN")
@@ -86,11 +86,11 @@ function OutcomeBadge({ outcome }: { outcome?: string }) {
 function AdjStatusDot({ s }: { s: "triggered" | "checked" | "n/a" }) {
   if (s === "triggered")
     return (
-      <span className="w-1.5 h-1.5 rounded-full bg-amber-400 flex-shrink-0 mt-0.5" />
+      <span className="w-1.5 h-1.5 rounded-full bg-yellow-400 flex-shrink-0 mt-0.5" />
     );
   if (s === "checked")
     return (
-      <span className="w-1.5 h-1.5 rounded-full bg-emerald-700 flex-shrink-0 mt-0.5" />
+      <span className="w-1.5 h-1.5 rounded-full bg-yellow-700 flex-shrink-0 mt-0.5" />
     );
   return (
     <span className="w-1.5 h-1.5 rounded-full bg-zinc-800 flex-shrink-0 mt-0.5" />
@@ -147,7 +147,7 @@ function CheckRow({ label, ok = true }: { label: string; ok?: boolean }) {
   return (
     <div className="flex items-start gap-2 py-0.5">
       <span
-        className={`text-[11px] flex-shrink-0 leading-none mt-0.5 ${ok ? "text-emerald-400" : "text-red-400"}`}
+        className={`text-[11px] flex-shrink-0 leading-none mt-0.5 ${ok ? "text-yellow-400" : "text-red-400"}`}
       >
         {ok ? "✓" : "✗"}
       </span>
@@ -172,12 +172,12 @@ function AdjRow({
     n === 0 ? (
       <span className="text-zinc-700">0</span>
     ) : n > 0 ? (
-      <span className="text-emerald-400">+{n}</span>
+      <span className="text-yellow-400">+{n}</span>
     ) : (
       <span className="text-red-400">{n}</span>
     );
   return (
-    <div className="grid grid-cols-[10px_160px_44px_44px_1fr] gap-2 text-xs font-mono py-1 border-b border-zinc-800/40 last:border-0 items-start">
+    <div className="grid grid-cols-[10px_160px_44px_44px_1fr] gap-2 text-xs font-mono py-1 border-b border-yellow-950/40 last:border-0 items-start">
       <AdjStatusDot s={status} />
       <span
         className={`text-[10px] leading-tight ${status === "triggered" ? "text-zinc-200" : status === "n/a" ? "text-zinc-700" : "text-zinc-500"}`}
@@ -231,7 +231,7 @@ function Field({
       onBlur={onBlur}
       list={list}
       placeholder={placeholder}
-      className={`w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-zinc-500 transition placeholder:text-zinc-700 ${className}`}
+      className={`w-full bg-zinc-800 border border-yellow-900 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-zinc-500 transition placeholder:text-zinc-700 ${className}`}
     />
   );
 }
@@ -258,7 +258,7 @@ function SmallField({
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
-        className="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-2 py-1.5 text-xs text-white focus:outline-none focus:border-zinc-600 transition placeholder:text-zinc-700 text-center"
+        className="w-full bg-zinc-900 border border-yellow-950 rounded-lg px-2 py-1.5 text-xs text-white focus:outline-none focus:border-zinc-600 transition placeholder:text-zinc-700 text-center"
       />
     </div>
   );
@@ -267,12 +267,12 @@ function SmallField({
 function SplendorLogo() {
   return (
     <div className="flex items-center gap-3 flex-shrink-0">
-      <div className="relative flex items-center justify-center w-16 h-16 bg-gradient-to-br from-purple-600 to-indigo-600 rounded-full shadow-2xl drop-shadow-2xl">
+      <div className="relative flex items-center justify-center w-16 h-16 bg-gradient-to-br from-purple-600 to-yellow-600 rounded-full shadow-2xl drop-shadow-2xl">
         <Globe className="w-8 h-8 text-white drop-shadow-xl" />
         <ShieldCheck className="w-4 h-4 text-yellow-300 absolute bottom-1 right-1 drop-shadow-lg" />
       </div>
       <div className="text-left">
-        <h1 className="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-300 via-indigo-300 to-cyan-300 drop-shadow-xl" style={{ textShadow: '0 0 30px rgba(168, 85, 247, 0.6), 0 0 60px rgba(99, 102, 241, 0.4)' }}>SPLENDOR HUB</h1>
+        <h1 className="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-300 via-yellow-300 to-yellow-300 drop-shadow-xl" style={{ textShadow: '0 0 30px rgba(168, 85, 247, 0.6), 0 0 60px rgba(99, 102, 241, 0.4)' }}>SPLENDOR HUB</h1>
         <p className="text-sm text-zinc-300">Premium Sportsbook Suite</p>
         <p className="text-xs text-zinc-400">18+ Bet Responsibly</p>
       </div>
@@ -359,13 +359,13 @@ export function RangeEngine() {
         <div className="mb-3 opacity-50">
           <div className="flex justify-between text-[10px] font-mono text-zinc-500 mb-1">
             <span>-</span>
-            <span className="uppercase tracking-widest text-emerald-500/30">
+            <span className="uppercase tracking-widest text-yellow-500/30">
               {label}
             </span>
             <span>-</span>
           </div>
           <div className="flex h-1.5 w-full bg-zinc-900 rounded-full overflow-hidden">
-            <div className="bg-emerald-900/50 w-[50%]"></div>
+            <div className="bg-yellow-900/50 w-[50%]"></div>
             <div className="bg-red-900/50 w-[50%] ml-auto"></div>
           </div>
         </div>
@@ -381,14 +381,14 @@ export function RangeEngine() {
       <div className="mb-3">
         <div className="flex justify-between text-[10px] font-mono text-zinc-200 mb-1">
           <span>{item.home || hVal}</span>
-          <span className="uppercase tracking-widest text-emerald-400 font-bold">
+          <span className="uppercase tracking-widest text-yellow-400 font-bold">
             {label}
           </span>
           <span>{item.away || aVal}</span>
         </div>
         <div className="flex h-1.5 w-full bg-zinc-900 rounded-full overflow-hidden">
           <div
-            className="bg-emerald-500 transition-all duration-1000 ease-out"
+            className="bg-yellow-500 transition-all duration-1000 ease-out"
             style={{ width: `${hPct}%` }}
           ></div>
           <div
@@ -1374,13 +1374,13 @@ export function RangeEngine() {
       : null;
 
   return (
-    <div className="min-h-screen bg-slate-950 text-white font-mono flex flex-col text-sm select-none" style={{ background: 'linear-gradient(135deg, #020617 0%, #0f172a 50%, #1a1a2e 100%)' }}>
+    <div className="min-h-screen bg-black text-white font-mono flex flex-col text-sm select-none" style={{ background: '#000000' }}>
       {tab === "football" && (
-        <div className="fixed inset-0 bg-slate-950/95 backdrop-blur-md z-9998 flex flex-col items-center justify-center p-6 overflow-y-auto border border-emerald-500/20" style={{ background: 'rgba(2, 6, 23, 0.95)', backdropFilter: 'blur(12px)' }}>
-          <h1 className="text-4xl font-black text-center mb-4 text-transparent bg-clip-text bg-gradient-to-r from-emerald-300 to-cyan-300" style={{ textShadow: '0 0 30px rgba(16, 185, 129, 0.4)' }}>⚽ Football Analyser</h1>
+        <div className="fixed inset-0 bg-black/95 z-9998 flex flex-col items-center justify-center p-6 overflow-y-auto border border-yellow-500/20" style={{ background: 'rgba(0, 0, 0, 0.95)',  }}>
+          <h1 className="text-4xl font-black text-center mb-4 text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-yellow-300" style={{ textShadow: '0 0 30px rgba(16, 185, 129, 0.4)' }}>⚽ Football Analyser</h1>
           <h2 className="text-zinc-400 font-normal mb-8 text-center text-lg">Coming Soon — Premier Soccer Integration</h2>
-          <div className="bg-zinc-900/40 backdrop-blur-sm p-6 rounded-xl border border-zinc-700/50 max-w-xl text-left leading-relaxed">
-            <p className="text-emerald-400 font-bold mb-3">🚀 Advanced Soccer Analysis Engine</p>
+          <div className="bg-zinc-900/40 p-6 rounded-xl border border-yellow-900/50 max-w-xl text-left leading-relaxed">
+            <p className="text-yellow-400 font-bold mb-3">🚀 Advanced Soccer Analysis Engine</p>
             <ul className="text-zinc-300 text-sm space-y-2">
               <li>✓ xG & Post-Shot xG Models</li>
               <li>✓ Momentum & Defensive Pressure Analysis</li>
@@ -1388,22 +1388,22 @@ export function RangeEngine() {
               <li>✓ Live 90-Minute Pacing Dynamics</li>
             </ul>
           </div>
-          <button onClick={() => setTab("analyzer")} className="mt-8 px-8 py-3 bg-gradient-to-r from-emerald-600 to-cyan-600 text-white font-bold rounded-lg hover:from-emerald-500 hover:to-cyan-500 transition shadow-lg">Return to Basketball</button>
+          <button onClick={() => setTab("analyzer")} className="mt-8 px-8 py-3 bg-gradient-to-r from-yellow-600 to-yellow-600 text-white font-bold rounded-lg hover:from-yellow-500 hover:to-yellow-500 transition shadow-lg">Return to Basketball</button>
         </div>
       )}
       {/* ── GAMES BROWSER — today's covered games (STATUS panel) ── */}
       {showGames && (
-        <div className="fixed inset-0 bg-slate-950/95 backdrop-blur-md flex flex-col p-4 overflow-y-auto" style={{ zIndex: 9999 }}>
+        <div className="fixed inset-0 bg-black/95 flex flex-col p-4 overflow-y-auto" style={{ zIndex: 9999 }}>
           <div className="flex items-center justify-between mb-3">
-            <p className="text-emerald-400 font-black text-sm uppercase tracking-widest">📡 Covered Games — Today</p>
+            <p className="text-yellow-400 font-black text-sm uppercase tracking-widest">📡 Covered Games — Today</p>
             <button onClick={() => setShowGames(false)} className="text-zinc-400 text-xl px-2">✕</button>
           </div>
           <p className="text-[10px] text-zinc-500 mb-3">API quota: {quotaInfo.remaining ?? "—"}/{quotaInfo.limit ?? "—"} remaining · schedules cached till midnight</p>
           {!gSel ? (
             <div className="space-y-1.5">
-              {gTours.length === 0 && <p className="text-zinc-500 text-xs">Loading tournaments… (if this stays empty, nothing is scheduled today)</p>}
+              {gTours.length === 0 && <p className="text-zinc-500 text-xs">No tournaments loaded — daily API quota exhausted or nothing scheduled yet. Quota resets in the afternoon.</p>}
               {gTours.map((t) => (
-                <button key={t.id} onClick={() => openTournament(t)} className="w-full text-left bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 hover:border-emerald-700 transition">
+                <button key={t.id} onClick={() => openTournament(t)} className="w-full text-left bg-zinc-900 border border-yellow-950 rounded-lg px-3 py-2 hover:border-yellow-700 transition">
                   <span className="text-xs text-zinc-200 font-bold">{t.name}</span>
                   <span className="text-[10px] text-zinc-500 ml-2">{t.country}</span>
                 </button>
@@ -1411,18 +1411,18 @@ export function RangeEngine() {
             </div>
           ) : (
             <div>
-              <button onClick={() => { setGSel(null); setGGames([]); }} className="text-[10px] text-emerald-400 mb-2">← All tournaments</button>
+              <button onClick={() => { setGSel(null); setGGames([]); }} className="text-[10px] text-yellow-400 mb-2">← All tournaments</button>
               <p className="text-xs text-zinc-300 font-bold mb-2">{gSel.country} - {gSel.name}</p>
               {gLoading && <p className="text-zinc-500 text-xs">Loading fixtures…</p>}
               {!gLoading && gGames.length === 0 && <p className="text-zinc-500 text-xs">No fixtures returned for today.</p>}
               <div className="space-y-1.5">
                 {gGames.map((g) => (
-                  <div key={g.id} className="bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 flex items-center justify-between gap-2">
+                  <div key={g.id} className="bg-zinc-900 border border-yellow-950 rounded-lg px-3 py-2 flex items-center justify-between gap-2">
                     <div>
                       <p className="text-xs text-zinc-200">{g.home} vs {g.away}</p>
                       <p className="text-[10px] text-zinc-500">{g.startTimestamp ? new Date(g.startTimestamp * 1000).toLocaleString([], { weekday: "short", hour: "2-digit", minute: "2-digit" }) : "TBD"} · {g.status}</p>
                     </div>
-                    <button onClick={() => betFill(g)} className="bg-violet-600 hover:bg-violet-500 text-white text-[10px] font-black px-3 py-1.5 rounded uppercase">Bet</button>
+                    <button onClick={() => betFill(g)} className="bg-yellow-600 hover:bg-yellow-500 text-white text-[10px] font-black px-3 py-1.5 rounded uppercase">Bet</button>
                   </div>
                 ))}
               </div>
@@ -1431,7 +1431,7 @@ export function RangeEngine() {
         </div>
       )}
       {/* ─── Premium Header with Global Navigation ─────────────────────────────────────── */}
-      <div className="border-b border-emerald-500/10 px-5 py-4 flex flex-col items-center justify-center bg-zinc-950/60 backdrop-blur-md flex-shrink-0" style={{ background: 'rgba(24, 23, 37, 0.6)', backdropFilter: 'blur(12px)', borderImage: 'linear-gradient(90deg, transparent, rgba(16, 185, 129, 0.2), transparent) 1' }}>
+      <div className="border-b border-yellow-500/10 px-5 py-4 flex flex-col items-center justify-center bg-black/60 flex-shrink-0" style={{ background: 'rgba(0, 0, 0, 0.85)', borderImage: 'linear-gradient(90deg, transparent, rgba(16, 185, 129, 0.2), transparent) 1' }}>
         <SplendorLogo />
         <div className="flex items-center gap-3 mt-4 flex-wrap justify-center">
           {[
@@ -1442,12 +1442,12 @@ export function RangeEngine() {
             <button
               key={item.key}
               onClick={() => setTab(item.key as typeof tab)}
-              className={`text-[10px] px-4 py-2 rounded-lg font-bold uppercase tracking-widest transition border backdrop-blur-sm ${
+              className={`text-[10px] px-4 py-2 rounded-lg font-bold uppercase tracking-widest transition border ${
                 tab === item.key
-                  ? "bg-gradient-to-r from-emerald-600 to-cyan-600 text-white border-emerald-400 shadow-lg shadow-emerald-500/50"
+                  ? "bg-gradient-to-r from-yellow-600 to-yellow-600 text-white border-yellow-400 shadow-lg shadow-yellow-500/50"
                   : item.key === "football"
-                  ? "text-zinc-300 border-emerald-600/30 hover:border-emerald-500 hover:text-emerald-300 bg-emerald-950/20"
-                  : "text-zinc-400 border-zinc-700 hover:border-zinc-500 hover:text-white bg-zinc-900/30"
+                  ? "text-zinc-300 border-yellow-600/30 hover:border-yellow-500 hover:text-yellow-300 bg-yellow-950/20"
+                  : "text-zinc-400 border-yellow-900 hover:border-zinc-500 hover:text-white bg-zinc-900/30"
               }`}
               title={item.key === "football" ? "Coming Soon" : ""}
             >
@@ -1458,19 +1458,19 @@ export function RangeEngine() {
           {tab === "analyzer" && phase !== "idle" && (
             <button
               onClick={handleReset}
-              className="text-[10px] text-zinc-400 hover:text-white border border-zinc-600 hover:border-zinc-400 rounded-lg px-3 py-2 transition bg-zinc-900/30 backdrop-blur-sm"
+              className="text-[10px] text-zinc-400 hover:text-white border border-zinc-600 hover:border-zinc-400 rounded-lg px-3 py-2 transition bg-zinc-900/30"
             >
               ← New Analysis
             </button>
           )}
         </div>
         {/* Battery Pill - Telemetry Node */}
-        <div className="mt-3 px-4 py-2 rounded-full border border-emerald-500/40 bg-emerald-950/30 backdrop-blur-sm flex items-center gap-2">
-          <span onClick={openGames} className="text-emerald-400 font-bold text-xs uppercase tracking-widest cursor-pointer">System Status</span>
-          <div className="w-6 h-3 rounded border border-emerald-400 flex items-center px-0.5 bg-emerald-950/50">
-            <div className="w-full h-full bg-emerald-500 rounded-sm"></div>
+        <div className="mt-3 px-4 py-2 rounded-full border border-yellow-500/40 bg-yellow-950/30 flex items-center gap-2">
+          <span onClick={openGames} className="text-yellow-400 font-bold text-xs uppercase tracking-widest cursor-pointer">System Status</span>
+          <div className="w-6 h-3 rounded border border-yellow-400 flex items-center px-0.5 bg-yellow-950/50">
+            <div className="w-full h-full bg-yellow-500 rounded-sm"></div>
           </div>
-          <span onClick={openGames} className="text-emerald-300 font-black text-xs cursor-pointer">{Math.max(0, quotaInfo.remaining ?? 100)}/{quotaInfo.limit ?? 100}</span>
+          <span onClick={openGames} className="text-yellow-300 font-black text-xs cursor-pointer">{Math.max(0, quotaInfo.remaining ?? 100)}/{quotaInfo.limit ?? 100}</span>
         </div>
       </div>
 
@@ -1496,21 +1496,21 @@ export function RangeEngine() {
               {(
                 [
                   ["Analyses", histStats.total, "text-white"],
-                  ["Wins", histStats.wins, "text-emerald-400"],
+                  ["Wins", histStats.wins, "text-yellow-400"],
                   ["Losses", histStats.losses, "text-red-400"],
-                  ["Pending", histStats.pending, "text-amber-300"],
+                  ["Pending", histStats.pending, "text-yellow-300"],
                   [
                     "Win Rate",
                     winRate !== null ? `${winRate}%` : "—",
                     winRate !== null && winRate >= 60
-                      ? "text-emerald-400"
+                      ? "text-yellow-400"
                       : "text-zinc-400",
                   ],
                 ] as const
               ).map(([lbl, val, cls]) => (
                 <div
                   key={String(lbl)}
-                  className="bg-zinc-950/40 backdrop-blur-md border border-emerald-500/20 rounded-xl p-3 text-center hover:border-emerald-500/40 transition shadow-lg shadow-emerald-500/10"
+                  className="bg-black/40 border border-yellow-500/20 rounded-xl p-3 text-center hover:border-yellow-500/40 transition shadow-lg shadow-yellow-500/10"
                   style={{ background: "rgba(24, 23, 37, 0.4)", backdropFilter: "blur(8px)" }}
                 >
                   <p className={`text-lg font-black ${cls}`}>{val}</p>
@@ -1545,7 +1545,7 @@ export function RangeEngine() {
                 {archiveEntries.map((entry) => (
                   <div
                     key={entry.id}
-                    className="border border-emerald-500/20 rounded-xl bg-zinc-950/60 backdrop-blur-md p-4 shadow-lg shadow-emerald-500/5"
+                    className="border border-yellow-500/20 rounded-xl bg-black/60 p-4 shadow-lg shadow-yellow-500/5"
                   >
                     <div className="flex flex-wrap items-center justify-between gap-4">
                       <div>
@@ -1556,25 +1556,25 @@ export function RangeEngine() {
                       </div>
                       <div className="text-right">
                         <p className="text-[10px] uppercase tracking-widest text-zinc-500">Final Range</p>
-                        <p className="text-sm font-bold text-emerald-300">{entry.finalRange}</p>
+                        <p className="text-sm font-bold text-yellow-300">{entry.finalRange}</p>
                       </div>
                     </div>
                     <div className="mt-3 grid grid-cols-2 gap-3 text-[11px]">
-                      <div className="rounded-lg border border-zinc-800/70 bg-zinc-950/40 px-3 py-2">
+                      <div className="rounded-lg border border-yellow-950/70 bg-black/40 px-3 py-2">
                         <span className="block text-[9px] uppercase tracking-widest text-zinc-500">Bookmaker</span>
                         <span className="text-zinc-200 font-bold">{entry.bookmaker}</span>
                       </div>
-                      <div className="rounded-lg border border-zinc-800/70 bg-zinc-950/40 px-3 py-2">
+                      <div className="rounded-lg border border-yellow-950/70 bg-black/40 px-3 py-2">
                         <span className="block text-[9px] uppercase tracking-widest text-zinc-500">Decision</span>
-                        <span className="text-emerald-300 font-bold">{entry.decision}</span>
+                        <span className="text-yellow-300 font-bold">{entry.decision}</span>
                       </div>
-                      <div className="rounded-lg border border-zinc-800/70 bg-zinc-950/40 px-3 py-2">
+                      <div className="rounded-lg border border-yellow-950/70 bg-black/40 px-3 py-2">
                         <span className="block text-[9px] uppercase tracking-widest text-zinc-500">Outcome</span>
                         <span className="text-zinc-200 font-bold">{entry.outcome}</span>
                       </div>
-                      <div className="rounded-lg border border-zinc-800/70 bg-zinc-950/40 px-3 py-2">
+                      <div className="rounded-lg border border-yellow-950/70 bg-black/40 px-3 py-2">
                         <span className="block text-[9px] uppercase tracking-widest text-zinc-500">Confidence</span>
-                        <span className="text-cyan-300 font-bold">{entry.confidence}</span>
+                        <span className="text-yellow-300 font-bold">{entry.confidence}</span>
                       </div>
                     </div>
                   </div>
@@ -1603,24 +1603,24 @@ export function RangeEngine() {
                 </div>
 
                 {/* 60-Second Auto-Sync Timer Sentinel */}
-                <div className="bg-zinc-950 border border-zinc-800 rounded-lg p-3 mb-4 flex items-center justify-between">
+                <div className="bg-black border border-yellow-950 rounded-lg p-3 mb-4 flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <span className="text-amber-500 animate-pulse">⏳</span>
+                    <span className="text-yellow-500 animate-pulse">⏳</span>
                     <span className="text-[10px] font-bold text-zinc-300 uppercase tracking-wider">
                       Live Sync Active
                     </span>
                   </div>
-                  <div className="text-xs font-mono text-amber-400 font-bold">
+                  <div className="text-xs font-mono text-yellow-400 font-bold">
                     {isReanalyzing ? (
                       <div className="flex items-center gap-3">
-                        <div className="text-[11px] font-bold text-emerald-300">Reanalyzing</div>
+                        <div className="text-[11px] font-bold text-yellow-300">Reanalyzing</div>
                         <div className="w-28 bg-zinc-900 rounded overflow-hidden h-2">
                           <div
-                            className="bg-emerald-500 h-2 transition-all"
+                            className="bg-yellow-500 h-2 transition-all"
                             style={{ width: `${reanalysisProgress}%` }}
                           />
                         </div>
-                        <div className="text-[10px] font-mono text-amber-400">{reanalysisProgress}%</div>
+                        <div className="text-[10px] font-mono text-yellow-400">{reanalysisProgress}%</div>
                       </div>
                     ) : (
                       `${Math.floor(refreshCountdown / 60)}:${(refreshCountdown % 60).toString().padStart(2, "0")}`
@@ -1629,8 +1629,8 @@ export function RangeEngine() {
                 </div>
 
                 {/* Match Context */}
-                <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-4 space-y-3">
-                  <p className="text-[9px] font-bold uppercase tracking-widest text-zinc-500 border-b border-zinc-800 pb-2">
+                <div className="bg-zinc-900/50 border border-yellow-950 rounded-xl p-4 space-y-3">
+                  <p className="text-[9px] font-bold uppercase tracking-widest text-zinc-500 border-b border-yellow-950 pb-2">
                     ⏱ 
     <datalist id="leagues">
       <option value="Turkiye - Super Lig" />
@@ -1667,7 +1667,7 @@ MATCH CONTEXT — Rule 1 (Time Sync)
                       <select
                         value={bookmaker}
                         onChange={(e) => setBookmaker(e.target.value)}
-                        className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-zinc-500 transition"
+                        className="w-full bg-zinc-800 border border-yellow-900 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-zinc-500 transition"
                       >
                         <option>Sportybet</option>
                         <option>Bet365</option>
@@ -1682,12 +1682,12 @@ MATCH CONTEXT — Rule 1 (Time Sync)
                       <div
                         className={`w-full rounded-lg px-3 py-2 text-xs font-bold border transition ${
                           tipOff.includes("NOW")
-                            ? "bg-emerald-950/50 border-emerald-700 text-emerald-300"
+                            ? "bg-yellow-950/50 border-yellow-700 text-yellow-300"
                             : tipOff.includes("progress")
-                              ? "bg-amber-950/50 border-amber-700 text-amber-300"
+                              ? "bg-yellow-950/50 border-yellow-700 text-yellow-300"
                               : tipOff
                                 ? "bg-zinc-800 border-zinc-600 text-white"
-                                : "bg-zinc-900 border-zinc-800 text-zinc-700"
+                                : "bg-zinc-900 border-yellow-950 text-zinc-700"
                         }`}
                       >
                         {tipOff || "Set KO Time + Current Time above →"}
@@ -1708,12 +1708,12 @@ MATCH CONTEXT — Rule 1 (Time Sync)
                     <div className="flex items-end">
                       {league ? (
                         <div
-                          className={`text-[9px] px-2 py-2 rounded border font-bold w-full text-center ${getLeagueDNA(league).key === "DEFAULT" ? "border-amber-800 text-amber-600 bg-amber-950/30" : "border-emerald-900 text-emerald-600 bg-emerald-950/20"}`}
+                          className={`text-[9px] px-2 py-2 rounded border font-bold w-full text-center ${getLeagueDNA(league).key === "DEFAULT" ? "border-yellow-800 text-yellow-600 bg-yellow-950/30" : "border-yellow-900 text-yellow-600 bg-yellow-950/20"}`}
                         >
                           🧬 {getLeagueDNA(league).name}
                         </div>
                       ) : (
-                        <div className="text-[9px] px-2 py-2 rounded border border-zinc-800 text-zinc-700 w-full text-center">
+                        <div className="text-[9px] px-2 py-2 rounded border border-yellow-950 text-zinc-700 w-full text-center">
                           DNA profile loads when league entered
                         </div>
                       )}
@@ -1722,18 +1722,18 @@ MATCH CONTEXT — Rule 1 (Time Sync)
                 </div>
 
                 {/* Fixture */}
-                <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-4 space-y-3">
-                  <div className="flex items-center justify-between border-b border-zinc-800 pb-2">
+                <div className="bg-zinc-900/50 border border-yellow-950 rounded-xl p-4 space-y-3">
+                  <div className="flex items-center justify-between border-b border-yellow-950 pb-2">
                     <p className="text-[9px] font-bold uppercase tracking-widest text-zinc-500">
                       🏀 FIXTURE — Rule 3/4
                     </p>
                     {researchPhase === "researching" && (
-                      <div className="flex items-center gap-1.5 text-[9px] text-violet-400">
+                      <div className="flex items-center gap-1.5 text-[9px] text-yellow-400">
                         <span className="flex gap-0.5">
                           {[0, 1, 2].map((d) => (
                             <span
                               key={d}
-                              className="w-1 h-1 bg-violet-400 rounded-full animate-bounce"
+                              className="w-1 h-1 bg-yellow-400 rounded-full animate-bounce"
                               style={{ animationDelay: `${d * 0.15}s` }}
                             />
                           ))}
@@ -1742,7 +1742,7 @@ MATCH CONTEXT — Rule 1 (Time Sync)
                       </div>
                     )}
                     {researchPhase === "done" && (
-                      <span className="text-[9px] text-emerald-500 font-bold">
+                      <span className="text-[9px] text-yellow-500 font-bold">
                         ✓ Research complete
                       </span>
                     )}
@@ -1775,7 +1775,7 @@ MATCH CONTEXT — Rule 1 (Time Sync)
                   </div>
 
                   {/* Context Checkboxes */}
-                  <div className="flex items-center gap-4 pt-2 border-t border-zinc-800">
+                  <div className="flex items-center gap-4 pt-2 border-t border-yellow-950">
                     <div className="flex items-center gap-2">
                       <input
                         type="radio"
@@ -1783,7 +1783,7 @@ MATCH CONTEXT — Rule 1 (Time Sync)
                         name="gender"
                         checked={matchGender === 'Men'}
                         onChange={() => setMatchGender('Men')}
-                        className="w-3 h-3 text-indigo-600 bg-zinc-800 border-zinc-700 focus:ring-indigo-500"
+                        className="w-3 h-3 text-yellow-600 bg-zinc-800 border-yellow-900 focus:ring-yellow-500"
                       />
                       <label htmlFor="men" className="text-xs text-zinc-300">Men's Game</label>
                     </div>
@@ -1794,7 +1794,7 @@ MATCH CONTEXT — Rule 1 (Time Sync)
                         name="gender"
                         checked={matchGender === 'Women'}
                         onChange={() => setMatchGender('Women')}
-                        className="w-3 h-3 text-indigo-600 bg-zinc-800 border-zinc-700 focus:ring-indigo-500"
+                        className="w-3 h-3 text-yellow-600 bg-zinc-800 border-yellow-900 focus:ring-yellow-500"
                       />
                       <label htmlFor="women" className="text-xs text-zinc-300">Women's Game</label>
                     </div>
@@ -1804,7 +1804,7 @@ MATCH CONTEXT — Rule 1 (Time Sync)
                         id="live"
                         checked={isLiveMatch}
                         onChange={(e) => setIsLiveMatch(e.target.checked)}
-                        className="w-3 h-3 text-indigo-600 bg-zinc-800 border-zinc-700 rounded focus:ring-indigo-500"
+                        className="w-3 h-3 text-yellow-600 bg-zinc-800 border-yellow-900 rounded focus:ring-yellow-500"
                       />
                       <label htmlFor="live" className="text-xs text-zinc-300">Live Match</label>
                     </div>
@@ -1821,10 +1821,10 @@ MATCH CONTEXT — Rule 1 (Time Sync)
                 {/* ── Auto-Research Intelligence Panel ────────────────────────── */}
                 {(researchPhase === "researching" ||
                   researchPhase === "done") && (
-                  <div className="bg-zinc-950 border border-violet-900/60 rounded-xl overflow-hidden">
-                    <div className="px-4 py-3 border-b border-violet-900/40 flex items-center justify-between">
+                  <div className="bg-black border border-yellow-900/60 rounded-xl overflow-hidden">
+                    <div className="px-4 py-3 border-b border-yellow-900/40 flex items-center justify-between">
                       <div>
-                        <p className="text-[9px] font-black uppercase tracking-widest text-violet-400">
+                        <p className="text-[9px] font-black uppercase tracking-widest text-yellow-400">
                           🔬 RESEARCH INTELLIGENCE ENGINE — Auto-Scan
                         </p>
                         {researchPhase === "done" && researchData && (
@@ -1842,11 +1842,11 @@ MATCH CONTEXT — Rule 1 (Time Sync)
                         )}
                       </div>
                       {researchPhase === "researching" ? (
-                        <span className="text-[8px] text-violet-500 bg-violet-950/60 px-2 py-1 rounded-full animate-pulse">
+                        <span className="text-[8px] text-yellow-500 bg-yellow-950/60 px-2 py-1 rounded-full animate-pulse">
                           SCANNING…
                         </span>
                       ) : (
-                        <span className="text-[8px] text-emerald-500 bg-emerald-950/60 px-2 py-1 rounded-full">
+                        <span className="text-[8px] text-yellow-500 bg-yellow-950/60 px-2 py-1 rounded-full">
                           RESEARCH DONE ✓
                         </span>
                       )}
@@ -1856,18 +1856,18 @@ MATCH CONTEXT — Rule 1 (Time Sync)
                       <div className="px-4 py-6 text-center space-y-3">
                         <div className="w-full bg-zinc-900 rounded-full h-2 overflow-hidden">
                           <div
-                            className="h-full bg-gradient-to-r from-violet-600 to-violet-400 transition-all duration-300 ease-out"
+                            className="h-full bg-gradient-to-r from-yellow-600 to-yellow-400 transition-all duration-300 ease-out"
                             style={{ width: `${researchProgress}%` }}
                           ></div>
                         </div>
-                        <p className="text-xs text-violet-400 font-bold animate-pulse">
+                        <p className="text-xs text-yellow-400 font-bold animate-pulse">
                           Cross-referencing team databases, league archives &
                           H2H records…
                         </p>
                         <p className="text-[9px] text-zinc-600">
                           {homeTeam} · {awayTeam} · {league}
                         </p>
-                        <p className="text-[10px] text-violet-500 font-mono">
+                        <p className="text-[10px] text-yellow-500 font-mono">
                           {researchProgress}% Complete
                         </p>
                       </div>
@@ -1876,7 +1876,7 @@ MATCH CONTEXT — Rule 1 (Time Sync)
                     {researchPhase === "done" && (
                       <div className="divide-y divide-zinc-900">
                         { !researchData && (
-                          <div className="px-4 py-3 rounded-xl border border-amber-700/20 bg-amber-950/10 text-amber-200 text-[10px]">
+                          <div className="px-4 py-3 rounded-xl border border-yellow-700/20 bg-yellow-950/10 text-yellow-200 text-[10px]">
                             <p className="font-bold uppercase tracking-widest mb-1">⚠️ Live API Bridge Warning</p>
                             <p className="text-zinc-400">
                               The research scan completed, but live API metrics were not available. The dashboard remains visible to preserve analysis flow while the connector is restored.
@@ -1885,11 +1885,11 @@ MATCH CONTEXT — Rule 1 (Time Sync)
                         ) }
                         {/* STATISTICAL DNA & THERMAL MOMENTUM TIMELINE (V3 Upgraded) */}
                         <div className="px-4 py-3 space-y-3">
-                          <div className="flex items-center justify-between border-b border-zinc-800 pb-1.5">
+                          <div className="flex items-center justify-between border-b border-yellow-950 pb-1.5">
                             <p className="text-[9px] font-bold uppercase tracking-widest text-zinc-500">
                               🧬 STATISTICAL DNA — Rules 3/5/7
                             </p>
-                            <span className="text-[8px] text-amber-500 font-mono tracking-widest animate-pulse">
+                            <span className="text-[8px] text-yellow-500 font-mono tracking-widest animate-pulse">
                               MOMENTUM SENSOR ACTIVE
                             </span>
                           </div>
@@ -1899,22 +1899,22 @@ MATCH CONTEXT — Rule 1 (Time Sync)
                               [
                                 "Home Arena PPG",
                                 formatDataValue(researchData?.homeArenaPPG),
-                                "text-sky-300",
+                                "text-yellow-300",
                               ],
                               [
                                 "Away Road PPG",
                                 formatDataValue(researchData?.awayRoadPPG),
-                                "text-amber-300",
+                                "text-yellow-300",
                               ],
                               [
                                 "H2H Avg Total",
                                 formatDataValue(researchData?.h2hAvgTotal),
-                                "text-violet-300",
+                                "text-yellow-300",
                               ],
                             ].map(([lbl, val, cls]) => (
                               <div
                                 key={String(lbl)}
-                                className="bg-zinc-900 rounded-lg px-3 py-2 border border-zinc-800"
+                                className="bg-zinc-900 rounded-lg px-3 py-2 border border-yellow-950"
                               >
                                 <p className="text-[8px] uppercase tracking-widest text-zinc-600">
                                   {lbl}
@@ -1952,7 +1952,7 @@ MATCH CONTEXT — Rule 1 (Time Sync)
                             ].map(([lbl, val, cls]) => (
                               <div
                                 key={String(lbl)}
-                                className="bg-zinc-900 rounded-lg px-2 py-1.5 border border-zinc-800 text-center"
+                                className="bg-zinc-900 rounded-lg px-2 py-1.5 border border-yellow-950 text-center"
                               >
                                 <p className="text-[7px] uppercase tracking-widest text-zinc-600">
                                   {lbl}
@@ -1967,14 +1967,14 @@ MATCH CONTEXT — Rule 1 (Time Sync)
                           </div>
 
                           {/* THERMAL MOMENTUM TIMELINE */}
-                          <div className="bg-zinc-950 p-2 rounded-lg border border-zinc-800">
+                          <div className="bg-black p-2 rounded-lg border border-yellow-950">
                             <div className="flex items-center justify-between mb-2">
                               <p className="text-[9px] text-zinc-400 uppercase tracking-widest font-bold">
                                 Historical Collapse Risk (Q1-Q4)
                               </p>
                               <div className="flex items-center gap-1.5">
                                 <span
-                                  className={`w-1.5 h-1.5 rounded-full ${(researchData?.collapsePct ?? 0) > 20 ? "bg-blue-500 shadow-[0_0_5px_rgba(59,130,246,0.8)]" : "bg-emerald-500"}`}
+                                  className={`w-1.5 h-1.5 rounded-full ${(researchData?.collapsePct ?? 0) > 20 ? "bg-yellow-500 shadow-[0_0_5px_rgba(59,130,246,0.8)]" : "bg-yellow-500"}`}
                                 ></span>
                                 <span className="text-[8px] text-zinc-500">
                                   {researchData?.collapsePct ?? 0}% peak · {(researchData?.homeQuarters?.gamesWithQuarters ?? 0) + (researchData?.awayQuarters?.gamesWithQuarters ?? 0)} games studied
@@ -1991,15 +1991,15 @@ MATCH CONTEXT — Rule 1 (Time Sync)
                                 return (
                                   <div
                                     key={qk}
-                                    className={`relative h-7 rounded border flex items-center justify-center overflow-hidden transition-all duration-300 ${hot ? "bg-blue-950/40 border-blue-800/80 shadow-[inset_0_0_10px_rgba(30,58,138,0.3)]" : "bg-zinc-900 border-zinc-800"}`}
+                                    className={`relative h-7 rounded border flex items-center justify-center overflow-hidden transition-all duration-300 ${hot ? "bg-yellow-950/40 border-yellow-800/80 shadow-[inset_0_0_10px_rgba(30,58,138,0.3)]" : "bg-zinc-900 border-yellow-950"}`}
                                   >
                                     {hot && (
                                       <>
-                                        <div className="absolute inset-0 bg-blue-600/10 animate-pulse"></div>
-                                        <div className="absolute bottom-0 left-0 h-[2px] w-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.8)]"></div>
+                                        <div className="absolute inset-0 bg-yellow-600/10 animate-pulse"></div>
+                                        <div className="absolute bottom-0 left-0 h-[2px] w-full bg-yellow-500 shadow-[0_0_8px_rgba(59,130,246,0.8)]"></div>
                                       </>
                                     )}
-                                    <span className={`text-[10px] font-extrabold z-10 tracking-widest ${hot ? "text-blue-300" : "text-zinc-600"}`}>
+                                    <span className={`text-[10px] font-extrabold z-10 tracking-widest ${hot ? "text-yellow-300" : "text-zinc-600"}`}>
                                       Q{qi + 1}{risk != null ? ` ${risk}%` : ""}{hot ? " ❄️" : ""}
                                     </span>
                                   </div>
@@ -2020,20 +2020,20 @@ MATCH CONTEXT — Rule 1 (Time Sync)
                         {/* Injury / Vacuum */}
 
                         {homeTeam && awayTeam && (
-                          <div className="mt-6 border-t border-emerald-900/30 pt-5 mb-2">
-                            <div className="text-[9px] text-emerald-500 uppercase tracking-widest mb-3 flex justify-between items-center">
+                          <div className="mt-6 border-t border-yellow-900/30 pt-5 mb-2">
+                            <div className="text-[9px] text-yellow-500 uppercase tracking-widest mb-3 flex justify-between items-center">
                               <span className="flex items-center gap-2">
-                                <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full shadow-[0_0_5px_#10b981]"></span>{" "}
+                                <span className="w-1.5 h-1.5 bg-yellow-500 rounded-full shadow-[0_0_5px_#10b981]"></span>{" "}
                                 Deep Historical Matrix (H2H & Form)
                               </span>
-                              <span className="text-zinc-500 bg-black/50 px-2 py-1 rounded border border-emerald-900/20">
+                              <span className="text-zinc-500 bg-black/50 px-2 py-1 rounded border border-yellow-900/20">
                                 AWAITING API BRIDGE
                               </span>
                             </div>
-                            <div className="space-y-4 bg-[#050807] p-5 rounded-xl border border-emerald-900/20 shadow-[inset_0_0_20px_rgba(0,0,0,0.4)]">
+                            <div className="space-y-4 bg-[#050807] p-5 rounded-xl border border-yellow-900/20 shadow-[inset_0_0_20px_rgba(0,0,0,0.4)]">
                               <div>
                                 <div className="flex justify-between text-[9px] font-mono text-zinc-400 mb-1.5">
-                                  <span className="text-emerald-400 font-bold">
+                                  <span className="text-yellow-400 font-bold">
                                     86.1
                                   </span>
                                   <span className="uppercase tracking-widest text-zinc-500">
@@ -2044,13 +2044,13 @@ MATCH CONTEXT — Rule 1 (Time Sync)
                                   </span>
                                 </div>
                                 <div className="flex h-1.5 w-full bg-zinc-900 rounded-full overflow-hidden">
-                                  <div className="bg-emerald-500 w-[52%] shadow-[0_0_5px_#10b981]"></div>
+                                  <div className="bg-yellow-500 w-[52%] shadow-[0_0_5px_#10b981]"></div>
                                   <div className="bg-red-600 w-[48%] ml-auto"></div>
                                 </div>
                               </div>
                               <div>
                                 <div className="flex justify-between text-[9px] font-mono text-zinc-400 mb-1.5">
-                                  <span className="text-emerald-400 font-bold">
+                                  <span className="text-yellow-400 font-bold">
                                     77.3
                                   </span>
                                   <span className="uppercase tracking-widest text-zinc-500">
@@ -2061,7 +2061,7 @@ MATCH CONTEXT — Rule 1 (Time Sync)
                                   </span>
                                 </div>
                                 <div className="flex h-1.5 w-full bg-zinc-900 rounded-full overflow-hidden">
-                                  <div className="bg-emerald-500 w-[48%] shadow-[0_0_5px_#10b981]"></div>
+                                  <div className="bg-yellow-500 w-[48%] shadow-[0_0_5px_#10b981]"></div>
                                   <div className="bg-red-600 w-[52%] ml-auto"></div>
                                 </div>
                               </div>
@@ -2073,13 +2073,13 @@ MATCH CONTEXT — Rule 1 (Time Sync)
                           {/* ===================================================================== */}
                           {/* 🎯 POINT 3: DEEP HISTORICAL MATRIX H2H & FORM (SPORTYBET PRE-MATCH)   */}
                           {/* ===================================================================== */}
-                          <div className="mt-4 border border-indigo-900/60 bg-black/50 rounded-xl p-5 shadow-[0_0_20px_rgba(79,70,229,0.15)] relative overflow-hidden">
-                            <div className="absolute top-0 right-0 bg-indigo-900/40 text-indigo-300 text-[10px] px-2 py-1 rounded-bl-lg font-mono flex items-center gap-1 border-b border-l border-indigo-900/60">
-                              <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 animate-pulse"></span>
+                          <div className="mt-4 border border-yellow-900/60 bg-black/50 rounded-xl p-5 shadow-[0_0_20px_rgba(79,70,229,0.15)] relative overflow-hidden">
+                            <div className="absolute top-0 right-0 bg-yellow-900/40 text-yellow-300 text-[10px] px-2 py-1 rounded-bl-lg font-mono flex items-center gap-1 border-b border-l border-yellow-900/60">
+                              <span className="w-1.5 h-1.5 rounded-full bg-yellow-400 animate-pulse"></span>
                               REAL DATA · WAREHOUSE + NEWS
                             </div>
 
-                            <h3 className="text-indigo-400 font-bold tracking-[0.15em] mb-4 border-b border-indigo-900/60 pb-2 text-sm uppercase flex items-center">
+                            <h3 className="text-yellow-400 font-bold tracking-[0.15em] mb-4 border-b border-yellow-900/60 pb-2 text-sm uppercase flex items-center">
                               <svg
                                 className="w-4 h-4 mr-2"
                                 fill="none"
@@ -2099,12 +2099,12 @@ MATCH CONTEXT — Rule 1 (Time Sync)
 
                             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                               <div className="space-y-4">
-                                <div className="bg-zinc-900/50 rounded p-3 border border-zinc-800/50">
+                                <div className="bg-zinc-900/50 rounded p-3 border border-yellow-950/50">
                                   <h4 className="text-xs text-zinc-400 font-mono mb-2 uppercase">
                                       Head-to-Head (Last 50 Matchups)
                                     </h4>
-                                  <div className="flex justify-between items-center bg-black/40 p-2 rounded border border-zinc-800">
-                                    <span className="text-sky-400 font-bold text-sm">
+                                  <div className="flex justify-between items-center bg-black/40 p-2 rounded border border-yellow-950">
+                                    <span className="text-yellow-400 font-bold text-sm">
                                       HOME TEAM
                                     </span>
                                     <div className="flex gap-1 text-xs font-mono font-bold">
@@ -2112,7 +2112,7 @@ MATCH CONTEXT — Rule 1 (Time Sync)
                                       <span className="text-zinc-600">-</span>
                                       <span className="text-red-500">{(safeStringArray(researchData?.homeRecentForm).filter((v) => v === "L").length)}L</span>
                                     </div>
-                                    <span className="text-amber-400 font-bold text-sm">
+                                    <span className="text-yellow-400 font-bold text-sm">
                                       AWAY TEAM
                                     </span>
                                   </div>
@@ -2123,7 +2123,7 @@ MATCH CONTEXT — Rule 1 (Time Sync)
                                 </div>
 
                                 <div className="grid grid-cols-2 gap-2">
-                                  <div className="bg-zinc-900/50 rounded p-3 border border-zinc-800/50">
+                                  <div className="bg-zinc-900/50 rounded p-3 border border-yellow-950/50">
                                     <h4 className="text-[10px] text-zinc-400 font-mono mb-1 uppercase">
                                       Home vs Other (L5)
                                     </h4>
@@ -2135,7 +2135,7 @@ MATCH CONTEXT — Rule 1 (Time Sync)
                                       ))}
                                     </div>
                                   </div>
-                                  <div className="bg-zinc-900/50 rounded p-3 border border-zinc-800/50">
+                                  <div className="bg-zinc-900/50 rounded p-3 border border-yellow-950/50">
                                     <h4 className="text-[10px] text-zinc-400 font-mono mb-1 uppercase">
                                       Away vs Other (L5)
                                     </h4>
@@ -2150,72 +2150,72 @@ MATCH CONTEXT — Rule 1 (Time Sync)
                                 </div>
                               </div>
 
-                              <div className="bg-zinc-900/50 rounded p-3 border border-zinc-800/50">
+                              <div className="bg-zinc-900/50 rounded p-3 border border-yellow-950/50">
                                 <h4 className="text-xs text-zinc-400 font-mono mb-3 uppercase flex justify-between">
                                   <span>Advanced Form DNA</span>
-                                  <span className="text-indigo-400">
+                                  <span className="text-yellow-400">
                                     HOME vs AWAY
                                   </span>
                                 </h4>
 
                                 <div className="space-y-2 text-xs font-mono">
-                                  <div className="flex justify-between items-center border-b border-zinc-800 pb-1">
-                                    <span className="text-sky-300 w-12 text-center">
+                                  <div className="flex justify-between items-center border-b border-yellow-950 pb-1">
+                                    <span className="text-yellow-300 w-12 text-center">
                                       {formatPercentValue(researchData?.homeFreeThrowPct)}
                                     </span>
                                     <span className="text-zinc-500 flex-1 text-center text-[10px]">
                                       FREE THROW %
                                     </span>
-                                    <span className="text-amber-300 w-12 text-center">
+                                    <span className="text-yellow-300 w-12 text-center">
                                       {formatPercentValue(researchData?.awayFreeThrowPct)}
                                     </span>
                                   </div>
-                                  <div className="flex justify-between items-center border-b border-zinc-800 pb-1">
-                                    <span className="text-sky-300 w-12 text-center">
+                                  <div className="flex justify-between items-center border-b border-yellow-950 pb-1">
+                                    <span className="text-yellow-300 w-12 text-center">
                                       {formatPercentValue(researchData?.homeThreePtPct)}
                                     </span>
                                     <span className="text-zinc-500 flex-1 text-center text-[10px]">
                                       3-POINT %
                                     </span>
-                                    <span className="text-amber-300 w-12 text-center">
+                                    <span className="text-yellow-300 w-12 text-center">
                                       {formatPercentValue(researchData?.awayThreePtPct)}
                                     </span>
                                   </div>
-                                  <div className="flex justify-between items-center border-b border-zinc-800 pb-1">
-                                    <span className="text-sky-300 w-12 text-center">
+                                  <div className="flex justify-between items-center border-b border-yellow-950 pb-1">
+                                    <span className="text-yellow-300 w-12 text-center">
                                       {formatPercentValue(researchData?.homeFgPct)}
                                     </span>
                                     <span className="text-zinc-500 flex-1 text-center text-[10px]">
                                       FIELD GOALS %
                                     </span>
-                                    <span className="text-amber-300 w-12 text-center">
+                                    <span className="text-yellow-300 w-12 text-center">
                                       {formatPercentValue(researchData?.awayFgPct)}
                                     </span>
                                   </div>
                                   <div className="flex justify-between items-center bg-black/30 rounded py-1 px-2 mt-2">
-                                    <span className="text-sky-400 font-bold w-12 text-center">
+                                    <span className="text-yellow-400 font-bold w-12 text-center">
                                       {researchData?.homeOffPpg ?? "--"}
                                     </span>
                                     <span className="text-zinc-400 flex-1 text-center text-[10px]">
                                       PPG OFFENSE
                                     </span>
-                                    <span className="text-amber-400 font-bold w-12 text-center">
+                                    <span className="text-yellow-400 font-bold w-12 text-center">
                                       {researchData?.awayOffPpg ?? "--"}
                                     </span>
                                   </div>
                                   <div className="flex justify-between items-center bg-black/30 rounded py-1 px-2">
-                                    <span className="text-sky-400 font-bold w-12 text-center">
+                                    <span className="text-yellow-400 font-bold w-12 text-center">
                                       {researchData?.homeDefPpg ?? "--"}
                                     </span>
                                     <span className="text-zinc-400 flex-1 text-center text-[10px]">
                                       PPG DEFENSE
                                     </span>
-                                    <span className="text-amber-400 font-bold w-12 text-center">
+                                    <span className="text-yellow-400 font-bold w-12 text-center">
                                       {researchData?.awayDefPpg ?? "--"}
                                     </span>
                                   </div>
-                                  <div className="flex justify-between items-center border-b border-zinc-800 pb-1 mt-1">
-                                    <span className="text-sky-300 w-12 text-center">
+                                  <div className="flex justify-between items-center border-b border-yellow-950 pb-1 mt-1">
+                                    <span className="text-yellow-300 w-12 text-center">
                                       {researchData?.homePointDiff != null
                                         ? researchData.homePointDiff > 0
                                           ? `+${researchData.homePointDiff.toFixed(1)}`
@@ -2225,7 +2225,7 @@ MATCH CONTEXT — Rule 1 (Time Sync)
                                     <span className="text-zinc-500 flex-1 text-center text-[10px]">
                                       POINT DIFF
                                     </span>
-                                    <span className="text-amber-300 w-12 text-center">
+                                    <span className="text-yellow-300 w-12 text-center">
                                       {researchData?.awayPointDiff != null
                                         ? researchData.awayPointDiff > 0
                                           ? `+${researchData.awayPointDiff.toFixed(1)}`
@@ -2233,14 +2233,14 @@ MATCH CONTEXT — Rule 1 (Time Sync)
                                         : "--"}
                                     </span>
                                   </div>
-                                  <div className="flex justify-between items-center pt-1 bg-indigo-900/20 rounded py-1 px-1">
-                                    <span className="text-sky-300 w-12 text-center">
+                                  <div className="flex justify-between items-center pt-1 bg-yellow-900/20 rounded py-1 px-1">
+                                    <span className="text-yellow-300 w-12 text-center">
                                       {researchData?.homeLeadTime ?? "--"}
                                     </span>
-                                    <span className="text-indigo-300 flex-1 text-center text-[10px] font-bold">
+                                    <span className="text-yellow-300 flex-1 text-center text-[10px] font-bold">
                                       TIME IN LEAD
                                     </span>
-                                    <span className="text-amber-300 w-12 text-center">
+                                    <span className="text-yellow-300 w-12 text-center">
                                       {researchData?.awayLeadTime ?? "--"}
                                     </span>
                                   </div>
@@ -2254,7 +2254,7 @@ MATCH CONTEXT — Rule 1 (Time Sync)
                             🏥 INJURY / VACUUM — Rule 11
                           </p>
                           <div className="grid grid-cols-2 gap-2">
-                            <div className="bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2">
+                            <div className="bg-zinc-900 border border-yellow-950 rounded-lg px-3 py-2">
                               <p className="text-[8px] uppercase tracking-widest text-zinc-600 mb-1">
                                 {homeTeam} (Home) · News Scout
                               </p>
@@ -2274,10 +2274,10 @@ MATCH CONTEXT — Rule 1 (Time Sync)
                                 value={homeManualOut}
                                 onChange={(e) => setHomeManualOut(e.target.value)}
                                 placeholder="CONFIRMED OUT (you verify) — e.g. J. Smith"
-                                className="w-full bg-zinc-950 border border-zinc-800 rounded px-2 py-1 text-[10px] text-amber-300 placeholder:text-zinc-600"
+                                className="w-full bg-black border border-yellow-950 rounded px-2 py-1 text-[10px] text-yellow-300 placeholder:text-zinc-600"
                               />
                             </div>
-                            <div className="bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2">
+                            <div className="bg-zinc-900 border border-yellow-950 rounded-lg px-3 py-2">
                               <p className="text-[8px] uppercase tracking-widest text-zinc-600 mb-1">
                                 {awayTeam} (Away) · News Scout
                               </p>
@@ -2297,7 +2297,7 @@ MATCH CONTEXT — Rule 1 (Time Sync)
                                 value={awayManualOut}
                                 onChange={(e) => setAwayManualOut(e.target.value)}
                                 placeholder="CONFIRMED OUT (you verify) — e.g. J. Smith"
-                                className="w-full bg-zinc-950 border border-zinc-800 rounded px-2 py-1 text-[10px] text-amber-300 placeholder:text-zinc-600"
+                                className="w-full bg-black border border-yellow-950 rounded px-2 py-1 text-[10px] text-yellow-300 placeholder:text-zinc-600"
                               />
                             </div>
                           </div>
@@ -2309,14 +2309,14 @@ MATCH CONTEXT — Rule 1 (Time Sync)
                             📋 LINEUPS
                           </p>
                           <div className="grid grid-cols-2 gap-2">
-                            <div className="bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2">
+                            <div className="bg-zinc-900 border border-yellow-950 rounded-lg px-3 py-2">
                               <p className="text-[8px] uppercase tracking-widest text-zinc-600 mb-1">
                                 {homeTeam}
                               </p>
 
-                              <div className="flex items-center gap-1.5 mb-2 bg-emerald-950/30 border border-emerald-900/50 p-1 rounded">
-                                <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></div>
-                                <span className="text-[8px] text-emerald-500 font-bold uppercase tracking-wider">
+                              <div className="flex items-center gap-1.5 mb-2 bg-yellow-950/30 border border-yellow-900/50 p-1 rounded">
+                                <div className="w-1.5 h-1.5 rounded-full bg-yellow-500 animate-pulse"></div>
+                                <span className="text-[8px] text-yellow-500 font-bold uppercase tracking-wider">
                                   30-Min Lock Confirmed
                                 </span>
                               </div>
@@ -2324,7 +2324,7 @@ MATCH CONTEXT — Rule 1 (Time Sync)
                                 {researchData?.homeLineup?.map((p, i) => (
                                   <div
                                     key={i}
-                                    className="flex justify-between items-center text-[10px] border-b border-zinc-800/50 pb-0.5"
+                                    className="flex justify-between items-center text-[10px] border-b border-yellow-950/50 pb-0.5"
                                   >
                                     <span className="text-zinc-500 font-mono w-6">
                                       {p.pos}
@@ -2336,14 +2336,14 @@ MATCH CONTEXT — Rule 1 (Time Sync)
                                 ))}
                               </div>
                             </div>
-                            <div className="bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2">
+                            <div className="bg-zinc-900 border border-yellow-950 rounded-lg px-3 py-2">
                               <p className="text-[8px] uppercase tracking-widest text-zinc-600 mb-1">
                                 {awayTeam}
                               </p>
 
-                              <div className="flex items-center gap-1.5 mb-2 bg-emerald-950/30 border border-emerald-900/50 p-1 rounded">
-                                <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></div>
-                                <span className="text-[8px] text-emerald-500 font-bold uppercase tracking-wider">
+                              <div className="flex items-center gap-1.5 mb-2 bg-yellow-950/30 border border-yellow-900/50 p-1 rounded">
+                                <div className="w-1.5 h-1.5 rounded-full bg-yellow-500 animate-pulse"></div>
+                                <span className="text-[8px] text-yellow-500 font-bold uppercase tracking-wider">
                                   30-Min Lock Confirmed
                                 </span>
                               </div>
@@ -2351,7 +2351,7 @@ MATCH CONTEXT — Rule 1 (Time Sync)
                                 {researchData?.awayLineup?.map((p, i) => (
                                   <div
                                     key={i}
-                                    className="flex justify-between items-center text-[10px] border-b border-zinc-800/50 pb-0.5"
+                                    className="flex justify-between items-center text-[10px] border-b border-yellow-950/50 pb-0.5"
                                   >
                                     <span className="text-zinc-500 font-mono w-6">
                                       {p.pos}
@@ -2377,11 +2377,11 @@ MATCH CONTEXT — Rule 1 (Time Sync)
                             </span>
                           </div>
                           <div
-                            className={`rounded-lg px-3 py-2 border ${researchData?.defStallRisk === "HIGH" ? "border-red-800 bg-red-950/30" : researchData?.defStallRisk === "MODERATE" ? "border-amber-800 bg-amber-950/30" : "border-zinc-800 bg-zinc-900"}`}
+                            className={`rounded-lg px-3 py-2 border ${researchData?.defStallRisk === "HIGH" ? "border-red-800 bg-red-950/30" : researchData?.defStallRisk === "MODERATE" ? "border-yellow-800 bg-yellow-950/30" : "border-yellow-950 bg-zinc-900"}`}
                           >
                             <div className="flex items-center gap-2 mb-1">
                               <span
-                                className={`text-[9px] font-black ${researchData?.defStallRisk === "HIGH" ? "text-red-400" : researchData?.defStallRisk === "MODERATE" ? "text-amber-400" : "text-emerald-500"}`}
+                                className={`text-[9px] font-black ${researchData?.defStallRisk === "HIGH" ? "text-red-400" : researchData?.defStallRisk === "MODERATE" ? "text-yellow-400" : "text-yellow-500"}`}
                               >
                                 {researchData?.defStallRisk ?? "LOW"}
                               </span>
@@ -2406,11 +2406,11 @@ MATCH CONTEXT — Rule 1 (Time Sync)
                             </span>
                           </div>
                           <div
-                            className={`rounded-lg px-3 py-2 border ${researchData?.offSurgeRisk === "HIGH" ? "border-sky-800 bg-sky-950/30" : researchData?.offSurgeRisk === "MODERATE" ? "border-amber-800 bg-amber-950/30" : "border-zinc-800 bg-zinc-900"}`}
+                            className={`rounded-lg px-3 py-2 border ${researchData?.offSurgeRisk === "HIGH" ? "border-yellow-800 bg-yellow-950/30" : researchData?.offSurgeRisk === "MODERATE" ? "border-yellow-800 bg-yellow-950/30" : "border-yellow-950 bg-zinc-900"}`}
                           >
                             <div className="flex items-center gap-2 mb-1">
                               <span
-                                className={`text-[9px] font-black ${researchData?.offSurgeRisk === "HIGH" ? "text-sky-400" : researchData?.offSurgeRisk === "MODERATE" ? "text-amber-400" : "text-emerald-500"}`}
+                                className={`text-[9px] font-black ${researchData?.offSurgeRisk === "HIGH" ? "text-yellow-400" : researchData?.offSurgeRisk === "MODERATE" ? "text-yellow-400" : "text-yellow-500"}`}
                               >
                                 {researchData?.offSurgeRisk ?? "LOW"}
                               </span>
@@ -2427,16 +2427,16 @@ MATCH CONTEXT — Rule 1 (Time Sync)
                         {/* Rule 10 Foul Engine */}
                         <div className="px-4 py-3 space-y-2">
                           <div className="flex items-center gap-2">
-                            <p className={`text-[9px] font-bold uppercase tracking-widest ${researchData?.foulEngineStatus === "HIGH RISK" ? "text-red-400" : "text-emerald-400"}`}>
+                            <p className={`text-[9px] font-bold uppercase tracking-widest ${researchData?.foulEngineStatus === "HIGH RISK" ? "text-red-400" : "text-yellow-400"}`}>
                               ⚠️ FOUL ENGINE (RULE 10) - PACE KILLER
                             </p>
                             <span className="text-[8px] text-zinc-600">
                               Free throw volume and league whistle context
                             </span>
                           </div>
-                          <div className={`rounded-lg px-3 py-2 border ${researchData?.foulEngineStatus === "HIGH RISK" ? "border-red-800 bg-red-950/30" : "border-emerald-800 bg-emerald-950/30"}`}>
+                          <div className={`rounded-lg px-3 py-2 border ${researchData?.foulEngineStatus === "HIGH RISK" ? "border-red-800 bg-red-950/30" : "border-yellow-800 bg-yellow-950/30"}`}>
                             <div className="flex items-center gap-2 mb-1">
-                              <span className={`text-[9px] font-black ${researchData?.foulEngineStatus === "HIGH RISK" ? "text-red-400" : "text-emerald-500"}`}>
+                              <span className={`text-[9px] font-black ${researchData?.foulEngineStatus === "HIGH RISK" ? "text-red-400" : "text-yellow-500"}`}>
                                 {researchData?.foulEngineStatus ?? "SAFE"}
                               </span>
                               <span className="text-zinc-700 text-[9px]">
@@ -2454,7 +2454,7 @@ MATCH CONTEXT — Rule 1 (Time Sync)
                           <p className="text-[9px] font-bold uppercase tracking-widest text-zinc-500">
                             🛌 FATIGUE & SCHEDULE
                           </p>
-                          <div className="rounded-lg px-3 py-2 border border-zinc-800 bg-zinc-950/40">
+                          <div className="rounded-lg px-3 py-2 border border-yellow-950 bg-black/40">
                             <p className="text-[10px] text-zinc-400 leading-relaxed">
                               {researchData?.fatigueNote ?? "Live API data unavailable."} Home rest: {researchData?.homeRestDays ?? 0}d / Away rest: {researchData?.awayRestDays ?? 0}d. This schedule stress directly boosts stall and foul-engine risk.
                             </p>
@@ -2467,11 +2467,11 @@ MATCH CONTEXT — Rule 1 (Time Sync)
                             🕐 OVERTIME POSSIBILITY — Rule 18
                           </p>
                           <div
-                            className={`rounded-lg px-3 py-2 border ${researchData?.otRisk === "HIGH" ? "border-violet-800 bg-violet-950/30" : researchData?.otRisk === "MODERATE" ? "border-amber-800 bg-amber-950/30" : "border-zinc-800 bg-zinc-900"}`}
+                            className={`rounded-lg px-3 py-2 border ${researchData?.otRisk === "HIGH" ? "border-yellow-800 bg-yellow-950/30" : researchData?.otRisk === "MODERATE" ? "border-yellow-800 bg-yellow-950/30" : "border-yellow-950 bg-zinc-900"}`}
                           >
                             <div className="flex items-center gap-2 mb-1">
                               <span
-                                className={`text-[9px] font-black ${researchData?.otRisk === "HIGH" ? "text-violet-400" : researchData?.otRisk === "MODERATE" ? "text-amber-400" : "text-emerald-500"}`}
+                                className={`text-[9px] font-black ${researchData?.otRisk === "HIGH" ? "text-yellow-400" : researchData?.otRisk === "MODERATE" ? "text-yellow-400" : "text-yellow-500"}`}
                               >
                                 {researchData?.otRisk ?? "LOW"}
                               </span>
@@ -2488,7 +2488,7 @@ MATCH CONTEXT — Rule 1 (Time Sync)
                     )}
 
                     {researchPhase === "done" && researchData && (
-                      <div className="px-4 py-3 border-t border-zinc-800">
+                      <div className="px-4 py-3 border-t border-yellow-950">
                         <button
                           onClick={() => {
                             alert(`SOURCE REPORT — REAL DATA ONLY
@@ -2499,7 +2499,7 @@ H2H: ${researchData?.h2hAvgTotal ? `avg total ${researchData.h2hAvgTotal}` : "no
 Feeds: BasketAPI + Google News index
 Unavailable data is labeled — never invented.`);
                           }}
-                          className="w-full py-2 bg-violet-600/20 hover:bg-violet-600/40 border border-violet-500/50 rounded text-[10px] text-violet-300 font-bold tracking-widest uppercase transition-all duration-300 flex justify-center items-center gap-2"
+                          className="w-full py-2 bg-yellow-600/20 hover:bg-yellow-600/40 border border-yellow-500/50 rounded text-[10px] text-yellow-300 font-bold tracking-widest uppercase transition-all duration-300 flex justify-center items-center gap-2"
                         >
                           <svg
                             className="w-3 h-3"
@@ -2519,7 +2519,7 @@ Unavailable data is labeled — never invented.`);
                       </div>
                     )}
                     {researchPhase === "done" && !researchData && (
-                      <div className="px-4 py-6 space-y-4 border-t border-zinc-900 bg-zinc-950/70">
+                      <div className="px-4 py-6 space-y-4 border-t border-zinc-900 bg-black/70">
                         <div className="rounded-xl border border-rose-700 bg-rose-950/30 p-4 text-center">
                           <p className="text-sm font-bold text-rose-300">
                             Live research data is unavailable.
@@ -2529,7 +2529,7 @@ Unavailable data is labeled — never invented.`);
                           </p>
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                          <div className="rounded-xl border border-zinc-800 bg-zinc-900 p-4">
+                          <div className="rounded-xl border border-yellow-950 bg-zinc-900 p-4">
                             <p className="text-[9px] uppercase tracking-widest text-zinc-500 mb-2">
                               🧬 Statistical DNA
                             </p>
@@ -2537,7 +2537,7 @@ Unavailable data is labeled — never invented.`);
                               No live metrics available until a genuine API source is connected.
                             </p>
                           </div>
-                          <div className="rounded-xl border border-zinc-800 bg-zinc-900 p-4">
+                          <div className="rounded-xl border border-yellow-950 bg-zinc-900 p-4">
                             <p className="text-[9px] uppercase tracking-widest text-zinc-500 mb-2">
                               🕐 Overtime Risk
                             </p>
@@ -2553,13 +2553,13 @@ Unavailable data is labeled — never invented.`);
 
                 {/* Market Lines */}
 
-                <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-4 space-y-3">
-                  <p className="text-[9px] font-bold uppercase tracking-widest text-zinc-500 border-b border-zinc-800 pb-2">
+                <div className="bg-zinc-900/50 border border-yellow-950 rounded-xl p-4 space-y-3">
+                  <p className="text-[9px] font-bold uppercase tracking-widest text-zinc-500 border-b border-yellow-950 pb-2">
                     💰 MARKET LINES — Rule 12
                   </p>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <p className="text-[9px] text-sky-400 font-bold uppercase tracking-widest">
+                      <p className="text-[9px] text-yellow-400 font-bold uppercase tracking-widest">
                         OVER — Between *
                       </p>
                       <div className="flex items-center gap-2">
@@ -2568,7 +2568,7 @@ Unavailable data is labeled — never invented.`);
                           onChange={(event) => {
                             setOverLow(event.target.value);
                           }}
-                          className="flex-1 rounded border border-zinc-800 bg-zinc-950 px-3 py-2 text-sm text-zinc-100"
+                          className="flex-1 rounded border border-yellow-950 bg-black px-3 py-2 text-sm text-zinc-100"
                         >
                           <option value="">Select low</option>
                           {marketLineOptions}
@@ -2577,7 +2577,7 @@ Unavailable data is labeled — never invented.`);
                         <select
                           value={overHigh}
                           onChange={(event) => setOverHigh(event.target.value)}
-                          className="flex-1 rounded border border-zinc-800 bg-zinc-950 px-3 py-2 text-sm text-zinc-100"
+                          className="flex-1 rounded border border-yellow-950 bg-black px-3 py-2 text-sm text-zinc-100"
                         >
                           <option value="">Select high</option>
                           {marketLineOptions}
@@ -2603,7 +2603,7 @@ Unavailable data is labeled — never invented.`);
                               setAltLines(list);
                             }
                           }}
-                          className="text-[10px] px-2 py-1 rounded border border-zinc-800 text-zinc-300 bg-zinc-900"
+                          className="text-[10px] px-2 py-1 rounded border border-yellow-950 text-zinc-300 bg-zinc-900"
                         >
                           {showAltLines ? "Hide alternatives" : "Show alternatives"}
                         </button>
@@ -2612,7 +2612,7 @@ Unavailable data is labeled — never invented.`);
                         <div className="mt-2 grid grid-cols-3 sm:grid-cols-5 gap-2">
                           {altLines.map((val) => (
                             <div key={val} className="flex items-center gap-2 text-[11px]">
-                              <span className="w-6 h-6 rounded border border-zinc-800 flex items-center justify-center text-zinc-300">[ ]</span>
+                              <span className="w-6 h-6 rounded border border-yellow-950 flex items-center justify-center text-zinc-300">[ ]</span>
                               <div className="flex-1">
                                 <div className="text-zinc-200 font-mono">{val.toFixed(1)}</div>
                                 <div className="text-[10px] text-zinc-500 flex gap-2 mt-0.5">
@@ -2622,7 +2622,7 @@ Unavailable data is labeled — never invented.`);
                                       setOverLow(String(val));
                                       setOverHigh(String(val));
                                     }}
-                                    className="px-1 py-0.5 rounded border border-emerald-700 text-emerald-300"
+                                    className="px-1 py-0.5 rounded border border-yellow-700 text-yellow-300"
                                   >
                                     O
                                   </button>
@@ -2631,7 +2631,7 @@ Unavailable data is labeled — never invented.`);
                                       setUnderLow(String(val));
                                       setUnderHigh(String(val));
                                     }}
-                                    className="px-1 py-0.5 rounded border border-amber-700 text-amber-300"
+                                    className="px-1 py-0.5 rounded border border-yellow-700 text-yellow-300"
                                   >
                                     U
                                   </button>
@@ -2646,14 +2646,14 @@ Unavailable data is labeled — never invented.`);
                       </p>
                     </div>
                     <div className="space-y-2">
-                      <p className="text-[9px] text-amber-400 font-bold uppercase tracking-widest">
+                      <p className="text-[9px] text-yellow-400 font-bold uppercase tracking-widest">
                         UNDER — Between *
                       </p>
                       <div className="flex items-center gap-2">
                         <select
                           value={underLow}
                           onChange={(event) => setUnderLow(event.target.value)}
-                          className="flex-1 rounded border border-zinc-800 bg-zinc-950 px-3 py-2 text-sm text-zinc-100"
+                          className="flex-1 rounded border border-yellow-950 bg-black px-3 py-2 text-sm text-zinc-100"
                         >
                           <option value="">Select low</option>
                           {marketLineOptions}
@@ -2662,7 +2662,7 @@ Unavailable data is labeled — never invented.`);
                         <select
                           value={underHigh}
                           onChange={(event) => setUnderHigh(event.target.value)}
-                          className="flex-1 rounded border border-zinc-800 bg-zinc-950 px-3 py-2 text-sm text-zinc-100"
+                          className="flex-1 rounded border border-yellow-950 bg-black px-3 py-2 text-sm text-zinc-100"
                         >
                           <option value="">Select high</option>
                           {marketLineOptions}
@@ -2677,15 +2677,15 @@ Unavailable data is labeled — never invented.`);
 
                 {/* --- DEEP SCAN INTELLIGENCE UI --- */}
                 {homeTeam && awayTeam && (
-                  <div className="w-full bg-[#0a0f1a] border border-indigo-500/30 rounded-xl p-4 mb-4 flex flex-col gap-3 shadow-[0_0_20px_rgba(79,70,229,0.1)]">
-                    <div className="flex justify-between items-center border-b border-indigo-500/20 pb-2">
-                      <h4 className="text-[10px] font-black tracking-widest text-indigo-400 uppercase flex items-center gap-2">
+                  <div className="w-full bg-[#0a0f1a] border border-yellow-500/30 rounded-xl p-4 mb-4 flex flex-col gap-3 shadow-[0_0_20px_rgba(79,70,229,0.1)]">
+                    <div className="flex justify-between items-center border-b border-yellow-500/20 pb-2">
+                      <h4 className="text-[10px] font-black tracking-widest text-yellow-400 uppercase flex items-center gap-2">
                         <span
-                          className={`w-2 h-2 rounded-full ${research.scanning ? "bg-yellow-400 animate-pulse" : research.done ? "bg-indigo-500" : "bg-slate-600"}`}
+                          className={`w-2 h-2 rounded-full ${research.scanning ? "bg-yellow-400 animate-pulse" : research.done ? "bg-yellow-500" : "bg-slate-600"}`}
                         ></span>
                         {research.scanning ? "Syncing Deep Scan..." : research.done ? "Deep Scan Live" : "Deep Scan Standby"}
                       </h4>
-                      <span className="text-[9px] text-indigo-300/70 font-mono tracking-widest uppercase">
+                      <span className="text-[9px] text-yellow-300/70 font-mono tracking-widest uppercase">
                         {liveMatrixData.sourceNodes.length > 0 ? `${liveMatrixData.sourceNodes.length} source nodes` : "Live API bridge"}
                       </span>
                     </div>
@@ -2697,7 +2697,7 @@ Unavailable data is labeled — never invented.`);
                           key={i}
                           className={`h-2 w-2 rounded-full transition-all duration-300 ${
                             research.node >= i
-                              ? "bg-indigo-400 shadow-[0_0_8px_rgba(129,140,248,0.9)] scale-110"
+                              ? "bg-yellow-400 shadow-[0_0_8px_rgba(129,140,248,0.9)] scale-110"
                               : "bg-slate-800 opacity-40"
                           }`}
                         />
@@ -2705,7 +2705,7 @@ Unavailable data is labeled — never invented.`);
                     </div>
 
                     {/* The Heavyweight Dynamic URL Terminal (32 Sources) */}
-                    <div className="bg-black/80 rounded p-2 border border-indigo-900/40 h-[140px] overflow-hidden relative mt-1 flex flex-col">
+                    <div className="bg-black/80 rounded p-2 border border-yellow-900/40 h-[140px] overflow-hidden relative mt-1 flex flex-col">
                       <div className="absolute top-0 left-0 w-full h-4 bg-gradient-to-b from-black/80 to-transparent z-10 pointer-events-none"></div>
                       <div className="absolute bottom-0 left-0 w-full h-4 bg-gradient-to-t from-black/80 to-transparent z-10 pointer-events-none"></div>
 
@@ -2727,7 +2727,7 @@ Unavailable data is labeled — never invented.`);
                               <span
                                 className={
                                   i === 0 && !research.done
-                                    ? "text-indigo-300 animate-pulse"
+                                    ? "text-yellow-300 animate-pulse"
                                     : "text-zinc-500"
                                 }
                               >
@@ -2738,8 +2738,8 @@ Unavailable data is labeled — never invented.`);
                               <span
                                 className={
                                   i === 0 && !research.done
-                                    ? "text-amber-400"
-                                    : "text-emerald-500 font-bold"
+                                    ? "text-yellow-400"
+                                    : "text-yellow-500 font-bold"
                                 }
                               >
                                 {i === 0 && !research.done
@@ -2755,7 +2755,7 @@ Unavailable data is labeled — never invented.`);
                     <div className="flex flex-col mt-1">
                       <div className="flex justify-between text-[10px] font-mono">
                         <span
-                          className={`${research.done ? "text-indigo-400" : "text-indigo-300 animate-pulse"}`}
+                          className={`${research.done ? "text-yellow-400" : "text-yellow-300 animate-pulse"}`}
                         >
                           {research.scanning
                             ? "Real-time aggregation active. Delay for accuracy..."
@@ -2768,7 +2768,7 @@ Unavailable data is labeled — never invented.`);
                             research.scanning && research.progress >= 98
                               ? "text-yellow-400 font-bold"
                               : research.done
-                                ? "text-indigo-400"
+                                ? "text-yellow-400"
                                 : "text-slate-500"
                           }
                         >
@@ -2777,7 +2777,7 @@ Unavailable data is labeled — never invented.`);
                       </div>
 
                       {/* Truth Protocol: Scanner Status Text */}
-                      <div className="text-[10px] text-emerald-400 font-semibold mt-2 font-mono">
+                      <div className="text-[10px] text-yellow-400 font-semibold mt-2 font-mono">
                         {scanPhase}
                       </div>
 
@@ -2786,7 +2786,7 @@ Unavailable data is labeled — never invented.`);
                       </div>
 
                       {research.node >= 0 && (
-                        <div className="text-[9px] text-right text-indigo-400/70 font-mono mt-1">
+                        <div className="text-[9px] text-right text-yellow-400/70 font-mono mt-1">
                           SCAN COMPLETION:{" "}
                           <span
                             className={
@@ -2803,26 +2803,26 @@ Unavailable data is labeled — never invented.`);
                     {research.done && (
                       <>
                         {/* Truth Protocol: Dynamic Form Data Display */}
-                        <div className="mt-3 bg-zinc-900/50 border border-emerald-500/30 rounded-lg p-3 space-y-2">
-                          <p className="text-[9px] uppercase tracking-widest text-emerald-500 font-bold">
+                        <div className="mt-3 bg-zinc-900/50 border border-yellow-500/30 rounded-lg p-3 space-y-2">
+                          <p className="text-[9px] uppercase tracking-widest text-yellow-500 font-bold">
                             ✓ Dynamic Data Matrix (Anti-Static)
                           </p>
                           <div className="grid grid-cols-2 gap-2 text-[9px]">
-                            <div className="bg-zinc-950 border border-emerald-500/20 rounded px-2 py-1">
+                            <div className="bg-black border border-yellow-500/20 rounded px-2 py-1">
                               <span className="text-zinc-600">Home Form:</span>{" "}
-                              <span className="text-emerald-300 font-bold">{liveMatrixData.homeForm || "—"}</span>
+                              <span className="text-yellow-300 font-bold">{liveMatrixData.homeForm || "—"}</span>
                             </div>
-                            <div className="bg-zinc-950 border border-emerald-500/20 rounded px-2 py-1">
+                            <div className="bg-black border border-yellow-500/20 rounded px-2 py-1">
                               <span className="text-zinc-600">Away Form:</span>{" "}
-                              <span className="text-emerald-300 font-bold">{liveMatrixData.awayForm || "—"}</span>
+                              <span className="text-yellow-300 font-bold">{liveMatrixData.awayForm || "—"}</span>
                             </div>
-                            <div className="bg-zinc-950 border border-emerald-500/20 rounded px-2 py-1">
+                            <div className="bg-black border border-yellow-500/20 rounded px-2 py-1">
                               <span className="text-zinc-600">H2H:</span>{" "}
-                              <span className="text-emerald-300 font-bold">{liveMatrixData.h2h || "—"}</span>
+                              <span className="text-yellow-300 font-bold">{liveMatrixData.h2h || "—"}</span>
                             </div>
-                            <div className="bg-zinc-950 border border-emerald-500/20 rounded px-2 py-1">
+                            <div className="bg-black border border-yellow-500/20 rounded px-2 py-1">
                               <span className="text-zinc-600">Pace Volatility:</span>{" "}
-                              <span className="text-emerald-300 font-bold">API-Driven</span>
+                              <span className="text-yellow-300 font-bold">API-Driven</span>
                             </div>
                           </div>
                           <p className="text-[8px] text-zinc-600 italic">
@@ -2837,7 +2837,7 @@ Unavailable data is labeled — never invented.`);
                           alert(`LIVE SYNC SOURCE: BasketAPI live feed — match found and connected. No third-party scrapers used.`);
                           setIsReportOpen(true);
                         }}
-                        className="mt-3 w-full py-2 bg-indigo-600/20 hover:bg-indigo-600/40 border border-indigo-500/50 rounded text-[10px] text-indigo-300 font-bold tracking-widest uppercase transition-all duration-300 flex justify-center items-center gap-2"
+                        className="mt-3 w-full py-2 bg-yellow-600/20 hover:bg-yellow-600/40 border border-yellow-500/50 rounded text-[10px] text-yellow-300 font-bold tracking-widest uppercase transition-all duration-300 flex justify-center items-center gap-2"
                       >
                         <svg
                           className="w-3 h-3"
@@ -2861,13 +2861,13 @@ Unavailable data is labeled — never invented.`);
 
                 {/* --- CLASSIFIED REPORT MODAL --- */}
                 {isReportOpen && (
-                  <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90 backdrop-blur-md">
-                    <div className="bg-[#05080f] border border-indigo-500/50 rounded-xl w-full max-w-lg max-h-[85vh] flex flex-col shadow-[0_0_50px_rgba(79,70,229,0.15)] relative overflow-hidden">
+                  <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90">
+                    <div className="bg-[#05080f] border border-yellow-500/50 rounded-xl w-full max-w-lg max-h-[85vh] flex flex-col shadow-[0_0_50px_rgba(79,70,229,0.15)] relative overflow-hidden">
                       {/* Modal Header */}
-                      <div className="bg-indigo-950/40 border-b border-indigo-500/30 p-4 flex justify-between items-center">
+                      <div className="bg-yellow-950/40 border-b border-yellow-500/30 p-4 flex justify-between items-center">
                         <div>
-                          <h3 className="text-xs font-black tracking-widest text-indigo-400 uppercase flex items-center gap-2">
-                            <span className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_#10b981]"></span>
+                          <h3 className="text-xs font-black tracking-widest text-yellow-400 uppercase flex items-center gap-2">
+                            <span className="w-2 h-2 rounded-full bg-yellow-500 shadow-[0_0_8px_#10b981]"></span>
                             Post-Scan Extraction Report
                           </h3>
                           <p className="text-[9px] text-zinc-500 font-mono mt-1">
@@ -2895,10 +2895,10 @@ Unavailable data is labeled — never invented.`);
                       </div>
 
                       {/* Modal Body - The Data Readout */}
-                      <div className="p-4 overflow-y-auto scrollbar-thin scrollbar-thumb-indigo-900/50 space-y-4 font-mono">
+                      <div className="p-4 overflow-y-auto scrollbar-thin scrollbar-thumb-yellow-900/50 space-y-4 font-mono">
                         {/* Executive Summary — real counts */}
-                        <div className="bg-indigo-950/20 border border-indigo-500/30 rounded p-3 mb-2">
-                          <p className="text-[10px] text-indigo-300 mb-1 font-bold">
+                        <div className="bg-yellow-950/20 border border-yellow-500/30 rounded p-3 mb-2">
+                          <p className="text-[10px] text-yellow-300 mb-1 font-bold">
                             RESEARCH OVERVIEW — REAL DATA
                           </p>
                           <p className="text-[9px] text-zinc-400">
@@ -2907,16 +2907,16 @@ Unavailable data is labeled — never invented.`);
                         </div>
 
                         <div className="space-y-3">
-                          <h4 className="text-[10px] font-bold text-emerald-500 border-b border-emerald-900/50 pb-1">
+                          <h4 className="text-[10px] font-bold text-yellow-500 border-b border-yellow-900/50 pb-1">
                             DATA CHANNELS
                           </h4>
 
-                          <div className="bg-black/50 border border-zinc-800 rounded p-3">
+                          <div className="bg-black/50 border border-yellow-950 rounded p-3">
                             <div className="flex justify-between items-center mb-1">
-                              <span className="text-[10px] text-emerald-400 font-bold">
+                              <span className="text-[10px] text-yellow-400 font-bold">
                                 [WAREHOUSE] Match History
                               </span>
-                              <span className="text-[8px] bg-emerald-900/50 text-emerald-300 px-1.5 py-0.5 rounded">
+                              <span className="text-[8px] bg-yellow-900/50 text-yellow-300 px-1.5 py-0.5 rounded">
                                 STORED LOCALLY
                               </span>
                             </div>
@@ -2925,12 +2925,12 @@ Unavailable data is labeled — never invented.`);
                             </p>
                           </div>
 
-                          <div className="bg-black/50 border border-zinc-800 rounded p-3">
+                          <div className="bg-black/50 border border-yellow-950 rounded p-3">
                             <div className="flex justify-between items-center mb-1">
-                              <span className="text-[10px] text-sky-400 font-bold">
+                              <span className="text-[10px] text-yellow-400 font-bold">
                                 [NEWS SCOUT] Injury & Lineup Reports
                               </span>
-                              <span className="text-[8px] bg-sky-900/50 text-sky-300 px-1.5 py-0.5 rounded">
+                              <span className="text-[8px] bg-yellow-900/50 text-yellow-300 px-1.5 py-0.5 rounded">
                                 {detectKeyOut().out ? "KEY-OUT SIGNAL" : "NO STRONG SIGNALS"}
                               </span>
                             </div>
@@ -2941,12 +2941,12 @@ Unavailable data is labeled — never invented.`);
                             </p>
                           </div>
 
-                          <div className="bg-black/50 border border-zinc-800 rounded p-3">
+                          <div className="bg-black/50 border border-yellow-950 rounded p-3">
                             <div className="flex justify-between items-center mb-1">
-                              <span className="text-[10px] text-amber-400 font-bold">
+                              <span className="text-[10px] text-yellow-400 font-bold">
                                 [H2H & COLLAPSE] Historical Patterns
                               </span>
-                              <span className="text-[8px] bg-amber-900/50 text-amber-300 px-1.5 py-0.5 rounded">
+                              <span className="text-[8px] bg-yellow-900/50 text-yellow-300 px-1.5 py-0.5 rounded">
                                 {(researchData?.collapsePct ?? 0) > 20 ? "COLLAPSE RISK" : "STABLE PROFILE"}
                               </span>
                             </div>
@@ -2957,19 +2957,19 @@ Unavailable data is labeled — never invented.`);
                         </div>
 
                         <div className="mt-4">
-                          <h4 className="text-[10px] font-bold text-zinc-500 border-b border-zinc-800 pb-1 mb-2">
+                          <h4 className="text-[10px] font-bold text-zinc-500 border-b border-yellow-950 pb-1 mb-2">
                             PIPELINE LOG — ACTUAL EVENTS
                           </h4>
-                          <div className="bg-[#020305] border border-zinc-800 rounded p-2">
+                          <div className="bg-[#020305] border border-yellow-950 rounded p-2">
                             {[
                               { label: "Prematch data fetch", status: researchData ? "OK" : "NOT LOADED" },
                               { label: "Quarter-level history", status: (researchData?.homeQuarters?.gamesWithQuarters ?? 0) + (researchData?.awayQuarters?.gamesWithQuarters ?? 0) > 0 ? "OK" : "EMPTY" },
                               { label: "News scout", status: homeNews.length + awayNews.length > 0 ? `${homeNews.length + awayNews.length} REPORTS` : "NO REPORTS" },
                               { label: "H2H lookup", status: researchData?.h2hAvgTotal ? "FOUND" : "NONE FOUND" },
                             ].map((row, i) => (
-                              <div key={i} className="flex justify-between items-center py-1.5 border-b border-zinc-800/50 last:border-0">
+                              <div key={i} className="flex justify-between items-center py-1.5 border-b border-yellow-950/50 last:border-0">
                                 <span className="text-[9px] text-zinc-400">{row.label}</span>
-                                <span className="text-[8px] px-1 rounded bg-emerald-950/20 text-emerald-500">{row.status}</span>
+                                <span className="text-[8px] px-1 rounded bg-yellow-950/20 text-yellow-500">{row.status}</span>
                               </div>
                             ))}
                           </div>
@@ -2977,10 +2977,10 @@ Unavailable data is labeled — never invented.`);
                       </div>
 
                       {/* Modal Footer */}
-                      <div className="bg-indigo-950/20 border-t border-indigo-900/50 p-3">
+                      <div className="bg-yellow-950/20 border-t border-yellow-900/50 p-3">
                         <button
                           onClick={() => setIsReportOpen(false)}
-                          className="w-full bg-indigo-600 hover:bg-indigo-500 text-white text-[10px] font-black tracking-widest uppercase py-2.5 rounded transition"
+                          className="w-full bg-yellow-600 hover:bg-yellow-500 text-white text-[10px] font-black tracking-widest uppercase py-2.5 rounded transition"
                         >
                           Acknowledge & Close Report
                         </button>
@@ -3002,7 +3002,7 @@ Unavailable data is labeled — never invented.`);
                     !research.done ||
                     isReanalyzing
                   }
-                  className="w-full bg-violet-600 hover:bg-violet-500 disabled:opacity-20 disabled:cursor-not-allowed text-white font-black text-xs rounded-xl py-3.5 tracking-widest uppercase transition"
+                  className="w-full bg-yellow-600 hover:bg-yellow-500 disabled:opacity-20 disabled:cursor-not-allowed text-white font-black text-xs rounded-xl py-3.5 tracking-widest uppercase transition"
                 >
                   ⚙ Execute Analysis — Splendor Engine V3
                 </button>
@@ -3032,7 +3032,7 @@ Unavailable data is labeled — never invented.`);
                   return (
                     <div
                       key={i}
-                      className={`flex items-center gap-3 rounded-lg px-3.5 py-2.5 border transition-all duration-300 ${done ? "opacity-35 bg-zinc-900/20 border-zinc-900" : active ? "bg-zinc-900 border-violet-700 shadow-lg" : "bg-zinc-900/10 border-zinc-900"}`}
+                      className={`flex items-center gap-3 rounded-lg px-3.5 py-2.5 border transition-all duration-300 ${done ? "opacity-35 bg-zinc-900/20 border-zinc-900" : active ? "bg-zinc-900 border-yellow-700 shadow-lg" : "bg-zinc-900/10 border-zinc-900"}`}
                     >
                       <span className="text-sm flex-shrink-0">{st.icon}</span>
                       <span
@@ -3041,7 +3041,7 @@ Unavailable data is labeled — never invented.`);
                         {st.label}
                       </span>
                       {done && (
-                        <span className="text-emerald-500 text-[10px] flex-shrink-0">
+                        <span className="text-yellow-500 text-[10px] flex-shrink-0">
                           ✓
                         </span>
                       )}
@@ -3050,7 +3050,7 @@ Unavailable data is labeled — never invented.`);
                           {[0, 1, 2].map((d) => (
                             <span
                               key={d}
-                              className="w-1 h-1 bg-violet-400 rounded-full animate-bounce"
+                              className="w-1 h-1 bg-yellow-400 rounded-full animate-bounce"
                               style={{ animationDelay: `${d * 0.15}s` }}
                             />
                           ))}
@@ -3068,7 +3068,7 @@ Unavailable data is labeled — never invented.`);
             <div className="flex-1 overflow-y-auto">
               <div className="max-w-2xl mx-auto px-5 py-4 space-y-3">
                 {/* Time Sync */}
-                <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl px-4 py-3">
+                <div className="bg-zinc-900/50 border border-yellow-950 rounded-xl px-4 py-3">
                   <p className="text-[9px] font-bold uppercase tracking-widest text-zinc-600 mb-1.5">
                     ⏱ RULE 1 — TIME SYNC
                   </p>
@@ -3093,13 +3093,13 @@ Unavailable data is labeled — never invented.`);
                 </div>
 
                 {/* Data Reliability + DNA */}
-                <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl px-4 py-3 space-y-2">
+                <div className="bg-zinc-900/50 border border-yellow-950 rounded-xl px-4 py-3 space-y-2">
                   <p className="text-[9px] font-bold uppercase tracking-widest text-zinc-600 mb-1.5">
                     📊 RULE 2 — DATA RELIABILITY & LEAGUE DNA
                   </p>
                   <div className="flex items-start gap-3">
                     <span
-                      className={`text-xs font-black px-3 py-1 rounded-full border flex-shrink-0 ${result.reliability === "Strong" ? "text-emerald-400 border-emerald-800 bg-emerald-950/50" : result.reliability === "Moderate" ? "text-amber-400 border-amber-800 bg-amber-950/50" : "text-red-400 border-red-800 bg-red-950/50"}`}
+                      className={`text-xs font-black px-3 py-1 rounded-full border flex-shrink-0 ${result.reliability === "Strong" ? "text-yellow-400 border-yellow-800 bg-yellow-950/50" : result.reliability === "Moderate" ? "text-yellow-400 border-yellow-800 bg-yellow-950/50" : "text-red-400 border-red-800 bg-red-950/50"}`}
                     >
                       {result.reliability}
                     </span>
@@ -3109,19 +3109,19 @@ Unavailable data is labeled — never invented.`);
                   </div>
                   <div className="flex items-center gap-2 flex-wrap mt-1">
                     <span
-                      className={`text-[9px] font-bold px-2 py-0.5 rounded border ${result.proxyCapped ? "border-amber-800 text-amber-500 bg-amber-950/30" : "border-zinc-800 text-zinc-600"}`}
+                      className={`text-[9px] font-bold px-2 py-0.5 rounded border ${result.proxyCapped ? "border-yellow-800 text-yellow-500 bg-yellow-950/30" : "border-yellow-950 text-zinc-600"}`}
                     >
                       {result.proxyCapped
                         ? `🛡 PROXY CAP: ${result.capValue} PPG max`
                         : "✓ DB Data — No Cap"}
                     </span>
-                    <span className="text-[9px] font-bold px-2 py-0.5 rounded border border-violet-900 text-violet-500 bg-violet-950/30">
+                    <span className="text-[9px] font-bold px-2 py-0.5 rounded border border-yellow-900 text-yellow-500 bg-yellow-950/30">
                       🧬 {result.leagueDNAName}
                     </span>
-                    <span className="text-[9px] font-bold px-2 py-0.5 rounded border border-zinc-800 text-zinc-500">
+                    <span className="text-[9px] font-bold px-2 py-0.5 rounded border border-yellow-950 text-zinc-500">
                       Hammer threshold: {result.hammer_edge_used}pt
                     </span>
-                    <span className="text-[9px] font-bold px-2 py-0.5 rounded border border-zinc-800 text-zinc-500">
+                    <span className="text-[9px] font-bold px-2 py-0.5 rounded border border-yellow-950 text-zinc-500">
                       Hook buffer: ±{result.hook_buffer}pt
                     </span>
                   </div>
@@ -3134,7 +3134,7 @@ Unavailable data is labeled — never invented.`);
                 </div>
 
                 {/* Recent Form */}
-                <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl px-4 py-3">
+                <div className="bg-zinc-900/50 border border-yellow-950 rounded-xl px-4 py-3">
                   <p className="text-[9px] font-bold uppercase tracking-widest text-zinc-600 mb-2">
                     📋 RULE 3 — STATISTICAL FORM SUMMARY
                   </p>
@@ -3154,7 +3154,7 @@ Unavailable data is labeled — never invented.`);
                               ({String(side)})
                             </span>{" "}
                             <span
-                              className={`text-[9px] ml-1 ${info.source === "DB" ? "text-emerald-600" : "text-amber-600"}`}
+                              className={`text-[9px] ml-1 ${info.source === "DB" ? "text-yellow-600" : "text-yellow-600"}`}
                             >
                               [{info.source}]
                             </span>
@@ -3193,7 +3193,7 @@ Unavailable data is labeled — never invented.`);
                               </span>
                             </p>
                             {info.proxyCapped && (
-                              <p className="text-amber-600">
+                              <p className="text-yellow-600">
                                 ⛔ Capped @ {info.capValue} PPG
                               </p>
                             )}
@@ -3204,7 +3204,7 @@ Unavailable data is labeled — never invented.`);
                   </div>
                   {researchData?.collapsePct != null && (
                     <div
-                      className={`mt-2 px-2 py-1.5 rounded text-[9px] font-bold ${researchData.collapsePct > 30 ? "bg-red-950/40 text-red-400" : researchData.collapsePct > 20 ? "bg-amber-950/40 text-amber-400" : "bg-zinc-900 text-zinc-500"}`}
+                      className={`mt-2 px-2 py-1.5 rounded text-[9px] font-bold ${researchData.collapsePct > 30 ? "bg-red-950/40 text-red-400" : researchData.collapsePct > 20 ? "bg-yellow-950/40 text-yellow-400" : "bg-zinc-900 text-zinc-500"}`}
                     >
                       Collapse % (auto-researched): {researchData.collapsePct}%
                       Q1-Q4 Structural Collapse{" "}
@@ -3220,7 +3220,7 @@ Unavailable data is labeled — never invented.`);
                 <Divider label="Mandatory Compliance Verification Block" />
 
                 {/* Compliance Block */}
-                <div className="bg-zinc-900/50 border border-zinc-700 rounded-xl px-4 py-4 space-y-4">
+                <div className="bg-zinc-900/50 border border-yellow-900 rounded-xl px-4 py-4 space-y-4">
                   <p className="text-[9px] font-black uppercase tracking-[0.2em] text-white">
                     ✅ MANDATORY PRE-MATCH COMPLIANCE VERIFICATION — V3
                   </p>
@@ -3250,7 +3250,7 @@ Unavailable data is labeled — never invented.`);
                       label={`OT Hazard (Rule 18): ${result.otHazard ? "ACTIVE — margin ≤5, HB+8 applied (LB grounded)" : "Inactive — margin >5"}`}
                     />
                   </div>
-                  <div className="border-t border-zinc-800 pt-3 space-y-1">
+                  <div className="border-t border-yellow-950 pt-3 space-y-1">
                     <p className="text-[9px] font-bold uppercase tracking-widest text-zinc-500 mb-1.5">
                       — Master Rulebook V3 — Block 1 → 2 → 3 —
                     </p>
@@ -3266,18 +3266,18 @@ Unavailable data is labeled — never invented.`);
                 <Divider label="Mandatory Numeric Validation Report — Full Chain Audit Rules 1–18" />
 
                 {/* Full-Chain Audit */}
-                <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl px-4 py-4">
+                <div className="bg-zinc-900/50 border border-yellow-950 rounded-xl px-4 py-4">
                   <div className="flex items-center justify-between mb-3">
                     <p className="text-[9px] font-black uppercase tracking-[0.2em] text-white">
                       📐 MANDATORY NUMERIC VALIDATION — FULL AUDIT
                     </p>
                     <div className="flex items-center gap-3 text-[9px] text-zinc-600">
                       <span className="flex items-center gap-1">
-                        <span className="w-1.5 h-1.5 rounded-full bg-amber-400 inline-block" />
+                        <span className="w-1.5 h-1.5 rounded-full bg-yellow-400 inline-block" />
                         Triggered
                       </span>
                       <span className="flex items-center gap-1">
-                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-700 inline-block" />
+                        <span className="w-1.5 h-1.5 rounded-full bg-yellow-700 inline-block" />
                         Checked/Pass
                       </span>
                       <span className="flex items-center gap-1">
@@ -3288,7 +3288,7 @@ Unavailable data is labeled — never invented.`);
                   </div>
 
                   <div className="space-y-0">
-                    <p className="text-[8px] font-bold uppercase tracking-widest text-zinc-600 py-1.5 border-b border-zinc-800 mb-1">
+                    <p className="text-[8px] font-bold uppercase tracking-widest text-zinc-600 py-1.5 border-b border-yellow-950 mb-1">
                       BLOCK 1 — FOUNDATION (Rules 1–7)
                     </p>
                     {result.adj_log.slice(0, 7).map((row, i) => (
@@ -3301,7 +3301,7 @@ Unavailable data is labeled — never invented.`);
                         status={row.status}
                       />
                     ))}
-                    <p className="text-[8px] font-bold uppercase tracking-widest text-zinc-600 py-1.5 border-b border-zinc-800 mt-2 mb-1">
+                    <p className="text-[8px] font-bold uppercase tracking-widest text-zinc-600 py-1.5 border-b border-yellow-950 mt-2 mb-1">
                       BLOCK 2 — ENVIRONMENT (Rules 8–12/18)
                     </p>
                     {result.adj_log.slice(7, 12).map((row, i) => (
@@ -3314,7 +3314,7 @@ Unavailable data is labeled — never invented.`);
                         status={row.status}
                       />
                     ))}
-                    <p className="text-[8px] font-bold uppercase tracking-widest text-zinc-600 py-1.5 border-b border-zinc-800 mt-2 mb-1">
+                    <p className="text-[8px] font-bold uppercase tracking-widest text-zinc-600 py-1.5 border-b border-yellow-950 mt-2 mb-1">
                       BLOCK 3 — DECISION CORE (Rules 13–16)
                     </p>
                     {result.adj_log.slice(12).map((row, i) => (
@@ -3329,7 +3329,7 @@ Unavailable data is labeled — never invented.`);
                     ))}
                   </div>
 
-                  <div className="mt-4 pt-3 border-t border-zinc-700 grid grid-cols-2 gap-4">
+                  <div className="mt-4 pt-3 border-t border-yellow-900 grid grid-cols-2 gap-4">
                     <div>
                       <p className="text-[9px] text-zinc-600 uppercase tracking-widest mb-0.5">
                         Final Scoring Range
@@ -3346,7 +3346,7 @@ Unavailable data is labeled — never invented.`);
                         Range Width
                       </p>
                       <p
-                        className={`text-2xl font-black ${result.range_width > getLeagueDNA(league).maxWidth ? "text-red-400" : result.range_width > getLeagueDNA(league).maxWidth - 4 ? "text-amber-400" : "text-zinc-300"}`}
+                        className={`text-2xl font-black ${result.range_width > getLeagueDNA(league).maxWidth ? "text-red-400" : result.range_width > getLeagueDNA(league).maxWidth - 4 ? "text-yellow-400" : "text-zinc-300"}`}
                       >
                         {result.range_width} pts
                       </p>
@@ -3357,7 +3357,7 @@ Unavailable data is labeled — never invented.`);
                   </div>
 
                   {/* Market Position */}
-                  <div className="mt-3 pt-3 border-t border-zinc-800">
+                  <div className="mt-3 pt-3 border-t border-yellow-950">
                     <p className="text-[9px] font-bold uppercase tracking-widest text-zinc-600 mb-2">
                       💰 RULE 12 — MARKET LINE POSITION
                     </p>
@@ -3365,7 +3365,7 @@ Unavailable data is labeled — never invented.`);
                       <div>
                         <span className="text-zinc-600">Best OVER line: </span>
                         <span
-                          className={`font-bold ${result.best_over_line < result.lb - result.hammer_edge_used ? "text-emerald-400" : result.best_over_line < result.lb ? "text-sky-400" : "text-zinc-500"}`}
+                          className={`font-bold ${result.best_over_line < result.lb - result.hammer_edge_used ? "text-yellow-400" : result.best_over_line < result.lb ? "text-yellow-400" : "text-zinc-500"}`}
                         >
                           {overLow}
                         </span>
@@ -3381,7 +3381,7 @@ Unavailable data is labeled — never invented.`);
                       <div>
                         <span className="text-zinc-600">Best UNDER line: </span>
                         <span
-                          className={`font-bold ${result.best_under_line > result.hb + result.hammer_edge_used ? "text-emerald-400" : result.best_under_line > result.hb ? "text-amber-400" : "text-zinc-500"}`}
+                          className={`font-bold ${result.best_under_line > result.hb + result.hammer_edge_used ? "text-yellow-400" : result.best_under_line > result.hb ? "text-yellow-400" : "text-zinc-500"}`}
                         >
                           {underHigh}
                         </span>
@@ -3398,7 +3398,7 @@ Unavailable data is labeled — never invented.`);
                     <p className="text-[10px] text-zinc-600">
                       Market position:{" "}
                       <span
-                        className={`font-bold ${result.line_position === "Inside" ? "text-zinc-500" : "text-emerald-400"}`}
+                        className={`font-bold ${result.line_position === "Inside" ? "text-zinc-500" : "text-yellow-400"}`}
                       >
                         {result.line_position}
                       </span>
@@ -3411,7 +3411,15 @@ Unavailable data is labeled — never invented.`);
                         vs {result.midpoint}
                       </span>
                       &nbsp;|&nbsp; Lean:{" "}
-                      <span className="text-violet-400 font-bold">
+                      <span className="text-yellow-400 font-bold">
+                  {result.alt_line_note && (
+                    <div className="bg-yellow-950/30 border border-yellow-700/60 rounded-lg px-3 py-2 mb-2">
+                      <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-yellow-500 mb-1">
+                        🎯 Alt-Line Watch
+                      </p>
+                      <p className="text-[11px] text-yellow-200 leading-snug">{result.alt_line_note}</p>
+                    </div>
+                  )}
                         {result.lean !== "NONE"
                           ? result.lean.includes("UNDER")
                             ? "UNDER"
@@ -3460,13 +3468,13 @@ Unavailable data is labeled — never invented.`);
                       </p>
                     )}
                     {result.buf_blocked && (
-                      <p className="text-[11px] text-amber-400">
+                      <p className="text-[11px] text-yellow-400">
                         🛡 Rule 13 (Hook Shield): Line outside range but within
                         ±{result.hook_buffer}pt — BLOCKED
                       </p>
                     )}
                     {result.hammer && (
-                      <p className="text-[11px] text-emerald-400">
+                      <p className="text-[11px] text-yellow-400">
                         ★ Rule 16 Hammer: {result.hammer_edge_used}pt edge
                         confirmed — Buffer & Volatility overridden
                       </p>
@@ -3484,7 +3492,7 @@ Unavailable data is labeled — never invented.`);
                 </div>
 
                 {/* ── Live Monitor ── */}
-                <div className="bg-black/60 border border-zinc-700 rounded-xl overflow-hidden">
+                <div className="bg-black/60 border border-yellow-900 rounded-xl overflow-hidden">
                   <button
                     onClick={() => setShowLive(!showLive)}
                     className="w-full flex items-center justify-between px-4 py-3 hover:bg-zinc-800/20 transition"
@@ -3496,7 +3504,7 @@ Unavailable data is labeled — never invented.`);
                     </span>
                   </button>
                   {showLive && (
-                    <div className="border-t border-zinc-800 px-4 py-4 space-y-4">
+                    <div className="border-t border-yellow-950 px-4 py-4 space-y-4">
                       <div className="grid grid-cols-3 gap-3">
                         <SmallField
                           value={liveHome}
@@ -3544,14 +3552,14 @@ Unavailable data is labeled — never invented.`);
                                 value={hv}
                                 onChange={(e) => hs(e.target.value)}
                                 placeholder="H"
-                                className="w-full bg-zinc-900 border border-zinc-800 rounded-md px-1.5 py-1 text-[11px] text-white text-center focus:outline-none focus:border-sky-700"
+                                className="w-full bg-zinc-900 border border-yellow-950 rounded-md px-1.5 py-1 text-[11px] text-white text-center focus:outline-none focus:border-yellow-700"
                               />
                               <input
                                 type="number"
                                 value={av}
                                 onChange={(e) => as_(e.target.value)}
                                 placeholder="A"
-                                className="w-full bg-zinc-900 border border-zinc-800 rounded-md px-1.5 py-1 text-[11px] text-white text-center focus:outline-none focus:border-amber-700"
+                                className="w-full bg-zinc-900 border border-yellow-950 rounded-md px-1.5 py-1 text-[11px] text-white text-center focus:outline-none focus:border-yellow-700"
                               />
                               {(parseFloat(hv) || 0) + (parseFloat(av) || 0) >
                                 0 && (
@@ -3579,10 +3587,10 @@ Unavailable data is labeled — never invented.`);
                       </button>
                       {liveAlert && (
                         <div
-                          className={`rounded-lg px-4 py-3 border ${liveAlert.level === "danger" ? "bg-red-950/50 border-red-700" : liveAlert.hbAdj < 0 ? "bg-amber-950/50 border-amber-700" : "bg-emerald-950/30 border-emerald-800"}`}
+                          className={`rounded-lg px-4 py-3 border ${liveAlert.level === "danger" ? "bg-red-950/50 border-red-700" : liveAlert.hbAdj < 0 ? "bg-yellow-950/50 border-yellow-700" : "bg-yellow-950/30 border-yellow-800"}`}
                         >
                           <p
-                            className={`text-[11px] font-bold leading-relaxed ${liveAlert.level === "danger" ? "text-red-300" : liveAlert.hbAdj < 0 ? "text-amber-300" : "text-emerald-400"}`}
+                            className={`text-[11px] font-bold leading-relaxed ${liveAlert.level === "danger" ? "text-red-300" : liveAlert.hbAdj < 0 ? "text-yellow-300" : "text-yellow-400"}`}
                           >
                             {liveAlert.msg}
                           </p>
@@ -3604,8 +3612,8 @@ Unavailable data is labeled — never invented.`);
                 </div>
 
                 {/* ─── RERUN ── */}
-                <div className="bg-black/70 border border-zinc-700 rounded-xl overflow-hidden">
-                  <div className="px-4 py-3 border-b border-zinc-800">
+                <div className="bg-black/70 border border-yellow-900 rounded-xl overflow-hidden">
+                  <div className="px-4 py-3 border-b border-yellow-950">
                     <p className="text-[9px] font-bold uppercase tracking-widest text-zinc-400">
                       🔁 RERUN — SPLENDOR ENGINE V3 · COLD RECOMPUTE
                     </p>
@@ -3623,12 +3631,12 @@ Unavailable data is labeled — never invented.`);
                           if (e.key === "Enter") handleRerun();
                         }}
                         placeholder={`"Tatum out"  ·  "line to 228"  ·  "no injury"  ·  "adjust total 157.5"`}
-                        className="flex-1 bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-xs text-white placeholder:text-zinc-700 focus:outline-none focus:border-zinc-500 transition font-mono"
+                        className="flex-1 bg-zinc-900 border border-yellow-900 rounded-lg px-3 py-2 text-xs text-white placeholder:text-zinc-700 focus:outline-none focus:border-zinc-500 transition font-mono"
                       />
                       <button
                         onClick={handleRerun}
                         disabled={!rerunCmd.trim() || rerunPhase === "running"}
-                        className="bg-violet-700 hover:bg-violet-600 disabled:opacity-30 text-white text-xs font-bold px-4 rounded-lg transition whitespace-nowrap"
+                        className="bg-yellow-700 hover:bg-yellow-600 disabled:opacity-30 text-white text-xs font-bold px-4 rounded-lg transition whitespace-nowrap"
                       >
                         {rerunPhase === "running" ? "…" : "RERUN →"}
                       </button>
@@ -3645,7 +3653,7 @@ Unavailable data is labeled — never invented.`);
                         {[0, 1, 2].map((d) => (
                           <span
                             key={d}
-                            className="w-1 h-1 bg-violet-500 rounded-full animate-bounce"
+                            className="w-1 h-1 bg-yellow-500 rounded-full animate-bounce"
                             style={{ animationDelay: `${d * 0.15}s` }}
                           />
                         ))}
@@ -3655,7 +3663,7 @@ Unavailable data is labeled — never invented.`);
                   )}
 
                   {rerunPhase === "done" && rerunResult && rs && (
-                    <div className="border-t border-zinc-800 px-4 py-4 space-y-3 bg-zinc-950/70">
+                    <div className="border-t border-yellow-950 px-4 py-4 space-y-3 bg-black/70">
                       <p className="text-[9px] font-bold uppercase tracking-widest text-zinc-400">
                         🔁 RERUN OUTPUT — COLD RECOMPUTE · FRESH TIMESTAMP
                       </p>
@@ -3670,7 +3678,7 @@ Unavailable data is labeled — never invented.`);
                         <p>
                           <span className="text-zinc-700">Reliability:</span>{" "}
                           <span
-                            className={`font-bold ${rerunResult.reliability === "Strong" ? "text-emerald-400" : rerunResult.reliability === "Moderate" ? "text-amber-400" : "text-red-400"}`}
+                            className={`font-bold ${rerunResult.reliability === "Strong" ? "text-yellow-400" : rerunResult.reliability === "Moderate" ? "text-yellow-400" : "text-red-400"}`}
                           >
                             {rerunResult.reliability}
                           </span>{" "}
@@ -3678,7 +3686,7 @@ Unavailable data is labeled — never invented.`);
                           {rerunResult.hammer_edge_used}pt
                         </p>
                       </div>
-                      <div className="bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2.5">
+                      <div className="bg-zinc-900 border border-yellow-950 rounded-lg px-3 py-2.5">
                         <p className="text-[9px] uppercase tracking-widest text-zinc-600 font-bold mb-1.5">
                           VALIDATION SNAPSHOT
                         </p>
@@ -3722,12 +3730,12 @@ Unavailable data is labeled — never invented.`);
                             rerunResult.line_position,
                             rerunResult.line_position === "Inside"
                               ? "text-zinc-500"
-                              : "text-emerald-400",
+                              : "text-yellow-400",
                           ],
                         ].map(([lbl, val, cls]) => (
                           <div
                             key={String(lbl)}
-                            className="bg-zinc-900 border border-zinc-800 rounded-lg py-2 px-2 text-center"
+                            className="bg-zinc-900 border border-yellow-950 rounded-lg py-2 px-2 text-center"
                           >
                             <p className="text-[8px] uppercase tracking-widest text-zinc-600">
                               {lbl}
@@ -3906,14 +3914,14 @@ const PhantomLiveHub = () => {
   }, [hScore, aScore, clockMin]);
 
   return (
-    <div className="mt-6 border border-zinc-800 bg-black/60 rounded-xl p-4 shadow-2xl relative overflow-hidden">
+    <div className="mt-6 border border-yellow-950 bg-black/60 rounded-xl p-4 shadow-2xl relative overflow-hidden">
       {avalanche && (
         <div className="absolute top-0 left-0 w-full h-full bg-red-950/20 border-2 border-red-600/50 pointer-events-none animate-pulse"></div>
       )}
 
-      <div className="flex justify-between items-center mb-4 border-b border-zinc-800/50 pb-3 relative z-10">
+      <div className="flex justify-between items-center mb-4 border-b border-yellow-950/50 pb-3 relative z-10">
         <div>
-          <h3 className="text-emerald-400 font-black tracking-widest text-[13px] uppercase">
+          <h3 className="text-yellow-400 font-black tracking-widest text-[13px] uppercase">
             Live Sync Hub
           </h3>
           <p className="text-zinc-500 text-[9px] uppercase tracking-widest mt-0.5">
@@ -3921,7 +3929,7 @@ const PhantomLiveHub = () => {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span>
+          <span className="w-2 h-2 bg-yellow-500 rounded-full animate-pulse"></span>
           <span className="text-zinc-400 text-[10px] font-mono">
             Q{qtr} {clockMin}:00
           </span>
@@ -3942,7 +3950,7 @@ const PhantomLiveHub = () => {
 
       {/* Simulator Controls (To test the Avalanche trigger) */}
       <div className="grid grid-cols-2 gap-4 mb-5 relative z-10">
-        <div className="bg-zinc-900/50 rounded p-3 text-center border border-zinc-800/50">
+        <div className="bg-zinc-900/50 rounded p-3 text-center border border-yellow-950/50">
           <span className="text-zinc-500 text-[9px] uppercase tracking-widest block mb-1">
             Home Score
           </span>
@@ -3962,7 +3970,7 @@ const PhantomLiveHub = () => {
             </button>
           </div>
         </div>
-        <div className="bg-zinc-900/50 rounded p-3 text-center border border-zinc-800/50">
+        <div className="bg-zinc-900/50 rounded p-3 text-center border border-yellow-950/50">
           <span className="text-zinc-500 text-[9px] uppercase tracking-widest block mb-1">
             Away Score
           </span>
@@ -3985,13 +3993,13 @@ const PhantomLiveHub = () => {
       </div>
 
       <div className="grid grid-cols-3 gap-3 mb-4 relative z-10">
-        <div className="bg-zinc-950 rounded p-2 text-center border border-zinc-900">
+        <div className="bg-black rounded p-2 text-center border border-zinc-900">
           <span className="text-zinc-600 text-[8px] uppercase tracking-widest block">
             Possession
           </span>
-          <span className="text-sky-400 text-[11px] font-bold">{poss}</span>
+          <span className="text-yellow-400 text-[11px] font-bold">{poss}</span>
         </div>
-        <div className="bg-zinc-950 rounded p-2 text-center border border-zinc-900">
+        <div className="bg-black rounded p-2 text-center border border-zinc-900">
           <span className="text-zinc-600 text-[8px] uppercase tracking-widest block">
             Clock (Min)
           </span>
@@ -4002,7 +4010,7 @@ const PhantomLiveHub = () => {
             >
               -
             </button>
-            <span className="text-amber-400 text-[11px] font-bold">
+            <span className="text-yellow-400 text-[11px] font-bold">
               {clockMin}
             </span>
             <button
@@ -4013,42 +4021,42 @@ const PhantomLiveHub = () => {
             </button>
           </div>
         </div>
-        <div className="bg-zinc-950 rounded p-2 text-center border border-zinc-900">
+        <div className="bg-black rounded p-2 text-center border border-zinc-900">
           <span className="text-zinc-600 text-[8px] uppercase tracking-widest block">
             Time In Lead
           </span>
-          <span className="text-indigo-400 text-[10px] font-bold">
+          <span className="text-yellow-400 text-[10px] font-bold">
             {leadTime}
           </span>
         </div>
       </div>
 
-      <div className="grid grid-cols-5 gap-2 border-t border-zinc-800/50 pt-4 relative z-10">
+      <div className="grid grid-cols-5 gap-2 border-t border-yellow-950/50 pt-4 relative z-10">
         <div className="text-center">
           <span className="text-zinc-600 text-[8px] uppercase tracking-widest block mb-1">
             FT%
           </span>
           <span className="text-zinc-300 text-[10px] font-mono">{ftPct}%</span>
         </div>
-        <div className="text-center border-l border-zinc-800/50">
+        <div className="text-center border-l border-yellow-950/50">
           <span className="text-zinc-600 text-[8px] uppercase tracking-widest block mb-1">
             3PT%
           </span>
           <span className="text-zinc-300 text-[10px] font-mono">{pt3Pct}%</span>
         </div>
-        <div className="text-center border-l border-zinc-800/50">
+        <div className="text-center border-l border-yellow-950/50">
           <span className="text-zinc-600 text-[8px] uppercase tracking-widest block mb-1">
             FG%
           </span>
           <span className="text-zinc-300 text-[10px] font-mono">{fgPct}%</span>
         </div>
-        <div className="text-center border-l border-zinc-800/50">
+        <div className="text-center border-l border-yellow-950/50">
           <span className="text-zinc-600 text-[8px] uppercase tracking-widest block mb-1">
             Off PPG
           </span>
           <span className="text-zinc-300 text-[10px] font-mono">{offPpg}</span>
         </div>
-        <div className="text-center border-l border-zinc-800/50">
+        <div className="text-center border-l border-yellow-950/50">
           <span className="text-zinc-600 text-[8px] uppercase tracking-widest block mb-1">
             Def PPG
           </span>
