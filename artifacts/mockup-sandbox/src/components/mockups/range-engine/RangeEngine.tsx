@@ -890,6 +890,52 @@ export function RangeEngine() {
     setHistory(loadHistory());
   }, []);
 
+  // ── SETTLE & POST-MATCH GRADE — warehouse-settled, zero API cost, never overwrites ──
+  // ── CONFIRM: reopen a receipt as the full Results page ──
+  const confirmEntry = (id: string) => {
+    const hist: any = history.find((h) => h.id === id);
+    if (!hist?.result) return;
+    if (hist.homeTeam) setHomeTeam(hist.homeTeam);
+    if (hist.awayTeam) setAwayTeam(hist.awayTeam);
+    setResult(hist.result);
+    setRerunResult(hist.rerunResult ?? null);
+    setPhase("result");
+    setTab("analyzer");
+  };
+  const settleAndGrade = async (entry: HistoryEntry) => {
+    try {
+      const r = await fetch(`${API_BASE}/api/v1/result?homeTeam=${encodeURIComponent(entry.homeTeam)}&awayTeam=${encodeURIComponent(entry.awayTeam)}`).then((x) => (x.ok ? x.json() : null));
+      if (!r?.settled || r.total == null) return false;
+      const res: any = entry.result;
+      const dec: string = res?.decision ?? "";
+      let outcome: HistoryEntry["outcome"] = "PUSH";
+      if (dec.includes("OVER")) outcome = r.total > res.best_over_line ? "WIN" : r.total === res.best_over_line ? "PUSH" : "LOSS";
+      else if (dec.includes("UNDER")) outcome = r.total < res.best_under_line ? "WIN" : r.total === res.best_under_line ? "PUSH" : "LOSS";
+      const within = res ? r.total >= res.lb && r.total <= res.hb : null;
+      const err = res ? +(r.total - res.midpoint).toFixed(1) : null;
+      const postMatch = {
+        actualTotal: r.total,
+        ftScore: `${r.home}-${r.away}`,
+        quarters: r.quarters,
+        withinRange: within,
+        midpointError: err,
+        grade: within ? "RANGE HIT" : "RANGE MISS",
+        note: within
+          ? `Actual ${r.total} landed inside ${res?.lb}–${res?.hb} — the pre-match study captured this game.`
+          : `Actual ${r.total} vs range ${res?.lb}–${res?.hb} (mid ${res?.midpoint}) — missed by ${err} pts. Logged for recalibration.`,
+      };
+      const updated = history.map((h) => (h.id === entry.id ? ({ ...h, outcome, actualTotal: r.total, ftScore: postMatch.ftScore, postMatch } as any) : h));
+      setHistory(updated);
+      saveHistory(updated);
+      return true;
+    } catch { return false; }
+  };
+
+  // Auto-settle: opening the Archive tries every PENDING receipt against the warehouse (free)
+  useEffect(() => {
+    if (tab !== "history") return;
+    history.filter((h) => h.outcome === "PENDING").forEach((h) => { settleAndGrade(h); });
+  }, [tab]);
   const revalidateEarlyEntry = async (entry: HistoryEntry) => {
     try {
       const params = new URLSearchParams({
@@ -1626,6 +1672,30 @@ export function RangeEngine() {
                         <p className="text-sm font-bold text-yellow-300">{entry.finalRange}</p>
                       </div>
                     </div>
+                    {(() => {
+                      const hist: any = history.find((h) => h.id === entry.id);
+                      const pm = hist?.postMatch;
+                      return (
+                        <div className="mt-3 space-y-2">
+                          {pm ? (
+                            <div className={`rounded-lg border px-3 py-2 ${pm.withinRange ? "border-yellow-700 bg-yellow-950/30" : "border-red-800 bg-red-950/20"}`}>
+                              <p className={`text-[10px] font-black tracking-widest uppercase ${pm.withinRange ? "text-yellow-300" : "text-red-300"}`}>
+                                FT {pm.ftScore} · Total {pm.actualTotal} · {pm.grade}
+                              </p>
+                              <p className="text-[10px] text-zinc-400 mt-1">{pm.note}</p>
+                              {Array.isArray(pm.quarters?.home) && pm.quarters.home[0] != null && (
+                                <p className="text-[9px] text-zinc-500 font-mono mt-1">Quarters: {pm.quarters.home.join(" / ")} — {pm.quarters.away.join(" / ")}</p>
+                              )}
+                            </div>
+                          ) : (
+                            <p className="text-[9px] text-zinc-600">Not settled yet — open the games browser once after full time to bank the result, then revisit this tab.</p>
+                          )}
+                          <button onClick={() => confirmEntry(entry.id)} className="w-full bg-yellow-700 hover:bg-yellow-600 text-black text-[10px] font-black py-2 rounded-lg uppercase tracking-widest transition">
+                            Confirm → Full Results
+                          </button>
+                        </div>
+                      );
+                    })()}
                     <div className="mt-3 grid grid-cols-2 gap-3 text-[11px]">
                       <div className="rounded-lg border border-yellow-950/70 bg-black/40 px-3 py-2">
                         <span className="block text-[9px] uppercase tracking-widest text-zinc-500">Bookmaker</span>
