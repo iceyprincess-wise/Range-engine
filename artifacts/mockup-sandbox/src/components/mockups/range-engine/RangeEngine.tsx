@@ -2765,7 +2765,7 @@ Unavailable data is labeled — never invented.`);
                         {research.scanning ? "Syncing Deep Scan..." : research.done ? "Deep Scan Live" : "Deep Scan Standby"}
                       </h4>
                       <span className="text-[9px] text-yellow-300/70 font-mono tracking-widest uppercase">
-                        {liveMatrixData.sourceNodes.length > 0 ? `${liveMatrixData.sourceNodes.length} source nodes` : "Live API bridge"}
+                        REAL CHANNELS · WAREHOUSE + NEWS + H2H + QUOTA
                       </span>
                     </div>
 
@@ -2783,50 +2783,31 @@ Unavailable data is labeled — never invented.`);
                       ))}
                     </div>
 
-                    {/* The Heavyweight Dynamic URL Terminal (32 Sources) */}
+                    {/* Real-channel terminal — every row is an actual feed */}
                     <div className="bg-black/80 rounded p-2 border border-yellow-900/40 h-[140px] overflow-hidden relative mt-1 flex flex-col">
                       <div className="absolute top-0 left-0 w-full h-4 bg-gradient-to-b from-black/80 to-transparent z-10 pointer-events-none"></div>
                       <div className="absolute bottom-0 left-0 w-full h-4 bg-gradient-to-t from-black/80 to-transparent z-10 pointer-events-none"></div>
 
                       <ul className="text-[8px] text-zinc-500 space-y-1.5 font-mono overflow-y-auto scrollbar-none pb-4 pt-2">
-                        {(liveMatrixData.sourceNodes.length > 0 ? liveMatrixData.sourceNodes : [`Live node connected to ${homeTeam} vs ${awayTeam}`])
-                          .slice(
-                            0,
-                            Math.max(
-                              1,
-                              Math.floor((research.progress / 100) * (liveMatrixData.sourceNodes.length || 1)),
-                            ),
-                          )
-                          .reverse()
-                          .map((url, i, arr) => (
-                            <li
-                              key={url}
-                              className="flex items-center justify-between transition-all duration-300"
-                            >
-                              <span
-                                className={
-                                  i === 0 && !research.done
-                                    ? "text-yellow-300 animate-pulse"
-                                    : "text-zinc-500"
-                                }
-                              >
-                                [NODE{" "}
-                                {(arr.length - i).toString().padStart(2, "0")}]{" "}
-                                {url}
+                        {(() => {
+                          const wg = (researchData?.homeQuarters?.gamesWithQuarters ?? 0) + (researchData?.awayQuarters?.gamesWithQuarters ?? 0);
+                          const reports = homeNews.length + awayNews.length;
+                          const outlets = [...new Set([...homeNews, ...awayNews].map((n) => n.source))].slice(0, 3).join(", ");
+                          const channels: [string, string, boolean][] = [
+                            ["WAREHOUSE — stored match history", researchData ? `${wg} games (quarter-level)` : "pending", !!researchData],
+                            ["NEWS — Google News index", reports > 0 ? `${reports} reports · ${outlets}` : "no reports found", reports > 0],
+                            ["H2H — warehouse archive", researchData?.h2hAvgTotal ? `avg total ${researchData.h2hAvgTotal}` : "none found", !!researchData?.h2hAvgTotal],
+                            ["QUOTA — BasketAPI", quotaInfo.remaining != null ? `${Math.max(0, quotaInfo.remaining)}/${quotaInfo.limit ?? "—"} calls left` : "unknown", quotaInfo.remaining != null],
+                          ];
+                          return channels.map(([label, detail, ok], i) => (
+                            <li key={label} className="flex items-center justify-between">
+                              <span className={research.scanning && !ok ? "text-yellow-300 animate-pulse" : "text-zinc-500"}>
+                                [{String(i + 1).padStart(2, "0")}] {label} — {detail}
                               </span>
-                              <span
-                                className={
-                                  i === 0 && !research.done
-                                    ? "text-yellow-400"
-                                    : "text-yellow-500 font-bold"
-                                }
-                              >
-                                {i === 0 && !research.done
-                                  ? "SYNC..."
-                                  : "200 OK"}
-                              </span>
+                              <span className={ok ? "text-yellow-500 font-bold" : "text-zinc-600"}>{ok ? "LIVE" : "—"}</span>
                             </li>
-                          ))}
+                          ));
+                        })()}
                       </ul>
                     </div>
 
