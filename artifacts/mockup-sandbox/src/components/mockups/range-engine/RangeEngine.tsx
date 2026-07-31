@@ -511,6 +511,42 @@ export function RangeEngine() {
       setWhAt(Date.now());
     } catch { setWh(null); }
   };
+  const [gMeta, setGMeta] = useState<any>(null);
+  const [gStatuses, setGStatuses] = useState<Record<number, any>>({});
+  const updateTournaments = async () => {
+    if (refreshing) return;
+    setRefreshing(true);
+    try {
+      const t = await fetch(`${API_BASE}/api/v1/games/tournaments?update=1`).then((r) => (r.ok ? r.json() : null));
+      if (t) { setGTours(t.tournaments || []); setGMeta(t); }
+      const q = await fetch(`${API_BASE}/api/v1/quota`).then((r) => (r.ok ? r.json() : null));
+      if (q) setQuotaInfo({ limit: (q as any).limit ?? null, remaining: (q as any).remaining ?? null });
+    } catch { /* best-effort */ } finally { setRefreshing(false); }
+  };
+  // FREE self-ticker (every 30s while page open): clock-derived phase + warehouse-confirmed finals. Zero quota, always.
+  useEffect(() => {
+    if (!showGames || gGames.length === 0) { setGStatuses({}); return; }
+    let stop = false;
+    const tick = async () => {
+      const now = Date.now() / 1000;
+      const st: Record<number, any> = {};
+      for (const g of gGames) {
+        if (!g.startTimestamp) continue;
+        if (now < g.startTimestamp) st[g.id] = { phase: "UPCOMING" };
+        else if (now < g.startTimestamp + 3 * 3600) st[g.id] = { phase: "LIVE (clock est.)" };
+        else st[g.id] = { phase: "ENDED (unconfirmed)" };
+      }
+      try {
+        const ids = gGames.map((g: any) => g.id).join(",");
+        const b = await fetch(`${API_BASE}/api/v1/games/bankcheck?ids=${ids}`).then((r) => (r.ok ? r.json() : null));
+        for (const f of b?.finals || []) st[f.id] = { phase: "FT", hs: f.hs, as: f.as };
+      } catch { /* free check, best-effort */ }
+      if (!stop) setGStatuses(st);
+    };
+    tick();
+    const iv = setInterval(tick, 30000);
+    return () => { stop = true; clearInterval(iv); };
+  }, [showGames, gGames]);
   const openGames = async () => {
     setShowGames(true);
     setGSel(null);
@@ -1544,9 +1580,9 @@ export function RangeEngine() {
         <div className="fixed inset-0 bg-black/95 flex flex-col p-4 overflow-y-auto" style={{ zIndex: 9999 }}>
           <div className="flex items-center justify-between mb-3">
             <p className="text-yellow-400 font-black text-sm uppercase tracking-widest">📡 Covered Games — Today</p>
-            <span className="flex items-center gap-2"><button onClick={() => refreshAll()} className="text-yellow-300 text-[10px] font-black px-2 py-1 rounded border border-yellow-700 bg-yellow-950/40 uppercase">{refreshing ? "⟳ Refreshing…" : "⟳ Refresh"}</button><button onClick={() => setShowGames(false)} className="text-zinc-400 text-xl px-2">✕</button></span>
+            <span className="flex items-center gap-2"><button onClick={() => updateTournaments()} className="text-yellow-300 text-[10px] font-black px-2 py-1 rounded border border-yellow-700 bg-yellow-950/40 uppercase">{refreshing ? "⬆ UPDATING…" : "⬆ UPDATE (spends quota)"}</button><button onClick={() => setShowGames(false)} className="text-zinc-400 text-xl px-2">✕</button></span>
           </div>
-          <p className="text-[10px] text-zinc-500 mb-3">API quota: {quotaInfo.remaining ?? "—"}/{quotaInfo.limit ?? "—"} remaining · schedules cached till midnight</p>
+          <p className="text-[10px] text-zinc-500 mb-3">API quota: {quotaInfo.remaining ?? "—"}/{quotaInfo.limit ?? "—"} remaining · {gMeta?.fromDisk === false ? "fresh UPDATE" : "showing last saved update"}{typeof gMeta?.quotaSpent === "number" ? ` — cost ${gMeta.quotaSpent} calls` : ""}</p>
           {!gSel ? (
             <div className="space-y-1.5">
               {gTours.length === 0 && <p className="text-zinc-500 text-xs">No tournaments loaded — daily API quota exhausted or nothing scheduled yet. Quota resets in the afternoon.</p>}
@@ -1568,7 +1604,7 @@ export function RangeEngine() {
                   <div key={g.id} className="bg-zinc-900 border border-yellow-950 rounded-lg px-3 py-2 flex items-center justify-between gap-2">
                     <div>
                       <p className="text-xs text-zinc-200">{g.home} vs {g.away}</p>
-                      <p className="text-[10px] text-zinc-500">{g.startTimestamp ? new Date(g.startTimestamp * 1000).toLocaleString([], { weekday: "short", hour: "2-digit", minute: "2-digit" }) : "TBD"} · {g.status}</p>
+                      <p className="text-[10px] text-zinc-500">{g.startTimestamp ? new Date(g.startTimestamp * 1000).toLocaleString([], { weekday: "short", hour: "2-digit", minute: "2-digit" }) : "TBD"} · {gStatuses[g.id]?.phase === "FT" ? `FT ${gStatuses[g.id].hs}-${gStatuses[g.id].as}` : (gStatuses[g.id]?.phase ?? g.status)}</p>
                     </div>
                     <button onClick={() => betFill(g)} className="bg-yellow-600 hover:bg-yellow-500 text-white text-[10px] font-black px-3 py-1.5 rounded uppercase">Bet</button>
                   </div>
@@ -1671,7 +1707,7 @@ export function RangeEngine() {
 
             <div className="flex items-center justify-between">
               <p className="text-[9px] uppercase tracking-widest text-zinc-600">
-                Local Archive — {histStats.total} receipts
+                Local Archive — {histStats.total} receipts · <span className="text-yellow-400">{history.filter((h: any) => h.postMatch).length}/{histStats.total} DNA-banked ✓</span>
               </p>
               <button
                 onClick={clearHistory}
