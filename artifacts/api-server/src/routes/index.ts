@@ -7,6 +7,7 @@ import gamesRouter from "./games";
 import backtestRouter from "./backtest";
 import resultsRouter from "./results";
 import leagueDnaRouter from "./league-dna";
+import warehouseViewRouter from "./warehouse-view";
 
 const router: IRouter = Router();
 
@@ -18,5 +19,6 @@ router.use(gamesRouter);
 router.use(backtestRouter);
 router.use(resultsRouter);
 router.use(leagueDnaRouter);
+router.use(warehouseViewRouter);
 
 export default router;

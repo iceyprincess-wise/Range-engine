@@ -497,6 +497,19 @@ export function RangeEngine() {
       setRefreshing(false);
     }
   };
+  // ── MY WAREHOUSE: self-refreshes the instant it opens — local backend, zero quota ──
+  const [showWh, setShowWh] = useState(false);
+  const [wh, setWh] = useState<any>(null);
+  const [whAt, setWhAt] = useState<number>(0);
+  const openWarehouse = async () => {
+    setShowWh(true);
+    setWh(null);
+    try {
+      const d = await fetch(`${API_BASE}/api/v1/warehouse`).then((r) => (r.ok ? r.json() : null));
+      setWh(d);
+      setWhAt(Date.now());
+    } catch { setWh(null); }
+  };
   const openGames = async () => {
     setShowGames(true);
     setGSel(null);
@@ -1524,6 +1537,64 @@ export function RangeEngine() {
           <button onClick={() => setTab("analyzer")} className="mt-8 px-8 py-3 bg-gradient-to-r from-yellow-600 to-yellow-600 text-white font-bold rounded-lg hover:from-yellow-500 hover:to-yellow-500 transition shadow-lg">Return to Basketball</button>
         </div>
       )}
+      {/* ── 🏢 MY WAREHOUSE — everything stored, straight from disk ── */}
+      {showWh && (
+        <div className="fixed inset-0 bg-black/97 flex flex-col p-4 overflow-y-auto" style={{ zIndex: 9999 }}>
+          <div className="flex items-center justify-between mb-1">
+            <p className="text-yellow-400 font-black text-sm uppercase tracking-widest">🏢 My Warehouse</p>
+            <button onClick={() => setShowWh(false)} className="text-zinc-400 text-xl px-2">✕</button>
+          </div>
+          {!wh ? (
+            <p className="text-zinc-500 text-xs mt-4">Reading store from disk…</p>
+          ) : (
+            <>
+              <p className="text-[10px] text-yellow-600 mb-3 font-mono">
+                Updated {Math.max(0, Math.round((Date.now() - whAt) / 1000))}s ago · last store write {wh.storeWrittenAgoSec != null ? `${wh.storeWrittenAgoSec}s ago` : "n/a"} · {wh.storeSizeBytes ? `${(wh.storeSizeBytes / 1024).toFixed(0)} KB on disk` : ""} · {wh.provenance}
+              </p>
+              <div className="grid grid-cols-4 gap-2 mb-3">
+                {([["Games", wh.totals.games], ["Teams", wh.totals.teams], ["Stat-enriched", wh.totals.statsEnriched], ["Quarter-level", wh.totals.quarterLevel]] as const).map(([l, v]) => (
+                  <div key={l} className="bg-zinc-900 border border-yellow-950 rounded-lg p-2 text-center">
+                    <p className="text-lg font-black text-yellow-300">{v}</p>
+                    <p className="text-[8px] uppercase tracking-widest text-zinc-500">{l}</p>
+                  </div>
+                ))}
+              </div>
+              <p className="text-[9px] text-zinc-600 mb-3">Span: {wh.span.oldest} → {wh.span.newest} · every game below is banked permanently — finished scores never change, never expire.</p>
+
+              <p className="text-[9px] font-bold uppercase tracking-widest text-yellow-500 mb-1.5">Leagues ({wh.leagues.length})</p>
+              <div className="space-y-1.5 mb-4">
+                {wh.leagues.map((lg: any) => (
+                  <details key={lg.league} className="bg-zinc-900 border border-yellow-950 rounded-lg px-3 py-2">
+                    <summary className="text-xs text-zinc-200 font-bold cursor-pointer">
+                      {lg.league} <span className="text-yellow-500">· {lg.games}g</span>
+                      {lg.avgTotal != null && <span className="text-[10px] text-zinc-500"> · avg {lg.avgTotal} ({lg.minTotal}–{lg.maxTotal})</span>}
+                    </summary>
+                    <div className="mt-2 space-y-1">
+                      {lg.latest.map((g: any, i: number) => (
+                        <p key={i} className="text-[10px] text-zinc-400 font-mono">
+                          {g.date} · {g.home} <span className="text-yellow-300">{g.hs}</span>–<span className="text-red-400">{g.as}</span> {g.away}{g.quarters ? " · Q✓" : ""}
+                        </p>
+                      ))}
+                      {lg.games > lg.latest.length && <p className="text-[9px] text-zinc-600">…and {lg.games - lg.latest.length} more banked in this league</p>}
+                    </div>
+                  </details>
+                ))}
+              </div>
+
+              <p className="text-[9px] font-bold uppercase tracking-widest text-yellow-500 mb-1.5">Teams profiled ({wh.teams.length})</p>
+              <div className="space-y-1.5 mb-4">
+                {wh.teams.map((t: any) => (
+                  <div key={t.id} className="bg-zinc-900 border border-yellow-950 rounded-lg px-3 py-2 flex items-center justify-between">
+                    <span className="text-xs text-zinc-200">{t.name}</span>
+                    <span className="text-[10px] text-zinc-500 font-mono">{t.gamesInStore}g stored · {t.statEnriched} stat-enriched</span>
+                  </div>
+                ))}
+              </div>
+              <p className="text-[9px] text-zinc-600 mb-6">Quota snapshot: {wh.quota?.remaining ?? "—"}/{wh.quota?.limit ?? "—"} — this page spent none of it.</p>
+            </>
+          )}
+        </div>
+      )}
       {/* ── GAMES BROWSER — today's covered games (STATUS panel) ── */}
       {showGames && (
         <div className="fixed inset-0 bg-black/95 flex flex-col p-4 overflow-y-auto" style={{ zIndex: 9999 }}>
@@ -1599,7 +1670,7 @@ export function RangeEngine() {
         </div>
         {/* Battery Pill - Telemetry Node */}
         <div className="mt-3 px-4 py-2 rounded-full border border-yellow-500/40 bg-yellow-950/30 flex items-center gap-2">
-          <span onClick={openGames} className="text-yellow-400 font-bold text-xs uppercase tracking-widest cursor-pointer">System Status</span><span onClick={() => refreshAll()} className={"ml-2 text-yellow-300 font-black text-xs cursor-pointer border border-yellow-700 rounded px-1.5 py-0.5" + (refreshing ? " animate-spin inline-block" : "")}>⟳</span>
+          <span onClick={openGames} className="text-yellow-400 font-bold text-xs uppercase tracking-widest cursor-pointer">System Status</span><span onClick={() => refreshAll()} className={"ml-2 text-yellow-300 font-black text-xs cursor-pointer border border-yellow-700 rounded px-1.5 py-0.5" + (refreshing ? " animate-spin inline-block" : "")}>⟳</span><span onClick={openWarehouse} className="ml-2 text-yellow-300 text-sm cursor-pointer border border-yellow-700 rounded px-1.5 py-0.5">🏢</span>
           <div className="w-6 h-3 rounded border border-yellow-400 flex items-center px-0.5 bg-yellow-950/50">
             <div className="w-full h-full bg-yellow-500 rounded-sm"></div>
           </div>
