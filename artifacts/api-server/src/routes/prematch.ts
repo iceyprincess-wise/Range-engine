@@ -34,7 +34,7 @@ let quota: { limit: number | null; remaining: number | null; updatedAt: number |
   limit: null, remaining: null, updatedAt: null,
 };
 
-const apiFetch = async (p: string) => {
+const apiFetch = async (p: string): Promise<any> => {
   const response = await fetch("https" + "://" + RAPIDAPI_HOST + p, {
     headers: { "x-rapidapi-key": RAPIDAPI_KEY ?? "", "x-rapidapi-host": RAPIDAPI_HOST },
   });
@@ -135,7 +135,7 @@ router.get("/v1/prematch", async (req: Request, res: Response) => {
     const h2hAvgTotal = h2hTotals.length ? h2hTotals.reduce((s, v) => s + v, 0) / h2hTotals.length : null;
 
     persist();
-    res.json({
+    return res.json({
       provenance: "real",
       fetchedAt: new Date().toISOString(),
       home: { id: home.id, name: home.name, ...summarize(homeGames, home.id) },
@@ -146,7 +146,7 @@ router.get("/v1/prematch", async (req: Request, res: Response) => {
     });
   } catch (error) {
     console.error("/api/v1/prematch error:", error);
-    res.status(502).json({ error: error instanceof Error ? error.message : "prematch fetch failed" });
+    return res.status(502).json({ error: error instanceof Error ? error.message : "prematch fetch failed" });
   }
 });
 
