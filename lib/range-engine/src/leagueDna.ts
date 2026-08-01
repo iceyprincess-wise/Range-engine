@@ -1,3 +1,12 @@
+import {
+  LEAGUE_DNA_MEASURED,
+  MEASURED_PROFILES,
+  resolveMeasuredKey,
+  blendDna,
+  dnaWeight,
+  isStale,
+} from "./leagueDnaMeasured";
+
 export const LEAGUE_DNA_PROFILES: Record<
   string,
   {
@@ -137,6 +146,22 @@ export const LEAGUE_DNA_PROFILES: Record<
 
 export function getLeagueDNA(league: string) {
   const lg = league.toUpperCase();
+
+  // Warehouse-measured DNA takes precedence over generic proxies.
+  const mk = resolveMeasuredKey(lg);
+  if (mk && MEASURED_PROFILES[mk] && LEAGUE_DNA_MEASURED[mk]) {
+    const meas = LEAGUE_DNA_MEASURED[mk];
+    const stale = isStale(meas.lastGame);
+    return {
+      ...blendDna(MEASURED_PROFILES[mk], LEAGUE_DNA_PROFILES.DEFAULT, meas.n, stale),
+      key: mk,
+      measured: true,
+      sample: meas.n,
+      weight: dnaWeight(meas.n),
+      stale,
+      lastGame: meas.lastGame,
+    };
+  }
   if (lg.includes("TBT") || lg.includes("BASKETBALL TOURNAMENT"))
     return { ...LEAGUE_DNA_PROFILES.TBT, key: "TBT" };
   if (lg.includes("WNBA"))

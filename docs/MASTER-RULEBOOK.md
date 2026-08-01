@@ -625,3 +625,45 @@ As I insert from time to league and then to Insert the home team and the away te
 
 As well Injury/Vacuum categories same activity of (4) that done in statistical DNA should be done to it and now more information will be provided it'll now be Injury/ Vacuum, lineups, Possible Heartbreaking Defensive Stalling by either teams during the gameplay incases of being given Over prediction and it stalls to become under, Possible Heartbreaking Offensive Stalling by either teams during the gameplay incases of being given Under prediction and it stalls to become Over, Overtime Possibility All research across Millions of sites to derive accurate results and data immediately home team name and away team name is provided and this should be before I tap on the execute analysis button and I should view the results of the auto researches but can't edit.
 
+
+## Measured League DNA (warehouse-derived)
+
+Snapshot 2026-08-01 · 570 scored games · 17 leagues · zero API calls.
+Regenerate with `node artifacts/api-server/tools/league-dna-measure.cjs`.
+
+Every value is computed from finished games held locally. Nothing is estimated,
+analogised, or carried in from outside the warehouse.
+
+**Derivation constants**, recovered from the hand-tuned WNBA and TBT profiles
+(both reproduce exactly, which is why they are trusted as the anchors):
+
+- `proxyPPG = avgTotal / 2 x 0.93` — the 0.93 is the anti-inflation cap; the
+  engine treats proxyPPG as a hard ceiling, not a central estimate.
+- `maxWidth = clamp(0.83 x sdTotal, 16, 24)`
+- `buffer   = sdTotal >= 25 ? 2.5 : 2.0`, +0.5 when the sample is stale
+- `grind    = avgQuarterTotal < 40`
+- `noOT` is set only where the format forbids overtime (TBT's Elam ending).
+  Six leagues show otPct 0 on small samples; none of them earn the flag.
+
+**Home/low bias stays at zero everywhere.** Each league's measured homeEdge was
+tested against its own standard error (SE = avgMargin x 1.253 / sqrt(n)). Nothing
+reached |t| >= 2. The loudest offender was LDB: +12.5 points and 83.3% home wins
+across six games, t = 1.02 — indistinguishable from noise, and exactly the shape
+of number that looks like an edge and is not.
+
+**Shrinkage.** Measured DNA blends toward the generic DEFAULT profile by
+`w = n / (n + 15)`. No cliff at any sample size: a 6-game league contributes 29%
+of its own signal, a 40-game league 73%, an 82-game league 85%. Provenance is
+reported as `measured · n · w` so the backtest can grade the constant itself.
+
+**Staleness.** A league whose newest finished game is more than 180 days old is
+flagged `stale` and pays +0.5 buffer. As of this snapshot: Uruguay LUB
+(2025-04-06), Divisional Tercera de Ascenso (2025-11-18), PBA Philippine Cup
+(2026-02-01).
+
+**Splits that must never share a profile:**
+
+- WNBA vs WNBA Preseason — preseason runs deep rotations; 174.1 vs 167.6 avg total.
+- The three PBA conferences — Governors' 218.0, Commissioner's 208.0, Philippine
+  Cup 187.5. The import rules drive a 30-point spread; one shared PBA profile is
+  wrong for at least two of them.
