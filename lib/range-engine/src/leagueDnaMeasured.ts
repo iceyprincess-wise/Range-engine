@@ -47,7 +47,7 @@ export type DnaMeasurement = {
 
 export const DNA_SNAPSHOT_AT = "2026-08-01";
 export const DNA_SNAPSHOT_GAMES = 570;
-export const SHRINK_K = 15;
+export const SHRINK_K = 1;
 export const CAP_DISCOUNT = 0.93;
 export const STALE_DAYS = 180;
 
@@ -131,15 +131,20 @@ export function blendDna(
   stale = false,
 ): DnaCore {
   const w = dnaWeight(n);
+  const u = 1 - w; // uncertainty share
+
+  // ESTIMATES shrink toward the prior.
+  // RISK CONTROLS move toward conservative as n falls — never toward DEFAULT,
+  // whose buffer (1.5) and hammerEdge (15) are laxer than any measured profile.
   return {
     name: measured.name,
     proxyPPG: mix(measured.proxyPPG, fallback.proxyPPG, w),
     hbDNA: 0,
     lbDNA: 0,
-    maxWidth: Math.round(mix(measured.maxWidth, fallback.maxWidth, w)),
-    hammerEdge: Math.round(mix(measured.hammerEdge, fallback.hammerEdge, w)),
-    buffer: mix(measured.buffer, fallback.buffer, w) + (stale ? 0.5 : 0),
-    grind: w >= 0.5 ? measured.grind : fallback.grind,
+    maxWidth: Math.min(24, Math.round(measured.maxWidth + 6 * u)),
+    hammerEdge: Math.round(measured.hammerEdge + 7 * u),
+    buffer: Math.round((measured.buffer + 1.0 * u + (stale ? 0.5 : 0)) * 10) / 10,
+    grind: measured.grind,
     noOT: measured.noOT,
   };
 }
