@@ -54,3 +54,4 @@ artifacts/api-server/data/
 artifacts/api-server/*.json
 artifacts/api-server/data/
 artifacts/api-server/*.json
+artifacts/api-server/tools/.dna-bundle.mjs

@@ -652,9 +652,21 @@ across six games, t = 1.02 — indistinguishable from noise, and exactly the sha
 of number that looks like an edge and is not.
 
 **Shrinkage.** Measured DNA blends toward the generic DEFAULT profile by
-`w = n / (n + 15)`. No cliff at any sample size: a 6-game league contributes 29%
-of its own signal, a 40-game league 73%, an 82-game league 85%. Provenance is
+`w = n / (n + 1)`. The constant is estimated from the warehouse itself, not
+assumed: between-league SD of average totals is 28.3 while within-league game
+SD is 19.5, so league identity carries far more signal than sampling noise
+(k* = 19.5^2 / 28.3^2 ~ 0.5). The hand-tuned anchors ratify it: TBT (68) and
+WNBA (81) both reproduce under k~1 and fail under stronger shrinkage, which
+had been mispricing CBI U15 Fem by +37 and PBA Governors' Cup by -31 total
+points. Weights: n=4 -> 0.80, n=10 -> 0.91, n=40 -> 0.98. Provenance is
 reported as `measured · n · w` so the backtest can grade the constant itself.
+
+**Risk controls never shrink toward laxer defaults.** Only the estimate
+(proxyPPG) blends toward DEFAULT. buffer, maxWidth and hammerEdge move
+monotonically toward conservative as the sample thins:
+`buffer += 1.0 x (1-w)`, `maxWidth += 6 x (1-w)` capped at 24,
+`hammerEdge += 7 x (1-w)`. A thin sample always pays a wider safety margin,
+never a narrower one.
 
 **Staleness.** A league whose newest finished game is more than 180 days old is
 flagged `stale` and pays +0.5 buffer. As of this snapshot: Uruguay LUB
