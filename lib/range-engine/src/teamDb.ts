@@ -373,12 +373,17 @@ export function lookupTeam(
   proxyCapped: boolean;
   capValue: number;
 } {
-  const key = name
-    .toLowerCase()
-    .trim()
-    .replace(/[^a-z0-9]/g, "");
+  const normalized = name.toLowerCase().trim();
+  const compact = normalized.replace(/[^a-z0-9]/g, "");
+  const tokens = new Set(normalized.match(/[a-z0-9]+/g) ?? []);
+
+  // Prefer exact aliases before whole-name-token matching.
   for (const [k, v] of Object.entries(TEAM_DB)) {
-    if (key.includes(k) || k.includes(key))
+    if (compact === k)
+      return { stats: v, source: "DB", proxyCapped: false, capValue: 0 };
+  }
+  for (const [k, v] of Object.entries(TEAM_DB)) {
+    if (tokens.has(k))
       return { stats: v, source: "DB", proxyCapped: false, capValue: 0 };
   }
   // Tier 2 Proxy — PPG STRICTLY capped at league DNA proxy PPG (anti-hallucination)

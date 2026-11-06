@@ -343,7 +343,7 @@ export async function fetchResearchData(
     homeOffPpg: homeOffPpg,
     awayOffPpg: awayOffPpg,
     homeDefPpg: homeDefPpg,
-    awayDefPpg: awayRoadPPG,
+    awayDefPpg: awayDefPpg,
     homePointDiff: homePointDiff,
     awayPointDiff: awayPointDiff,
     homeLeadTime: homeLeadTime,

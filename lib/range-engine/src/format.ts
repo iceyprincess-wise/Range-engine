@@ -67,12 +67,18 @@ export function weightedAverage(values: number[]): number {
 
 export function getLineupFromPayload(value: unknown): { pos: string; name: string }[] {
   if (!Array.isArray(value)) return [];
-  return value
-    .slice(0, 5)
-    .map((item: any, idx) => ({
-      pos: item?.pos || ["PG", "SG", "SF", "PF", "C"][idx] || "?",
-      name: item?.name || item?.player || `Player ${idx + 1}`,
-    }));
+  return value.slice(0, 5).map((item: any, idx) => {
+    const fallbackPos = ["PG", "SG", "SF", "PF", "C"][idx] || "?";
+    const pos = typeof item?.pos === "string" && item.pos.trim()
+      ? item.pos
+      : fallbackPos;
+    const name = typeof item?.name === "string" && item.name.trim()
+      ? item.name
+      : typeof item?.player === "string" && item.player.trim()
+        ? item.player
+        : `Player ${idx + 1}`;
+    return { pos, name };
+  });
 }
 
 export function formatInjuryNotes(value: unknown, defaultNote: string) {

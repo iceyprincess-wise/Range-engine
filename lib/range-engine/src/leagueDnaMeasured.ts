@@ -109,7 +109,7 @@ export function resolveMeasuredKey(leagueUpper: string): string | null {
 
 // ─── Shrinkage ───────────────────────────────────────────────────────────────
 // Continuous, no cliff: a 6-game league is not silently promoted to fact, and a
-// 12-game league is not thrown away. w = n / (n + 15).
+// 12-game league is not thrown away. w = n / (n + SHRINK_K).
 //   n=4 -> 0.21 · n=10 -> 0.40 · n=17 -> 0.53 · n=40 -> 0.73 · n=82 -> 0.85
 export const dnaWeight = (n: number): number =>
   Math.round((n / (n + SHRINK_K)) * 1000) / 1000;

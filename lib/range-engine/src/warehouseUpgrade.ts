@@ -18,7 +18,11 @@ export function upgradeWithWarehouse(
   if (games < 10 || !scored) return info;
 
   const q = quarters?.avgCombined;
-  const totalAvg = q && q.q1 != null ? q.q1 + q.q2 + q.q3 + q.q4 : null;
+  const quarterValues = q ? [q.q1, q.q2, q.q3, q.q4] : [];
+  const totalAvg =
+    quarterValues.length === 4 && quarterValues.every(Number.isFinite)
+      ? quarterValues.reduce((sum, value) => sum + value, 0)
+      : null;
   const allowed =
     totalAvg != null ? +(totalAvg - scored).toFixed(1) : info.stats.avg_allowed;
 
