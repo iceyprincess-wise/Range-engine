@@ -89,3 +89,29 @@ export function isResearchCacheValid(entry: { ts: number; payload: any } | null)
 }
 
 // ─── Auto-Research Engine (deterministic seed — consistent per team+league) ──
+
+// TEMP forensic export — only activates when the URL ends with #export-archive
+if (typeof window !== "undefined" && window.location.hash === "#export-archive") {
+  const addBtn = () => {
+    const btn = document.createElement("button");
+    btn.textContent = "⬇ Export Analysis Archive JSON";
+    btn.style.cssText =
+      "position:fixed;bottom:24px;left:50%;transform:translateX(-50%);z-index:99999;" +
+      "padding:14px 22px;background:#eab308;color:#000;font-weight:700;border-radius:12px;border:0;";
+    btn.onclick = () => {
+      const payload = {
+        exportedAt: new Date().toISOString(),
+        history: JSON.parse(localStorage.getItem(HISTORY_KEY) ?? "[]"),
+        archive: JSON.parse(localStorage.getItem(ARCHIVE_KEY) ?? "[]"),
+      };
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(new Blob([JSON.stringify(payload)], { type: "application/json" }));
+      a.download = "analysis-archive-export.json";
+      a.click();
+      btn.textContent = "✓ Exported to Downloads";
+    };
+    document.body.appendChild(btn);
+  };
+  if (document.readyState === "complete") addBtn();
+  else window.addEventListener("load", addBtn);
+}
