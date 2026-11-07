@@ -1,5 +1,6 @@
 import type { lookupTeam } from "./teamDb";
 import { getLeagueDNA } from "./leagueDna";
+import { normalizePercent } from "./format";
 import type { AdjLog, EngineOutput } from "./types";
 export function runEngine(opts: {
   home_name: string;
@@ -265,11 +266,31 @@ export function runEngine(opts: {
     );
 
   // ── Rule 10 (Foul Engine) + Rule 11 (Injury Vacuum) ──────────────────────
-  const homeFoulRate = opts.homeFoulRate ?? 0;
-  const awayFoulRate = opts.awayFoulRate ?? 0;
+  // Recency-weighted foul/FTA inputs (computed in research.ts) take
+  // precedence when supplied; the raw season rates are the fallback.
+  // Only the WEIGHTED foul rates are normalised here, with the same
+  // normalizePercent rule research.ts applies to the scalar rates
+  // (the 50-game arrays are never normalised there); the raw fallback
+  // is already normalised upstream, so it is used as-is. Callers that
+  // pass neither (e.g. backtest) are unaffected.
+  const weightedFoul =
+    opts.homeFoulWeightedAvg != null ||
+    opts.awayFoulWeightedAvg != null ||
+    opts.homeFtAttemptWeightedAvg != null ||
+    opts.awayFtAttemptWeightedAvg != null;
+  const homeFoulRate =
+    opts.homeFoulWeightedAvg != null
+      ? normalizePercent(opts.homeFoulWeightedAvg)
+      : (opts.homeFoulRate ?? 0);
+  const awayFoulRate =
+    opts.awayFoulWeightedAvg != null
+      ? normalizePercent(opts.awayFoulWeightedAvg)
+      : (opts.awayFoulRate ?? 0);
   const totalFoulRate = homeFoulRate + awayFoulRate;
-  const homeFtAttempts = opts.homeFtAttempts ?? 0;
-  const awayFtAttempts = opts.awayFtAttempts ?? 0;
+  const homeFtAttempts =
+    opts.homeFtAttemptWeightedAvg ?? opts.homeFtAttempts ?? 0;
+  const awayFtAttempts =
+    opts.awayFtAttemptWeightedAvg ?? opts.awayFtAttempts ?? 0;
   const totalFtAttempts = homeFtAttempts + awayFtAttempts;
   const homeRestDays = opts.homeRestDays ?? 1;
   const awayRestDays = opts.awayRestDays ?? 1;
@@ -309,6 +330,7 @@ export function runEngine(opts: {
   }
   const r10note = [
     `FT%: ${(avg_ft * 100).toFixed(0)}%, Fouls: ${totalFoulRate.toFixed(1)}%, FTAs: ${totalFtAttempts}`,
+    weightedFoul ? "| Weighted foul/FTA (recent-form)" : "",
     leagueFoulAverage ? `| League Fouls: ${leagueFoulAverage.toFixed(1)}` : "",
     refereeSignal ? "| Referee Strictness: Elevated" : "",
     fatiguePenalty > 0 ? `| Rest Days: ${homeRestDays}/${awayRestDays}` : "",
@@ -393,7 +415,7 @@ export function runEngine(opts: {
     rule: "Rule 12 — Market Position",
     lb_adj: 0,
     hb_adj: 0,
-    note: `OVER line: ${best_over_line} (edge: ${over_edge.toFixed(1)}pts) | UNDER line: ${best_under_line} (edge: ${under_edge.toFixed(1)}pts) | Position: ${mktPos}`,
+    note: `Market window: OVER ${opts.over_low}-${opts.over_high} | UNDER ${opts.under_low}-${opts.under_high} | Best OVER: ${best_over_line} (edge: ${over_edge.toFixed(1)}pts) | Best UNDER: ${best_under_line} (edge: ${under_edge.toFixed(1)}pts) | Position: ${mktPos}`,
     status: "checked",
   });
 
@@ -432,7 +454,7 @@ export function runEngine(opts: {
       rule: "Rule 16 — Hammer Play",
       lb_adj: 0,
       hb_adj: 0,
-      note: `RERUN Heavy Adj Kill active — Hammer blocked`,
+      note: `RERUN Heavy Adj Kill active — Hammer blocked${opts.rerun_timestamp ? ` @ ${opts.rerun_timestamp}` : ""}`,
       status: "n/a",
     });
   } else {

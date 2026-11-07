@@ -47,38 +47,6 @@ function decisionStyle(d: string) {
     dot: "bg-zinc-600",
   };
 }
-function outcomeStyle(o?: string) {
-  if (o === "WIN")
-    return "text-yellow-400 border-yellow-800 bg-yellow-950/40";
-  if (o === "LOSS") return "text-red-400 border-red-800 bg-red-950/40";
-  if (o === "PUSH") return "text-zinc-400 border-yellow-900 bg-zinc-900/40";
-  return "text-zinc-600 border-yellow-950 bg-zinc-900/20";
-}
-function OutcomeBadge({ outcome }: { outcome?: string }) {
-  if (outcome === "WIN")
-    return (
-      <span className="text-xl" title="WIN">
-        🏆
-      </span>
-    );
-  if (outcome === "LOSS")
-    return (
-      <span className="text-xl" title="LOSS">
-        ❌
-      </span>
-    );
-  if (outcome === "PUSH")
-    return (
-      <span className="text-lg" title="PUSH">
-        🤝
-      </span>
-    );
-  return (
-    <span className="text-lg text-zinc-700" title="PENDING">
-      ⏳
-    </span>
-  );
-}
 function AdjStatusDot({ s }: { s: "triggered" | "checked" | "n/a" }) {
   if (s === "triggered")
     return (
@@ -231,34 +199,6 @@ function Field({
     />
   );
 }
-function SmallField({
-  value,
-  onChange,
-  placeholder,
-  label,
-}: {
-  value: string;
-  onChange: (v: string) => void;
-  placeholder?: string;
-  label?: string;
-}) {
-  return (
-    <div className="text-center">
-      {label && (
-        <p className="text-[8px] uppercase tracking-widest text-zinc-700 mb-1">
-          {label}
-        </p>
-      )}
-      <input
-        type="number"
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        placeholder={placeholder}
-        className="w-full bg-zinc-900 border border-yellow-950 rounded-lg px-2 py-1.5 text-xs text-white focus:outline-none focus:border-zinc-600 transition placeholder:text-zinc-700 text-center"
-      />
-    </div>
-  );
-}
 
 function SplendorLogo() {
   return (
@@ -280,124 +220,11 @@ function SplendorLogo() {
 // ─── Main Component ───────────────────────────────────────────────────────────
 export function RangeEngine() {
   const today = new Date().toISOString().split("T")[0];
-  const IS_OWNER = true; // 🚨 TRUTH PROTOCOL: Owner Gateway Architecture
   const [tab, setTab] = useState<"analyzer" | "live" | "history" | "football">("analyzer"); // ─── BASKETAPI LIVE ENGINE (FINAL MATRIX) ───
 
-  const [liveStats, setLiveStats] = useState<any>(null);
-  const [isFetchingLive, setIsFetchingLive] = useState(false);
-  const [apiError, setApiError] = useState("");
   const API_BASE = import.meta.env.VITE_API_BASE || "";
 
-  const triggerLiveSync = async () => {
-    setIsFetchingLive(true);
-    setApiError("");
-    try {
-      const hSearch = (homeTeam || "").toLowerCase();
-      const aSearch = (awayTeam || "").toLowerCase();
-
-      if (!hSearch || !aSearch) {
-        throw new Error(
-          "Missing Teams: Please enter the Home and Away team names in the Analyzer first.",
-        );
-      }
-
-      const params = new URLSearchParams({
-        league: league || "",
-        homeTeam: homeTeam || "",
-        awayTeam: awayTeam || "",
-      });
-      if (gameId) params.set("gameId", gameId);
-      if (bookmaker) params.set("bookmaker", bookmaker);
-
-      const response = await fetch(`${API_BASE}/api/v1/sync?${params.toString()}`);
-      if (!response.ok) {
-        const payload = await response.json().catch(() => null);
-        throw new Error(
-          payload?.error || `Backend sync failed with status ${response.status}`,
-        );
-      }
-
-      const syncData = await response.json();
-      setLiveStats({ radar: syncData, stats: syncData.statistics || null });
-      try {
-        // expose live payload for injected / legacy UI hubs
-        (window as any).__LIVE_STATS__ = syncData;
-        window.dispatchEvent(new CustomEvent("liveStatsUpdated", { detail: syncData }));
-      } catch (e) {}
-      console.log("🔥 Live Matrix Connected & Mapped via backend proxy");
-    } catch (err: any) {
-      setApiError(err.message || "API Connection Failed");
-      console.error(err);
-    } finally {
-      setIsFetchingLive(false);
-    }
-  };
-
   // Mathematical Extractor
-  const getLiveStat = (key: string) => {
-    if (!liveStats?.stats?.statistics?.[0]?.groups) return null;
-    for (const g of liveStats.stats.statistics[0].groups) {
-      const item = g.statisticsItems.find((i: any) => i.key === key);
-      if (item) return item;
-    }
-    return null;
-  };
-
-  const LiveStatBar = ({
-    label,
-    statKey,
-  }: {
-    label: string;
-    statKey: string;
-  }) => {
-    const item = getLiveStat(statKey);
-    if (!item)
-      return (
-        <div className="mb-3 opacity-50">
-          <div className="flex justify-between text-[10px] font-mono text-zinc-500 mb-1">
-            <span>-</span>
-            <span className="uppercase tracking-widest text-yellow-500/30">
-              {label}
-            </span>
-            <span>-</span>
-          </div>
-          <div className="flex h-1.5 w-full bg-zinc-900 rounded-full overflow-hidden">
-            <div className="bg-yellow-900/50 w-[50%]"></div>
-            <div className="bg-red-900/50 w-[50%] ml-auto"></div>
-          </div>
-        </div>
-      );
-
-    let hVal = item.homeValue || 0;
-    let aVal = item.awayValue || 0;
-    let total = hVal + aVal;
-    let hPct = total === 0 ? 50 : (hVal / total) * 100;
-    let aPct = total === 0 ? 50 : (aVal / total) * 100;
-
-    return (
-      <div className="mb-3">
-        <div className="flex justify-between text-[10px] font-mono text-zinc-200 mb-1">
-          <span>{item.home || hVal}</span>
-          <span className="uppercase tracking-widest text-yellow-400 font-bold">
-            {label}
-          </span>
-          <span>{item.away || aVal}</span>
-        </div>
-        <div className="flex h-1.5 w-full bg-zinc-900 rounded-full overflow-hidden">
-          <div
-            className="bg-yellow-500 transition-all duration-1000 ease-out"
-            style={{ width: `${hPct}%` }}
-          ></div>
-          <div
-            className="bg-red-600 transition-all duration-1000 ease-out"
-            style={{ width: `${aPct}%` }}
-          ></div>
-        </div>
-      </div>
-    );
-  };
-  // ──────────────────────────────────────────────
-
   // Core fields
   const [date, setDate] = useState(today);
   const [koTime, setKoTime] = useState("20:00");
@@ -597,12 +424,11 @@ export function RangeEngine() {
   }, [homeTeam, awayTeam]);
   // ─────────────────────────────────────────────────────────────────────────
   const [isReportOpen, setIsReportOpen] = useState(false);
-  const [analysisHistory, setAnalysisHistory] = useState<any[]>([]);
   // --- Auto-Refresh Sync Timer ---
   const [refreshCountdown, setRefreshCountdown] = useState(60);
   const [isReanalyzing, setIsReanalyzing] = useState(false);
   const [reanalysisProgress, setReanalysisProgress] = useState(0);
-  const [reanalysisMessage, setReanalysisMessage] = useState<string | null>(null);
+  const [, setReanalysisMessage] = useState<string | null>(null);
 
   // --- POINT 11: TOP NOTCH AUTO-SYNC ENGINE TIMER (SURGICALLY INJECTED) ---
   // This is the single, bulletproof source of truth for the 60s countdown.
@@ -782,7 +608,6 @@ export function RangeEngine() {
 
   const MARKET_LINE_LOW_BOUND = 120.5;
   const MARKET_LINE_HIGH_BOUND = 300.5;
-  const [activeLinePreset, setActiveLinePreset] = useState<number | null>(null);
 
   const renderMarketLineOptions = (lowBound: number, highBound: number) =>
     generateLineOptions(lowBound, highBound).map((value) => (
@@ -797,8 +622,6 @@ export function RangeEngine() {
   );
 
   // Alternative market line picker options (expandable)
-  const ALT_LINE_OPTIONS = [160, 164, 168, 172, 176, 180, 184, 188, 192, 196, 200];
-  const [activeQuarter, setActiveQuarter] = useState<string>("Q1");
   // --- MARKET LINES AUTO-SYNC ---
   useEffect(() => {
     if (overLow && overLow !== underLow) setUnderLow(overLow);
@@ -902,42 +725,15 @@ export function RangeEngine() {
     typeof lookupTeam
   > | null>(null);
   // RERUN
-  const [rerunCmd, setRerunCmd] = useState("");
   const [rerunResult, setRerunResult] = useState<EngineOutput | null>(null);
   const [rerunPhase, setRerunPhase] = useState<"idle" | "running" | "done">(
     "idle",
   );
   // Live Monitor
-  const [showLive, setShowLive] = useState(false);
-  const [liveHome, setLiveHome] = useState("");
-  const [liveAway, setLiveAway] = useState("");
-  const [q1H, setQ1H] = useState("");
-  const [q1A, setQ1A] = useState("");
-  const [q2H, setQ2H] = useState("");
-  const [q2A, setQ2A] = useState("");
-  const [q3H, setQ3H] = useState("");
-  const [q3A, setQ3A] = useState("");
-  const [q4H, setQ4H] = useState("");
-  const [q4A, setQ4A] = useState("");
-  const [liveAlert, setLiveAlert] = useState<{
-    msg: string;
-    hbAdj: number;
-    level: "warn" | "danger";
-  } | null>(null);
 
-  useEffect(() => {
-    if (phase === "result") {
-      setShowLive(true);
-    }
-  }, [phase]);
 
   // History
   const [history, setHistory] = useState<HistoryEntry[]>([]);
-  const [expandedId, setExpandedId] = useState<string | null>(null);
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [editActual, setEditActual] = useState("");
-  const [editFtScore, setEditFtScore] = useState("");
-  const [resolvingId, setResolvingId] = useState<string | null>(null);
   const currentEntryId = useRef<string | null>(null);
 
   useEffect(() => {
@@ -1040,13 +836,6 @@ export function RangeEngine() {
             : `Final sync complete. No late shift detected.`,
         };
       });
-      if (lateShiftDetected) {
-        setLiveAlert({
-          msg: "LATE SHIFT DETECTED - RECALCULATE",
-          hbAdj: 0,
-          level: "danger",
-        });
-      }
       setHistory(updatedHistory);
       saveHistory(updatedHistory);
     } catch (err) {
@@ -1184,20 +973,7 @@ export function RangeEngine() {
     setHuntStep(0);
     setResult(null);
     setRerunResult(null);
-    setRerunCmd("");
     setRerunPhase("idle");
-    setLiveAlert(null);
-    setShowLive(false);
-    setLiveHome("");
-    setLiveAway("");
-    setQ1H("");
-    setQ1A("");
-    setQ2H("");
-    setQ2A("");
-    setQ3H("");
-    setQ3A("");
-    setQ4H("");
-    setQ4A("");
 
     const rd = researchData; // snapshot auto-researched data
     let step = 0;
@@ -1319,216 +1095,11 @@ export function RangeEngine() {
     }, 900);
     return () => clearTimeout(t);
   }, [result, phase]);
-  function handleRerun() {
-    if (!rerunCmd.trim() || !homeInfo || !awayInfo) return;
-    const freshTime = new Date().toLocaleTimeString("en-GB", {
-      hour: "2-digit",
-      minute: "2-digit",
-      second: "2-digit",
-    });
-    const lc = rerunCmd.toLowerCase();
-    let rKeyOut = false,
-      rKeyName = "Key Scorer";
-    let rOverLow = parseFloat(overLow),
-      rOverHigh = parseFloat(overHigh || overLow);
-    let rUnderLow = parseFloat(underLow || underHigh),
-      rUnderHigh = parseFloat(underHigh);
-    const outM = rerunCmd.match(/(\w+(?:\s+\w+)?)\s+(?:is\s+)?out/i);
-    if (outM) {
-      rKeyOut = true;
-      rKeyName = outM[1];
-    }
-    if (
-      lc.includes("no injury") ||
-      lc.includes("healthy") ||
-      lc.includes("back")
-    ) {
-      rKeyOut = false;
-      rKeyName = "";
-    }
-    const lineM =
-      rerunCmd.match(/line\s+(?:to\s+)?(\d+\.?\d*)/i) ||
-      rerunCmd.match(/(?:total|adjust|ou)\s+(?:to\s+)?(\d+\.?\d*)/i);
-    if (lineM) {
-      const nl = parseFloat(lineM[1]);
-      rOverLow = nl - 1;
-      rOverHigh = nl + 1;
-      rUnderLow = nl - 1;
-      rUnderHigh = nl + 1;
-    }
-    setRerunPhase("running");
-    setTimeout(async () => {
-      const dna = getLeagueDNA(league);
-      // Force fresh research payload for reruns (bypass cache)
-      let freshResearch: ResearchData | null = null;
-      try {
-        freshResearch = await fetchResearchDataCached(homeTeam, awayTeam, league, gameId, bookmaker, true);
-      } catch (e) {
-        console.warn("Failed to fetch fresh research for rerun, falling back to cached/recent researchData", e);
-        freshResearch = researchData ?? null;
-      }
-
-      const res = runEngine({
-        home_name: homeTeam,
-        away_name: awayTeam,
-        home_stats: homeInfo,
-        away_stats: awayInfo,
-        league,
-        gender: matchGender,
-        is_live_match: isLiveMatch,
-        key_player_out: rKeyOut,
-        key_player_name: rKeyName,
-        over_low: rOverLow,
-        over_high: rOverHigh,
-        under_low: rUnderLow,
-        under_high: rUnderHigh,
-        home_ft: freshResearch?.homeFt,
-        away_ft: freshResearch?.awayFt,
-        home_pt3: freshResearch?.homePt3,
-        away_pt3: freshResearch?.awayPt3,
-        collapse_pct: freshResearch?.collapsePct ?? 0,
-        league_measured: freshResearch?.leagueDnaMeasured ?? null,
-        is_rerun: true,
-        rerun_timestamp: freshTime,
-      });
-      setRerunResult(res);
-      setRerunPhase("done");
-      if (currentEntryId.current) {
-        const updated = history.map((h) =>
-          h.id === currentEntryId.current
-            ? { ...h, rerunResult: res, rerunCmd }
-            : h,
-        );
-        setHistory(updated);
-        saveHistory(updated);
-      }
-    }, 1200);
-  }
-
-  function applyLiveMonitor() {
-    const quarters = [
-      { h: parseFloat(q1H || "0"), a: parseFloat(q1A || "0"), label: "Q1" },
-      { h: parseFloat(q2H || "0"), a: parseFloat(q2A || "0"), label: "Q2" },
-      { h: parseFloat(q3H || "0"), a: parseFloat(q3A || "0"), label: "Q3" },
-      { h: parseFloat(q4H || "0"), a: parseFloat(q4A || "0"), label: "Q4" },
-    ].filter((q) => q.h > 0 || q.a > 0);
-    const stalledQ = quarters.filter((q) => q.h + q.a < 30);
-    const runningTotal =
-      parseFloat(liveHome || "0") + parseFloat(liveAway || "0");
-
-    // Pace-Drop Stalling Sensor Logic (Point 6)
-    const q1q2Avg =
-      quarters
-        .filter((q) => q.label === "Q1" || q.label === "Q2")
-        .reduce((s, q) => s + q.h + q.a, 0) /
-      Math.max(
-        1,
-        quarters.filter((q) => q.label === "Q1" || q.label === "Q2").length,
-      );
-    const q3q4Avg =
-      quarters
-        .filter((q) => q.label === "Q3" || q.label === "Q4")
-        .reduce((s, q) => s + q.h + q.a, 0) /
-      Math.max(
-        1,
-        quarters.filter((q) => q.label === "Q3" || q.label === "Q4").length,
-      );
-
-    const isArtificialPaceDrop =
-      q1q2Avg > 0 && q3q4Avg > 0 && q1q2Avg - q3q4Avg >= 10;
-
-    if (isArtificialPaceDrop) {
-      setLiveAlert({
-        msg: `🚨 FOUL-INDUCED PACE DROP DETECTED! 1st Half Avg: ${q1q2Avg.toFixed(1)} vs 2nd Half Avg: ${q3q4Avg.toFixed(1)}. Transition game has collapsed into isolation/foul trouble. UNDER ALERT ACTIVE. HB compressed -10.`,
-        hbAdj: -10,
-        level: "danger",
-      });
-    } else if (stalledQ.length >= 2) {
-      setLiveAlert({
-        msg: `🚨 MULTI-QUARTER STALL — ${stalledQ.map((q) => q.label).join(", ")} combined <30 pts. Running total: ${runningTotal}. Isolation lockdown in effect. HB compressed -8. Pivot to UNDER.`,
-        hbAdj: -8,
-        level: "danger",
-      });
-    } else if (stalledQ.length === 1) {
-      setLiveAlert({
-        msg: `⚠ STALL SENSOR TRIGGERED — ${stalledQ[0].label} dropped to ${stalledQ[0].h + stalledQ[0].a} pts. Watch for foul-induced pace deceleration. HB compressed -4. Running: ${runningTotal}.`,
-        hbAdj: -4,
-        level: "warn",
-      });
-    } else if (quarters.length > 0) {
-      const avgPerQ =
-        quarters.reduce((s, q) => s + q.h + q.a, 0) / quarters.length;
-      const projFinal = avgPerQ * 4;
-      setLiveAlert({
-        msg: `✓ Pace Sensor Nominal — Avg ${avgPerQ.toFixed(1)} pts/qtr → Proj final: ~${projFinal.toFixed(0)} pts. No foul-induced stalling detected yet.`,
-        hbAdj: 0,
-        level: "warn",
-      });
-    }
-  }
-
   function handleReset() {
     setPhase("idle");
     setResult(null);
     setRerunResult(null);
-    setRerunCmd("");
     setRerunPhase("idle");
-    setLiveAlert(null);
-    setShowLive(false);
-  }
-  function setOutcome(
-    id: string,
-    outcome: HistoryEntry["outcome"],
-    actualTotal?: number,
-    ftScore?: string,
-  ) {
-    const updated = history.map((h) =>
-      h.id === id
-        ? { ...h, outcome, actualTotal, ftScore: ftScore || h.ftScore }
-        : h,
-    );
-    setHistory(updated);
-    saveHistory(updated);
-    setEditingId(null);
-    setEditActual("");
-    setEditFtScore("");
-  }
-
-  async function resolveHistory(id: string) {
-    const entry = history.find(h => h.id === id);
-    if (!entry) return;
-    setResolvingId(id);
-
-    try {
-      const response = await fetch(`${API_BASE}/api/v1/resolve?league=${encodeURIComponent(entry.league)}&homeTeam=${encodeURIComponent(entry.homeTeam)}&awayTeam=${encodeURIComponent(entry.awayTeam)}&date=${encodeURIComponent(entry.date)}`);
-      if (!response.ok) {
-        throw new Error(`API request failed: ${response.status}`);
-      }
-      const resolveData = await response.json();
-      
-      // Update with real final score data
-      const actualTotal = resolveData.actualTotal;
-      const ftScore = resolveData.ftScore || entry.ftScore;
-      
-      // Determine outcome based on the resolved data
-      let outcome: HistoryEntry["outcome"] = "PENDING";
-      if (actualTotal !== undefined) {
-        if (entry.result.decision.includes("OVER") && actualTotal > entry.result.best_over_line) {
-          outcome = "WIN";
-        } else if (entry.result.decision.includes("UNDER") && actualTotal < entry.result.best_under_line) {
-          outcome = "WIN";
-        } else if (entry.result.decision !== "NO ACTION") {
-          outcome = "LOSS";
-        }
-      }
-      
-      setOutcome(id, outcome, actualTotal, ftScore);
-    } catch (err) {
-      console.error("History resolve error:", err);
-      alert("API resolution failed. Please enter the final score manually.");
-    } finally {
-      setResolvingId(null);
-    }
   }
   function clearHistory() {
     setHistory([]);
@@ -3909,265 +3480,4 @@ Unavailable data is labeled — never invented.`);
   );
 }
 
-function usePreviousState<T>(value: T) {
-  const ref = useRef<T | undefined>(undefined);
-  useEffect(() => {
-    ref.current = value;
-  }, [value]);
-  return ref.current; 
-}
-
-const PhantomLiveHub = () => {
-  // Live Data Mockups
-  const [hScore, setHScore] = useState(0);
-  const [aScore, setAScore] = useState(0);
-  const [clockMin, setClockMin] = useState(12);
-  const [qtr, setQtr] = useState(3);
-
-  // Advanced Live Metrics
-  const [ftPct, setFtPct] = useState(78.5);
-  const [pt3Pct, setPt3Pct] = useState(36.2);
-  const [fgPct, setFgPct] = useState(45.1);
-  const [offPpg, setOffPpg] = useState(112.4);
-  const [defPpg, setDefPpg] = useState(108.9);
-  const [leadTime, setLeadTime] = useState("H: 24m | A: 4m");
-  const [poss, setPoss] = useState("Neutral");
-
-  // The Phantom Hooks (Short-term Memory)
-  const prevH = usePreviousState(hScore);
-  const prevA = usePreviousState(aScore);
-  const prevClock = usePreviousState(clockMin);
-
-  // If the live backend exposes data, map it into the PhantomLiveHub UI.
-  useEffect(() => {
-    let mounted = true;
-    const applyLive = (live: any) => {
-      if (!live || !mounted) return;
-      try {
-        const homeScore = live.homeScore ?? live.home?.score ?? live.stats?.homeScore ?? live.home_score ?? live.score?.home ?? live?.hScore;
-        const awayScore = live.awayScore ?? live.away?.score ?? live.stats?.awayScore ?? live.away_score ?? live.score?.away ?? live?.aScore;
-        const clock = live.clock ?? live.time ?? live.clockMin ?? live.period_clock ?? live?.gameClock ?? null;
-        const quarter = live.quarter ?? live.qtr ?? live.period ?? live.q ?? live?.quarter ?? null;
-        const ft = live.ftPct ?? live.stats?.ftPct ?? live.freeThrowPct ?? null;
-        const pt3 = live.pt3Pct ?? live.stats?.pt3Pct ?? live.threePtPct ?? null;
-        const fg = live.fgPct ?? live.stats?.fgPct ?? live.fieldGoalPct ?? null;
-        const off = live.offPpg ?? live.off_ppg ?? live.offensePpg ?? null;
-        const def = live.defPpg ?? live.def_ppg ?? live.defensePpg ?? null;
-        const lead = live.leadTime ?? live.lead_time ?? live.leadTimeText ?? null;
-        const possession = live.possession ?? live.poss ?? live.pos ?? null;
-
-        if (homeScore != null) setHScore(Number(homeScore) || 0);
-        if (awayScore != null) setAScore(Number(awayScore) || 0);
-        if (clock != null) setClockMin(Math.max(0, Number(clock) || 0));
-        if (quarter != null) setQtr(Number(quarter) || 1);
-        if (ft != null) setFtPct(Number(ft) || 0);
-        if (pt3 != null) setPt3Pct(Number(pt3) || 0);
-        if (fg != null) setFgPct(Number(fg) || 0);
-        if (off != null) setOffPpg(Number(off) || 0);
-        if (def != null) setDefPpg(Number(def) || 0);
-        if (lead != null) setLeadTime(String(lead));
-        if (possession != null) setPoss(String(possession));
-      } catch (e) {
-        // non-fatal mapping issues
-      }
-    };
-
-    // initial apply
-    try {
-      applyLive((window as any).__LIVE_STATS__);
-    } catch (e) {}
-
-    // listen for explicit updates
-    const onUpdate = (e: any) => applyLive(e?.detail ?? (window as any).__LIVE_STATS__);
-    window.addEventListener("liveStatsUpdated", onUpdate);
-
-    // poll as a fallback (every 1s)
-    const iv = setInterval(() => applyLive((window as any).__LIVE_STATS__), 1000);
-    return () => {
-      mounted = false;
-      clearInterval(iv);
-      window.removeEventListener("liveStatsUpdated", onUpdate);
-    };
-  }, []);
-
-  const [avalanche, setAvalanche] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (prevH !== undefined && prevA !== undefined && prevClock !== undefined) {
-      const prevLeadTeam =
-        prevH > prevA ? "Home" : prevA > prevH ? "Away" : "Tie";
-      const prevLead = Math.abs(prevH - prevA);
-      const currentLead = Math.abs(hScore - aScore);
-      const timeDelta = prevClock - clockMin; // Assuming countdown clock
-
-      // TRIGGER: Momentum Avalanche
-      // If a 10+ point lead drops by 5+ points in under 3 minutes of game clock
-      if (
-        prevLead >= 10 &&
-        currentLead <= prevLead - 5 &&
-        timeDelta > 0 &&
-        timeDelta <= 3
-      ) {
-        setAvalanche(
-          `🚨 MOMENTUM AVALANCHE: Velocity of Bleed critical. ${prevLeadTeam} lead collapsed from ${prevLead} to ${currentLead} in ${timeDelta} mins.`,
-        );
-      } else if (currentLead > prevLead + 4) {
-        setAvalanche(null); // Clear alarm if lead stabilizes and grows
-      }
-    }
-  }, [hScore, aScore, clockMin]);
-
-  return (
-    <div className="mt-6 border border-yellow-950 bg-black/60 rounded-xl p-4 shadow-2xl relative overflow-hidden">
-      {avalanche && (
-        <div className="absolute top-0 left-0 w-full h-full bg-red-950/20 border-2 border-red-600/50 pointer-events-none animate-pulse"></div>
-      )}
-
-      <div className="flex justify-between items-center mb-4 border-b border-yellow-950/50 pb-3 relative z-10">
-        <div>
-          <h3 className="text-yellow-400 font-black tracking-widest text-[13px] uppercase">
-            Live Sync Hub
-          </h3>
-          <p className="text-zinc-500 text-[9px] uppercase tracking-widest mt-0.5">
-            Phantom-Delta Matrix Active
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          <span className="w-2 h-2 bg-yellow-500 rounded-full animate-pulse"></span>
-          <span className="text-zinc-400 text-[10px] font-mono">
-            Q{qtr} {clockMin}:00
-          </span>
-        </div>
-      </div>
-
-      {avalanche && (
-        <div className="mb-4 bg-red-950/60 border border-red-700/50 rounded-md p-3 relative z-10">
-          <p className="text-red-400 text-[11px] font-bold leading-relaxed">
-            {avalanche}
-          </p>
-          <p className="text-red-300/70 text-[9px] mt-1">
-            Mathematical averages compromised. Anticipating offensive efficiency
-            drop and defensive fouling.
-          </p>
-        </div>
-      )}
-
-      {/* Simulator Controls (To test the Avalanche trigger) */}
-      <div className="grid grid-cols-2 gap-4 mb-5 relative z-10">
-        <div className="bg-zinc-900/50 rounded p-3 text-center border border-yellow-950/50">
-          <span className="text-zinc-500 text-[9px] uppercase tracking-widest block mb-1">
-            Home Score
-          </span>
-          <div className="flex items-center justify-center gap-3">
-            <button
-              onClick={() => setHScore((h) => Math.max(0, h - 1))}
-              className="text-zinc-400 px-2 py-1 bg-zinc-800 rounded hover:bg-zinc-700 hover:text-white transition"
-            >
-              -
-            </button>
-            <span className="text-2xl font-black text-white">{hScore}</span>
-            <button
-              onClick={() => setHScore((h) => h + 1)}
-              className="text-zinc-400 px-2 py-1 bg-zinc-800 rounded hover:bg-zinc-700 hover:text-white transition"
-            >
-              +
-            </button>
-          </div>
-        </div>
-        <div className="bg-zinc-900/50 rounded p-3 text-center border border-yellow-950/50">
-          <span className="text-zinc-500 text-[9px] uppercase tracking-widest block mb-1">
-            Away Score
-          </span>
-          <div className="flex items-center justify-center gap-3">
-            <button
-              onClick={() => setAScore((a) => Math.max(0, a - 1))}
-              className="text-zinc-400 px-2 py-1 bg-zinc-800 rounded hover:bg-zinc-700 hover:text-white transition"
-            >
-              -
-            </button>
-            <span className="text-2xl font-black text-white">{aScore}</span>
-            <button
-              onClick={() => setAScore((a) => a + 1)}
-              className="text-zinc-400 px-2 py-1 bg-zinc-800 rounded hover:bg-zinc-700 hover:text-white transition"
-            >
-              +
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-3 gap-3 mb-4 relative z-10">
-        <div className="bg-black rounded p-2 text-center border border-zinc-900">
-          <span className="text-zinc-600 text-[8px] uppercase tracking-widest block">
-            Possession
-          </span>
-          <span className="text-yellow-400 text-[11px] font-bold">{poss}</span>
-        </div>
-        <div className="bg-black rounded p-2 text-center border border-zinc-900">
-          <span className="text-zinc-600 text-[8px] uppercase tracking-widest block">
-            Clock (Min)
-          </span>
-          <div className="flex justify-center items-center gap-2">
-            <button
-              onClick={() => setClockMin((c) => Math.max(0, c - 1))}
-              className="text-zinc-500 hover:text-white"
-            >
-              -
-            </button>
-            <span className="text-yellow-400 text-[11px] font-bold">
-              {clockMin}
-            </span>
-            <button
-              onClick={() => setClockMin((c) => c + 1)}
-              className="text-zinc-500 hover:text-white"
-            >
-              +
-            </button>
-          </div>
-        </div>
-        <div className="bg-black rounded p-2 text-center border border-zinc-900">
-          <span className="text-zinc-600 text-[8px] uppercase tracking-widest block">
-            Time In Lead
-          </span>
-          <span className="text-yellow-400 text-[10px] font-bold">
-            {leadTime}
-          </span>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-5 gap-2 border-t border-yellow-950/50 pt-4 relative z-10">
-        <div className="text-center">
-          <span className="text-zinc-600 text-[8px] uppercase tracking-widest block mb-1">
-            FT%
-          </span>
-          <span className="text-zinc-300 text-[10px] font-mono">{ftPct}%</span>
-        </div>
-        <div className="text-center border-l border-yellow-950/50">
-          <span className="text-zinc-600 text-[8px] uppercase tracking-widest block mb-1">
-            3PT%
-          </span>
-          <span className="text-zinc-300 text-[10px] font-mono">{pt3Pct}%</span>
-        </div>
-        <div className="text-center border-l border-yellow-950/50">
-          <span className="text-zinc-600 text-[8px] uppercase tracking-widest block mb-1">
-            FG%
-          </span>
-          <span className="text-zinc-300 text-[10px] font-mono">{fgPct}%</span>
-        </div>
-        <div className="text-center border-l border-yellow-950/50">
-          <span className="text-zinc-600 text-[8px] uppercase tracking-widest block mb-1">
-            Off PPG
-          </span>
-          <span className="text-zinc-300 text-[10px] font-mono">{offPpg}</span>
-        </div>
-        <div className="text-center border-l border-yellow-950/50">
-          <span className="text-zinc-600 text-[8px] uppercase tracking-widest block mb-1">
-            Def PPG
-          </span>
-          <span className="text-zinc-300 text-[10px] font-mono">{defPpg}</span>
-        </div>
-      </div>
-    </div>
-  );
-};
 // =====================================================================

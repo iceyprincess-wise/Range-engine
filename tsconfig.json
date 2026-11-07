@@ -14,6 +14,9 @@
     },
     {
       "path": "./lib/range-engine"
+    },
+    {
+      "path": "./lib/api-spec"
     }
   ]
 }

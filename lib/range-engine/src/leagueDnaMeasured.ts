@@ -2,13 +2,19 @@
 // MEASURED LEAGUE DNA — derived ONLY from finished games in the local warehouse.
 // Source: artifacts/api-server/data/store.json
 // Regenerate: node artifacts/api-server/tools/league-dna-measure.cjs
-// Snapshot: 2026-08-01 · 570 scored games · 17 leagues · 0 API calls
+// Snapshot: 2026-08-01 · 568 scored games · 15 leagues · 0 API calls
+// (568/15 = sum/count of the LEAGUE_DNA_MEASURED table below. The previous
+// 570/17 header disagreed with its own table; store.json is gitignored and
+// not in the repo, so the table is the only verifiable source. Re-run
+// node artifacts/api-server/tools/league-dna-measure.cjs against store.json
+// to re-verify the snapshot externally.)
 //
 // DERIVATION (constants recovered from the hand-tuned WNBA + TBT profiles):
 //   proxyPPG  = round1(avgTotal / 2 * 0.93)   WNBA -> 81 exact, TBT -> 68 exact
 //   maxWidth  = clamp(round(0.83 * sdTotal), 16, 24)
 //   buffer    = sdTotal >= 25 ? 2.5 : 2.0
 //   grind     = avgQuarterTotal < 40          WNBA 43.2 false, TBT 36.5 true
+//   (avgQuarterTotal null -> grind false; U18_PAULISTA has no quarter data)
 //   hbDNA/lbDNA = 0 unless |homeEdge / SE| >= 2 — NOTHING measured qualifies
 //   noOT      = format-forbidden only, never inferred from otPct === 0
 //
@@ -46,9 +52,11 @@ export type DnaMeasurement = {
 };
 
 export const DNA_SNAPSHOT_AT = "2026-08-01";
-export const DNA_SNAPSHOT_GAMES = 570;
+export const DNA_SNAPSHOT_GAMES = 568;
 export const SHRINK_K = 1;
-export const CAP_DISCOUNT = 0.93;
+export const CAP_DISCOUNT = 0.93; // Derivation factor for MEASURED_PROFILES proxyPPG
+// (round1(avgTotal / 2 * CAP_DISCOUNT)); verified against all 13 profiles.
+// Kept exported: it documents the derivation, it is not dead weight.
 export const STALE_DAYS = 180;
 
 export const LEAGUE_DNA_MEASURED: Record<string, DnaMeasurement> = {
