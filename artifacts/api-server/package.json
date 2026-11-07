@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@workspace/api-zod": "workspace:*",
+    "@workspace/db": "workspace:*",
     "@workspace/range-engine": "workspace:*",
     "cors": "^2",
     "dotenv": "^17.4.2",

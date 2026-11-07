@@ -40,12 +40,22 @@ if (!store.stats) store.stats = {};
 
 let dirty = false;
 export const markDirty = () => { dirty = true; };
+
+// Hybrid Postgres dual-write hook. lib/hybridStore.ts registers a
+// function here in Postgres mode (null in file mode). persist() calls
+// it after the store.json write so the same data lands in both places.
+// The hook is fire-and-forget: it must never throw into a request path.
+let pgPersistHook: (() => void) | null = null;
+export const registerPgPersist = (fn: () => void) => { pgPersistHook = fn; };
 export const persist = () => {
   if (!dirty) return;
   try {
     fs.mkdirSync(DATA_DIR, { recursive: true });
     fs.writeFileSync(STORE_PATH, JSON.stringify(store));
     dirty = false;
+    // Hybrid dual-write: in Postgres mode this mirrors the same data
+    // to the database (async, fire-and-forget, never throws).
+    pgPersistHook?.();
   } catch (err) { console.error("warehouse persist failed:", err); }
 };
 setInterval(persist, 30_000).unref();

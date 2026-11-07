@@ -34,11 +34,40 @@ Pushes to `main` build a debug APK in GitHub Actions
 Locally: `cd artifacts/mockup-sandbox && pnpm exec cap sync android`
 then `cd android && ./gradlew assembleDebug`.
 
-## Postgres (optional, future cutover)
+## Postgres (optional, hybrid with store.json)
 
-The schema lives in `lib/db` (teams / games / analysis_history).
-With a database provisioned, backfill it from the warehouse with
-`DATABASE_URL=... pnpm --filter @workspace/db run seed` — teams are
-upserted from banked games first, so the games → teams foreign keys
-hold. The api-server still reads `store.json` until the cutover lands.
+The schema lives in `lib/db` (teams / games / analysis_history). The
+api-server runs in one of two modes, picked by environment:
+
+- **File mode** (`DATABASE_URL` unset, the default): the warehouse
+  lives in `artifacts/api-server/data/store.json` only, exactly as
+  before. Nothing about Postgres is needed.
+- **Hybrid mode** (`DATABASE_URL` set): on startup the server seeds an
+  empty database from `store.json` (teams first, from the searched map
+  UNION the teams inside the stored games, so the games → teams
+  foreign keys hold), then loads the warehouse from Postgres. Every
+  `persist()` then writes BOTH Postgres and `store.json` (local
+  mirror), so the file stays current in Termux and on Render. If
+  Postgres is unreachable at startup the server logs a warning and
+  falls back to file mode for that run. Quota, the games cache and the
+  analysis archive stay file-only; `analysis_history` has no server
+  writer. The in-memory store stays the runtime source of truth in
+  both modes — no route changed for this.
+
+One-time setup for hybrid mode (do this once, before the first
+hybrid start):
+
+```sh
+# 1. Provision a Postgres database (e.g. Render free Postgres).
+# 2. Create the tables from the repo migrations (from the repo root):
+DATABASE_URL=postgres://user:password@host:5432/database pnpm --filter @workspace/db run push
+# 3. Put DATABASE_URL in artifacts/api-server/.env (Termux) or the
+#    Render dashboard (hosted). Never commit a real DATABASE_URL.
+# 4. Start the server. First start seeds the empty tables from
+#    store.json; later starts load from Postgres.
+```
+
+You can also backfill a database by hand at any time with
+`DATABASE_URL=... pnpm --filter @workspace/db run seed` — same
+upsert logic as the startup seed.
 
