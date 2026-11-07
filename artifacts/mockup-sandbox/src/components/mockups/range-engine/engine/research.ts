@@ -1,7 +1,7 @@
 import { parseNumber, parseNumberArray, normalizePercent, weightedAverage, formatInjuryNotes, getLineupFromPayload } from "@workspace/range-engine";
 import { makeResearchCacheKey, saveResearchCache, loadResearchCache, isResearchCacheValid } from "./storage";
 import type { ResearchData } from "@workspace/range-engine";
-export const API_BASE = import.meta.env.VITE_API_BASE || "";
+export const API_BASE = (import.meta.env.VITE_API_BASE || "").replace(/\/+$/, "");
 export async function fetchResearchData(
   homeTeam: string,
   awayTeam: string,
