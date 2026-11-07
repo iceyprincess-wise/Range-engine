@@ -88,7 +88,7 @@ export function isResearchCacheValid(entry: { ts: number; payload: any } | null)
   return Date.now() - entry.ts < RESEARCH_CACHE_TTL;
 }
 
-// ─── Auto-Research Engine (deterministic seed — consistent per team+league) ──
+// ─── Forensic export (manual, hash-gated) ───
 
 // TEMP forensic export — only activates when the URL ends with #export-archive
 if (typeof window !== "undefined" && window.location.hash === "#export-archive") {

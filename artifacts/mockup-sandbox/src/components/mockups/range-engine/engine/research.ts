@@ -72,6 +72,12 @@ export async function fetchResearchData(
     apiData.awayFoulRate = preData.away?.shooting?.foulsPerGame ?? apiData.awayFoulRate;
     apiData.homeRestDays = preData.home?.restDays ?? apiData.homeRestDays;
     apiData.awayRestDays = preData.away?.restDays ?? apiData.awayRestDays;
+    // Quarters-derived collapse must be computed BEFORE the fade note below,
+    // which quotes it ("Peak collapse X%"); previously it was computed after.
+    const qc = [preData.home?.quarters?.collapsePct, preData.away?.quarters?.collapsePct].filter(Boolean);
+    if (qc.length) {
+      apiData.collapsePct = Math.max(...qc.flatMap((c: any) => [c.q1, c.q2, c.q3, c.q4]));
+    }
     const qf = (q: any) => (q?.q1 != null ? +((q.q1 + q.q2) - (q.q3 + q.q4)).toFixed(1) : null);
     const fadeH = qf(preData.home?.quarters?.avgCombined);
     const fadeA = qf(preData.away?.quarters?.avgCombined);
@@ -83,10 +89,6 @@ export async function fetchResearchData(
       apiData.offSurgeRisk = bestSurge < -4 ? "HIGH" : bestSurge < -1.5 ? "MODERATE" : "LOW";
       apiData.offSurgeNote = `2nd-half uptick — home ${fadeH != null ? -fadeH : "n/a"} pts, away ${fadeA != null ? -fadeA : "n/a"} pts. Computed from stored quarters, not simulated.`;
     }
-    const qc = [preData.home?.quarters?.collapsePct, preData.away?.quarters?.collapsePct].filter(Boolean);
-    if (qc.length) {
-      apiData.collapsePct = Math.max(...qc.flatMap((c: any) => [c.q1, c.q2, c.q3, c.q4]));
-    }
   }
   const homeForm50 = parseNumberArray(
     apiData.homeForm50 ?? apiData.home_form_50 ?? apiData.homeForm ?? [],
@@ -95,7 +97,7 @@ export async function fetchResearchData(
     apiData.awayForm50 ?? apiData.away_form_50 ?? apiData.awayForm ?? [],
   );
   const h2h50 = parseNumberArray(
-    apiData.h2h50 ?? apiData.h2h_50 ?? apiData.h2h50 ?? apiData.h2h ?? [],
+    apiData.h2h50 ?? apiData.h2h_50 ?? apiData.h2h ?? [],
   );
 
   const homeFoulRate = normalizePercent(
@@ -266,8 +268,11 @@ export async function fetchResearchData(
   const awayDefPpg = parseNumber(apiData.awayDefPpg ?? apiData.away_def_ppg ?? apiData.awayDefensePpg ?? awayRoadPPG, 0);
   const homePointDiff = parseFloat((homeOffPpg - awayDefPpg).toFixed(1));
   const awayPointDiff = parseFloat((awayOffPpg - homeDefPpg).toFixed(1));
-  const homeLeadTime = apiData.homeLeadTime ?? apiData.home_lead_time ?? `${Math.floor((apiData.homeLeadPct ?? 0))}% in lead`;
-  const awayLeadTime = apiData.awayLeadTime ?? apiData.away_lead_time ?? `${Math.floor((apiData.awayLeadPct ?? 0))}% in lead`;
+  // No endpoint in the repo returns lead-time fields, so a missing value must
+  // render as "no data" ("--", the UI's own placeholder) — never "0% in lead",
+  // which would present an unmeasured zero as a measured one.
+  const homeLeadTime = apiData.homeLeadTime ?? apiData.home_lead_time ?? (apiData.homeLeadPct != null ? `${Math.floor(apiData.homeLeadPct)}% in lead` : "--");
+  const awayLeadTime = apiData.awayLeadTime ?? apiData.away_lead_time ?? (apiData.awayLeadPct != null ? `${Math.floor(apiData.awayLeadPct)}% in lead` : "--");
 
   return {
     homeArenaPPG,
@@ -360,4 +365,3 @@ export async function fetchResearchDataCached(
   }
   return fresh;
 }
-// ─── Master Rulebook V3 Engine (Rules 1–18, Anti-Template, Anti-Hallucination) ─

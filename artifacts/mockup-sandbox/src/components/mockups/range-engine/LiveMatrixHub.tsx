@@ -64,27 +64,38 @@ export const LiveMatrixHub: React.FC<LiveMatrixHubProps> = ({ history, setHistor
         const safeAway = awayPart?.trim().toLowerCase() || "";
 
         // Hunt for the matching game in the API response
-        const matchedApiGame = liveEvents.find((evt: any) => 
-          evt.homeTeam?.name?.toLowerCase().includes(safeHome) ||
-          evt.awayTeam?.name?.toLowerCase().includes(safeAway)
+        const matchedApiGame = liveEvents.find((evt: any) =>
+          (safeHome !== "" && evt.homeTeam?.name?.toLowerCase().includes(safeHome)) ||
+          (safeAway !== "" && evt.awayTeam?.name?.toLowerCase().includes(safeAway))
         );
 
         if (matchedApiGame) {
           newRefMap[game.id] = matchedApiGame; // Link them together for the UI
 
           // 🚨 TRUTH PROTOCOL: AUTO-PUSH TO HISTORY ON FULL TIME
+          // Settles with the entry's OWN decision + lines (same rule as
+          // RangeEngine settleAndGrade): OVER wins above best_over_line,
+          // UNDER wins below best_under_line, exact line is a PUSH. A home-team
+          // win says nothing about a totals range, so it must never decide WIN/LOSS.
           if (matchedApiGame.status?.type === "finished" || matchedApiGame.status?.type === "ended") {
             const homeScore = matchedApiGame.homeScore?.current || 0;
             const awayScore = matchedApiGame.awayScore?.current || 0;
-            
-            // Logic: Assume win if Home score > Away score (Adjust to your specific betting logic later)
-            const isWin = homeScore > awayScore; 
+            const total = homeScore + awayScore;
+            const dec: string = game.result?.decision ?? "";
+            const overLine = game.result?.best_over_line;
+            const underLine = game.result?.best_under_line;
+            let outcome: string | null = null;
+            if (dec.includes("OVER") && typeof overLine === "number") {
+              outcome = total > overLine ? "WIN" : total === overLine ? "PUSH" : "LOSS";
+            } else if (dec.includes("UNDER") && typeof underLine === "number") {
+              outcome = total < underLine ? "WIN" : total === underLine ? "PUSH" : "LOSS";
+            }
 
             updatedHistory = updatedHistory.map(h => {
               if (h.id === game.id) {
                 return {
                   ...h,
-                  outcome: isWin ? "WIN" : "LOSS",
+                  ...(outcome ? { outcome, actualTotal: total, ftScore: `${homeScore}-${awayScore}` } : {}),
                   result: { ...h.result, type: "FT", home: homeScore, away: awayScore }
                 };
               }
@@ -151,8 +162,10 @@ export const LiveMatrixHub: React.FC<LiveMatrixHubProps> = ({ history, setHistor
 
       // STALL SENSOR SYNTHESIS (Mocked logic over deep data to prevent crash, as Q-scores vary by API)
       let stallRisk = "LOW";
-      let stallNote = "Authentic Deep Scan Active: Pace Nominal.";
       const homePoss = parseInt(parsedStats.possession.home) || 50;
+      // Possession-skew heuristic only (one signal, not a full scan): the
+      // previous label claimed an "Authentic Deep Scan", which overstated it.
+      let stallNote = `Possession-skew check: home possession ${homePoss}% — within the normal band.`;
       
       if (homePoss > 65 || homePoss < 35) {
          stallRisk = "MODERATE";

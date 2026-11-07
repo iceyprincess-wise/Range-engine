@@ -1,4 +1,4 @@
-package com.getcapacitor.myapp;
+package com.splendorhub.engine;
 
 import static org.junit.Assert.*;
 
