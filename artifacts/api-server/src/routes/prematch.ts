@@ -205,7 +205,17 @@ router.get("/v1/prematch", async (req: Request, res: Response) => {
     const homeGames = gamesForTeam(home.id);
     const awayGames = gamesForTeam(away.id);
 
-    await enrichStats([...homeGames, ...awayGames], 3);
+    // Per-side enrichment: the old single call capped the SHARED list
+    // at 3, and home games come first, so all 3 slots went to home games
+    // and the away side never got any stats (proven live 2026-11-07:
+    // home shooting statGames 3, away statGames 0, every away percentage
+    // null). Enrich up to 3 games PER SIDE instead (max 6 fetches, still
+    // guarded by the quota check inside enrichStats). Stats are cached in
+    // the warehouse, so the extra fetches are paid once per game, not
+    // once per prematch. A home-side fetch failure no longer blocks the
+    // away side either (each call breaks independently).
+    await enrichStats(homeGames, 3);
+    await enrichStats(awayGames, 3);
 
     const h2hGames = Object.values(store.games).filter((e: any) => {
       const ids = [e.homeTeam?.id, e.awayTeam?.id];
