@@ -433,6 +433,9 @@ importers:
 
   lib/api-spec:
     devDependencies:
+      '@types/node':
+        specifier: 'catalog:'
+        version: 25.3.5
       orval:
         specifier: ^8.5.2
         version: 8.5.3(prettier@3.8.1)(typescript@5.9.3)
