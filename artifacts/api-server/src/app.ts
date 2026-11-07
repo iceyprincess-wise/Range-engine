@@ -3,8 +3,15 @@ import cors from "cors";
 import pinoHttp from "pino-http";
 import router from "./routes";
 import { logger } from "./lib/logger";
+import { rateLimit } from "./middlewares/rateLimit";
 
 const app: Express = express();
+
+// Behind Render (or any proxy) the client IP arrives in
+// X-Forwarded-For; trust the first proxy so the rate limiter keys on
+// the real client instead of lumping everyone behind one IP.
+app.set("trust proxy", 1);
+app.use(rateLimit);
 
 app.use(
   pinoHttp({

@@ -23,7 +23,10 @@ const pts = (e: any, side: "home" | "away") => e?.[side + "Score"]?.current ?? n
 
 const searchOnce = async (q: string) => {
   const data = await apiFetch("/api/basketball/search/" + encodeURIComponent(q));
-  const hit = (data?.results || []).find((r: any) => r.type === "team");
+  const hits = (data?.results || []).filter((r: any) => r.type === "team");
+  // Prefer the provider hit whose name is exactly the query: the old
+  // first-hit pick could return a similarly-named team.
+  const hit = hits.find((r: any) => r.entity?.name?.trim().toLowerCase() === q.trim().toLowerCase()) || hits[0];
   return hit ? { id: hit.entity.id as number, name: hit.entity.name as string } : null;
 };
 
@@ -38,8 +41,27 @@ const searchTeam = async (name: string) => {
     words.length > 1 ? words[words.length - 1] : "",
   ].filter((c) => c && c.length >= 3))].slice(0, 3);
   for (const q of candidates) {
-    const team = await searchOnce(q);
-    if (team) { store.teams[key] = team; markDirty(); return team; }
+    try {
+      const team = await searchOnce(q);
+      if (team) { store.teams[key] = team; markDirty(); return team; }
+    } catch {
+      // Provider unreachable for this query — try the next candidate,
+      // then the warehouse fallback below, instead of failing a
+      // request the warehouse can already answer.
+    }
+  }
+  // Warehouse fallback: the provider search missed, but the warehouse
+  // already holds this team under its exact name — banked games carry
+  // team ids + names. Resolve the id locally instead of failing a
+  // request the warehouse can already answer.
+  const banked = (Object.values(store.games) as any[]).find((g: any) =>
+    (g.homeTeam?.name ?? "").trim().toLowerCase() === key || (g.awayTeam?.name ?? "").trim().toLowerCase() === key);
+  const bankedSide = banked
+    ? ((banked.homeTeam?.name ?? "").trim().toLowerCase() === key ? banked.homeTeam : banked.awayTeam)
+    : null;
+  if (bankedSide?.id) {
+    const team = { id: bankedSide.id as number, name: bankedSide.name as string };
+    store.teams[key] = team; markDirty(); return team;
   }
   throw new Error('Team not found in provider: "' + name + '" — check spelling or use the games browser tap-to-fill (exact names)');
 };
@@ -167,10 +189,12 @@ router.get("/v1/prematch", async (req: Request, res: Response) => {
   if (!homeTeam || !awayTeam) {
     return res.status(400).json({ error: "homeTeam and awayTeam are required" });
   }
-  if (!RAPIDAPI_KEY) {
-    return res.status(500).json({ error: "Missing RAPIDAPI_KEY environment variable" });
-  }
-
+  // No early key gate here on purpose: searchTeam falls back to the
+  // warehouse and a failed refresh degrades to provenance
+  // "warehouse-stale", so a missing key must not 500 a request the
+  // warehouse can already answer. Live-only routes (resolve/sync)
+  // keep their own key guard. Proven by the no-key live test: the old
+  // gate 500'd even for banked pairings.
   try {
     const [home, away] = await Promise.all([searchTeam(homeTeam), searchTeam(awayTeam)]);
     const now = Date.now();

@@ -5,21 +5,26 @@ const cache = new Map<string, { expiresAt: number; value: any }>();
 const TTL = 30 * 60 * 1000; // news stays fresh 30 min
 
 const decode = (s: string) =>
-  s.replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">")
+  // Strip CDATA markers first: the tag-strip below would otherwise eat
+  // a whole CDATA-wrapped title (it matches from "<![CDATA[" to the
+  // first ">"). Live feed verified 2026-11-07: titles are plain text
+  // today, so this changes nothing now — it only future-proofs the parse.
+  s.replace(/<!\[CDATA\[/g, "").replace(/\]\]>/g, "")
+   .replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">")
    .replace(/&#39;/g, "'").replace(/&quot;/g, '"').replace(/<[^>]+>/g, "").trim();
 
 router.get("/v1/news", async (req: Request, res: Response) => {
   const { team } = req.query as Record<string, string>;
   if (!team) return res.status(400).json({ error: "team is required" });
 
-  const key = team.toLowerCase();
+  const key = team.trim().toLowerCase();
   const hit = cache.get(key);
   if (hit && hit.expiresAt > Date.now()) return res.json(hit.value);
 
   try {
     const q = encodeURIComponent(team + " basketball injury OR lineup OR out");
     const url = "https" + "://news.google.com/rss/search?q=" + q + "&hl=en-US&gl=US&ceid=US:en";
-    const response = await fetch(url, { headers: { "user-agent": "Mozilla/5.0" } });
+    const response = await fetch(url, { headers: { "user-agent": "Mozilla/5.0" }, signal: AbortSignal.timeout(10_000) });
     if (!response.ok) throw new Error("news fetch failed: " + response.status);
     const xml = await response.text();
 

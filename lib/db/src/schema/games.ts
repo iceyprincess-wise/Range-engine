@@ -1,4 +1,5 @@
 import { index, integer, jsonb, pgTable, text } from "drizzle-orm/pg-core";
+import { teams } from "./teams";
 
 /**
  * games — one row per finished game in the warehouse.
@@ -21,16 +22,17 @@ import { index, integer, jsonb, pgTable, text } from "drizzle-orm/pg-core";
  *   column instead of a fourth table because it is strictly 1:1 with
  *   a game and is only ever read together with that game.
  *
- * No FK to teams (see teams.ts): 140 of the 168 team ids used by games
- * are not in the teams map yet.
+ * FKs to teams hold because the backfill (lib/db/seed-from-store.mjs)
+ * upserts every team id referenced by games — from the games
+ * themselves, not just the 28-team store.teams map — before games.
  */
 export const games = pgTable(
   "games",
   {
     id: integer("id").primaryKey(),
     league: text("league").notNull(),
-    homeTeamId: integer("home_team_id").notNull(),
-    awayTeamId: integer("away_team_id").notNull(),
+    homeTeamId: integer("home_team_id").notNull().references(() => teams.id),
+    awayTeamId: integer("away_team_id").notNull().references(() => teams.id),
     homeTeam: text("home_team").notNull(),
     awayTeam: text("away_team").notNull(),
     homeScore: integer("home_score"),

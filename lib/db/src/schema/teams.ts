@@ -4,13 +4,12 @@ import { integer, pgTable, text } from "drizzle-orm/pg-core";
  * teams — one row per known team (BasketAPI team id).
  *
  * Seed source: store.teams from the api-server warehouse
- * (artifacts/api-server/data/store.json). The map holds 28 teams, but the
- * 611 stored games reference 168 distinct team ids, so 140 team ids used
- * by games are NOT in the map yet. The teams table therefore starts as
- * the 28 known rows and is backfilled from games on first import.
- *
- * Deliberately NO foreign key from games to teams (v1): a FK would reject
- * every insert for those 140 teams. Add the FK only after the backfill.
+ * (artifacts/api-server/data/store.json) UNION the team ids + names
+ * carried inside the stored games themselves. The map holds 28 teams,
+ * but the 611 stored games reference 168 distinct team ids — the other
+ * 140 come from the games. lib/db/seed-from-store.mjs does this union
+ * and upserts teams before games, so the games -> teams foreign keys
+ * (see games.ts) hold on a fresh database.
  */
 export const teams = pgTable("teams", {
   id: integer("id").primaryKey(),

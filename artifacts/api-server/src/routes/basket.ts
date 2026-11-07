@@ -41,12 +41,13 @@ const basketFetch = async (path: string): Promise<any> => {
 const safeMatch = (event: any, homeSearch: string, awaySearch: string) => {
   const homeName = event?.homeTeam?.name?.toLowerCase() || "";
   const awayName = event?.awayTeam?.name?.toLowerCase() || "";
-  return (
-    homeName.includes(homeSearch) ||
-    awayName.includes(awaySearch) ||
-    homeSearch.includes(homeName) ||
-    awaySearch.includes(awayName)
-  );
+  // BOTH sides must match (each side allows either direction, so
+  // "Lakers" still finds "Los Angeles Lakers"). The old OR logic
+  // returned the first live game involving EITHER team, e.g. a
+  // Lakers-vs-Celtics query matched a live Lakers-vs-Bulls game.
+  const side = (stored: string, query: string) =>
+    stored.length > 0 && query.length > 0 && (stored.includes(query) || query.includes(stored));
+  return side(homeName, homeSearch) && side(awayName, awaySearch);
 };
 
 const getTargetMatch = (events: any[], homeTeam: string, awayTeam: string) => {
@@ -109,6 +110,24 @@ router.get("/v1/resolve", async (req: Request, res: Response) => {
 
   if (!homeTeam || !awayTeam) {
     return res.status(400).json({ error: "homeTeam and awayTeam are required" });
+  }
+
+  // Every other BasketAPI route in this file guards the key first;
+  // resolve did not, so a keyless server answered 502 (upstream 403)
+  // instead of a clean 500 "Missing RAPIDAPI_KEY".
+  if (!RAPIDAPI_KEY) {
+    return res.status(500).json({ error: "Missing RAPIDAPI_KEY environment variable" });
+  }
+
+  // Resolve searches LIVE matches only: a dated query cannot be
+  // answered from the live feed, so say so instead of silently
+  // returning today's match (or a 404) for another day. Use
+  // /api/v1/games/schedule for dated fixtures.
+  if (date) {
+    const today = new Date().toISOString().split("T")[0];
+    if (date !== today) {
+      return res.status(400).json({ error: "resolve only searches live matches; use /api/v1/games/schedule for dated fixtures", date, today });
+    }
   }
 
   try {

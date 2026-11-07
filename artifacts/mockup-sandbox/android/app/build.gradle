@@ -18,6 +18,12 @@ android {
     }
     buildTypes {
         release {
+            // Deliberately NOT minified (decision 2026-11-07): this app
+            // is a Capacitor WebView shell with no app Java/Kotlin code
+            // of its own, the web bundle is already minified by vite,
+            // and R8 risks breaking Capacitor internals for no
+            // measurable gain. Revisit only if native code is added.
+            // proguard-rules.pro stays inert while this is false.
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }

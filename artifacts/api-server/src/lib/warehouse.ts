@@ -1,7 +1,31 @@
 import fs from "node:fs";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 
-const DATA_DIR = path.join(process.cwd(), "data");
+/**
+ * Data directory resolution. The server is normally started from
+ * artifacts/api-server (so process.cwd()/data is right), but nothing
+ * guarantees that: started from the repo root, every store/quota/cache
+ * path silently pointed at a fresh empty <repo-root>/data instead.
+ * Resolve once, preferring an explicit DATA_DIR, then a data dir that
+ * already exists (cwd first, then the install location), and fall back
+ * to cwd/data for first run. The module-relative candidates cover both
+ * layouts: src/lib (../../data) and the esbuild bundle in dist (../data).
+ */
+export const resolveDataDir = (): string => {
+  const candidates = [
+    process.env.DATA_DIR,
+    path.join(process.cwd(), "data"),
+    path.join(path.dirname(fileURLToPath(import.meta.url)), "..", "..", "data"),
+    path.join(path.dirname(fileURLToPath(import.meta.url)), "..", "data"),
+  ].filter((c): c is string => !!c);
+  for (const c of candidates) {
+    try { if (fs.statSync(c).isDirectory()) return c; } catch { /* try next */ }
+  }
+  return path.join(process.cwd(), "data");
+};
+
+const DATA_DIR = resolveDataDir();
 const STORE_PATH = path.join(DATA_DIR, "store.json");
 
 export type StoredTeam = { id: number; name: string };

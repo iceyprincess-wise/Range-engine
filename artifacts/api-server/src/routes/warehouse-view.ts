@@ -45,8 +45,19 @@ router.get("/v1/warehouse", (_req: Request, res: Response) => {
     };
   }).sort((a, b) => b.games - a.games);
 
-  // TEAM DNA — full profile per stored team, every game listed
-  const teams = Object.values(store.teams).map((t: any) => {
+  // TEAM DNA — full profile per stored team, every game listed.
+  // store.teams only holds the 28 teams resolved by name search, but
+  // banked games reference 168 team ids (names + ids ride inside the
+  // game objects), so derive the team list from the games and merge the
+  // searched map over it. Without this, 140 teams had no profile at all.
+  const teamById = new Map<number, { id: number; name: string }>();
+  for (const g of games) {
+    for (const side of [g.homeTeam, g.awayTeam]) {
+      if (side?.id != null && side?.name && !teamById.has(side.id)) teamById.set(side.id, { id: side.id, name: side.name });
+    }
+  }
+  for (const t of Object.values(store.teams) as any[]) if (t?.id != null) teamById.set(t.id, { id: t.id, name: t.name ?? teamById.get(t.id)?.name ?? "?" });
+  const teams = [...teamById.values()].map((t: any) => {
     const gs = games
       .filter((g) => g.homeTeam?.id === t.id || g.awayTeam?.id === t.id)
       .sort((a, b) => (b.startTimestamp ?? 0) - (a.startTimestamp ?? 0));

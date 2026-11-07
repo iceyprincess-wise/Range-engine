@@ -2,9 +2,10 @@ import { Router, type Request, type Response } from "express";
 import fs from "node:fs";
 import path from "node:path";
 import { runEngine, lookupTeam, getLeagueDNA } from "@workspace/range-engine";
+import { resolveDataDir } from "../lib/warehouse";
 
 const router = Router();
-const STORE_PATH = path.join(process.cwd(), "data", "store.json");
+const STORE_PATH = path.join(resolveDataDir(), "store.json");
 const pts = (e: any, side: "home" | "away") => e?.[side + "Score"]?.current ?? null;
 
 router.get("/v1/backtest", (_req: Request, res: Response) => {
@@ -24,7 +25,6 @@ router.get("/v1/backtest", (_req: Request, res: Response) => {
     const homeP: number[] = [], roadP: number[] = [], allowed: number[] = [];
     for (const g of prior.slice(-30)) {
       const isHome = g.homeTeam?.id === teamId;
-      homeP.length + roadP.length; // no-op
       (isHome ? homeP : roadP).push(pts(g, isHome ? "home" : "away"));
       allowed.push(pts(g, isHome ? "away" : "home"));
     }

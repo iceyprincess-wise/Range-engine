@@ -20,7 +20,10 @@ jobs:
       - name: Install pnpm
         uses: pnpm/action-setup@v3
         with:
-          version: 9
+          # pnpm 9 cannot do a frozen install from this lockfile
+          # (ERR_PNPM_LOCKFILE_CONFIG_MISMATCH on overrides, proven
+          # 2026-11-07); pnpm 10 installs it frozen with no diff.
+          version: 10
           
       - name: Setup Java JDK
         uses: actions/setup-java@v4
@@ -30,7 +33,7 @@ jobs:
           
       - name: Install Dependencies
         working-directory: ./artifacts/mockup-sandbox
-        run: pnpm install --no-frozen-lockfile
+        run: pnpm install --frozen-lockfile
         
       - name: Build Web Assets
         working-directory: ./artifacts/mockup-sandbox
@@ -43,6 +46,12 @@ jobs:
       - name: Sync Capacitor Android
         working-directory: ./artifacts/mockup-sandbox
         run: pnpm exec cap sync android
+
+      - name: Unit Tests
+        working-directory: ./artifacts/mockup-sandbox/android
+        run: |
+          chmod +x gradlew
+          ./gradlew testDebugUnitTest
         
       - name: Compile APK
         working-directory: ./artifacts/mockup-sandbox/android
