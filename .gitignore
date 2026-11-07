@@ -51,5 +51,4 @@ audit.txt
 **/.env
 audit.txt
 artifacts/api-server/*.json
-artifacts/api-server/*.json
 artifacts/api-server/tools/.dna-bundle.mjs

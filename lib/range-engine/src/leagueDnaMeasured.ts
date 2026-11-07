@@ -1,13 +1,17 @@
 // ─────────────────────────────────────────────────────────────────────────────
 // MEASURED LEAGUE DNA — derived ONLY from finished games in the local warehouse.
-// Source: artifacts/api-server/data/store.json
+// Source: artifacts/api-server/data/store.json (now committed in the repo)
 // Regenerate: node artifacts/api-server/tools/league-dna-measure.cjs
-// Snapshot: 2026-08-01 · 568 scored games · 15 leagues · 0 API calls
-// (568/15 = sum/count of the LEAGUE_DNA_MEASURED table below. The previous
-// 570/17 header disagreed with its own table; store.json is gitignored and
-// not in the repo, so the table is the only verifiable source. Re-run
-// node artifacts/api-server/tools/league-dna-measure.cjs against store.json
-// to re-verify the snapshot externally.)
+// Snapshot: 2026-11-07 · 610 scored games · 19 leagues · 0 API calls
+// (610/19 = every scored game / every league in the store. The table below
+// lists only the 15 leagues with n >= 4 — 606 games. Excluded from the table:
+// 4 single-game leagues (CEBL, WNBA Commissioner's Cup, Chile LNB, Puerto
+// Rico BSN — n = 1 each, too thin to measure). 606 + 4 = 610.
+// The old 2026-08-01 header said 570/17 while its table summed to 568/15:
+// that was the same rule — the store-wide count included 2 single-game
+// leagues the table omitted. The Aug-1 store itself can't be rebuilt exactly
+// (sync timing isn't recorded), so this snapshot is regenerated from the
+// current store instead of patched by hand.)
 //
 // DERIVATION (constants recovered from the hand-tuned WNBA + TBT profiles):
 //   proxyPPG  = round1(avgTotal / 2 * 0.93)   WNBA -> 81 exact, TBT -> 68 exact
@@ -51,8 +55,8 @@ export type DnaMeasurement = {
   avgQuarterTotal: number | null;
 };
 
-export const DNA_SNAPSHOT_AT = "2026-08-01";
-export const DNA_SNAPSHOT_GAMES = 568;
+export const DNA_SNAPSHOT_AT = "2026-11-07";
+export const DNA_SNAPSHOT_GAMES = 606; // games covered by LEAGUE_DNA_MEASURED below (store-wide scored total is 610; see header)
 export const SHRINK_K = 1;
 export const CAP_DISCOUNT = 0.93; // Derivation factor for MEASURED_PROFILES proxyPPG
 // (round1(avgTotal / 2 * CAP_DISCOUNT)); verified against all 13 profiles.
@@ -60,9 +64,9 @@ export const CAP_DISCOUNT = 0.93; // Derivation factor for MEASURED_PROFILES pro
 export const STALE_DAYS = 180;
 
 export const LEAGUE_DNA_MEASURED: Record<string, DnaMeasurement> = {
-  WNBA:              { n: 211, lastGame: "2026-07-31", avgTotal: 174.1, sdTotal: 21.7, p10: 148,   median: 172,   p90: 203,   homeEdge:   1.3, homeWinPct: 51.2, avgMargin: 11.4, blowout20Pct: 16.1, otPct: 3.8,  avgQuarterTotal: 43.2 },
-  BIG_V:             { n:  82, lastGame: "2026-07-25", avgTotal: 182.6, sdTotal: 18.5, p10: 160,   median: 182,   p90: 209.6, homeEdge:   0.8, homeWinPct: 43.9, avgMargin: 12.7, blowout20Pct: 17.1, otPct: 3.7,  avgQuarterTotal: 45.5 },
-  LDA:               { n:  62, lastGame: "2026-07-29", avgTotal: 156.1, sdTotal: 18.9, p10: 134.1, median: 154,   p90: 177.9, homeEdge:   3.2, homeWinPct: 51.6, avgMargin: 12.6, blowout20Pct: 16.1, otPct: 8.1,  avgQuarterTotal: 38.4 },
+  WNBA:              { n: 247, lastGame: "2026-10-03", avgTotal: 173.9, sdTotal: 21.2, p10: 148,   median: 172,   p90: 202.4, homeEdge:   2.1, homeWinPct: 55.1, avgMargin: 11.6, blowout20Pct: 17.8, otPct: 3.6,  avgQuarterTotal: 43.2 },
+  BIG_V:             { n:  83, lastGame: "2026-08-02", avgTotal: 182.6, sdTotal: 18.4, p10: 160,   median: 182,   p90: 209.2, homeEdge:   0.8, homeWinPct: 44.6, avgMargin: 12.6, blowout20Pct: 16.9, otPct: 3.6,  avgQuarterTotal: 45.5 },
+  LDA:               { n:  63, lastGame: "2026-07-31", avgTotal: 155.8, sdTotal: 18.9, p10: 134.2, median: 154,   p90: 177.8, homeEdge:   3.3, homeWinPct: 52.4, avgMargin: 12.5, blowout20Pct: 15.9, otPct: 7.9,  avgQuarterTotal: 38.3 },
   LEBANON:           { n:  40, lastGame: "2026-07-30", avgTotal: 188.0, sdTotal: 25.3, p10: 154.8, median: 188,   p90: 219.1, homeEdge:   1.5, homeWinPct: 55.0, avgMargin: 14.6, blowout20Pct: 30.0, otPct: 10.0, avgQuarterTotal: 46.4 },
   TBT:               { n:  30, lastGame: "2026-07-29", avgTotal: 146.2, sdTotal: 14.3, p10: 127.5, median: 145.5, p90: 159.2, homeEdge:   3.4, homeWinPct: 63.3, avgMargin: 13.6, blowout20Pct: 26.7, otPct: 0,    avgQuarterTotal: 36.5 },
   URUGUAY_LUB:       { n:  29, lastGame: "2025-04-06", avgTotal: 166.6, sdTotal: 17.5, p10: 140.6, median: 167,   p90: 187,   homeEdge:  -1.9, homeWinPct: 51.7, avgMargin: 11.7, blowout20Pct: 17.2, otPct: 3.4,  avgQuarterTotal: 41.3 },
@@ -79,7 +83,7 @@ export const LEAGUE_DNA_MEASURED: Record<string, DnaMeasurement> = {
 
 export const MEASURED_PROFILES: Record<string, DnaCore> = {
   BIG_V:             { name: "Big V (Australia state league)",     proxyPPG:  84.9, hbDNA: 0, lbDNA: 0, maxWidth: 16, hammerEdge: 8, buffer: 2.0, grind: false },
-  LDA:               { name: "LDA (measured grind)",               proxyPPG:  72.6, hbDNA: 0, lbDNA: 0, maxWidth: 16, hammerEdge: 8, buffer: 2.0, grind: true  },
+  LDA:               { name: "LDA (measured grind)",               proxyPPG:  72.4, hbDNA: 0, lbDNA: 0, maxWidth: 16, hammerEdge: 8, buffer: 2.0, grind: true  },
   LEBANON:           { name: "Lebanese BL (high variance)",        proxyPPG:  87.4, hbDNA: 0, lbDNA: 0, maxWidth: 21, hammerEdge: 8, buffer: 2.5, grind: false },
   URUGUAY_LUB:       { name: "Uruguay LUB (aged sample)",          proxyPPG:  77.5, hbDNA: 0, lbDNA: 0, maxWidth: 16, hammerEdge: 8, buffer: 2.0, grind: false },
   PBA_COMMISSIONERS: { name: "PBA Commissioner's Cup (imports)",   proxyPPG:  96.7, hbDNA: 0, lbDNA: 0, maxWidth: 18, hammerEdge: 8, buffer: 2.0, grind: false },
