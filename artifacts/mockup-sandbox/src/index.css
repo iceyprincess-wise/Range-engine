@@ -27,6 +27,9 @@
   --color-border: hsl(var(--border));
   --color-input: hsl(var(--input));
   --color-ring: hsl(var(--ring));
+  --color-primary-border: hsl(var(--primary));
+  --color-destructive-border: hsl(var(--destructive));
+  --color-secondary-border: hsl(var(--secondary));
   --color-chart-1: hsl(var(--chart-1));
   --color-chart-2: hsl(var(--chart-2));
   --color-chart-3: hsl(var(--chart-3));
