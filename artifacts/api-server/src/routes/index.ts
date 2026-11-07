@@ -8,6 +8,7 @@ import backtestRouter from "./backtest";
 import resultsRouter from "./results";
 import leagueDnaRouter from "./league-dna";
 import warehouseViewRouter from "./warehouse-view";
+import hybridRouter from "./hybrid";
 
 const router: IRouter = Router();
 
@@ -20,5 +21,6 @@ router.use(backtestRouter);
 router.use(resultsRouter);
 router.use(leagueDnaRouter);
 router.use(warehouseViewRouter);
+router.use(hybridRouter);
 
 export default router;

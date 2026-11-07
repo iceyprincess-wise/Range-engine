@@ -3,6 +3,7 @@ import { nextCountdownSec } from "@workspace/range-engine";
 import { useState, useRef, useEffect, useMemo } from "react";
 import { LiveMatrixHub } from "./LiveMatrixHub";
 import { WarehousePage } from "./WarehousePage";
+import { HybridPage } from "./HybridPage";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -353,6 +354,9 @@ export function RangeEngine() {
       setWhAt(Date.now());
     } catch { setWh(null); }
   };
+  // ── HYBRID SYNC: staged inbox moves between Termux and Render — zero quota ──
+  const [showHybrid, setShowHybrid] = useState(false);
+  const openHybrid = () => { setShowHybrid(true); };
   const [gMeta, setGMeta] = useState<any>(null);
   const [gStatuses, setGStatuses] = useState<Record<number, any>>({});
   const updateTournaments = async () => {
@@ -1158,6 +1162,7 @@ export function RangeEngine() {
         </div>
       )}
       {showWh && <WarehousePage wh={wh} whAt={whAt} onClose={() => setShowWh(false)} />}
+      {showHybrid && <HybridPage apiBase={API_BASE} onClose={() => setShowHybrid(false)} />}
       {/* ── GAMES BROWSER — today's covered games (STATUS panel) ── */}
       {showGames && (
         <div className="fixed inset-0 bg-black/95 flex flex-col p-4 overflow-y-auto" style={{ zIndex: 9999 }}>
@@ -1240,7 +1245,7 @@ export function RangeEngine() {
         </Tabs>
         {/* Battery Pill - Telemetry Node */}
         <div className="mt-3 px-4 py-2 rounded-full border border-yellow-500/40 bg-yellow-950/30 flex items-center gap-2">
-          <span onClick={openGames} className="text-yellow-400 font-bold text-xs uppercase tracking-widest cursor-pointer">System Status</span><span onClick={() => refreshAll()} className={"ml-2 text-yellow-300 font-black text-xs cursor-pointer border border-yellow-700 rounded px-1.5 py-0.5" + (refreshing ? " animate-spin inline-block" : "")}>⟳</span><span onClick={openWarehouse} className="ml-2 text-yellow-300 text-sm cursor-pointer border border-yellow-700 rounded px-1.5 py-0.5">🏢</span>
+          <span onClick={openGames} className="text-yellow-400 font-bold text-xs uppercase tracking-widest cursor-pointer">System Status</span><span onClick={() => refreshAll()} className={"ml-2 text-yellow-300 font-black text-xs cursor-pointer border border-yellow-700 rounded px-1.5 py-0.5" + (refreshing ? " animate-spin inline-block" : "")}>⟳</span><span onClick={openWarehouse} className="ml-2 text-yellow-300 text-sm cursor-pointer border border-yellow-700 rounded px-1.5 py-0.5">🏢</span><span onClick={openHybrid} className="ml-2 text-yellow-300 text-sm cursor-pointer border border-yellow-700 rounded px-1.5 py-0.5">🔀</span>
           <div className="w-6 h-3 rounded border border-yellow-400 flex items-center px-0.5 bg-yellow-950/50">
             <div className="w-full h-full bg-yellow-500 rounded-sm"></div>
           </div>
