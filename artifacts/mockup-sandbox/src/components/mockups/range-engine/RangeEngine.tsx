@@ -242,7 +242,7 @@ export function RangeEngine() {
   const today = new Date().toISOString().split("T")[0];
   const [tab, setTab] = useState<"analyzer" | "live" | "history" | "football">("analyzer"); // ─── BASKETAPI LIVE ENGINE (FINAL MATRIX) ───
 
-  const API_BASE = import.meta.env.VITE_API_BASE || "";
+  const API_BASE = (import.meta.env.VITE_API_BASE || "").replace(/\/+$/, "");
 
   // Mathematical Extractor
   // Core fields
@@ -1244,7 +1244,7 @@ export function RangeEngine() {
           <div className="w-6 h-3 rounded border border-yellow-400 flex items-center px-0.5 bg-yellow-950/50">
             <div className="w-full h-full bg-yellow-500 rounded-sm"></div>
           </div>
-          <span onClick={openGames} className="text-yellow-300 font-black text-xs cursor-pointer">{Math.max(0, quotaInfo.remaining ?? 100)}/{quotaInfo.limit ?? 100}</span>
+          <span onClick={openGames} className="text-yellow-300 font-black text-xs cursor-pointer">{quotaInfo.remaining != null ? Math.max(0, quotaInfo.remaining) : "—"}/{quotaInfo.limit ?? "—"}</span>
         </div>
       </div>
 

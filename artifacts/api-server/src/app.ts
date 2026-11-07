@@ -7,6 +7,16 @@ import { rateLimit } from "./middlewares/rateLimit";
 
 const app: Express = express();
 
+// Collapse a leading double slash (//api/...) to a single slash before
+// routing. A client whose API base URL ends in "/" builds URLs like
+// `${API_BASE}/api/...` = "//api/...", which Express does not match to
+// the /api router and 404s; this makes one misconfigured base URL unable
+// to 404 the whole API surface.
+app.use((req, _res, next) => {
+  if (req.url.startsWith("//")) req.url = req.url.replace(/^\/{2,}/, "/");
+  next();
+});
+
 // Behind Render (or any proxy) the client IP arrives in
 // X-Forwarded-For; trust the first proxy so the rate limiter keys on
 // the real client instead of lumping everyone behind one IP.
