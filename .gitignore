@@ -52,4 +52,5 @@ audit.txt
 artifacts/api-server/*.json
 artifacts/api-server/tools/.dna-bundle.mjs
 artifacts/api-server/data/
-
+artifacts/api-server/data/store.json
+artifacts/api-server/data/quota.json
