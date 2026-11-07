@@ -18,7 +18,8 @@ router.get("/v1/league-dna", (req: Request, res: Response) => {
   }
   if (totals.length === 0) return res.json({ measured: false, games: 0, note: "no banked games match this league yet — engine falls back to profile" });
   const avg = totals.reduce((s, v) => s + v, 0) / totals.length;
-  const sd = Math.sqrt(totals.reduce((s, v) => s + (v - avg) ** 2, 0) / totals.length);
+  // Sample SD (n-1), matching league-dna-measure.cjs, the generator of the DNA snapshot.
+  const sd = totals.length > 1 ? Math.sqrt(totals.reduce((s, v) => s + (v - avg) ** 2, 0) / (totals.length - 1)) : 0;
   return res.json({ measured: true, games: totals.length, avgTotal: +avg.toFixed(1), sd: +sd.toFixed(1), minTotal: Math.min(...totals), maxTotal: Math.max(...totals), provenance: "warehouse" });
 });
 export default router;

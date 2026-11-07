@@ -1,5 +1,7 @@
-const fs = require("fs");
-const s = JSON.parse(fs.readFileSync("data/store.json", "utf8"));
+const fs = require("fs"), path = require("path");
+const storePath = path.join(__dirname, "..", "data", "store.json");
+if (!fs.existsSync(storePath)) { console.error("missing store:", storePath); process.exit(1); }
+const s = JSON.parse(fs.readFileSync(storePath, "utf8"));
 const games = Object.values(s.games || {});
 const key = e => e?.tournament?.uniqueTournament?.name || e?.tournament?.name || "UNKNOWN";
 const num = v => (typeof v === "number" && isFinite(v) ? v : null);

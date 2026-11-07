@@ -185,9 +185,9 @@ router.get("/v1/prematch", async (req: Request, res: Response) => {
 
     const h2hGames = Object.values(store.games).filter((e: any) => {
       const ids = [e.homeTeam?.id, e.awayTeam?.id];
-      return ids.includes(home.id) && ids.includes(away.id);
+      return ids.includes(home.id) && ids.includes(away.id) && pts(e, "home") != null && pts(e, "away") != null;
     });
-    const h2hTotals = h2hGames.map((e: any) => (pts(e, "home") ?? 0) + (pts(e, "away") ?? 0));
+    const h2hTotals = h2hGames.map((e: any) => (pts(e, "home") as number) + (pts(e, "away") as number));
     const h2hAvgTotal = h2hTotals.length ? h2hTotals.reduce((s, v) => s + v, 0) / h2hTotals.length : null;
 
     persist();

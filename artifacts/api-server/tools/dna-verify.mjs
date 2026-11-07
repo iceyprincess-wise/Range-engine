@@ -12,7 +12,7 @@ const { getLeagueDNA } = await import("file://" + out);
 const names = ["WNBA", "The Basketball Tournament", "WNBA Preseason", "Big V", "LDA", "LDB",
   "Lebanese Basketball League", "Uruguay LUB", "PBA Commissioner's Cup", "PBA Philippine Cup",
   "PBA Governors' Cup", "Divisional Tercera de Ascenso", "CBI U15 Fem", "WASL West Asia",
-  "U18 Paulista", "WNBA Commissioner\u2019s Cup", "Chile LNB"];
+  "U18 Paulista", "WNBA Commissioner\u2019s Cup", "Chile LNB", "CEBL", "Puerto Rico BSN"];
 
 for (const n of names) {
   const d = getLeagueDNA(n);

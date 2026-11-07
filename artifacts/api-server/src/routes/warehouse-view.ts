@@ -35,7 +35,9 @@ router.get("/v1/warehouse", (_req: Request, res: Response) => {
     const sorted = gs.slice().sort((a, b) => (b.startTimestamp ?? 0) - (a.startTimestamp ?? 0));
     const totals = gs.map((g) => (g.homeScore?.current ?? 0) + (g.awayScore?.current ?? 0)).filter((t) => t > 0);
     const avg = totals.length ? totals.reduce((s, v) => s + v, 0) / totals.length : null;
-    const sd = avg != null ? Math.sqrt(totals.reduce((s, v) => s + (v - avg) ** 2, 0) / totals.length) : null;
+    // Sample SD (n-1), matching league-dna-measure.cjs, the generator of the
+    // DNA snapshot -- the live route must not disagree with the snapshot.
+    const sd = avg != null ? (totals.length > 1 ? Math.sqrt(totals.reduce((s, v) => s + (v - avg) ** 2, 0) / (totals.length - 1)) : 0) : null;
     return {
       league, games: gs.length,
       dna: avg != null ? { avgTotal: +avg.toFixed(1), sd: +sd!.toFixed(1), minTotal: Math.min(...totals), maxTotal: Math.max(...totals), measuredActive: totals.length >= 15 } : null,
@@ -60,7 +62,7 @@ router.get("/v1/warehouse", (_req: Request, res: Response) => {
       (isHome ? homeS : roadS).push(sc);
       if (form.length < 5) form += sc > al ? "W" : "L";
       const own = isHome ? g.homeScore : g.awayScore;
-      if (own?.period1 != null) { h1 += own.period1 + own.period2; h2 += own.period3 + own.period4; hn++; }
+      if (own?.period1 != null && own?.period2 != null && own?.period3 != null && own?.period4 != null) { h1 += own.period1 + own.period2; h2 += own.period3 + own.period4; hn++; }
       const st = store.stats[g.id];
       if (st) {
         const pick = (k: string) => { const it = st[k]; return it ? (isHome ? { m: it.hv, a: it.ht } : { m: it.av, a: it.at }) : null; };
