@@ -1,23 +1,18 @@
 import { upgradeWithWarehouse } from "@workspace/range-engine";
 import { nextCountdownSec } from "@workspace/range-engine";
 import { useState, useRef, useEffect, useMemo } from "react";
-import { Globe, ShieldCheck } from "lucide-react";
 import { LiveMatrixHub } from "./LiveMatrixHub";
 import { WarehousePage } from "./WarehousePage";
 
 
 import {
-  generateLineOptions, parseNumber, normalizePercent, parseNumberArray,
-  formatDataValue, formatPercentValue, safeStringArray, weightedAverage,
-  getLineupFromPayload, formatInjuryNotes,
-  LEAGUE_DNA_PROFILES, getLeagueDNA, TEAM_DB, lookupTeam, autoCorrectTeamName,
-  HISTORY_KEY, ARCHIVE_KEY, loadHistory, loadAnalysisArchive, saveHistory,
-  RESEARCH_CACHE_PREFIX, RESEARCH_CACHE_TTL, makeResearchCacheKey,
-  saveResearchCache, loadResearchCache, isResearchCacheValid,
-  hashStr, seededVal, INJURY_POOL_HOME, INJURY_POOL_AWAY,
-  runEngine, fetchResearchDataCached, API_BASE,
+  generateLineOptions, parseNumber,
+  formatDataValue, formatPercentValue, safeStringArray,
+  getLeagueDNA, lookupTeam, autoCorrectTeamName,
+  loadHistory, loadAnalysisArchive, saveHistory,
+  runEngine, fetchResearchDataCached,
 } from "./engine/core";
-import type { AdjLog, EngineOutput, HistoryEntry, AnalysisArchiveEntry, ResearchData } from "./engine/core";
+import type { EngineOutput, HistoryEntry, ResearchData } from "./engine/core";
 
 function decisionStyle(d: string) {
   if (d.includes("HAMMER"))

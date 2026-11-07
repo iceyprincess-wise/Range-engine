@@ -105,7 +105,7 @@ router.get("/v1/sync", async (req: Request, res: Response) => {
 });
 
 router.get("/v1/resolve", async (req: Request, res: Response) => {
-  const { league, homeTeam, awayTeam, date } = req.query as Record<string, string>;
+  const { homeTeam, awayTeam, date } = req.query as Record<string, string>;
 
   if (!homeTeam || !awayTeam) {
     return res.status(400).json({ error: "homeTeam and awayTeam are required" });
@@ -146,7 +146,7 @@ router.get("/v1/resolve", async (req: Request, res: Response) => {
   }
 });
 
-router.get("/basket/live", async (req: Request, res: Response) => {
+router.get("/basket/live", async (_req, res: Response) => {
   if (!RAPIDAPI_KEY) {
     return res.status(500).json({ error: "Missing RAPIDAPI_KEY environment variable" });
   }

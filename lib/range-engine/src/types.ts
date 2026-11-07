@@ -19,8 +19,6 @@ export interface EngineOutput {
   total_hb_expansion: number;
   total_lb_reduction: number;
   triggered_rules: string[];
-  unit_play?: string;
-  sharp_money_warning?: boolean;
   hammer: boolean;
   vol_killed: boolean;
   buf_blocked: boolean;

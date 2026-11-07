@@ -12,7 +12,7 @@ export function generateLineOptions(
     [lowBound, highBound] = [highBound, lowBound];
   }
 
-  const step = increment === 1 ? 1 : 0.5;
+  const step = Number.isFinite(increment) && increment > 0 ? increment : 1;
   let current = lowBound;
   while (current <= highBound + 1e-9) {
     options.push(parseFloat(current.toFixed(1)));
@@ -86,4 +86,3 @@ export function formatInjuryNotes(value: unknown, defaultNote: string) {
   return defaultNote;
 }
 
-// ─── League DNA Profiles (Anti-Template, Anti-Generic) ────────────────────────

@@ -1,26 +1,7 @@
 import { parseNumber, parseNumberArray, normalizePercent, weightedAverage, formatInjuryNotes, getLineupFromPayload } from "@workspace/range-engine";
-import { lookupTeam } from "@workspace/range-engine";
-import { getLeagueDNA } from "@workspace/range-engine";
 import { makeResearchCacheKey, saveResearchCache, loadResearchCache, isResearchCacheValid } from "./storage";
 import type { ResearchData } from "@workspace/range-engine";
 export const API_BASE = import.meta.env.VITE_API_BASE || "";
-export function hashStr(s: string): number {
-  let h = 5381;
-  for (let i = 0; i < s.length; i++)
-    h = ((h * 33) ^ s.charCodeAt(i)) & 0x7fffffff;
-  return h;
-}
-export function seededVal(
-  seed: number,
-  variant: number,
-  min: number,
-  max: number,
-  dec = 1,
-): number {
-  const x = Math.sin(seed * 9301 + variant * 49297 + 233) * 10000;
-  const r = x - Math.floor(x);
-  return parseFloat((min + r * (max - min)).toFixed(dec));
-}
 export async function fetchResearchData(
   homeTeam: string,
   awayTeam: string,
@@ -379,17 +360,4 @@ export async function fetchResearchDataCached(
   }
   return fresh;
 }
-export const INJURY_POOL_HOME = [
-  "⚠ Starting PG questionable (knee) — game-time decision",
-  "⚠ Starting C doubtful (ankle) — likely out",
-  "⚠ Top scorer — limited minutes expected (hamstring)",
-  "⚠ Key SF questionable (back) — 50/50",
-];
-export const INJURY_POOL_AWAY = [
-  "⚠ Starting PG questionable (back) — travel fatigue factor",
-  "⚠ Starting SF doubtful (hamstring) — probable out",
-  "⚠ Main scorer — game-time decision (knee)",
-  "⚠ Key PF limited (ankle) — reduced minutes",
-];
-
 // ─── Master Rulebook V3 Engine (Rules 1–18, Anti-Template, Anti-Hallucination) ─

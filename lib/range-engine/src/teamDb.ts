@@ -425,4 +425,3 @@ export function autoCorrectTeamName(input: string): string {
   return corrections[trimmed] || trimmed;
 }
 
-// ─── Interfaces ───────────────────────────────────────────────────────────────

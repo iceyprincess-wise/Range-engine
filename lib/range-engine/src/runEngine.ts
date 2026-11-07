@@ -1,7 +1,6 @@
-import { parseNumber, weightedAverage, normalizePercent } from "./format";
-import { lookupTeam } from "./teamDb";
+import type { lookupTeam } from "./teamDb";
 import { getLeagueDNA } from "./leagueDna";
-import type { AdjLog, EngineOutput, ResearchData } from "./types";
+import type { AdjLog, EngineOutput } from "./types";
 export function runEngine(opts: {
   home_name: string;
   away_name: string;
@@ -712,4 +711,3 @@ export function runEngine(opts: {
   };
 }
 
-// ─── Style Helpers ────────────────────────────────────────────────────────────

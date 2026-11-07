@@ -1,9 +1,6 @@
 import { Router, type Request, type Response } from "express";
 import { quota, updateQuotaFromResponse } from "../lib/quotaTracker";
 import { store, persist, markDirty, rememberGames } from "../lib/warehouse";
-import fs from "node:fs";
-import path from "node:path";
-
 const router = Router();
 const RAPIDAPI_KEY = process.env.RAPIDAPI_KEY;
 const RAPIDAPI_HOST = process.env.RAPIDAPI_HOST || "basketapi1.p.rapidapi.com";
