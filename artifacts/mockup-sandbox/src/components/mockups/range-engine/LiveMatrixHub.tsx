@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { Button } from "@/components/ui/button";
 
 interface LiveMatrixHubProps {
   history: any[];
@@ -173,13 +174,13 @@ export const LiveMatrixHub: React.FC<LiveMatrixHubProps> = ({ history, setHistor
         <h2 className="text-xl font-black uppercase tracking-widest text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-yellow-300">
           <span className="text-white">📡 Global</span> Live Matrix
         </h2>
-        <button 
+        <Button
           onClick={fetchGlobalLive} 
           disabled={globalLoading}
-          className="px-5 py-2 bg-gradient-to-r from-yellow-600 to-yellow-600 hover:from-yellow-500 hover:to-yellow-500 text-white font-bold rounded-lg shadow-lg border border-yellow-400/50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+          className="px-5 py-2 bg-gradient-to-r from-yellow-600 to-yellow-600 hover:from-yellow-500 hover:to-yellow-500 text-white font-bold rounded-lg shadow-lg border border-yellow-400/50 transition-all disabled:opacity-50 disabled:cursor-not-allowed text-base h-auto min-h-0 disabled:pointer-events-auto"
         >
           {globalLoading ? "Scanning Feed..." : "Refresh Board"}
-        </button>
+        </Button>
       </div>
 
       <div className="space-y-4">
@@ -230,13 +231,13 @@ export const LiveMatrixHub: React.FC<LiveMatrixHubProps> = ({ history, setHistor
                 <div className="p-5 border-t border-yellow-500/20 bg-black/30 backdrop-blur-sm">
                   <div className="flex justify-between items-center mb-5">
                     <h3 className="font-bold text-zinc-300 uppercase tracking-wider text-sm">Deep Telemetry & Sensor Output</h3>
-                    <button 
+                    <Button
                       onClick={() => handleManualSync(game.id, apiMatchData?.id)}
                       disabled={isSyncing || !isLive}
-                      className={`px-4 py-2 font-black uppercase text-xs rounded-md shadow-lg border transition-all ${(isSyncing || !isLive) ? 'bg-zinc-800/30 text-zinc-500 border-zinc-600/30 opacity-50 cursor-not-allowed' : 'bg-gradient-to-r from-yellow-600 to-yellow-600 text-white border-yellow-400/50 hover:from-yellow-500 hover:to-yellow-500 hover:shadow-yellow-500/20'}`}
+                      className={`px-4 py-2 font-black uppercase text-xs rounded-md shadow-lg border transition-all ${(isSyncing || !isLive) ? 'bg-zinc-800/30 text-zinc-500 border-zinc-600/30 opacity-50 cursor-not-allowed' : 'bg-gradient-to-r from-yellow-600 to-yellow-600 text-white border-yellow-400/50 hover:from-yellow-500 hover:to-yellow-500 hover:shadow-yellow-500/20'} h-auto min-h-0 disabled:pointer-events-auto`}
                     >
                       {isSyncing ? "Syncing..." : "⚡ LIVE SYNC"}
-                    </button>
+                    </Button>
                   </div>
 
                   {stats ? (

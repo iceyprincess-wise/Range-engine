@@ -3,6 +3,27 @@ import { nextCountdownSec } from "@workspace/range-engine";
 import { useState, useRef, useEffect, useMemo } from "react";
 import { LiveMatrixHub } from "./LiveMatrixHub";
 import { WarehousePage } from "./WarehousePage";
+import { Button } from "@/components/ui/button";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Progress } from "@/components/ui/progress";
+import { Input as UiInput } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Separator } from "@/components/ui/separator";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 
 import {
@@ -98,12 +119,11 @@ const HUNT_STEPS = [
 function Divider({ label }: { label: string }) {
   return (
     <div className="flex items-center gap-2 py-1">
-
-      <div className="flex-1 h-px bg-zinc-800" />
+      <Separator className="flex-1 bg-zinc-800" />
       <span className="text-[9px] font-bold uppercase tracking-[0.2em] text-zinc-600">
         {label}
       </span>
-      <div className="flex-1 h-px bg-zinc-800" />
+      <Separator className="flex-1 bg-zinc-800" />
     </div>
   );
 }
@@ -163,9 +183,9 @@ function Input({
 }) {
   return (
     <div>
-      <label className="text-[9px] uppercase tracking-widest text-zinc-600 block mb-1">
+      <Label className="text-[9px] uppercase tracking-widest text-zinc-600 block mb-1 font-normal leading-normal">
         {label}
-      </label>
+      </Label>
       {children}
     </div>
   );
@@ -188,14 +208,14 @@ function Field({
   list?: string;
 }) {
   return (
-    <input
+    <UiInput
       type={type}
       value={value}
       onChange={(e) => onChange(e.target.value)}
       onBlur={onBlur}
       list={list}
       placeholder={placeholder}
-      className={`w-full bg-zinc-800 border border-yellow-900 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-zinc-500 transition placeholder:text-zinc-700 ${className}`}
+      className={`w-full bg-zinc-800 border border-yellow-900 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-zinc-500 transition placeholder:text-zinc-700 ${className} h-auto shadow-none md:text-xs focus-visible:ring-0 focus-visible:border-zinc-500`}
     />
   );
 }
@@ -609,17 +629,14 @@ export function RangeEngine() {
   const MARKET_LINE_LOW_BOUND = 120.5;
   const MARKET_LINE_HIGH_BOUND = 300.5;
 
-  const renderMarketLineOptions = (lowBound: number, highBound: number) =>
-    generateLineOptions(lowBound, highBound).map((value) => (
-      <option key={value} value={value}>
-        {value.toFixed(1)}
-      </option>
-    ));
-
-  const marketLineOptions = renderMarketLineOptions(
+  const marketLineItems = generateLineOptions(
     MARKET_LINE_LOW_BOUND,
     MARKET_LINE_HIGH_BOUND,
-  );
+  ).map((value) => (
+    <SelectItem key={value} value={String(value)}>
+      {value.toFixed(1)}
+    </SelectItem>
+  ));
 
   // Alternative market line picker options (expandable)
   // --- MARKET LINES AUTO-SYNC ---
@@ -1137,7 +1154,7 @@ export function RangeEngine() {
               <li>✓ Live 90-Minute Pacing Dynamics</li>
             </ul>
           </div>
-          <button onClick={() => setTab("analyzer")} className="mt-8 px-8 py-3 bg-gradient-to-r from-yellow-600 to-yellow-600 text-white font-bold rounded-lg hover:from-yellow-500 hover:to-yellow-500 transition shadow-lg">Return to Basketball</button>
+          <Button onClick={() => setTab("analyzer")} className="mt-8 px-8 py-3 bg-gradient-to-r from-yellow-600 to-yellow-600 text-white font-bold rounded-lg hover:from-yellow-500 hover:to-yellow-500 transition shadow-lg h-auto min-h-0 border-0 text-base">Return to Basketball</Button>
         </div>
       )}
       {showWh && <WarehousePage wh={wh} whAt={whAt} onClose={() => setShowWh(false)} />}
@@ -1146,22 +1163,22 @@ export function RangeEngine() {
         <div className="fixed inset-0 bg-black/95 flex flex-col p-4 overflow-y-auto" style={{ zIndex: 9999 }}>
           <div className="flex items-center justify-between mb-3">
             <p className="text-yellow-400 font-black text-sm uppercase tracking-widest">📡 Covered Games — Today</p>
-            <span className="flex items-center gap-2"><button onClick={() => updateTournaments()} className="text-yellow-300 text-[10px] font-black px-2 py-1 rounded border border-yellow-700 bg-yellow-950/40 uppercase">{refreshing ? "⬆ UPDATING…" : "⬆ UPDATE (spends quota)"}</button><button onClick={() => setShowGames(false)} className="text-zinc-400 text-xl px-2">✕</button></span>
+            <span className="flex items-center gap-2"><Button onClick={() => updateTournaments()} className="text-yellow-300 text-[10px] font-black px-2 py-1 rounded border border-yellow-700 bg-yellow-950/40 uppercase h-auto min-h-0">{refreshing ? "⬆ UPDATING…" : "⬆ UPDATE (spends quota)"}</Button><Button onClick={() => setShowGames(false)} className="text-zinc-400 text-xl px-2 py-0 h-auto min-h-0 border-0 bg-transparent">✕</Button></span>
           </div>
           <p className="text-[10px] text-zinc-500 mb-3">API quota: {quotaInfo.remaining ?? "—"}/{quotaInfo.limit ?? "—"} remaining · {gMeta?.fromDisk === false ? "fresh UPDATE" : "showing last saved update"}{typeof gMeta?.quotaSpent === "number" ? ` — cost ${gMeta.quotaSpent} calls` : ""}</p>
           {!gSel ? (
             <div className="space-y-1.5">
               {gTours.length === 0 && <p className="text-zinc-500 text-xs">No tournaments loaded — daily API quota exhausted or nothing scheduled yet. Quota resets in the afternoon.</p>}
               {gTours.map((t) => (
-                <button key={t.id} onClick={() => openTournament(t)} className="w-full text-left bg-zinc-900 border border-yellow-950 rounded-lg px-3 py-2 hover:border-yellow-700 transition">
+                <Button key={t.id} onClick={() => openTournament(t)} className="w-full text-left bg-zinc-900 border border-yellow-950 rounded-lg px-3 py-2 hover:border-yellow-700 transition h-auto min-h-0 justify-start">
                   <span className="text-xs text-zinc-200 font-bold">{t.name}</span>
                   <span className="text-[10px] text-zinc-500 ml-2">{t.country}</span>
-                </button>
+                </Button>
               ))}
             </div>
           ) : (
             <div>
-              <button onClick={() => { setGSel(null); setGGames([]); }} className="text-[10px] text-yellow-400 mb-2">← All tournaments</button>
+              <Button onClick={() => { setGSel(null); setGGames([]); }} className="text-[10px] text-yellow-400 mb-2 px-0 py-0 h-auto min-h-0 border-0 bg-transparent">← All tournaments</Button>
               <p className="text-xs text-zinc-300 font-bold mb-2">{gSel.country} - {gSel.name}</p>
               {gLoading && <p className="text-zinc-500 text-xs">Loading fixtures…</p>}
               {!gLoading && gGames.length === 0 && <p className="text-zinc-500 text-xs">No fixtures returned for today.</p>}
@@ -1172,7 +1189,7 @@ export function RangeEngine() {
                       <p className="text-xs text-zinc-200">{g.home} vs {g.away}</p>
                       <p className="text-[10px] text-zinc-500">{g.startTimestamp ? new Date(g.startTimestamp * 1000).toLocaleString([], { weekday: "short", hour: "2-digit", minute: "2-digit" }) : "TBD"} · {gStatuses[g.id]?.phase === "FT" ? `FT ${gStatuses[g.id].hs}-${gStatuses[g.id].as}` : (gStatuses[g.id]?.phase ?? g.status)}</p>
                     </div>
-                    <button onClick={() => betFill(g)} className="bg-yellow-600 hover:bg-yellow-500 text-white text-[10px] font-black px-3 py-1.5 rounded uppercase">Bet</button>
+                    <Button onClick={() => betFill(g)} className="bg-yellow-600 hover:bg-yellow-500 text-white text-[10px] font-black px-3 py-1.5 rounded uppercase h-auto min-h-0 border-0">Bet</Button>
                   </div>
                 ))}
               </div>
@@ -1183,37 +1200,44 @@ export function RangeEngine() {
       {/* ─── Premium Header with Global Navigation ─────────────────────────────────────── */}
       <div className="border-b border-yellow-500/10 px-5 py-4 flex flex-col items-center justify-center bg-black/60 flex-shrink-0" style={{ background: 'rgba(0, 0, 0, 0.85)', borderImage: 'linear-gradient(90deg, transparent, rgba(16, 185, 129, 0.2), transparent) 1' }}>
         <SplendorLogo />
-        <div className="flex items-center gap-3 mt-4 flex-wrap justify-center">
-          {[
-            { key: "analyzer", label: "Basketball Analyser 🏀" },
-            { key: "football", label: "Football Analyser ⚽" },
-            { key: "history", label: "Analysis Archive 🗄️" }
-          ].map((item) => (
-            <button
-              key={item.key}
-              onClick={() => setTab(item.key as typeof tab)}
-              className={`text-[10px] px-4 py-2 rounded-lg font-bold uppercase tracking-widest transition border ${
-                tab === item.key
-                  ? "bg-gradient-to-r from-yellow-600 to-yellow-600 text-white border-yellow-400 shadow-lg shadow-yellow-500/50"
-                  : item.key === "football"
-                  ? "text-zinc-300 border-yellow-600/30 hover:border-yellow-500 hover:text-yellow-300 bg-yellow-950/20"
-                  : "text-zinc-400 border-yellow-900 hover:border-zinc-500 hover:text-white bg-zinc-900/30"
-              }`}
-              title={item.key === "football" ? "Coming Soon" : ""}
-            >
-              {item.label}
-              {item.key === "history" ? ` (${histStats.total})` : ""}
-            </button>
-          ))}
+        <Tabs
+          value={tab}
+          onValueChange={(v) => setTab(v as typeof tab)}
+          className="flex items-center gap-3 mt-4 flex-wrap justify-center"
+        >
+          <TabsList className="contents bg-transparent p-0 h-auto">
+            {[
+              { key: "analyzer", label: "Basketball Analyser 🏀" },
+              { key: "football", label: "Football Analyser ⚽" },
+              { key: "live", label: "Live Matrix 📡" },
+              { key: "history", label: "Analysis Archive 🗄️" }
+            ].map((item) => (
+              <TabsTrigger
+                key={item.key}
+                value={item.key}
+                className={`text-[10px] px-4 py-2 rounded-lg font-bold uppercase tracking-widest transition border data-[state=active]:text-white data-[state=active]:shadow-lg ${
+                  tab === item.key
+                    ? "bg-gradient-to-r from-yellow-600 to-yellow-600 text-white border-yellow-400 shadow-lg shadow-yellow-500/50"
+                    : item.key === "football"
+                    ? "text-zinc-300 border-yellow-600/30 hover:border-yellow-500 hover:text-yellow-300 bg-yellow-950/20"
+                    : "text-zinc-400 border-yellow-900 hover:border-zinc-500 hover:text-white bg-zinc-900/30"
+                }`}
+                title={item.key === "football" ? "Coming Soon" : ""}
+              >
+                {item.label}
+                {item.key === "history" ? ` (${histStats.total})` : ""}
+              </TabsTrigger>
+            ))}
+          </TabsList>
           {tab === "analyzer" && phase !== "idle" && (
-            <button
+            <Button
               onClick={handleReset}
-              className="text-[10px] text-zinc-400 hover:text-white border border-zinc-600 hover:border-zinc-400 rounded-lg px-3 py-2 transition bg-zinc-900/30"
+              className="text-[10px] text-zinc-400 hover:text-white border border-zinc-600 hover:border-zinc-400 rounded-lg px-3 py-2 transition bg-zinc-900/30 h-auto min-h-0"
             >
               ← New Analysis
-            </button>
+            </Button>
           )}
-        </div>
+        </Tabs>
         {/* Battery Pill - Telemetry Node */}
         <div className="mt-3 px-4 py-2 rounded-full border border-yellow-500/40 bg-yellow-950/30 flex items-center gap-2">
           <span onClick={openGames} className="text-yellow-400 font-bold text-xs uppercase tracking-widest cursor-pointer">System Status</span><span onClick={() => refreshAll()} className={"ml-2 text-yellow-300 font-black text-xs cursor-pointer border border-yellow-700 rounded px-1.5 py-0.5" + (refreshing ? " animate-spin inline-block" : "")}>⟳</span><span onClick={openWarehouse} className="ml-2 text-yellow-300 text-sm cursor-pointer border border-yellow-700 rounded px-1.5 py-0.5">🏢</span>
@@ -1275,12 +1299,12 @@ export function RangeEngine() {
               <p className="text-[9px] uppercase tracking-widest text-zinc-600">
                 Local Archive — {histStats.total} receipts · <span className="text-yellow-400">{history.filter((h: any) => h.postMatch).length}/{histStats.total} DNA-banked ✓</span>
               </p>
-              <button
+              <Button
                 onClick={clearHistory}
-                className="text-[9px] text-red-400 hover:text-red-300 transition"
+                className="text-[9px] text-red-400 hover:text-red-300 transition px-0 py-0 h-auto min-h-0 border-0 bg-transparent"
               >
                 Clear all
-              </button>
+              </Button>
             </div>
 
             {archiveEntries.length === 0 ? (
@@ -1327,9 +1351,9 @@ export function RangeEngine() {
                           ) : (
                             <p className="text-[9px] text-zinc-600">Not settled yet — open the games browser once after full time to bank the result, then revisit this tab.</p>
                           )}
-                          <button onClick={() => confirmEntry(entry.id)} className="w-full bg-yellow-700 hover:bg-yellow-600 text-black text-[10px] font-black py-2 rounded-lg uppercase tracking-widest transition">
+                          <Button onClick={() => confirmEntry(entry.id)} className="w-full bg-yellow-700 hover:bg-yellow-600 text-black text-[10px] font-black py-2 rounded-lg uppercase tracking-widest transition h-auto min-h-0 border-0">
                             Confirm → Full Results
-                          </button>
+                          </Button>
                         </div>
                       );
                     })()}
@@ -1388,12 +1412,12 @@ export function RangeEngine() {
                     {isReanalyzing ? (
                       <div className="flex items-center gap-3">
                         <div className="text-[11px] font-bold text-yellow-300">Reanalyzing</div>
-                        <div className="w-28 bg-zinc-900 rounded overflow-hidden h-2">
-                          <div
-                            className="bg-yellow-500 h-2 transition-all"
-                            style={{ width: `${reanalysisProgress}%` }}
-                          />
-                        </div>
+                        <Progress
+                          value={reanalysisProgress}
+                          max={100}
+                          className="w-28 bg-zinc-900 rounded overflow-hidden h-2"
+                          indicatorClassName="bg-yellow-500"
+                        />
                         <div className="text-[10px] font-mono text-yellow-400">{reanalysisProgress}%</div>
                       </div>
                     ) : (
@@ -1438,16 +1462,17 @@ MATCH CONTEXT — Rule 1 (Time Sync)
                       />
                     </Input>
                     <Input label="Bookmaker">
-                      <select
-                        value={bookmaker}
-                        onChange={(e) => setBookmaker(e.target.value)}
-                        className="w-full bg-zinc-800 border border-yellow-900 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-zinc-500 transition"
-                      >
-                        <option>Sportybet</option>
-                        <option>Bet365</option>
-                        <option>Betway</option>
-                        <option>Other</option>
-                      </select>
+                      <Select value={bookmaker} onValueChange={setBookmaker}>
+                        <SelectTrigger className="w-full bg-zinc-800 border border-yellow-900 rounded-lg px-3 py-2 text-xs text-white h-auto shadow-none">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Sportybet">Sportybet</SelectItem>
+                          <SelectItem value="Bet365">Bet365</SelectItem>
+                          <SelectItem value="Betway">Betway</SelectItem>
+                          <SelectItem value="Other">Other</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </Input>
                     <Input label="OFFICIAL KICK-OFF TIME">
                       <Field type="time" value={koTime} onChange={setKoTime} />
@@ -1550,37 +1575,28 @@ MATCH CONTEXT — Rule 1 (Time Sync)
 
                   {/* Context Checkboxes */}
                   <div className="flex items-center gap-4 pt-2 border-t border-yellow-950">
+                    <RadioGroup
+                      value={matchGender}
+                      onValueChange={(v) => setMatchGender(v as "Men" | "Women")}
+                      className="flex items-center gap-4"
+                    >
+                      <div className="flex items-center gap-2">
+                        <RadioGroupItem value="Men" id="men" className="h-4 w-4 border-yellow-900 text-yellow-600" />
+                        <Label htmlFor="men" className="text-xs text-zinc-300 font-normal leading-normal">Men's Game</Label>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <RadioGroupItem value="Women" id="women" className="h-4 w-4 border-yellow-900 text-yellow-600" />
+                        <Label htmlFor="women" className="text-xs text-zinc-300 font-normal leading-normal">Women's Game</Label>
+                      </div>
+                    </RadioGroup>
                     <div className="flex items-center gap-2">
-                      <input
-                        type="radio"
-                        id="men"
-                        name="gender"
-                        checked={matchGender === 'Men'}
-                        onChange={() => setMatchGender('Men')}
-                        className="w-3 h-3 text-yellow-600 bg-zinc-800 border-yellow-900 focus:ring-yellow-500"
-                      />
-                      <label htmlFor="men" className="text-xs text-zinc-300">Men's Game</label>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <input
-                        type="radio"
-                        id="women"
-                        name="gender"
-                        checked={matchGender === 'Women'}
-                        onChange={() => setMatchGender('Women')}
-                        className="w-3 h-3 text-yellow-600 bg-zinc-800 border-yellow-900 focus:ring-yellow-500"
-                      />
-                      <label htmlFor="women" className="text-xs text-zinc-300">Women's Game</label>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <input
-                        type="checkbox"
+                      <Checkbox
                         id="live"
                         checked={isLiveMatch}
-                        onChange={(e) => setIsLiveMatch(e.target.checked)}
-                        className="w-3 h-3 text-yellow-600 bg-zinc-800 border-yellow-900 rounded focus:ring-yellow-500"
+                        onCheckedChange={(c) => setIsLiveMatch(c === true)}
+                        className="h-4 w-4 border-yellow-900 bg-zinc-800 rounded shadow-none data-[state=checked]:bg-yellow-600 data-[state=checked]:text-white"
                       />
-                      <label htmlFor="live" className="text-xs text-zinc-300">Live Match</label>
+                      <Label htmlFor="live" className="text-xs text-zinc-300 font-normal leading-normal">Live Match</Label>
                     </div>
                   </div>
                   {league && (
@@ -1628,12 +1644,12 @@ MATCH CONTEXT — Rule 1 (Time Sync)
 
                     {researchPhase === "researching" && (
                       <div className="px-4 py-6 text-center space-y-3">
-                        <div className="w-full bg-zinc-900 rounded-full h-2 overflow-hidden">
-                          <div
-                            className="h-full bg-gradient-to-r from-yellow-600 to-yellow-400 transition-all duration-300 ease-out"
-                            style={{ width: `${researchProgress}%` }}
-                          ></div>
-                        </div>
+                        <Progress
+                          value={researchProgress}
+                          max={100}
+                          className="w-full bg-zinc-900 rounded-full h-2"
+                          indicatorClassName="bg-gradient-to-r from-yellow-600 to-yellow-400 duration-300 ease-out"
+                        />
                         <p className="text-xs text-yellow-400 font-bold animate-pulse">
                           Cross-referencing team databases, league archives &
                           H2H records…
@@ -2039,11 +2055,11 @@ MATCH CONTEXT — Rule 1 (Time Sync)
                                   ))}
                                 </div>
                               )}
-                              <input
+                              <UiInput
                                 value={homeManualOut}
                                 onChange={(e) => setHomeManualOut(e.target.value)}
                                 placeholder="CONFIRMED OUT (you verify) — e.g. J. Smith"
-                                className="w-full bg-black border border-yellow-950 rounded px-2 py-1 text-[10px] text-yellow-300 placeholder:text-zinc-600"
+                                className="w-full bg-black border border-yellow-950 rounded px-2 py-1 text-[10px] text-yellow-300 placeholder:text-zinc-600 h-auto shadow-none md:text-[10px] focus-visible:ring-0"
                               />
                             </div>
                             <div className="bg-zinc-900 border border-yellow-950 rounded-lg px-3 py-2">
@@ -2062,11 +2078,11 @@ MATCH CONTEXT — Rule 1 (Time Sync)
                                   ))}
                                 </div>
                               )}
-                              <input
+                              <UiInput
                                 value={awayManualOut}
                                 onChange={(e) => setAwayManualOut(e.target.value)}
                                 placeholder="CONFIRMED OUT (you verify) — e.g. J. Smith"
-                                className="w-full bg-black border border-yellow-950 rounded px-2 py-1 text-[10px] text-yellow-300 placeholder:text-zinc-600"
+                                className="w-full bg-black border border-yellow-950 rounded px-2 py-1 text-[10px] text-yellow-300 placeholder:text-zinc-600 h-auto shadow-none md:text-[10px] focus-visible:ring-0"
                               />
                             </div>
                           </div>
@@ -2258,7 +2274,7 @@ MATCH CONTEXT — Rule 1 (Time Sync)
 
                     {researchPhase === "done" && researchData && (
                       <div className="px-4 py-3 border-t border-yellow-950">
-                        <button
+                        <Button
                           onClick={() => {
                             alert(`SOURCE REPORT — REAL DATA ONLY
 
@@ -2268,7 +2284,7 @@ H2H: ${researchData?.h2hAvgTotal ? `avg total ${researchData.h2hAvgTotal}` : "no
 Feeds: BasketAPI + Google News index
 Unavailable data is labeled — never invented.`);
                           }}
-                          className="w-full py-2 bg-yellow-600/20 hover:bg-yellow-600/40 border border-yellow-500/50 rounded text-[10px] text-yellow-300 font-bold tracking-widest uppercase transition-all duration-300 flex justify-center items-center gap-2"
+                          className="w-full py-2 bg-yellow-600/20 hover:bg-yellow-600/40 border border-yellow-500/50 rounded text-[10px] text-yellow-300 font-bold tracking-widest uppercase transition-all duration-300 flex justify-center items-center gap-2 h-auto min-h-0 [&_svg]:size-3 whitespace-normal"
                         >
                           <svg
                             className="w-3 h-3"
@@ -2284,7 +2300,7 @@ Unavailable data is labeled — never invented.`);
                             />
                           </svg>
                           View Verified Source Report
-                        </button>
+                        </Button>
                       </div>
                     )}
                     {researchPhase === "done" && !researchData && (
@@ -2332,29 +2348,23 @@ Unavailable data is labeled — never invented.`);
                         OVER — Between *
                       </p>
                       <div className="flex items-center gap-2">
-                        <select
-                          value={overLow}
-                          onChange={(event) => {
-                            setOverLow(event.target.value);
-                          }}
-                          className="flex-1 rounded border border-yellow-950 bg-black px-3 py-2 text-sm text-zinc-100"
-                        >
-                          <option value="">Select low</option>
-                          {marketLineOptions}
-                        </select>
+                        <Select value={overLow} onValueChange={setOverLow}>
+                          <SelectTrigger className="flex-1 rounded border border-yellow-950 bg-black px-3 py-2 text-sm text-zinc-100 h-auto shadow-none">
+                            <SelectValue placeholder="Select low" />
+                          </SelectTrigger>
+                          <SelectContent>{marketLineItems}</SelectContent>
+                        </Select>
                         <span className="text-zinc-700 text-xs flex-shrink-0">to</span>
-                        <select
-                          value={overHigh}
-                          onChange={(event) => setOverHigh(event.target.value)}
-                          className="flex-1 rounded border border-yellow-950 bg-black px-3 py-2 text-sm text-zinc-100"
-                        >
-                          <option value="">Select high</option>
-                          {marketLineOptions}
-                        </select>
+                        <Select value={overHigh} onValueChange={setOverHigh}>
+                          <SelectTrigger className="flex-1 rounded border border-yellow-950 bg-black px-3 py-2 text-sm text-zinc-100 h-auto shadow-none">
+                            <SelectValue placeholder="Select high" />
+                          </SelectTrigger>
+                          <SelectContent>{marketLineItems}</SelectContent>
+                        </Select>
                       </div>
                       <div className="flex items-center justify-between mt-2">
                         <p className="text-[9px] text-zinc-700">Engine uses LOWEST (best OVER edge)</p>
-                        <button
+                        <Button
                           onClick={() => {
                             // toggle alt-lines
                             setShowAltLines((s) => !s);
@@ -2372,10 +2382,10 @@ Unavailable data is labeled — never invented.`);
                               setAltLines(list);
                             }
                           }}
-                          className="text-[10px] px-2 py-1 rounded border border-yellow-950 text-zinc-300 bg-zinc-900"
+                          className="text-[10px] px-2 py-1 rounded border border-yellow-950 text-zinc-300 bg-zinc-900 h-auto min-h-0"
                         >
                           {showAltLines ? "Hide alternatives" : "Show alternatives"}
-                        </button>
+                        </Button>
                       </div>
                       {showAltLines && altLines.length > 0 && (
                         <div className="mt-2 grid grid-cols-4 gap-2">
@@ -2385,25 +2395,25 @@ Unavailable data is labeled — never invented.`);
                               <div className="flex-1">
                                 <div className="text-zinc-100 font-mono text-center text-xs bg-zinc-900 rounded-md py-1.5 border border-yellow-950">{val.toFixed(1)}</div>
                                 <div className="text-[10px] flex gap-1.5 mt-1">
-                                  <button
+                                  <Button
                                     onClick={() => {
                                       // set over to this exact value (narrow to point)
                                       setOverLow(String(val));
                                       setOverHigh(String(val));
                                     }}
-                                    className="flex-1 py-1.5 rounded-md bg-yellow-950/40 border border-yellow-700 text-yellow-300 font-bold text-center"
+                                    className="flex-1 py-1.5 rounded-md bg-yellow-950/40 border border-yellow-700 text-yellow-300 font-bold text-center text-[10px] h-auto min-h-0"
                                   >
                                     O
-                                  </button>
-                                  <button
+                                  </Button>
+                                  <Button
                                     onClick={() => {
                                       setUnderLow(String(val));
                                       setUnderHigh(String(val));
                                     }}
-                                    className="flex-1 py-1.5 rounded-md bg-yellow-950/40 border border-yellow-700 text-yellow-300 font-bold text-center"
+                                    className="flex-1 py-1.5 rounded-md bg-yellow-950/40 border border-yellow-700 text-yellow-300 font-bold text-center text-[10px] h-auto min-h-0"
                                   >
                                     U
-                                  </button>
+                                  </Button>
                                 </div>
                               </div>
                             </div>
@@ -2416,30 +2426,26 @@ Unavailable data is labeled — never invented.`);
                         UNDER — Between *
                       </p>
                       <div className="flex items-center gap-2">
-                        <select
-                          value={underLow}
-                          onChange={(event) => setUnderLow(event.target.value)}
-                          className="flex-1 rounded border border-yellow-950 bg-black px-3 py-2 text-sm text-zinc-100"
-                        >
-                          <option value="">Select low</option>
-                          {marketLineOptions}
-                        </select>
+                        <Select value={underLow} onValueChange={setUnderLow}>
+                          <SelectTrigger className="flex-1 rounded border border-yellow-950 bg-black px-3 py-2 text-sm text-zinc-100 h-auto shadow-none">
+                            <SelectValue placeholder="Select low" />
+                          </SelectTrigger>
+                          <SelectContent>{marketLineItems}</SelectContent>
+                        </Select>
                         <span className="text-zinc-700 text-xs flex-shrink-0">to</span>
-                        <select
-                          value={underHigh}
-                          onChange={(event) => setUnderHigh(event.target.value)}
-                          className="flex-1 rounded border border-yellow-950 bg-black px-3 py-2 text-sm text-zinc-100"
-                        >
-                          <option value="">Select high</option>
-                          {marketLineOptions}
-                        </select>
+                        <Select value={underHigh} onValueChange={setUnderHigh}>
+                          <SelectTrigger className="flex-1 rounded border border-yellow-950 bg-black px-3 py-2 text-sm text-zinc-100 h-auto shadow-none">
+                            <SelectValue placeholder="Select high" />
+                          </SelectTrigger>
+                          <SelectContent>{marketLineItems}</SelectContent>
+                        </Select>
                       </div>
                       <p className="text-[9px] text-zinc-700">
                         Engine uses HIGHEST (best UNDER edge)
                       </p>
                       <div className="flex items-center justify-between mt-2">
                         <p className="text-[9px] text-zinc-700">Alternates auto-fill from your window</p>
-                        <button
+                        <Button
                           onClick={() => {
                             setShowAltLinesU((s) => !s);
                             if (!showAltLinesU) {
@@ -2454,10 +2460,10 @@ Unavailable data is labeled — never invented.`);
                               setAltLinesU(list);
                             }
                           }}
-                          className="text-[10px] px-2 py-1 rounded border border-yellow-950 text-zinc-300 bg-zinc-900"
+                          className="text-[10px] px-2 py-1 rounded border border-yellow-950 text-zinc-300 bg-zinc-900 h-auto min-h-0"
                         >
                           {showAltLinesU ? "Hide alternatives" : "Show alternatives"}
-                        </button>
+                          </Button>
                       </div>
                       {showAltLinesU && altLinesU.length > 0 && (
                         <div className="mt-2 grid grid-cols-4 gap-2">
@@ -2467,8 +2473,8 @@ Unavailable data is labeled — never invented.`);
                               <div className="flex-1">
                                 <div className="text-zinc-100 font-mono text-center text-xs bg-zinc-900 rounded-md py-1.5 border border-yellow-950">{val.toFixed(1)}</div>
                                 <div className="text-[10px] flex gap-1.5 mt-1">
-                                  <button onClick={() => { setOverLow(String(val)); setOverHigh(String(val)); }} className="flex-1 py-1.5 rounded-md bg-yellow-950/40 border border-yellow-700 text-yellow-300 font-bold text-center">O</button>
-                                  <button onClick={() => { setUnderLow(String(val)); setUnderHigh(String(val)); }} className="flex-1 py-1.5 rounded-md bg-yellow-950/40 border border-yellow-700 text-yellow-300 font-bold text-center">U</button>
+                                  <Button onClick={() => { setOverLow(String(val)); setOverHigh(String(val)); }} className="flex-1 py-1.5 rounded-md bg-yellow-950/40 border border-yellow-700 text-yellow-300 font-bold text-center text-[10px] h-auto min-h-0">O</Button>
+                                  <Button onClick={() => { setUnderLow(String(val)); setUnderHigh(String(val)); }} className="flex-1 py-1.5 rounded-md bg-yellow-950/40 border border-yellow-700 text-yellow-300 font-bold text-center text-[10px] h-auto min-h-0">U</Button>
                                 </div>
                               </div>
                             </div>
@@ -2617,12 +2623,12 @@ Unavailable data is labeled — never invented.`);
                         </>
                     )}
                     {research.done && (
-                      <button
+                      <Button
                         onClick={() => {
                           alert(`LIVE SYNC SOURCE: BasketAPI live feed — match found and connected. No third-party scrapers used.`);
                           setIsReportOpen(true);
                         }}
-                        className="mt-3 w-full py-2 bg-yellow-600/20 hover:bg-yellow-600/40 border border-yellow-500/50 rounded text-[10px] text-yellow-300 font-bold tracking-widest uppercase transition-all duration-300 flex justify-center items-center gap-2"
+                        className="mt-3 w-full py-2 bg-yellow-600/20 hover:bg-yellow-600/40 border border-yellow-500/50 rounded text-[10px] text-yellow-300 font-bold tracking-widest uppercase transition-all duration-300 flex justify-center items-center gap-2 h-auto min-h-0 [&_svg]:size-3 whitespace-normal"
                       >
                         <svg
                           className="w-3 h-3"
@@ -2638,45 +2644,26 @@ Unavailable data is labeled — never invented.`);
                           />
                         </svg>
                         View Authentic Source Report (API Node Dump)
-                      </button>
+                      </Button>
                     )}
                   </div>
                 )}
                 {/* --- END DEEP SCAN INTELLIGENCE UI --- */}
 
                 {/* --- CLASSIFIED REPORT MODAL --- */}
-                {isReportOpen && (
-                  <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90">
-                    <div className="bg-[#05080f] border border-yellow-500/50 rounded-xl w-full max-w-lg max-h-[85vh] flex flex-col shadow-[0_0_50px_rgba(79,70,229,0.15)] relative overflow-hidden">
+                <Dialog open={isReportOpen} onOpenChange={setIsReportOpen}>
+                  <DialogContent className="bg-[#05080f] border-yellow-500/50 max-w-lg max-h-[85vh] flex flex-col shadow-[0_0_50px_rgba(79,70,229,0.15)] overflow-hidden p-0 gap-0 sm:rounded-xl">
                       {/* Modal Header */}
                       <div className="bg-yellow-950/40 border-b border-yellow-500/30 p-4 flex justify-between items-center">
                         <div>
-                          <h3 className="text-xs font-black tracking-widest text-yellow-400 uppercase flex items-center gap-2">
+                          <DialogTitle className="text-xs font-black tracking-widest text-yellow-400 uppercase flex items-center gap-2 leading-normal">
                             <span className="w-2 h-2 rounded-full bg-yellow-500 shadow-[0_0_8px_#10b981]"></span>
                             Post-Scan Extraction Report
-                          </h3>
-                          <p className="text-[9px] text-zinc-500 font-mono mt-1">
+                          </DialogTitle>
+                          <DialogDescription className="text-[9px] text-zinc-500 font-mono mt-1">
                             REAL-DATA REPORT — warehouse history + live news index · nothing simulated
-                          </p>
+                          </DialogDescription>
                         </div>
-                        <button
-                          onClick={() => setIsReportOpen(false)}
-                          className="text-zinc-500 hover:text-red-400 transition"
-                        >
-                          <svg
-                            className="w-5 h-5"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M6 18L18 6M6 6l12 12"
-                            />
-                          </svg>
-                        </button>
                       </div>
 
                       {/* Modal Body - The Data Readout */}
@@ -2763,19 +2750,18 @@ Unavailable data is labeled — never invented.`);
 
                       {/* Modal Footer */}
                       <div className="bg-yellow-950/20 border-t border-yellow-900/50 p-3">
-                        <button
+                        <Button
                           onClick={() => setIsReportOpen(false)}
-                          className="w-full bg-yellow-600 hover:bg-yellow-500 text-white text-[10px] font-black tracking-widest uppercase py-2.5 rounded transition"
+                          className="w-full bg-yellow-600 hover:bg-yellow-500 text-white text-[10px] font-black tracking-widest uppercase py-2.5 rounded transition h-auto min-h-0 border-0 whitespace-normal"
                         >
                           Acknowledge & Close Report
-                        </button>
+                        </Button>
                       </div>
-                    </div>
-                  </div>
-                )}
+                  </DialogContent>
+                </Dialog>
                 {/* --- END CLASSIFIED REPORT MODAL --- */}
 
-                <button
+                <Button
                   onClick={handleAnalyze}
                   disabled={
                     !homeTeam ||
@@ -2787,10 +2773,10 @@ Unavailable data is labeled — never invented.`);
                     !research.done ||
                     isReanalyzing
                   }
-                  className="w-full bg-yellow-600 hover:bg-yellow-500 disabled:opacity-20 disabled:cursor-not-allowed text-white font-black text-xs rounded-xl py-3.5 tracking-widest uppercase transition"
+                  className="w-full bg-yellow-600 hover:bg-yellow-500 disabled:opacity-20 disabled:cursor-not-allowed text-white font-black text-xs rounded-xl py-3.5 tracking-widest uppercase transition h-auto min-h-0 border-0 disabled:pointer-events-auto whitespace-normal"
                 >
                   ⚙ Execute Analysis — Splendor Engine V3
-                </button>
+                </Button>
               </div>
             </div>
           )}
