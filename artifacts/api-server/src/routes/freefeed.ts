@@ -87,6 +87,10 @@ const convertEvent = (ev: any, leagueName: string, ids: Map<string, { id: number
       homeScore: hs,
       awayScore: as,
       tournament: { name: leagueName, category: { name: "USA" } },
+      // Venue identity from the ESPN payload, banked for completeness.
+      // No engine rule consumes venue yet — the only arena input the
+      // engine uses is the home/road PPG split.
+      venue: comp?.venue?.fullName ? { name: comp.venue.fullName } : undefined,
       source: "espn-freefeed",
     },
   };
@@ -113,7 +117,12 @@ const parseEspnBoxscore = (summary: any): any => {
   const out: any = { fieldGoalsScored: { hv: fgH.m, ht: fgH.a, av: fgA.m, at: fgA.a } };
   const p3H = ma(get(home, "threePointFieldGoalsMade-threePointFieldGoalsAttempted"));
   const p3A = ma(get(away, "threePointFieldGoalsMade-threePointFieldGoalsAttempted"));
-  if (p3H && p3A) out.threePointersScored = { hv: p3H.m, ht: p3H.a, av: p3A.m, at: p3A.a };
+  if (p3H && p3A) {
+    out.threePointersScored = { hv: p3H.m, ht: p3H.a, av: p3A.m, at: p3A.a };
+    // ESPN publishes no 2PT split; exact arithmetic on the measured
+    // FG and 3PT lines (2PT = FG - 3PT), same store.stats shape.
+    out.twoPointersScored = { hv: fgH.m - p3H.m, ht: fgH.a - p3H.a, av: fgA.m - p3A.m, at: fgA.a - p3A.a };
+  }
   const ftH = ma(get(home, "freeThrowsMade-freeThrowsAttempted"));
   const ftA = ma(get(away, "freeThrowsMade-freeThrowsAttempted"));
   if (ftH && ftA) out.freeThrowsScored = { hv: ftH.m, ht: ftH.a, av: ftA.m, at: ftA.a };

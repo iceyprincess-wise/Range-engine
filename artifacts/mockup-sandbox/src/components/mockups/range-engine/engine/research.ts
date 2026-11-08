@@ -33,6 +33,7 @@ export async function fetchResearchData(
     preData = null;
   }
 
+  let leagueFoulsMeasured: number | null = null;
   let leagueDnaMeasured: any = null;
   try {
     const ldRes = await fetch(`${API_BASE}/api/v1/league-dna?league=${encodeURIComponent(league || "")}`);
@@ -40,6 +41,7 @@ export async function fetchResearchData(
       sourcesScanned++;
       const ld = await ldRes.json();
       if (ld?.measured) leagueDnaMeasured = { games: ld.games, avgTotal: ld.avgTotal, sd: ld.sd };
+      if (typeof ld?.foulsPerGame === "number") leagueFoulsMeasured = ld.foulsPerGame;
     }
   } catch { leagueDnaMeasured = null; }
 
@@ -74,6 +76,15 @@ export async function fetchResearchData(
     apiData.awayFtAttempts = preData.away?.shooting?.ftAttemptsPerGame ?? apiData.awayFtAttempts;
     apiData.homeFoulRate = preData.home?.shooting?.foulsPerGame ?? apiData.homeFoulRate;
     apiData.awayFoulRate = preData.away?.shooting?.foulsPerGame ?? apiData.awayFoulRate;
+    apiData.homePt2 = preData.home?.shooting?.pt2Pct ?? apiData.homePt2;
+    apiData.awayPt2 = preData.away?.shooting?.pt2Pct ?? apiData.awayPt2;
+    // Per-game series -> the *50 arrays the weighted Rule 10 averages
+    // consume. No endpoint returned them before, so the weighted path
+    // was dead code that always fell back to the season scalars.
+    apiData.homeFoulRate50 = preData.home?.shootingSeries?.fouls ?? apiData.homeFoulRate50;
+    apiData.awayFoulRate50 = preData.away?.shootingSeries?.fouls ?? apiData.awayFoulRate50;
+    apiData.homeFtAttempts50 = preData.home?.shootingSeries?.ftAttempts ?? apiData.homeFtAttempts50;
+    apiData.awayFtAttempts50 = preData.away?.shootingSeries?.ftAttempts ?? apiData.awayFtAttempts50;
     apiData.homeRestDays = preData.home?.restDays ?? apiData.homeRestDays;
     apiData.awayRestDays = preData.away?.restDays ?? apiData.awayRestDays;
     // Pool the REAL recent game totals (both teams + H2H meetings) for the
@@ -101,6 +112,31 @@ export async function fetchResearchData(
       apiData.offSurgeNote = `2nd-half uptick — home ${fadeH != null ? -fadeH : "n/a"} pts, away ${fadeA != null ? -fadeA : "n/a"} pts. Computed from stored quarters, not simulated.`;
     }
   }
+  // ESPN injury feed (free, NBA/WNBA): real per-player status lines for
+  // the two teams, filling homeInjuries/awayInjuries — fields that until
+  // now only ever carried the "awaiting news scan" placeholder. Display
+  // and news-scan context only: the feed carries no player PPG, so
+  // nothing here auto-fires Rule 11's key-player-out verdict.
+  const injuryLeague = /wnba/i.test(league) ? "wnba" : /\bnba\b/i.test(league) ? "nba" : null;
+  if (injuryLeague) {
+    try {
+      const injRes = await fetch(`${API_BASE}/api/v1/freefeed/injuries?league=${injuryLeague}`);
+      if (injRes.ok) {
+        sourcesScanned++;
+        const injData = await injRes.json();
+        const linesFor = (team: string) =>
+          (Array.isArray(injData?.injuries) ? injData.injuries : [])
+            .filter((x: any) => String(x?.team ?? "").trim().toLowerCase() === team.trim().toLowerCase())
+            .map((x: any) => `${x.player} — ${x.status}${x.comment ? ` (${x.comment})` : ""}`)
+            .join("; ");
+        const homeInjLines = linesFor(homeTeam);
+        const awayInjLines = linesFor(awayTeam);
+        if (homeInjLines) apiData.homeInjuries = homeInjLines;
+        if (awayInjLines) apiData.awayInjuries = awayInjLines;
+      }
+    } catch { /* feed unavailable: placeholder text stays */ }
+  }
+
   const homeForm50 = parseNumberArray(
     apiData.homeForm50 ?? apiData.home_form_50 ?? apiData.homeForm ?? [],
   );
@@ -118,7 +154,7 @@ export async function fetchResearchData(
     apiData.awayFoulRate ?? apiData.away_foul_rate ?? apiData.away_fouls_per_game,
   );
   const leagueFoulAverage = normalizePercent(
-    apiData.leagueFoulAverage ?? apiData.league_foul_average ?? apiData.leagueFouls,
+    leagueFoulsMeasured ?? apiData.leagueFoulAverage ?? apiData.league_foul_average ?? apiData.leagueFouls,
   );
   const refereeStrictness = parseNumber(
     apiData.refereeStrictness ?? apiData.referee_strictness ?? apiData.referee_score,
@@ -153,18 +189,22 @@ export async function fetchResearchData(
   const homeRestDays: number | null = homeRestRaw == null ? null : parseNumber(homeRestRaw, 1);
   const awayRestDays: number | null = awayRestRaw == null ? null : parseNumber(awayRestRaw, 1);
 
-  const homeFt = normalizePercent(
-    apiData.homeFt ?? apiData.home_ft ?? apiData.homeFreeThrowPct,
-  );
-  const awayFt = normalizePercent(
-    apiData.awayFt ?? apiData.away_ft ?? apiData.awayFreeThrowPct,
-  );
-  const homePt3 = normalizePercent(
-    apiData.homePt3 ?? apiData.home_pt3 ?? apiData.homeThreePtPct,
-  );
-  const awayPt3 = normalizePercent(
-    apiData.awayPt3 ?? apiData.away_pt3 ?? apiData.awayThreePtPct,
-  );
+  // Shooting rates stay NULL when no source measured them. Defaulting
+  // to 0 made runEngine use a real-looking 0.00 eff FT/3PT and skip its
+  // TEAM_DB/warehouse fallback (its guard is != null); the call sites
+  // pass ?? undefined so null reaches the engine as "not provided".
+  const homeFtRaw = apiData.homeFt ?? apiData.home_ft ?? apiData.homeFreeThrowPct;
+  const homeFt: number | null = homeFtRaw == null ? null : normalizePercent(homeFtRaw);
+  const awayFtRaw = apiData.awayFt ?? apiData.away_ft ?? apiData.awayFreeThrowPct;
+  const awayFt: number | null = awayFtRaw == null ? null : normalizePercent(awayFtRaw);
+  const homePt3Raw = apiData.homePt3 ?? apiData.home_pt3 ?? apiData.homeThreePtPct;
+  const homePt3: number | null = homePt3Raw == null ? null : normalizePercent(homePt3Raw);
+  const awayPt3Raw = apiData.awayPt3 ?? apiData.away_pt3 ?? apiData.awayThreePtPct;
+  const awayPt3: number | null = awayPt3Raw == null ? null : normalizePercent(awayPt3Raw);
+  const homePt2Raw = apiData.homePt2 ?? apiData.home_pt2;
+  const homePt2: number | null = homePt2Raw == null ? null : normalizePercent(homePt2Raw);
+  const awayPt2Raw = apiData.awayPt2 ?? apiData.away_pt2;
+  const awayPt2: number | null = awayPt2Raw == null ? null : normalizePercent(awayPt2Raw);
   const homeArenaPPG = parseNumber(
     apiData.homeArenaPPG ?? apiData.home_arena_ppg ?? apiData.home_ppg,
     0,
@@ -212,42 +252,61 @@ export async function fetchResearchData(
   const highVolatility =
     totalFtAttempts >= 45 || totalFoulRate >= 42 || leagueFoulHigh || refStrict;
 
-  const fatigueRisk: "LOW" | "MODERATE" | "HIGH" =
-    fatiguePoints >= 1 || leagueFoulHigh ? "HIGH" : totalFoulRate >= 38 ? "MODERATE" : "LOW";
+  // With NO rest days, NO foul rates and NO league foul average, every
+  // input is an unmeasured zero — the old code still printed LOW with a
+  // "schedule profile stable" all-clear. UNKNOWN is the honest state.
+  const hasFatigueData =
+    homeRestDays != null || awayRestDays != null || totalFoulRate > 0 || leagueFoulAverage > 0;
+  const fatigueRisk: "LOW" | "MODERATE" | "HIGH" | "UNKNOWN" = !hasFatigueData
+    ? "UNKNOWN"
+    : fatiguePoints >= 1 || leagueFoulHigh ? "HIGH" : totalFoulRate >= 38 ? "MODERATE" : "LOW";
   const fatigueNote =
-    fatigueRisk === "HIGH"
+    fatigueRisk === "UNKNOWN"
+      ? `Fatigue not assessed — no rest days, foul rates or league foul average banked for either team.`
+      : fatigueRisk === "HIGH"
       ? `Schedule stress detected: ${homeRestDays ?? "—"}d rest / ${awayRestDays ?? "—"}d rest. Back-to-back / 3-in-4 fatigue is amplifying foul pressure and pace collapse risk.`
       : fatigueRisk === "MODERATE"
       ? `Moderate rest imbalance. Monitor warmups and minutes management for late-game fatigue fouls.`
       : `Schedule profile stable. No critical back-to-back or 3-in-4 fatigue signal detected.`;
 
-  const defStallRisk: "LOW" | "MODERATE" | "HIGH" = apiData.defStallRisk ?? (
+  const hasStallData =
+    apiData.defStallRisk != null || totalFoulRate > 0 || totalFtAttempts > 0 || refereeStrictness > 0;
+  const defStallRisk: "LOW" | "MODERATE" | "HIGH" | "UNKNOWN" = !hasStallData ? "UNKNOWN" : apiData.defStallRisk ?? (
     fatigueRisk === "HIGH" || totalFoulRate >= 42
       ? "HIGH"
       : totalFoulRate >= 36 || totalFtAttempts >= 40
       ? "MODERATE"
       : "LOW");
   const defStallNote = apiData.defStallNote ?? (
-    defStallRisk === "HIGH"
+    defStallRisk === "UNKNOWN"
+      ? `Stall risk not assessed — no quarter history, foul rates or free-throw data banked for either team.`
+      : defStallRisk === "HIGH"
       ? `🚨 DEFENSIVE STALL TRIGGER: ${totalFoulRate.toFixed(1)} foul rate combined, ${totalFtAttempts} FT attempts, ${homeRestDays ?? "—"} / ${awayRestDays ?? "—"} rest. League avg ${leagueFoulAverage} fouls. Late-game clock stoppages likely.`
       : defStallRisk === "MODERATE"
       ? `⚠ MODERATE stall risk: team foul pressure elevated and schedules are tight. Live possession management will decide the 4th quarter pace.`
       : `✓ LOW stall risk: historical pace remains stable and neither team is deep in fatigue territory.`);
 
-  const offSurgeRisk: "LOW" | "MODERATE" | "HIGH" = apiData.offSurgeRisk ?? (
+  const hasSurgeData =
+    apiData.offSurgeRisk != null || totalFoulRate > 0 || totalFtAttempts > 0 || refereeStrictness > 0;
+  const offSurgeRisk: "LOW" | "MODERATE" | "HIGH" | "UNKNOWN" = !hasSurgeData ? "UNKNOWN" : apiData.offSurgeRisk ?? (
     highVolatility && totalFtAttempts >= 38
       ? "HIGH"
       : totalFtAttempts >= 32 || totalFoulRate >= 36
       ? "MODERATE"
       : "LOW");
   const offSurgeNote = apiData.offSurgeNote ?? (
-    offSurgeRisk === "HIGH"
+    offSurgeRisk === "UNKNOWN"
+      ? `Surge risk not assessed — no foul rates or free-throw data banked for either team.`
+      : offSurgeRisk === "HIGH"
       ? `High-offense surge risk: heavy free-throw volume and league foul intensity are already above 40 fouls/game. Watch for clock stoppage and artificial point inflation.`
       : offSurgeRisk === "MODERATE"
       ? `Moderate surge risk. Free throw volume and team foul rates are elevated enough to keep totals alive late.`
       : `Scoring surge risk is low. Game shape remains controlled with reasonable foul pacing.`);
 
-  const otRisk: "LOW" | "MODERATE" | "HIGH" =
+  // The PPG-margin fallback fired on 0/0 PPG too: |0 - 0| <= 6 printed a
+  // MODERATE close-finish claim for a matchup with no data at all.
+  const hasOtData = h2h50.length >= 10 || homeArenaPPG > 0 || awayRoadPPG > 0;
+  const otRisk: "LOW" | "MODERATE" | "HIGH" | "UNKNOWN" = !hasOtData ? "UNKNOWN" :
     h2h50.length >= 10
       ? h2h50.filter((value) => Math.abs(value - (homeArenaPPG + awayRoadPPG) / 2) <= 2).length / h2h50.length >= 0.32
         ? "HIGH"
@@ -258,24 +317,32 @@ export async function fetchResearchData(
       ? "MODERATE"
       : "LOW";
   const otNote =
-    otRisk === "HIGH"
+    otRisk === "UNKNOWN"
+      ? `OT risk not assessed — no banked scoring or H2H data for either team.`
+      : otRisk === "HIGH"
       ? `High OT probability. Deep H2H body of work shows frequent close finish signatures and tight totals around projected average.`
       : otRisk === "MODERATE"
       ? `Moderate OT possibility. Margin and totals suggest a late-game close finish is possible.`
       : `Low OT probability. Historical spread and pace show a cleaner regulation finish.`;
 
-  const foulEngineStatus: "SAFE" | "HIGH RISK" =
-    highVolatility || fatigueRisk === "HIGH" || leagueFoulHigh || refStrict
+  const foulEngineStatus: "SAFE" | "HIGH RISK" | "UNKNOWN" =
+    totalFoulRate === 0 && totalFtAttempts === 0 && leagueFoulAverage === 0 && refereeStrictness === 0
+      ? "UNKNOWN"
+      : highVolatility || fatigueRisk === "HIGH" || leagueFoulHigh || refStrict
       ? "HIGH RISK"
       : "SAFE";
   const foulEngineNote =
-    foulEngineStatus === "HIGH RISK"
+    foulEngineStatus === "UNKNOWN"
+      ? "Foul engine not assessed — no foul, free-throw, rest or referee data available."
+      : foulEngineStatus === "HIGH RISK"
       ? "Extreme free-throw volume detected. Clock stoppage will artificially inflate total points. UNDER bets severely compromised."
       : "Standard foul pacing. Regulation finish expected.";
 
   // Additional normalized metrics for compatibility with the UI ResearchData shape
-  const homeFgPct = normalizePercent(apiData.homeFgPct ?? apiData.home_fg_pct ?? apiData.homeFieldGoalPct ?? null);
-  const awayFgPct = normalizePercent(apiData.awayFgPct ?? apiData.away_fg_pct ?? apiData.awayFieldGoalPct ?? null);
+  const homeFgPctRaw = apiData.homeFgPct ?? apiData.home_fg_pct ?? apiData.homeFieldGoalPct;
+  const homeFgPct: number | null = homeFgPctRaw == null ? null : normalizePercent(homeFgPctRaw);
+  const awayFgPctRaw = apiData.awayFgPct ?? apiData.away_fg_pct ?? apiData.awayFieldGoalPct;
+  const awayFgPct: number | null = awayFgPctRaw == null ? null : normalizePercent(awayFgPctRaw);
   const homeOffPpg = parseNumber(apiData.homeOffPpg ?? apiData.home_off_ppg ?? apiData.homeOffensePpg ?? homeArenaPPG, 0);
   const awayOffPpg = parseNumber(apiData.awayOffPpg ?? apiData.away_off_ppg ?? apiData.awayOffensePpg ?? awayRoadPPG, 0);
   const homeDefPpg = parseNumber(apiData.homeDefPpg ?? apiData.home_def_ppg ?? apiData.homeDefensePpg ?? homeArenaPPG, 0);
@@ -296,6 +363,8 @@ export async function fetchResearchData(
     awayFt,
     homePt3,
     awayPt3,
+    homePt2,
+    awayPt2,
     collapsePct,
     homeInjuries: seasonHomeInjuries,
     awayInjuries: seasonAwayInjuries,

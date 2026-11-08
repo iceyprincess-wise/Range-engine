@@ -177,7 +177,7 @@ const enrichStats = async (games: any[], max: number) => {
 };
 
 const teamShooting = (games: any[], teamId: number) => {
-  let ftM = 0, ftA = 0, p3M = 0, p3A = 0, fgM = 0, fgA = 0, fouls = 0, foulN = 0, n = 0;
+  let ftM = 0, ftA = 0, p3M = 0, p3A = 0, fgM = 0, fgA = 0, p2M = 0, p2A = 0, fouls = 0, foulN = 0, n = 0;
   for (const g of games) {
     const s = store.stats[g.id];
     if (!s) continue;
@@ -190,6 +190,7 @@ const teamShooting = (games: any[], teamId: number) => {
     if (ft?.a) { ftM += ft.m; ftA += ft.a; }
     if (p3?.a) { p3M += p3.m; p3A += p3.a; }
     if (fg?.a) { fgM += fg.m; fgA += fg.a; }
+    if (fg?.a && p3?.a) { p2M += fg.m - p3.m; p2A += fg.a - p3.a; }
     if (fl != null) { fouls += fl; foulN++; }
   }
   const pct = (m: number, a: number) => (a ? +((m / a) * 100).toFixed(1) : null);
@@ -198,9 +199,30 @@ const teamShooting = (games: any[], teamId: number) => {
     ftPct: pct(ftM, ftA),
     pt3Pct: pct(p3M, p3A),
     fgPct: pct(fgM, fgA),
+    // Neither provider publishes a 2PT split; it is exact arithmetic on
+    // the measured FG and 3PT lines (2PT = FG - 3PT).
+    pt2Pct: pct(p2M, p2A),
     ftAttemptsPerGame: n ? +(ftA / n).toFixed(1) : null,
     foulsPerGame: foulN ? +(fouls / foulN).toFixed(1) : null,
   };
+};
+// Per-game foul / FT-attempt series for one team, OLDEST -> NEWEST:
+// research feeds these to weightedAverage, which weights the LAST
+// element most. gamesForTeam returns newest-first, hence the reverse.
+// Until now no endpoint returned these series, so runEngine's weighted
+// Rule 10 path could never engage — it always fell back to the scalars.
+const shootingSeries = (games: any[], teamId: number) => {
+  const fouls: number[] = [];
+  const ftAttempts: number[] = [];
+  for (const g of games.slice().reverse()) {
+    const s = store.stats[g.id];
+    if (!s) continue;
+    const isHome = g.homeTeam?.id === teamId;
+    const fl = s["totalFouls"] ? (isHome ? s["totalFouls"].hv : s["totalFouls"].av) : null;
+    const ft = s["freeThrowsScored"] ? (isHome ? s["freeThrowsScored"].ht : s["freeThrowsScored"].at) : null;
+    if (fl != null && ft != null) { fouls.push(fl); ftAttempts.push(ft); }
+  }
+  return { fouls, ftAttempts };
 };
 router.get("/v1/prematch", async (req: Request, res: Response) => {
   const { homeTeam, awayTeam } = req.query as Record<string, string>;
@@ -262,8 +284,8 @@ router.get("/v1/prematch", async (req: Request, res: Response) => {
       // zero provider calls — was still labelled "real".
       provenance: (apiOk && stale.length > 0) || statsFetched ? "real" : "warehouse-stale",
       fetchedAt: new Date().toISOString(),
-      home: { id: home.id, name: home.name, ...summarize(homeGames, home.id), quarters: quarterProfile(homeGames), shooting: teamShooting(homeGames, home.id), restDays: homeGames[0]?.startTimestamp ? Math.max(0, Math.floor((Date.now() / 1000 - homeGames[0].startTimestamp) / 86400)) : null },
-      away: { id: away.id, name: away.name, ...summarize(awayGames, away.id), quarters: quarterProfile(awayGames), shooting: teamShooting(awayGames, away.id), restDays: awayGames[0]?.startTimestamp ? Math.max(0, Math.floor((Date.now() / 1000 - awayGames[0].startTimestamp) / 86400)) : null },
+      home: { id: home.id, name: home.name, ...summarize(homeGames, home.id), quarters: quarterProfile(homeGames), shooting: teamShooting(homeGames, home.id), shootingSeries: shootingSeries(homeGames, home.id), restDays: homeGames[0]?.startTimestamp ? Math.max(0, Math.floor((Date.now() / 1000 - homeGames[0].startTimestamp) / 86400)) : null },
+      away: { id: away.id, name: away.name, ...summarize(awayGames, away.id), quarters: quarterProfile(awayGames), shooting: teamShooting(awayGames, away.id), shootingSeries: shootingSeries(awayGames, away.id), restDays: awayGames[0]?.startTimestamp ? Math.max(0, Math.floor((Date.now() / 1000 - awayGames[0].startTimestamp) / 86400)) : null },
       h2h: { meetings: h2hGames.length, avgTotal: h2hAvgTotal, totals: h2hTotals },
       warehouse: { storedGames: Object.keys(store.games).length, storedTeams: Object.keys(store.teams).length },
       quota,

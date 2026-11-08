@@ -1029,10 +1029,10 @@ export function RangeEngine() {
           over_high: parseFloat(overHigh || overLow),
           under_low: parseFloat(underLow || underHigh),
           under_high: parseFloat(underHigh),
-          home_ft: rd?.homeFt,
-          away_ft: rd?.awayFt,
-          home_pt3: rd?.homePt3,
-          away_pt3: rd?.awayPt3,
+          home_ft: rd?.homeFt ?? undefined,
+          away_ft: rd?.awayFt ?? undefined,
+          home_pt3: rd?.homePt3 ?? undefined,
+          away_pt3: rd?.awayPt3 ?? undefined,
           home_arena_ppg: rd?.homeArenaPPG,
           away_arena_ppg: rd?.awayRoadPPG,
           h2h_avg_total: rd?.h2hAvgTotal,
@@ -1112,8 +1112,8 @@ export function RangeEngine() {
           key_player_name: detectKeyOut().name || "Key Scorer",
           over_low: parseFloat(overLow), over_high: parseFloat(overHigh || overLow),
           under_low: parseFloat(underLow || underHigh), under_high: parseFloat(underHigh),
-          home_ft: researchData?.homeFt, away_ft: researchData?.awayFt,
-          home_pt3: researchData?.homePt3, away_pt3: researchData?.awayPt3,
+          home_ft: researchData?.homeFt ?? undefined, away_ft: researchData?.awayFt ?? undefined,
+          home_pt3: researchData?.homePt3 ?? undefined, away_pt3: researchData?.awayPt3 ?? undefined,
           home_arena_ppg: researchData?.homeArenaPPG, away_arena_ppg: researchData?.awayRoadPPG,
           h2h_avg_total: researchData?.h2hAvgTotal,
           // Same inputs as the primary analysis — the reconfirm previously
@@ -2272,6 +2272,21 @@ MATCH CONTEXT — Rule 1 (Time Sync)
                           <div className="rounded-lg px-3 py-2 border border-yellow-950 bg-black/40">
                             <p className="text-[10px] text-zinc-400 leading-relaxed">
                               {researchData?.fatigueNote ?? "Live API data unavailable."} Home rest: {researchData?.homeRestDays != null ? researchData.homeRestDays + "d" : "—"} / Away rest: {researchData?.awayRestDays != null ? researchData.awayRestDays + "d" : "—"}. This schedule stress directly boosts stall and foul-engine risk.
+                            </p>
+                          </div>
+                        </div>
+
+                        {/* Injuries — ESPN free feed (NBA/WNBA) */}
+                        <div className="px-4 py-3 space-y-2">
+                          <p className="text-[9px] font-bold uppercase tracking-widest text-zinc-500">
+                            🏥 INJURIES — ESPN FEED
+                          </p>
+                          <div className="rounded-lg px-3 py-2 border border-yellow-950 bg-black/40 space-y-1">
+                            <p className="text-[10px] text-zinc-400 leading-relaxed">
+                              <span className="text-zinc-500 font-bold">HOME — </span>{researchData?.homeInjuries ?? "No injury data — awaiting news scan or manual entry"}
+                            </p>
+                            <p className="text-[10px] text-zinc-400 leading-relaxed">
+                              <span className="text-zinc-500 font-bold">AWAY — </span>{researchData?.awayInjuries ?? "No injury data — awaiting news scan or manual entry"}
                             </p>
                           </div>
                         </div>

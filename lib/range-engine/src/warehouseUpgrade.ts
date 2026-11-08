@@ -39,6 +39,8 @@ export function upgradeWithWarehouse(
   const pt3Pct = side === "home" ? r.homePt3 : r.awayPt3;
   if (typeof ftPct === "number" && ftPct > 0) stats.ft_pct = +(ftPct / 100).toFixed(3);
   if (typeof pt3Pct === "number" && pt3Pct > 0) stats.pt3_pct = +(pt3Pct / 100).toFixed(3);
+  const pt2Pct = side === "home" ? r.homePt2 : r.awayPt2;
+  if (typeof pt2Pct === "number" && pt2Pct > 0) stats.pt2_pct = +(pt2Pct / 100).toFixed(3);
 
   const upgraded = {
     ...info,

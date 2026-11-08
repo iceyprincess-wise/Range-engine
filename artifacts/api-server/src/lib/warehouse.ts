@@ -90,3 +90,43 @@ export const rememberGames = (events: any[]) => {
     if (!hasScores(existing)) { store.games[e.id] = e; markDirty(); }
   }
 };
+
+// ── Boot auto-restore ────────────────────────────────────────────────
+// Render's free-tier disk is ephemeral: every redeploy starts with an
+// empty data dir, so the warehouse booted at 0 games until someone
+// opened the Hybrid page and tapped "Send all new to warehouse". The
+// inbox file ships WITH the repo (it is the one tracked data file), so
+// a server that boots with an EMPTY store restores itself from it —
+// same finished+scored validation (rememberGames) as every other
+// intake, plus the inbox's stats/teams merged add-if-missing. Games
+// banked only on this server and never exported are NOT in the inbox
+// and are still lost on a wipe; they can be re-banked (the free ESPN
+// bank is re-runnable). Set RANGE_DISABLE_AUTORESTORE=1 to opt out.
+const autoRestoreFromInbox = () => {
+  if (process.env.RANGE_DISABLE_AUTORESTORE === "1") return;
+  if (Object.keys(store.games).length > 0) return;
+  let parsed: any;
+  try { parsed = JSON.parse(fs.readFileSync(path.join(DATA_DIR, "hybrid-inbox.json"), "utf8")); }
+  catch { return; } // no inbox file (or unreadable): nothing to restore from
+  const games: any[] = Array.isArray(parsed?.games) ? parsed.games : [];
+  if (!games.length) return;
+  rememberGames(games);
+  let statsAdded = 0, teamsAdded = 0;
+  if (parsed.stats && typeof parsed.stats === "object") {
+    for (const [gid, st] of Object.entries(parsed.stats)) {
+      if (st && store.games[gid] && !store.stats[gid]) { store.stats[gid] = st; statsAdded++; }
+    }
+  }
+  if (Array.isArray(parsed.teams)) {
+    for (const tm of parsed.teams) {
+      const key = typeof tm?.name === "string" ? tm.name.trim().toLowerCase() : "";
+      if (key && tm?.id != null && !store.teams[key]) { store.teams[key] = { id: tm.id, name: tm.name }; teamsAdded++; }
+    }
+  }
+  const restored = Object.keys(store.games).length;
+  if (restored > 0) {
+    markDirty(); persist();
+    console.log(`warehouse: auto-restored ${restored} games (+${statsAdded} stats, +${teamsAdded} teams) from hybrid-inbox.json after an empty boot`);
+  }
+};
+autoRestoreFromInbox();
