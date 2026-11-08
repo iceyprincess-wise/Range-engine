@@ -108,11 +108,30 @@ export function runEngine(opts: {
   const avg_eff = (homeEffPPG / leagueAvg + awayEffPPG / leagueAvg) / 2;
 
   // TASK 12: Gender & Live Match adjustments
-  // Apply a gender multiplier: women's games historically have lower team PPG
+  // Women's discount - PER SIDE and PROVENANCE-AWARE. The 0.93 corrects
+  // PROXY numbers only: a proxy PPG is a men's-calibrated league
+  // average, so pricing a women's fixture off it overstates that side.
+  // A MEASURED number (DB / warehouse profile, or a research arena
+  // split) is already the team's real scoring and must never be
+  // discounted. The old pair-level flag discounted BOTH teams when
+  // EITHER side was proxy - a measured 85.5 became 79.5 because the
+  // OTHER team was unknown (execution-proven 2026-11-08) - and a
+  // research arena split was discounted whenever the DB label said
+  // PROXY. It also fired silently: no audit entry recorded it. The
+  // Gender Adjustment entry below now states, for every women's
+  // analysis, exactly what was discounted or that nothing needed it.
   const gender = opts.gender ?? "Men";
-  const genderMultiplier = gender === "Women" && proxyUsed ? 0.93 : 1.0;
-  homeEffPPG = parseFloat((homeEffPPG * genderMultiplier).toFixed(1));
-  awayEffPPG = parseFloat((awayEffPPG * genderMultiplier).toFixed(1));
+  const homeProxyNumber = home_stats.source === "PROXY" && !(opts.home_arena_ppg != null && opts.home_arena_ppg > 0);
+  const awayProxyNumber = away_stats.source === "PROXY" && !(opts.away_arena_ppg != null && opts.away_arena_ppg > 0);
+  let genderNote: string | null = null;
+  if (gender === "Women") {
+    const discounted: string[] = [];
+    if (homeProxyNumber) { homeEffPPG = parseFloat((homeEffPPG * 0.93).toFixed(1)); discounted.push("home"); }
+    if (awayProxyNumber) { awayEffPPG = parseFloat((awayEffPPG * 0.93).toFixed(1)); discounted.push("away"); }
+    genderNote = discounted.length
+      ? `Women's fixture: proxy discount x0.93 applied to ${discounted.join(" + ")} PPG (proxy numbers are men's-calibrated). Measured PPGs are never discounted.`
+      : "Women's fixture: both PPGs are measured (DB / warehouse / arena split) - no proxy discount applies. The selector changes nothing when the numbers are real, and this entry proves it was considered.";
+  }
 
   const adj_log: AdjLog[] = [];
   const triggered: string[] = [];
@@ -135,6 +154,15 @@ export function runEngine(opts: {
     note: `${reliability} | Proxy Cap: ${proxyCapped ? `YES — ${capValue} PPG cap applied` : "No"} | ${dna.name}`,
     status: "checked",
   });
+  if (genderNote) {
+    adj_log.push({
+      rule: "Gender Adjustment",
+      lb_adj: 0,
+      hb_adj: 0,
+      note: genderNote,
+      status: homeProxyNumber || awayProxyNumber ? "triggered" : "checked",
+    });
+  }
 
   // ── Rule 3 (Form Anchor) — logged for audit ────────────────────────────────
   adj_log.push({

@@ -1657,6 +1657,11 @@ MATCH CONTEXT — Rule 1 (Time Sync)
                       <Label htmlFor="live" className="text-xs text-zinc-300 font-normal leading-normal">Live Match</Label>
                     </div>
                   </div>
+                  {researchData?.detectedGender && researchData.detectedGender !== matchGender && (
+                    <p className="text-[11px] text-amber-400 font-mono">
+                      ⚠ Warehouse records mark this fixture as a {researchData.detectedGender === "Women" ? "women's" : "men's"} game — the gender selector is set to {matchGender}. The engine prices what you selected; switch the selector if the warehouse is right.
+                    </p>
+                  )}
                   {league && (
                     <p className="text-[9px] text-zinc-700">
                       Universal engine · Unknown teams → Proxy cap{" "}
@@ -1944,7 +1949,7 @@ MATCH CONTEXT — Rule 1 (Time Sync)
                               <div className="space-y-4">
                                 <div className="bg-zinc-900/50 rounded p-3 border border-yellow-950/50">
                                   <h4 className="text-xs text-zinc-400 font-mono mb-2 uppercase">
-                                      Head-to-Head (Last 50 Matchups)
+                                      {researchData?.h2hMeetings != null ? `Head-to-Head (${researchData.h2hMeetings} Banked Matchups)` : "Head-to-Head (Last 50 Matchups)"}
                                     </h4>
                                   <div className="flex justify-between items-center bg-black/40 p-2 rounded border border-yellow-950">
                                     <span className="text-yellow-400 font-bold text-sm">
@@ -2077,6 +2082,116 @@ MATCH CONTEXT — Rule 1 (Time Sync)
                                     </span>
                                     <span className="text-yellow-300 w-12 text-center">
                                       {researchData?.awayAssists ?? "--"}
+                                    </span>
+                                  </div>
+                                  <div className="flex justify-between items-center border-b border-yellow-950 pb-1">
+                                    <span className="text-yellow-300 w-12 text-center">
+                                      {researchData?.homeBlocks ?? "--"}
+                                    </span>
+                                    <span className="text-zinc-500 flex-1 text-center text-[10px]">
+                                      BLOCKS /G
+                                    </span>
+                                    <span className="text-yellow-300 w-12 text-center">
+                                      {researchData?.awayBlocks ?? "--"}
+                                    </span>
+                                  </div>
+                                  <div className="flex justify-between items-center border-b border-yellow-950 pb-1">
+                                    <span className="text-yellow-300 w-12 text-center">
+                                      {researchData?.homeOffReb ?? "--"}
+                                    </span>
+                                    <span className="text-zinc-500 flex-1 text-center text-[10px]">
+                                      OFF REBOUNDS /G
+                                    </span>
+                                    <span className="text-yellow-300 w-12 text-center">
+                                      {researchData?.awayOffReb ?? "--"}
+                                    </span>
+                                  </div>
+                                  <div className="flex justify-between items-center border-b border-yellow-950 pb-1">
+                                    <span className="text-yellow-300 w-12 text-center">
+                                      {researchData?.homeDefReb ?? "--"}
+                                    </span>
+                                    <span className="text-zinc-500 flex-1 text-center text-[10px]">
+                                      DEF REBOUNDS /G
+                                    </span>
+                                    <span className="text-yellow-300 w-12 text-center">
+                                      {researchData?.awayDefReb ?? "--"}
+                                    </span>
+                                  </div>
+                                  <div className="flex justify-between items-center border-b border-yellow-950 pb-1">
+                                    <span className="text-yellow-300 w-12 text-center">
+                                      {researchData?.homeBiggestLead ?? "--"}
+                                    </span>
+                                    <span className="text-zinc-500 flex-1 text-center text-[10px]">
+                                      BIGGEST LEAD /G
+                                    </span>
+                                    <span className="text-yellow-300 w-12 text-center">
+                                      {researchData?.awayBiggestLead ?? "--"}
+                                    </span>
+                                  </div>
+                                  <div className="flex justify-between items-center border-b border-yellow-950 pb-1">
+                                    <span className="text-yellow-300 w-12 text-center">
+                                      {researchData?.homeLeadChanges ?? "--"}
+                                    </span>
+                                    <span className="text-zinc-500 flex-1 text-center text-[10px]">
+                                      LEAD CHANGES /G
+                                    </span>
+                                    <span className="text-yellow-300 w-12 text-center">
+                                      {researchData?.awayLeadChanges ?? "--"}
+                                    </span>
+                                  </div>
+                                  <div className="flex justify-between items-center border-b border-yellow-950 pb-1">
+                                    <span className="text-yellow-300 w-12 text-center">
+                                      {researchData?.homeMaxRun ?? "--"}
+                                    </span>
+                                    <span className="text-zinc-500 flex-1 text-center text-[10px]">
+                                      MAX RUN /G
+                                    </span>
+                                    <span className="text-yellow-300 w-12 text-center">
+                                      {researchData?.awayMaxRun ?? "--"}
+                                    </span>
+                                  </div>
+                                  <div className="flex justify-between items-center border-b border-yellow-950 pb-1">
+                                    <span className="text-yellow-300 w-12 text-center">
+                                      {researchData?.homeTimeouts ?? "--"}
+                                    </span>
+                                    <span className="text-zinc-500 flex-1 text-center text-[10px]">
+                                      TIMEOUTS /G
+                                    </span>
+                                    <span className="text-yellow-300 w-12 text-center">
+                                      {researchData?.awayTimeouts ?? "--"}
+                                    </span>
+                                  </div>
+                                  <div className="flex justify-between items-center border-b border-yellow-950 pb-1">
+                                    <span className="text-yellow-300 w-12 text-center">
+                                      {researchData?.homePaintPts ?? "--"}
+                                    </span>
+                                    <span className="text-zinc-500 flex-1 text-center text-[10px]">
+                                      PTS IN PAINT /G
+                                    </span>
+                                    <span className="text-yellow-300 w-12 text-center">
+                                      {researchData?.awayPaintPts ?? "--"}
+                                    </span>
+                                  </div>
+                                  <div className="flex justify-between items-center border-b border-yellow-950 pb-1">
+                                    <span className="text-yellow-300 w-12 text-center">
+                                      {researchData?.homeFastBreakPts ?? "--"}
+                                    </span>
+                                    <span className="text-zinc-500 flex-1 text-center text-[10px]">
+                                      FAST BREAK /G
+                                    </span>
+                                    <span className="text-yellow-300 w-12 text-center">
+                                      {researchData?.awayFastBreakPts ?? "--"}
+                                    </span>
+                                  </div>
+                                  <div className="flex justify-between items-center border-b border-yellow-950 pb-1">
+                                    <span className="text-yellow-300 w-12 text-center">
+                                      {researchData?.homeTurnoverPts ?? "--"}
+                                    </span>
+                                    <span className="text-zinc-500 flex-1 text-center text-[10px]">
+                                      TURNOVER PTS /G
+                                    </span>
+                                    <span className="text-yellow-300 w-12 text-center">
+                                      {researchData?.awayTurnoverPts ?? "--"}
                                     </span>
                                   </div>
                                   <div className="flex justify-between items-center bg-black/30 rounded py-1 px-2 mt-2">

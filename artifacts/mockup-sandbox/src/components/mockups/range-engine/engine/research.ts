@@ -100,6 +100,30 @@ export async function fetchResearchData(
     apiData.awayAssists = preData.away?.shooting?.assistsPerGame ?? apiData.awayAssists;
     apiData.homeBlocks = preData.home?.shooting?.blocksPerGame ?? apiData.homeBlocks;
     apiData.awayBlocks = preData.away?.shooting?.blocksPerGame ?? apiData.awayBlocks;
+    // Extended feeder stats (see prematch teamShooting note) + the
+    // time-in-lead ratio that finally feeds the Form DNA TIME IN LEAD
+    // row (it reads homeLeadPct below) + the detected fixture gender.
+    apiData.homeOffReb = preData.home?.shooting?.offensiveReboundsPerGame ?? apiData.homeOffReb;
+    apiData.awayOffReb = preData.away?.shooting?.offensiveReboundsPerGame ?? apiData.awayOffReb;
+    apiData.homeDefReb = preData.home?.shooting?.defensiveReboundsPerGame ?? apiData.homeDefReb;
+    apiData.awayDefReb = preData.away?.shooting?.defensiveReboundsPerGame ?? apiData.awayDefReb;
+    apiData.homeBiggestLead = preData.home?.shooting?.biggestLeadPerGame ?? apiData.homeBiggestLead;
+    apiData.awayBiggestLead = preData.away?.shooting?.biggestLeadPerGame ?? apiData.awayBiggestLead;
+    apiData.homeLeadChanges = preData.home?.shooting?.leadChangesPerGame ?? apiData.homeLeadChanges;
+    apiData.awayLeadChanges = preData.away?.shooting?.leadChangesPerGame ?? apiData.awayLeadChanges;
+    apiData.homeMaxRun = preData.home?.shooting?.maxRunPerGame ?? apiData.homeMaxRun;
+    apiData.awayMaxRun = preData.away?.shooting?.maxRunPerGame ?? apiData.awayMaxRun;
+    apiData.homeTimeouts = preData.home?.shooting?.timeoutsPerGame ?? apiData.homeTimeouts;
+    apiData.awayTimeouts = preData.away?.shooting?.timeoutsPerGame ?? apiData.awayTimeouts;
+    apiData.homeFastBreakPts = preData.home?.shooting?.fastBreakPointsPerGame ?? apiData.homeFastBreakPts;
+    apiData.awayFastBreakPts = preData.away?.shooting?.fastBreakPointsPerGame ?? apiData.awayFastBreakPts;
+    apiData.homePaintPts = preData.home?.shooting?.pointsInPaintPerGame ?? apiData.homePaintPts;
+    apiData.awayPaintPts = preData.away?.shooting?.pointsInPaintPerGame ?? apiData.awayPaintPts;
+    apiData.homeTurnoverPts = preData.home?.shooting?.turnoverPointsPerGame ?? apiData.homeTurnoverPts;
+    apiData.awayTurnoverPts = preData.away?.shooting?.turnoverPointsPerGame ?? apiData.awayTurnoverPts;
+    apiData.homeLeadPct = preData.home?.shooting?.timeInLeadPct ?? apiData.homeLeadPct;
+    apiData.awayLeadPct = preData.away?.shooting?.timeInLeadPct ?? apiData.awayLeadPct;
+    apiData.detectedGender = preData.detectedGender ?? apiData.detectedGender;
     // Per-game series -> the *50 arrays the weighted Rule 10 averages
     // consume. No endpoint returned them before, so the weighted path
     // was dead code that always fell back to the season scalars.
@@ -239,6 +263,24 @@ export async function fetchResearchData(
   const awayAssists: number | null = apiData.awayAssists == null ? null : parseNumber(apiData.awayAssists, 0);
   const homeBlocks: number | null = apiData.homeBlocks == null ? null : parseNumber(apiData.homeBlocks, 0);
   const awayBlocks: number | null = apiData.awayBlocks == null ? null : parseNumber(apiData.awayBlocks, 0);
+  const homeOffReb: number | null = apiData.homeOffReb == null ? null : parseNumber(apiData.homeOffReb, 0);
+  const awayOffReb: number | null = apiData.awayOffReb == null ? null : parseNumber(apiData.awayOffReb, 0);
+  const homeDefReb: number | null = apiData.homeDefReb == null ? null : parseNumber(apiData.homeDefReb, 0);
+  const awayDefReb: number | null = apiData.awayDefReb == null ? null : parseNumber(apiData.awayDefReb, 0);
+  const homeBiggestLead: number | null = apiData.homeBiggestLead == null ? null : parseNumber(apiData.homeBiggestLead, 0);
+  const awayBiggestLead: number | null = apiData.awayBiggestLead == null ? null : parseNumber(apiData.awayBiggestLead, 0);
+  const homeLeadChanges: number | null = apiData.homeLeadChanges == null ? null : parseNumber(apiData.homeLeadChanges, 0);
+  const awayLeadChanges: number | null = apiData.awayLeadChanges == null ? null : parseNumber(apiData.awayLeadChanges, 0);
+  const homeMaxRun: number | null = apiData.homeMaxRun == null ? null : parseNumber(apiData.homeMaxRun, 0);
+  const awayMaxRun: number | null = apiData.awayMaxRun == null ? null : parseNumber(apiData.awayMaxRun, 0);
+  const homeTimeouts: number | null = apiData.homeTimeouts == null ? null : parseNumber(apiData.homeTimeouts, 0);
+  const awayTimeouts: number | null = apiData.awayTimeouts == null ? null : parseNumber(apiData.awayTimeouts, 0);
+  const homeFastBreakPts: number | null = apiData.homeFastBreakPts == null ? null : parseNumber(apiData.homeFastBreakPts, 0);
+  const awayFastBreakPts: number | null = apiData.awayFastBreakPts == null ? null : parseNumber(apiData.awayFastBreakPts, 0);
+  const homePaintPts: number | null = apiData.homePaintPts == null ? null : parseNumber(apiData.homePaintPts, 0);
+  const awayPaintPts: number | null = apiData.awayPaintPts == null ? null : parseNumber(apiData.awayPaintPts, 0);
+  const homeTurnoverPts: number | null = apiData.homeTurnoverPts == null ? null : parseNumber(apiData.homeTurnoverPts, 0);
+  const awayTurnoverPts: number | null = apiData.awayTurnoverPts == null ? null : parseNumber(apiData.awayTurnoverPts, 0);
   const homeArenaPPG = parseNumber(
     apiData.homeArenaPPG ?? apiData.home_arena_ppg ?? apiData.home_ppg,
     0,
@@ -452,6 +494,25 @@ export async function fetchResearchData(
     awayAssists,
     homeBlocks,
     awayBlocks,
+    homeOffReb,
+    awayOffReb,
+    homeDefReb,
+    awayDefReb,
+    homeBiggestLead,
+    awayBiggestLead,
+    homeLeadChanges,
+    awayLeadChanges,
+    homeMaxRun,
+    awayMaxRun,
+    homeTimeouts,
+    awayTimeouts,
+    homeFastBreakPts,
+    awayFastBreakPts,
+    homePaintPts,
+    awayPaintPts,
+    homeTurnoverPts,
+    awayTurnoverPts,
+    detectedGender: apiData.detectedGender ?? null,
     recentTotals,
     fatigueRisk,
     fatigueNote,

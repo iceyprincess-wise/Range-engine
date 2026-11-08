@@ -189,6 +189,8 @@ const enrichStats = async (games: any[], max: number) => {
 const teamShooting = (games: any[], teamId: number) => {
   let ftM = 0, ftA = 0, p3M = 0, p3A = 0, fgM = 0, fgA = 0, p2M = 0, p2A = 0, fouls = 0, foulN = 0, n = 0;
   let stlSum = 0, stlN = 0, tovSum = 0, tovN = 0, rebSum = 0, rebN = 0, astSum = 0, astN = 0, blkSum = 0, blkN = 0;
+  let orebSum = 0, orebN = 0, drebSum = 0, drebN = 0, bigSum = 0, bigN = 0, lcSum = 0, lcN = 0, runSum = 0, runN = 0, tmoSum = 0, tmoN = 0;
+  let fbpSum = 0, fbpN = 0, pipSum = 0, pipN = 0, topSum = 0, topN = 0, leadSec = 0, leadTot = 0;
   for (const g of games) {
     const s = store.stats[g.id];
     if (!s) continue;
@@ -201,7 +203,10 @@ const teamShooting = (games: any[], teamId: number) => {
     if (ft?.a) { ftM += ft.m; ftA += ft.a; }
     if (p3?.a) { p3M += p3.m; p3A += p3.a; }
     if (fg?.a) { fgM += fg.m; fgA += fg.a; }
-    if (fg?.a && p3?.a) { p2M += fg.m - p3.m; p2A += fg.a - p3.a; }
+    // 2PT split: prefer the provider's own banked twoPointersScored
+    // per game; fall back to the exact FG - 3PT derivation otherwise.
+    const p2d = pick("twoPointersScored");
+    if (p2d?.a) { p2M += p2d.m; p2A += p2d.a; } else if (fg?.a && p3?.a) { p2M += fg.m - p3.m; p2A += fg.a - p3.a; }
     if (fl != null) { fouls += fl; foulN++; }
     // Counting stats (Ed's added parameters): banked by BOTH providers
     // under these keys, previously averaged by nobody. Each stat keeps
@@ -212,6 +217,24 @@ const teamShooting = (games: any[], teamId: number) => {
     const reb = cnt("rebounds"); if (reb != null) { rebSum += reb; rebN++; }
     const ast = cnt("assists"); if (ast != null) { astSum += ast; astN++; }
     const blk = cnt("blocks"); if (blk != null) { blkSum += blk; blkN++; }
+    // Extended feeder stats: banked by the providers (offensive /
+    // defensive rebounds, biggest lead, lead changes, max run,
+    // timeouts on the paid feed; fast-break / paint / turnover points
+    // and largest lead on the ESPN feed) and consumed by nobody until
+    // now. Same per-stat denominator discipline as the counting stats.
+    const orb = cnt("offensiveRebounds"); if (orb != null) { orebSum += orb; orebN++; }
+    const drb = cnt("defensiveRebounds"); if (drb != null) { drebSum += drb; drebN++; }
+    const big = cnt("biggestLead"); if (big != null) { bigSum += big; bigN++; }
+    const lc = cnt("leadChanges"); if (lc != null) { lcSum += lc; lcN++; }
+    const run = cnt("maxPointsInARow"); if (run != null) { runSum += run; runN++; }
+    const tmo = cnt("timeouts"); if (tmo != null) { tmoSum += tmo; tmoN++; }
+    const fbp = cnt("fastBreakPoints"); if (fbp != null) { fbpSum += fbp; fbpN++; }
+    const pip = cnt("pointsInPaint"); if (pip != null) { pipSum += pip; pipN++; }
+    const top = cnt("turnoverPoints"); if (top != null) { topSum += top; topN++; }
+    // Time in lead arrives as a made/attempted-style pair (seconds in
+    // lead over total game seconds): aggregate as a RATIO of sums,
+    // never a mean of per-game percentages.
+    const lead = pick("timeSpentInLead"); if (lead?.a) { leadSec += lead.m; leadTot += lead.a; }
   }
   const pct = (m: number, a: number) => (a ? +((m / a) * 100).toFixed(1) : null);
   return {
@@ -229,6 +252,16 @@ const teamShooting = (games: any[], teamId: number) => {
     reboundsPerGame: rebN ? +(rebSum / rebN).toFixed(1) : null,
     assistsPerGame: astN ? +(astSum / astN).toFixed(1) : null,
     blocksPerGame: blkN ? +(blkSum / blkN).toFixed(1) : null,
+    offensiveReboundsPerGame: orebN ? +(orebSum / orebN).toFixed(1) : null,
+    defensiveReboundsPerGame: drebN ? +(drebSum / drebN).toFixed(1) : null,
+    biggestLeadPerGame: bigN ? +(bigSum / bigN).toFixed(1) : null,
+    leadChangesPerGame: lcN ? +(lcSum / lcN).toFixed(1) : null,
+    maxRunPerGame: runN ? +(runSum / runN).toFixed(1) : null,
+    timeoutsPerGame: tmoN ? +(tmoSum / tmoN).toFixed(1) : null,
+    fastBreakPointsPerGame: fbpN ? +(fbpSum / fbpN).toFixed(1) : null,
+    pointsInPaintPerGame: pipN ? +(pipSum / pipN).toFixed(1) : null,
+    turnoverPointsPerGame: topN ? +(topSum / topN).toFixed(1) : null,
+    timeInLeadPct: leadTot ? +((leadSec / leadTot) * 100).toFixed(1) : null,
   };
 };
 // Per-game foul / FT-attempt series for one team, OLDEST -> NEWEST:
@@ -248,6 +281,29 @@ const shootingSeries = (games: any[], teamId: number) => {
     if (fl != null && ft != null) { fouls.push(fl); ftAttempts.push(ft); }
   }
   return { fouls, ftAttempts };
+};
+// The provider records each team's gender ("M" / "F") on the team
+// objects inside banked games - 770 of the 852 games in the tracked
+// warehouse carry it, and nothing read it. Detection is per team over
+// ALL its banked appearances; conflicting records claim nothing.
+const teamGender = (teamId: number): "M" | "F" | null => {
+  let g: string | null = null;
+  for (const e of Object.values(store.games) as any[]) {
+    for (const side of [e.homeTeam, e.awayTeam]) {
+      if (side?.id === teamId && (side.gender === "M" || side.gender === "F")) {
+        if (g && g !== side.gender) return null;
+        g = side.gender;
+      }
+    }
+  }
+  return g as "M" | "F" | null;
+};
+const detectFixtureGender = (homeId: number, awayId: number): "Men" | "Women" | null => {
+  const hg = teamGender(homeId), ag = teamGender(awayId);
+  if (hg && ag) return hg === ag ? (hg === "F" ? "Women" : "Men") : null;
+  if (hg === "F" || ag === "F") return "Women";
+  if (hg === "M" || ag === "M") return "Men";
+  return null;
 };
 router.get("/v1/prematch", async (req: Request, res: Response) => {
   const { homeTeam, awayTeam } = req.query as Record<string, string>;
@@ -321,6 +377,11 @@ router.get("/v1/prematch", async (req: Request, res: Response) => {
       home: { id: home.id, name: home.name, ...summarize(homeGames, home.id), quarters: quarterProfile(homeGames), shooting: teamShooting(homeGames, home.id), shootingSeries: shootingSeries(homeGames, home.id), restDays: homeGames[0]?.startTimestamp ? Math.max(0, Math.floor((Date.now() / 1000 - homeGames[0].startTimestamp) / 86400)) : null },
       away: { id: away.id, name: away.name, ...summarize(awayGames, away.id), quarters: quarterProfile(awayGames), shooting: teamShooting(awayGames, away.id), shootingSeries: shootingSeries(awayGames, away.id), restDays: awayGames[0]?.startTimestamp ? Math.max(0, Math.floor((Date.now() / 1000 - awayGames[0].startTimestamp) / 86400)) : null },
       h2h: { meetings: h2hGames.length, avgTotal: h2hAvgTotal, totals: h2hTotals, homeWins: h2hHomeWins, awayWins: h2hAwayWins },
+      // What the warehouse records say this fixture IS (see
+      // detectFixtureGender). Detection only - the engine still
+      // prices the selector the user chose; the UI warns on mismatch
+      // instead of a men's/women's mix-up passing silently.
+      detectedGender: detectFixtureGender(home.id, away.id),
       warehouse: { storedGames: Object.keys(store.games).length, storedTeams: Object.keys(store.teams).length },
       quota,
     });

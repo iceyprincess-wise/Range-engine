@@ -82,8 +82,12 @@ const convertEvent = (ev: any, leagueName: string, ids: Map<string, { id: number
       id: Number(ev.id),
       startTimestamp: Math.floor(new Date(ev.date).getTime() / 1000),
       status: { code: 100, description: "Ended", type: "finished" },
-      homeTeam: { id: hId.id, name: hId.name },
-      awayTeam: { id: aId.id, name: aId.name },
+      // The league determines the recorded gender deterministically
+      // for this feed (NBA = M, WNBA = F). The paid provider's team
+      // objects carry the same field; ESPN-converted games were the
+      // only banked games missing it.
+      homeTeam: { id: hId.id, name: hId.name, gender: /wnba/i.test(leagueName) ? "F" : "M" },
+      awayTeam: { id: aId.id, name: aId.name, gender: /wnba/i.test(leagueName) ? "F" : "M" },
       homeScore: hs,
       awayScore: as,
       tournament: { name: leagueName, category: { name: "USA" } },
@@ -146,6 +150,14 @@ const parseEspnBoxscore = (summary: any): any => {
   const reb = count("totalRebounds"); if (reb) out.rebounds = reb;
   const oreb = count("offensiveRebounds"); if (oreb) out.offensiveRebounds = oreb;
   const dreb = count("defensiveRebounds"); if (dreb) out.defensiveRebounds = dreb;
+  // ESPN-only extras (names verified live in the same payload):
+  // largestLead banks under the store's biggestLead key; fast-break,
+  // paint and turnover points have no paid-feed counterpart yet -
+  // prematch averages them whenever a banked entry carries them.
+  const lead = count("largestLead"); if (lead) out.biggestLead = lead;
+  const fbp = count("fastBreakPoints"); if (fbp) out.fastBreakPoints = fbp;
+  const pip = count("pointsInPaint"); if (pip) out.pointsInPaint = pip;
+  const top = count("turnoverPoints"); if (top) out.turnoverPoints = top;
   return out;
 };
 

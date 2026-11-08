@@ -88,7 +88,6 @@ router.get("/v1/sync", async (req: Request, res: Response) => {
       return res.status(404).json({ error: "Live match not found for the requested teams" });
     }
 
-    const statsResponse = await basketFetch(`/api/basketball/match/${target.id}/statistics`);
     const homeScore = target.homeScore?.current ?? 0;
     const awayScore = target.awayScore?.current ?? 0;
     const payload = {
@@ -99,7 +98,12 @@ router.get("/v1/sync", async (req: Request, res: Response) => {
       matchId: target.id,
       league: league || "",
       score: { home: homeScore, away: awayScore },
-      statistics: statsResponse?.statistics ?? null,
+      // No statistics payload: this handler used to spend a second
+      // quota call fetching the live match's statistics, and NO
+      // consumer ever read the field (research reads none of the sync
+      // fields for values; revalidation reads closing-line fields).
+      // A fetched-then-discarded result is waste, not a feature.
+      statistics: null,
     };
 
     setCache(cacheKey, payload, 20_000);

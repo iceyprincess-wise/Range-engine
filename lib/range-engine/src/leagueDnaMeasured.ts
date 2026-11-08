@@ -2,11 +2,16 @@
 // MEASURED LEAGUE DNA — derived ONLY from finished games in the local warehouse.
 // Source: artifacts/api-server/data/store.json (now committed in the repo)
 // Regenerate: node artifacts/api-server/tools/league-dna-measure.cjs
-// Snapshot: 2026-11-07 · 610 scored games · 19 leagues · 0 API calls
-// (610/19 = every scored game / every league in the store. The table below
-// lists only the 15 leagues with n >= 4 — 606 games. Excluded from the table:
-// 4 single-game leagues (CEBL, WNBA Commissioner's Cup, Chile LNB, Puerto
-// Rico BSN — n = 1 each, too thin to measure). 606 + 4 = 610.
+// Snapshot: 2026-11-08 · 852 scored games · 35 leagues · 0 API calls
+// (852/35 = every scored game / every league in the store. The table below
+// lists only the 21 leagues with n >= 4 — 653 games. Excluded from the table:
+// leagues with n < 4 (14 games) and the four hand-profile leagues the tool
+// also measures but whose hand-written profiles keep serving (NBA 131,
+// Germany BBL 38, Euroleague 10, Liga ACB 6 — 185 games). 653 + 14 + 185 = 852.
+// Refreshed 2026-11-08 from the tracked hybrid inbox (tool re-run on the
+// 852-game warehouse): WNBA updated 247 -> 250 games, and six families
+// promoted to measured profiles — NBA Summer League, NBA Preseason,
+// AdmiralBet ABA, Stoiximan GBL, Turkish Super League, FIBA Europe Cup.
 // The old 2026-08-01 header said 570/17 while its table summed to 568/15:
 // that was the same rule — the store-wide count included 2 single-game
 // leagues the table omitted. The Aug-1 store itself can't be rebuilt exactly
@@ -55,8 +60,8 @@ export type DnaMeasurement = {
   avgQuarterTotal: number | null;
 };
 
-export const DNA_SNAPSHOT_AT = "2026-11-07";
-export const DNA_SNAPSHOT_GAMES = 606; // games covered by LEAGUE_DNA_MEASURED below (store-wide scored total is 610; see header)
+export const DNA_SNAPSHOT_AT = "2026-11-08";
+export const DNA_SNAPSHOT_GAMES = 653; // games covered by LEAGUE_DNA_MEASURED below (store-wide scored total is 852; see header)
 export const SHRINK_K = 1;
 export const CAP_DISCOUNT = 0.93; // Derivation factor for MEASURED_PROFILES proxyPPG
 // (round1(avgTotal / 2 * CAP_DISCOUNT)); verified against all 13 profiles.
@@ -64,7 +69,7 @@ export const CAP_DISCOUNT = 0.93; // Derivation factor for MEASURED_PROFILES pro
 export const STALE_DAYS = 180;
 
 export const LEAGUE_DNA_MEASURED: Record<string, DnaMeasurement> = {
-  WNBA:              { n: 247, lastGame: "2026-10-03", avgTotal: 173.9, sdTotal: 21.2, p10: 148,   median: 172,   p90: 202.4, homeEdge:   2.1, homeWinPct: 55.1, avgMargin: 11.6, blowout20Pct: 17.8, otPct: 3.6,  avgQuarterTotal: 43.2 },
+  WNBA:              { n: 250, lastGame: "2026-11-01", avgTotal: 173.4, sdTotal: 21.6, p10: 146.9, median: 172,   p90: 202.1, homeEdge:   2.2, homeWinPct: 55.6, avgMargin: 11.5, blowout20Pct: 17.6, otPct: 3.6,  avgQuarterTotal: 43.1 },
   BIG_V:             { n:  83, lastGame: "2026-08-02", avgTotal: 182.6, sdTotal: 18.4, p10: 160,   median: 182,   p90: 209.2, homeEdge:   0.8, homeWinPct: 44.6, avgMargin: 12.6, blowout20Pct: 16.9, otPct: 3.6,  avgQuarterTotal: 45.5 },
   LDA:               { n:  63, lastGame: "2026-07-31", avgTotal: 155.8, sdTotal: 18.9, p10: 134.2, median: 154,   p90: 177.8, homeEdge:   3.3, homeWinPct: 52.4, avgMargin: 12.5, blowout20Pct: 15.9, otPct: 7.9,  avgQuarterTotal: 38.3 },
   LEBANON:           { n:  40, lastGame: "2026-07-30", avgTotal: 188.0, sdTotal: 25.3, p10: 154.8, median: 188,   p90: 219.1, homeEdge:   1.5, homeWinPct: 55.0, avgMargin: 14.6, blowout20Pct: 30.0, otPct: 10.0, avgQuarterTotal: 46.4 },
@@ -79,6 +84,12 @@ export const LEAGUE_DNA_MEASURED: Record<string, DnaMeasurement> = {
   WASL:              { n:   6, lastGame: "2026-02-18", avgTotal: 191.3, sdTotal: 15.7, p10: 173.5, median: 196.5, p90: 204,   homeEdge:   5.0, homeWinPct: 50.0, avgMargin: 18.0, blowout20Pct: 33.3, otPct: 16.7, avgQuarterTotal: 46.9 },
   LDB:               { n:   6, lastGame: "2026-07-29", avgTotal: 156.5, sdTotal: 18.0, p10: 138.5, median: 155,   p90: 176,   homeEdge:  12.5, homeWinPct: 83.3, avgMargin: 23.8, blowout20Pct: 66.7, otPct: 0,    avgQuarterTotal: 39.1 },
   U18_PAULISTA:      { n:   4, lastGame: "2026-07-29", avgTotal: 140.5, sdTotal: 17.5, p10: 126,   median: 137.5, p90: 157.4, homeEdge: -11.0, homeWinPct: 25.0, avgMargin: 20.5, blowout20Pct: 50.0, otPct: 0,    avgQuarterTotal: null },
+  NBA_SUMMER:        { n:  13, lastGame: "2026-07-19", avgTotal: 176.8, sdTotal: 13.0, p10: 161.2, median: 180,   p90: 191,   homeEdge:   0.4, homeWinPct: 46.2, avgMargin: 11.6, blowout20Pct: 23.1, otPct: 15.4, avgQuarterTotal: 43.8 },
+  NBA_PRESEASON:     { n:   9, lastGame: "2026-10-17", avgTotal: 225.8, sdTotal: 18.5, p10: 203.6, median: 227,   p90: 246,   homeEdge:   2.4, homeWinPct: 44.4, avgMargin: 17.3, blowout20Pct: 44.4, otPct: 11.1, avgQuarterTotal: 56.0 },
+  ABA:               { n:   6, lastGame: "2026-11-08", avgTotal: 155.8, sdTotal: 19.1, p10: 137,   median: 152.5, p90: 178,   homeEdge:  -2.5, homeWinPct: 33.3, avgMargin:  8.5, blowout20Pct:  0,   otPct: 0,    avgQuarterTotal: 39.0 },
+  GBL:               { n:   6, lastGame: "2026-11-08", avgTotal: 160.5, sdTotal:  2.9, p10: 158,   median: 159.5, p90: 164,   homeEdge:   3.8, homeWinPct: 50.0, avgMargin: 16.2, blowout20Pct: 33.3, otPct: 0,    avgQuarterTotal: 40.1 },
+  TURKISH_SL:        { n:   5, lastGame: "2026-11-08", avgTotal: 169.6, sdTotal: 18.7, p10: 151,   median: 176,   p90: 181.8, homeEdge:  -2.4, homeWinPct: 40.0, avgMargin: 11.6, blowout20Pct:  0,   otPct: 20.0, avgQuarterTotal: 42.3 },
+  FIBA_EUROPE_CUP:   { n:   5, lastGame: "2026-11-02", avgTotal: 161.2, sdTotal: 19.7, p10: 144,   median: 160,   p90: 180.4, homeEdge:  20.4, homeWinPct: 100.0, avgMargin: 20.4, blowout20Pct: 40.0, otPct: 0,    avgQuarterTotal: 40.3 },
 };
 
 export const MEASURED_PROFILES: Record<string, DnaCore> = {
@@ -95,6 +106,12 @@ export const MEASURED_PROFILES: Record<string, DnaCore> = {
   WASL:              { name: "WASL West Asia",                     proxyPPG:  89.0, hbDNA: 0, lbDNA: 0, maxWidth: 16, hammerEdge: 8, buffer: 2.0, grind: false },
   LDB:               { name: "LDB (thin sample)",                  proxyPPG:  72.8, hbDNA: 0, lbDNA: 0, maxWidth: 16, hammerEdge: 8, buffer: 2.0, grind: true  },
   U18_PAULISTA:      { name: "U18 Paulista (thin sample)",         proxyPPG:  65.3, hbDNA: 0, lbDNA: 0, maxWidth: 16, hammerEdge: 8, buffer: 2.0, grind: false },
+  NBA_SUMMER:        { name: "NBA Summer League (measured)",       proxyPPG:  82.2, hbDNA: 0, lbDNA: 0, maxWidth: 16, hammerEdge: 8, buffer: 2.0, grind: false },
+  NBA_PRESEASON:     { name: "NBA Preseason (measured)",           proxyPPG: 105.0, hbDNA: 0, lbDNA: 0, maxWidth: 16, hammerEdge: 8, buffer: 2.0, grind: false },
+  ABA:               { name: "AdmiralBet ABA League (thin sample)", proxyPPG:  72.4, hbDNA: 0, lbDNA: 0, maxWidth: 16, hammerEdge: 8, buffer: 2.0, grind: true  },
+  GBL:               { name: "Stoiximan GBL (thin sample)",        proxyPPG:  74.6, hbDNA: 0, lbDNA: 0, maxWidth: 16, hammerEdge: 8, buffer: 2.0, grind: false },
+  TURKISH_SL:        { name: "Turkish Super League (thin sample)", proxyPPG:  78.9, hbDNA: 0, lbDNA: 0, maxWidth: 16, hammerEdge: 8, buffer: 2.0, grind: false },
+  FIBA_EUROPE_CUP:   { name: "FIBA Europe Cup (thin sample)",      proxyPPG:  75.0, hbDNA: 0, lbDNA: 0, maxWidth: 16, hammerEdge: 8, buffer: 2.0, grind: false },
 };
 
 // ─── Resolver ────────────────────────────────────────────────────────────────
@@ -104,6 +121,10 @@ export const MEASURED_PROFILES: Record<string, DnaCore> = {
 export function resolveMeasuredKey(leagueUpper: string): string | null {
   const lg = leagueUpper;
   if (lg.includes("WNBA") && lg.includes("PRESEASON")) return "WNBA_PRESEASON";
+  // After the WNBA arm on purpose: "WNBA" contains "NBA", so the NBA
+  // variants must never be reachable from a WNBA string.
+  if (lg.includes("NBA") && lg.includes("SUMMER")) return "NBA_SUMMER";
+  if (lg.includes("NBA") && lg.includes("PRESEASON")) return "NBA_PRESEASON";
   if (lg.includes("PBA") && lg.includes("COMMISSIONER")) return "PBA_COMMISSIONERS";
   if (lg.includes("PBA") && lg.includes("GOVERNOR")) return "PBA_GOVERNORS";
   if (lg.includes("PBA") && lg.includes("PHILIPPINE")) return "PBA_PHILIPPINE";
@@ -126,6 +147,10 @@ export function resolveMeasuredKey(leagueUpper: string): string | null {
   // "Uruguay - LUB" still resolves on the LUB word itself.
   if (/\bLUB\b/.test(lg)) return "URUGUAY_LUB";
   if (/\bLDB\b/.test(lg)) return "LDB";
+  if (lg.includes("ADMIRALBET") || /\bABA\b/.test(lg)) return "ABA";
+  if (lg.includes("STOIXIMAN") || /\bGBL\b/.test(lg)) return "GBL";
+  if (lg.includes("TURKISH")) return "TURKISH_SL";
+  if (lg.includes("EUROPE CUP")) return "FIBA_EUROPE_CUP";
   return null;
 }
 
