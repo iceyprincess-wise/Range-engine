@@ -314,6 +314,18 @@ export function RangeEngine() {
       .catch(() => {});
   }, []);
 
+  // Re-read the server quota snapshot. EVERY provider call already
+  // reports its spend to the tracker server-side — the display simply
+  // never re-read it after spending, so the header kept showing the
+  // pre-spend number (Analyze, the biggest spender, never refreshed
+  // at all). Call this after any action that may have spent.
+  const refreshQuota = async () => {
+    try {
+      const q = await fetch(`${API_BASE}/api/v1/quota`).then((r) => (r.ok ? r.json() : null));
+      if (q) setQuotaInfo({ limit: (q as any).limit ?? null, remaining: (q as any).remaining ?? null });
+    } catch { /* best-effort */ }
+  };
+
   // ── MASTER REFRESH: re-pull quota, force-refresh games list, clear research cache ──
   const [refreshing, setRefreshing] = useState(false);
   const refreshAll = async () => {
@@ -338,6 +350,7 @@ export function RangeEngine() {
       setGSel(null);
       setGGames([]);
     } finally {
+      void refreshQuota();
       setRefreshing(false);
     }
   };
@@ -415,6 +428,7 @@ export function RangeEngine() {
     try {
       const d = await fetch(`${API_BASE}/api/v1/games/schedule?tid=${t.id}`).then((r) => (r.ok ? r.json() : { games: [] }));
       setGGames((d.games || []).slice().sort((x: any, y: any) => (x.startTimestamp ?? 0) - (y.startTimestamp ?? 0)));
+      void refreshQuota();
     } catch {
       setGGames([]);
     } finally {
@@ -711,6 +725,7 @@ export function RangeEngine() {
         console.error("Final reanalysis failed:", err);
         setReanalysisMessage("Reanalysis failed — network or API error");
       } finally {
+        void refreshQuota();
         // keep the status visible briefly before reset
         setTimeout(() => {
           setIsReanalyzing(false);
@@ -804,8 +819,9 @@ export function RangeEngine() {
       const updated = history.map((h) => (h.id === entry.id ? ({ ...h, outcome, actualTotal: r.total, ftScore: postMatch.ftScore, postMatch } as any) : h));
       setHistory(updated);
       saveHistory(updated);
+      void refreshQuota();
       return true;
-    } catch { return false; }
+    } catch { void refreshQuota(); return false; }
   };
 
   // Auto-settle: opening the Archive tries every PENDING receipt against the warehouse (free)
@@ -827,6 +843,7 @@ export function RangeEngine() {
       const response = await fetch(syncUrl);
       if (!response.ok) throw new Error(`Revalidation failed: ${response.status}`);
       const payload = await response.json();
+      void refreshQuota();
 
       const finalOver = parseNumber(
         payload.closing_over ?? payload.final_over ?? payload.over_line ?? payload.overLine,
@@ -953,6 +970,7 @@ export function RangeEngine() {
         // Retrieve expanded 50-game analytics from the live telemetry payload
         const data = await fetchResearchDataCached(homeTeam, awayTeam, league, gameId, bookmaker);
         setResearchData(data);
+        void refreshQuota();
         setResearchError(null);
         setResearchProgress(100);
         setResearchPhase("done");
@@ -960,6 +978,7 @@ export function RangeEngine() {
         console.error("Research error:", err);
         setResearchData(null);
         setResearchError(err?.message || "Research API failed.");
+        void refreshQuota();
         setResearchProgress(100);
         setResearchPhase("done");
       }
@@ -1288,6 +1307,7 @@ export function RangeEngine() {
             history={history}
             setHistory={setHistory}
             saveHistory={saveHistory}
+            onSpend={() => { void refreshQuota(); }}
           />
         </div>
       ) : null}

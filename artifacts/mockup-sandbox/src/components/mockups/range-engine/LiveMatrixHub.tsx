@@ -5,9 +5,12 @@ interface LiveMatrixHubProps {
   history: any[];
   setHistory: React.Dispatch<React.SetStateAction<any[]>>;
   saveHistory: (h: any[]) => void;
+  // Called after any action that may have spent provider quota, so the
+  // parent can re-read the quota snapshot and the header stays accurate.
+  onSpend?: () => void;
 }
 
-export const LiveMatrixHub: React.FC<LiveMatrixHubProps> = ({ history, setHistory, saveHistory }) => {
+export const LiveMatrixHub: React.FC<LiveMatrixHubProps> = ({ history, setHistory, saveHistory, onSpend }) => {
   const [expandedMatch, setExpandedMatch] = useState<string | null>(null);
   const [matchStats, setMatchStats] = useState<Record<string, any>>({});
   const [stallStatus, setStallStatus] = useState<Record<string, any>>({});
@@ -126,6 +129,7 @@ export const LiveMatrixHub: React.FC<LiveMatrixHubProps> = ({ history, setHistor
     } catch (err) {
       console.error("Global Live Feed Error:", err);
     }
+    onSpend?.();
     setGlobalLoading(false);
   };
 
@@ -188,6 +192,7 @@ export const LiveMatrixHub: React.FC<LiveMatrixHubProps> = ({ history, setHistor
       console.error("Deep sync error:", err);
       alert("Failed to pull deep telemetry. API may be rate limiting.");
     }
+    onSpend?.();
     setSyncing(prev => ({ ...prev, [historyId]: false }));
   };
 

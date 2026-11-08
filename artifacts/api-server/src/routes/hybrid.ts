@@ -85,7 +85,10 @@ const view = (g: any) => ({
   league: leagueOf(g),
 });
 
-const statusOf = (g: any) => (store.games[g.id] ? "already-exist" : "new");
+// A game that fails bankable() can NEVER enter the warehouse, so
+// calling it "new" makes the inbox promise a send that always skips
+// it. Three honest states instead.
+const statusOf = (g: any) => (store.games[g.id] ? "already-exist" : bankable(g) ? "new" : "invalid");
 
 // GET /v1/hybrid/inbox — read FRESH on every request (never cached at
 // boot), so a pushed or hand-dropped inbox file is visible without a
@@ -95,7 +98,8 @@ router.get("/v1/hybrid/inbox", (_req: Request, res: Response) => {
   const inbox = readInbox();
   const games = inbox.games.map((g) => ({ ...view(g), status: statusOf(g) }));
   const newCount = games.filter((g) => g.status === "new").length;
-  return res.json({ updatedAt: inbox.updatedAt, total: games.length, newCount, alreadyExistCount: games.length - newCount, games });
+  const invalidCount = games.filter((g) => g.status === "invalid").length;
+  return res.json({ updatedAt: inbox.updatedAt, total: games.length, newCount, invalidCount, alreadyExistCount: games.length - newCount - invalidCount, games });
 });
 
 // GET /v1/hybrid/games — the live store's full raw game objects, for the
@@ -119,10 +123,18 @@ router.post("/v1/hybrid/export", (_req: Request, res: Response) => {
   if (inbox.parseError) {
     return res.status(500).json({ error: "inbox file is corrupt — export refused so staged games are not destroyed; fix or remove hybrid-inbox.json first" });
   }
+  // Prune staged games that can never be sent (no final scores): they
+  // sat in the inbox labelled "new" forever while every import skipped
+  // them. Export is also the wrong place to CREATE that poison — store
+  // games failing bankable() are counted and skipped, never staged.
+  const stagedBefore = inbox.games.length;
+  inbox.games = inbox.games.filter((g: any) => bankable(g));
+  const pruned = stagedBefore - inbox.games.length;
   const have = new Set(inbox.games.map((g: any) => g.id));
-  let added = 0;
+  let added = 0, skippedInvalid = 0;
   for (const g of Object.values(store.games) as any[]) {
     if (g?.id == null || have.has(g.id)) continue;
+    if (!bankable(g)) { skippedInvalid++; continue; }
     inbox.games.push(g); have.add(g.id); added++;
   }
   let statsAdded = 0;
@@ -143,9 +155,9 @@ router.post("/v1/hybrid/export", (_req: Request, res: Response) => {
   inbox.teams = [...teamByName.values()];
   // updatedAt means "the inbox content changed" — the old code bumped
   // it on every export, even one that added nothing.
-  if (added > 0 || statsAdded > 0 || teamsChanged) inbox.updatedAt = new Date().toISOString();
+  if (added > 0 || statsAdded > 0 || teamsChanged || pruned > 0) inbox.updatedAt = new Date().toISOString();
   writeInbox(inbox);
-  return res.json({ added, statsAdded, teams: inbox.teams.length, total: inbox.games.length });
+  return res.json({ added, skippedInvalid, pruned, statsAdded, teams: inbox.teams.length, total: inbox.games.length });
 });
 
 // POST /v1/hybrid/import — body {ids?: number[]} (all "new" inbox games

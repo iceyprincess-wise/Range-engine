@@ -3,10 +3,10 @@ import { useEffect, useState } from "react";
 type InboxGame = {
   id: number; date: string; home: string; away: string;
   hs: number | null; as: number | null; league: string;
-  status: "new" | "already-exist";
+  status: "new" | "already-exist" | "invalid";
 };
 type InboxData = {
-  updatedAt: string | null; total: number; newCount: number;
+  updatedAt: string | null; total: number; newCount: number; invalidCount: number;
   alreadyExistCount: number; games: InboxGame[];
 };
 
@@ -50,7 +50,7 @@ export function HybridPage({ apiBase, onClose }: { apiBase: string; onClose: () 
       const r = await fetch(`${apiBase}/api/v1/hybrid/export`, { method: "POST" });
       const d = await r.json();
       if (!r.ok) throw new Error(d?.error ?? "export failed");
-      setNotice(`Exported ${d.added} new game${d.added === 1 ? "" : "s"} to the inbox (total ${d.total}). Commit + push the inbox file and Render auto-deploys it — then open this page on Render and Send to warehouse.`);
+      setNotice(`Exported ${d.added} new game${d.added === 1 ? "" : "s"} to the inbox (total ${d.total}).${d.pruned ? ` Pruned ${d.pruned} unbankable game${d.pruned === 1 ? "" : "s"} (no final scores) from the inbox.` : ""}${d.skippedInvalid ? ` Skipped ${d.skippedInvalid} store game${d.skippedInvalid === 1 ? "" : "s"} with no final scores — they cannot be banked.` : ""} Commit + push the inbox file and Render auto-deploys it — then open this page on Render and Send to warehouse.`);
       await loadInbox();
     } catch (e: any) { setErr(e?.message ?? "export failed"); }
     finally { setBusy(null); }
@@ -65,7 +65,7 @@ export function HybridPage({ apiBase, onClose }: { apiBase: string; onClose: () 
       });
       const d = await r.json();
       if (!r.ok) throw new Error(d?.error ?? "import failed");
-      setNotice(`Sent ${d.added} game${d.added === 1 ? "" : "s"} to this warehouse (${d.alreadyExist} already there).`);
+      setNotice(`Sent ${d.added} game${d.added === 1 ? "" : "s"} to this warehouse (${d.alreadyExist} already there).${d.skippedInvalid ? ` ${d.skippedInvalid} skipped — no final scores recorded, cannot be banked.` : ""}`);
       await loadInbox();
     } catch (e: any) { setErr(e?.message ?? "import failed"); }
     finally { setBusy(null); }
@@ -105,7 +105,7 @@ export function HybridPage({ apiBase, onClose }: { apiBase: string; onClose: () 
       });
       const d = await r.json();
       if (!r.ok) throw new Error(d?.error ?? "pull failed");
-      setNotice(`Pulled ${d.added} new game${d.added === 1 ? "" : "s"} from the source (${d.alreadyExist} already here, ${d.sourceGames} on the source).`);
+      setNotice(`Pulled ${d.added} new game${d.added === 1 ? "" : "s"} from the source (${d.alreadyExist} already here, ${d.sourceGames} on the source).${d.skippedInvalid ? ` ${d.skippedInvalid} skipped — no final scores recorded, cannot be banked.` : ""}`);
       await loadInbox();
     } catch (e: any) { setPullErr(e?.message ?? "pull failed"); }
     finally { setBusy(null); }
@@ -191,14 +191,17 @@ export function HybridPage({ apiBase, onClose }: { apiBase: string; onClose: () 
       ) : (
         <>
           <p className="text-[10px] text-yellow-600 mb-2 font-mono">
-            Inbox {inbox.total} game{inbox.total === 1 ? "" : "s"} · {inbox.newCount} new · {inbox.alreadyExistCount} already in this warehouse
+            Inbox {inbox.total} game{inbox.total === 1 ? "" : "s"} · {inbox.newCount} new · {inbox.alreadyExistCount} already in this warehouse{inbox.invalidCount ? ` · ${inbox.invalidCount} invalid (no final scores)` : ""}
             {inbox.updatedAt ? ` · updated ${new Date(inbox.updatedAt).toLocaleString()}` : ""}
           </p>
           {inbox.total === 0 && (
             <p className="text-zinc-500 text-xs mt-2">Inbox is empty — export this store to fill it, or pull from the other server.</p>
           )}
-          {inbox.total > 0 && inbox.newCount === 0 && (
+          {inbox.total > 0 && inbox.newCount === 0 && inbox.invalidCount === 0 && (
             <p className="text-zinc-500 text-xs mt-2">Every inbox game is already in this warehouse — nothing left to send.</p>
+          )}
+          {inbox.invalidCount > 0 && (
+            <p className="text-red-400/80 text-xs mt-2">{inbox.invalidCount} inbox game{inbox.invalidCount === 1 ? "" : "s"} can never be sent — no final scores were recorded for {inbox.invalidCount === 1 ? "it" : "them"}. Exporting from the source prunes {inbox.invalidCount === 1 ? "it" : "them"}.</p>
           )}
           <div className="space-y-1.5">
             {inbox.games.map((g) => (
@@ -208,8 +211,8 @@ export function HybridPage({ apiBase, onClose }: { apiBase: string; onClose: () 
                   <p className="text-[10px] text-zinc-500">{g.date} · {g.league} · #{g.id}</p>
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
-                  <span className={g.status === "new" ? "text-[10px] font-black uppercase text-green-400" : "text-[10px] font-black uppercase text-zinc-500"}>
-                    {g.status === "new" ? "new" : "already exist"}
+                  <span className={g.status === "new" ? "text-[10px] font-black uppercase text-green-400" : g.status === "invalid" ? "text-[10px] font-black uppercase text-red-400" : "text-[10px] font-black uppercase text-zinc-500"}>
+                    {g.status === "new" ? "new" : g.status === "invalid" ? "no scores — can't send" : "already exist"}
                   </span>
                   {g.status === "new" && (
                     <button onClick={() => doImport([g.id])} disabled={busy !== null} className={btn}>Send</button>

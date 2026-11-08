@@ -45,6 +45,24 @@ const loadStore = (): Store => {
         parsed[k] = {};
       }
     }
+    // Debris purge: every legitimate intake (rememberGames, hybrid
+    // import/pull, the free bank) banks finished games WITH final
+    // scores only. Anything else in the file is pre-validation debris
+    // — no consumer can use it (all skip scoreless games), but it
+    // inflates the counts and poisons hybrid exports, staging games
+    // that can never be sent. Drop it, loudly.
+    const gamesMap = parsed.games as Record<string, any>;
+    let dropped = 0;
+    for (const [gid, g] of Object.entries(gamesMap)) {
+      const bankableStored = g?.status?.type === "finished"
+        && typeof g?.homeScore?.current === "number"
+        && typeof g?.awayScore?.current === "number";
+      if (!bankableStored) { delete gamesMap[gid]; dropped++; }
+    }
+    if (dropped > 0) {
+      storePurged = dropped;
+      console.error(`warehouse: dropped ${dropped} stored game(s) that can never be banked (not finished / no final scores)`);
+    }
     return parsed as Store;
   } catch (err) {
     // A corrupt store must never be silently replaced by an empty one:
@@ -56,6 +74,7 @@ const loadStore = (): Store => {
     return { teams: {}, games: {}, stats: {} };
   }
 };
+let storePurged = 0;
 export const store: Store = loadStore();
 
 let dirty = false;
@@ -74,6 +93,7 @@ export const persist = () => {
   } catch (err) { console.error("warehouse persist failed:", err); }
 };
 setInterval(persist, 30_000).unref();
+if (storePurged > 0) { markDirty(); persist(); }
 
 const isFinished = (e: any) => e?.status?.type === "finished";
 const hasScores = (e: any) =>
