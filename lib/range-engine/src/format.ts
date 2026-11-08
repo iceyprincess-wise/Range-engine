@@ -38,6 +38,11 @@ export function parseNumberArray(value: unknown): number[] {
 }
 
 export function formatDataValue(value: unknown, decimals = 1, fallback = "--"): string {
+  // Number(null) is 0, which is finite - an unmeasured value rendered
+  // as a measured "0.0" (the scan panel showed FT% 0.0% for teams
+  // whose shooting was simply not banked yet). Null / undefined /
+  // empty means NOT MEASURED and must reach the fallback.
+  if (value == null || value === "") return fallback;
   const n = Number(value);
   if (!Number.isFinite(n)) return fallback;
   return n.toFixed(decimals);

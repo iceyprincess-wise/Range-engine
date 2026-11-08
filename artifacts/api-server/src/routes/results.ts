@@ -21,10 +21,20 @@ const apiFetch = async (p: string): Promise<any> => {
 };
 
 const findStored = (h: string, a: string, date?: string): any => {
+  // SETTLEMENT IDENTITY: a result belongs to ONE fixture. Matching on
+  // team names alone returned the pair's most recent scored meeting -
+  // an April game "settled" a November fixture minutes before its
+  // tip-off (proven live 2026-11-08). With a fixture date, only games
+  // starting within +-1 day of it may answer (the +-1 tolerates
+  // UTC/local date edges around midnight); exact-date matches are
+  // preferred over window-edge ones in the return below.
+  const target = date ? Date.parse(date + "T00:00:00Z") : NaN;
+  const dayOf = (g: any) => (g.startTimestamp ? new Date(g.startTimestamp * 1000).toISOString().slice(0, 10) : null);
   const pool = Object.values(store.games).filter((g: any) => {
-    if (!date) return true;
-    const d = g.startTimestamp ? new Date(g.startTimestamp * 1000).toISOString().slice(0, 10) : null;
-    return d === date;
+    if (!Number.isFinite(target)) return true;
+    const d = dayOf(g);
+    if (!d) return false;
+    return Math.abs(Date.parse(d + "T00:00:00Z") - target) <= 86400000;
   });
   // Exact pair first: substring matching must never outrank the exact
   // pair when it is banked (e.g. a later meeting of the same teams, or
@@ -43,7 +53,8 @@ const findStored = (h: string, a: string, date?: string): any => {
     if (exact) return exact;
     return byTime(games.filter((g: any) => norm(g.homeTeam?.name ?? "").includes(h) && norm(g.awayTeam?.name ?? "").includes(a)));
   };
-  return pick(scored(pool)) ?? pick(pool);
+  const exactDay = Number.isFinite(target) ? pool.filter((g: any) => dayOf(g) === date) : pool;
+  return pick(scored(exactDay)) ?? pick(scored(pool)) ?? pick(exactDay) ?? pick(pool);
 };
 
 router.get("/v1/result", async (req: Request, res: Response) => {

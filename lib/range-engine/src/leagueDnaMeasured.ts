@@ -110,12 +110,22 @@ export function resolveMeasuredKey(leagueUpper: string): string | null {
   if (lg.includes("BIG V")) return "BIG_V";
   if (lg.includes("LEBAN")) return "LEBANON";
   if (lg.includes("WASL") || lg.includes("WEST ASIA")) return "WASL";
-  if (lg.includes("TERCERA") || lg.includes("ASCENSO")) return "DIV_TERCERA";
+  // TERCERA first: "Divisional Tercera de Ascenso" contains both
+  // tokens and IS the Tercera profile. A bare "Liga de Ascenso" is
+  // the LDA measurement's own league - the old combined arm routed
+  // its 63 warehouse games to the 17-game Tercera profile and left
+  // LDA unreachable.
+  if (lg.includes("TERCERA")) return "DIV_TERCERA";
+  if (lg.includes("ASCENSO") || /\bLDA\b/.test(lg)) return "LDA";
   if (lg.includes("CBI") && lg.includes("U15")) return "CBI_U15_FEM";
   if (lg.includes("PAULISTA")) return "U18_PAULISTA";
-  if (lg.includes("URUGUAY") || lg.includes("LUB")) return "URUGUAY_LUB";
+  // Word-boundary LUB, and no bare URUGUAY token: the substring
+  // matched "CLUB" (Club Friendlies fixtures were served the Uruguay
+  // LUB profile), and bare URUGUAY routed every Uruguayan division -
+  // DTA fixtures included - to the first division's profile.
+  // "Uruguay - LUB" still resolves on the LUB word itself.
+  if (/\bLUB\b/.test(lg)) return "URUGUAY_LUB";
   if (/\bLDB\b/.test(lg)) return "LDB";
-  if (/\bLDA\b/.test(lg)) return "LDA";
   return null;
 }
 

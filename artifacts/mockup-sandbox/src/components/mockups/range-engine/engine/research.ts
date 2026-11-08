@@ -78,6 +78,28 @@ export async function fetchResearchData(
     apiData.awayFoulRate = preData.away?.shooting?.foulsPerGame ?? apiData.awayFoulRate;
     apiData.homePt2 = preData.home?.shooting?.pt2Pct ?? apiData.homePt2;
     apiData.awayPt2 = preData.away?.shooting?.pt2Pct ?? apiData.awayPt2;
+    // Measured points-ALLOWED averages -> defensive PPG. Until now no
+    // merge line carried them, so homeDefPpg fell back to the team's
+    // OFFENSIVE PPG and the Form DNA "PPG DEFENSE" row printed the
+    // attack number as a defensive profile.
+    apiData.homeDefPpg = preData.home?.avgAllowed ?? apiData.homeDefPpg;
+    apiData.awayDefPpg = preData.away?.avgAllowed ?? apiData.awayDefPpg;
+    // Real H2H record for the Sportybet matrix header (the box used to
+    // count last-5 form letters - see prematch h2h note).
+    apiData.h2hMeetings = preData.h2h?.meetings ?? apiData.h2hMeetings;
+    apiData.h2hHomeWins = preData.h2h?.homeWins ?? apiData.h2hHomeWins;
+    apiData.h2hAwayWins = preData.h2h?.awayWins ?? apiData.h2hAwayWins;
+    // Counting stats per game (display layer - see prematch note).
+    apiData.homeSteals = preData.home?.shooting?.stealsPerGame ?? apiData.homeSteals;
+    apiData.awaySteals = preData.away?.shooting?.stealsPerGame ?? apiData.awaySteals;
+    apiData.homeTurnovers = preData.home?.shooting?.turnoversPerGame ?? apiData.homeTurnovers;
+    apiData.awayTurnovers = preData.away?.shooting?.turnoversPerGame ?? apiData.awayTurnovers;
+    apiData.homeRebounds = preData.home?.shooting?.reboundsPerGame ?? apiData.homeRebounds;
+    apiData.awayRebounds = preData.away?.shooting?.reboundsPerGame ?? apiData.awayRebounds;
+    apiData.homeAssists = preData.home?.shooting?.assistsPerGame ?? apiData.homeAssists;
+    apiData.awayAssists = preData.away?.shooting?.assistsPerGame ?? apiData.awayAssists;
+    apiData.homeBlocks = preData.home?.shooting?.blocksPerGame ?? apiData.homeBlocks;
+    apiData.awayBlocks = preData.away?.shooting?.blocksPerGame ?? apiData.awayBlocks;
     // Per-game series -> the *50 arrays the weighted Rule 10 averages
     // consume. No endpoint returned them before, so the weighted path
     // was dead code that always fell back to the season scalars.
@@ -205,6 +227,18 @@ export async function fetchResearchData(
   const homePt2: number | null = homePt2Raw == null ? null : normalizePercent(homePt2Raw);
   const awayPt2Raw = apiData.awayPt2 ?? apiData.away_pt2;
   const awayPt2: number | null = awayPt2Raw == null ? null : normalizePercent(awayPt2Raw);
+  // Counting stats stay NULL when no banked stat line carries them -
+  // the Form DNA panel renders "--" rather than a fabricated 0.
+  const homeSteals: number | null = apiData.homeSteals == null ? null : parseNumber(apiData.homeSteals, 0);
+  const awaySteals: number | null = apiData.awaySteals == null ? null : parseNumber(apiData.awaySteals, 0);
+  const homeTurnovers: number | null = apiData.homeTurnovers == null ? null : parseNumber(apiData.homeTurnovers, 0);
+  const awayTurnovers: number | null = apiData.awayTurnovers == null ? null : parseNumber(apiData.awayTurnovers, 0);
+  const homeRebounds: number | null = apiData.homeRebounds == null ? null : parseNumber(apiData.homeRebounds, 0);
+  const awayRebounds: number | null = apiData.awayRebounds == null ? null : parseNumber(apiData.awayRebounds, 0);
+  const homeAssists: number | null = apiData.homeAssists == null ? null : parseNumber(apiData.homeAssists, 0);
+  const awayAssists: number | null = apiData.awayAssists == null ? null : parseNumber(apiData.awayAssists, 0);
+  const homeBlocks: number | null = apiData.homeBlocks == null ? null : parseNumber(apiData.homeBlocks, 0);
+  const awayBlocks: number | null = apiData.awayBlocks == null ? null : parseNumber(apiData.awayBlocks, 0);
   const homeArenaPPG = parseNumber(
     apiData.homeArenaPPG ?? apiData.home_arena_ppg ?? apiData.home_ppg,
     0,
@@ -264,7 +298,11 @@ export async function fetchResearchData(
     fatigueRisk === "UNKNOWN"
       ? `Fatigue not assessed — no rest days, foul rates or league foul average banked for either team.`
       : fatigueRisk === "HIGH"
-      ? `Schedule stress detected: ${homeRestDays ?? "—"}d rest / ${awayRestDays ?? "—"}d rest. Back-to-back / 3-in-4 fatigue is amplifying foul pressure and pace collapse risk.`
+      ? fatiguePoints >= 1 && leagueFoulHigh
+        ? `Schedule stress detected: ${homeRestDays ?? "—"}d rest / ${awayRestDays ?? "—"}d rest. Back-to-back / 3-in-4 fatigue is amplifying foul pressure and pace collapse risk. League foul volume adds to it: ${leagueFoulAverage} fouls/game measured.`
+        : fatiguePoints >= 1
+        ? `Schedule stress detected: ${homeRestDays ?? "—"}d rest / ${awayRestDays ?? "—"}d rest. Back-to-back / 3-in-4 fatigue is amplifying foul pressure and pace collapse risk.`
+        : `League foul volume is driving this risk, not the schedule: the league averages ${leagueFoulAverage} fouls/game (rest is ${homeRestDays ?? "—"}d / ${awayRestDays ?? "—"}d - no back-to-back stress measured). High foul volume amplifies foul pressure and pace collapse risk.`
       : fatigueRisk === "MODERATE"
       ? `Moderate rest imbalance. Monitor warmups and minutes management for late-game fatigue fouls.`
       : `Schedule profile stable. No critical back-to-back or 3-in-4 fatigue signal detected.`;
@@ -345,10 +383,17 @@ export async function fetchResearchData(
   const awayFgPct: number | null = awayFgPctRaw == null ? null : normalizePercent(awayFgPctRaw);
   const homeOffPpg = parseNumber(apiData.homeOffPpg ?? apiData.home_off_ppg ?? apiData.homeOffensePpg ?? homeArenaPPG, 0);
   const awayOffPpg = parseNumber(apiData.awayOffPpg ?? apiData.away_off_ppg ?? apiData.awayOffensePpg ?? awayRoadPPG, 0);
-  const homeDefPpg = parseNumber(apiData.homeDefPpg ?? apiData.home_def_ppg ?? apiData.homeDefensePpg ?? homeArenaPPG, 0);
-  const awayDefPpg = parseNumber(apiData.awayDefPpg ?? apiData.away_def_ppg ?? apiData.awayDefensePpg ?? awayRoadPPG, 0);
-  const homePointDiff = parseFloat((homeOffPpg - awayDefPpg).toFixed(1));
-  const awayPointDiff = parseFloat((awayOffPpg - homeDefPpg).toFixed(1));
+  // Defensive PPG is the measured points-ALLOWED average or NOTHING.
+  // The old fallback substituted the team's own OFFENSIVE PPG: the
+  // panel printed "PPG DEFENSE 85.5" for a team whose real allowed
+  // average was 74.2 - a fabricated defensive profile feeding the
+  // point-diff rows below.
+  const homeDefPpgRaw = apiData.homeDefPpg ?? apiData.home_def_ppg ?? apiData.homeDefensePpg;
+  const homeDefPpg: number | null = homeDefPpgRaw == null ? null : parseNumber(homeDefPpgRaw, 0);
+  const awayDefPpgRaw = apiData.awayDefPpg ?? apiData.away_def_ppg ?? apiData.awayDefensePpg;
+  const awayDefPpg: number | null = awayDefPpgRaw == null ? null : parseNumber(awayDefPpgRaw, 0);
+  const homePointDiff: number | null = awayDefPpg == null ? null : parseFloat((homeOffPpg - awayDefPpg).toFixed(1));
+  const awayPointDiff: number | null = homeDefPpg == null ? null : parseFloat((awayOffPpg - homeDefPpg).toFixed(1));
   // No endpoint in the repo returns lead-time fields, so a missing value must
   // render as "no data" ("--", the UI's own placeholder) — never "0% in lead",
   // which would present an unmeasured zero as a measured one.
@@ -394,6 +439,19 @@ export async function fetchResearchData(
     homeForm50,
     awayForm50,
     h2h50,
+    h2hMeetings: apiData.h2hMeetings ?? null,
+    h2hHomeWins: apiData.h2hHomeWins ?? null,
+    h2hAwayWins: apiData.h2hAwayWins ?? null,
+    homeSteals,
+    awaySteals,
+    homeTurnovers,
+    awayTurnovers,
+    homeRebounds,
+    awayRebounds,
+    homeAssists,
+    awayAssists,
+    homeBlocks,
+    awayBlocks,
     recentTotals,
     fatigueRisk,
     fatigueNote,

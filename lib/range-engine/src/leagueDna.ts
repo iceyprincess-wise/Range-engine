@@ -175,14 +175,13 @@ export function getLeagueDNA(league: string) {
     return { ...LEAGUE_DNA_PROFILES.EUROLEAGUE, key: "EUROLEAGUE" };
   if (lg.includes("ACB") || (lg.includes("SPAIN") && lg.includes("BASKET")))
     return { ...LEAGUE_DNA_PROFILES.ACB, key: "ACB" };
-  if (
-    lg.includes("RUSSIA") ||
-    lg.includes("VTB") ||
-    lg.includes("SUPERLIGA") ||
-    lg.includes("SUPER LIGA") ||
-    lg.includes("PBL") ||
-    lg.includes("PARI")
-  )
+  // SUPERLIGA / SUPER LIGA / PBL / PARI were dropped as bare tokens:
+  // "Superliga" is the top-flight name in many countries - Albania's
+  // Superliga was served this Russian grind profile (proven against
+  // the warehouse, 2026-11-08). A genuine Russian entry carries
+  // RUSSIA in the league string (country-prefixed) or plays in the
+  // VTB United League.
+  if (lg.includes("RUSSIA") || lg.includes("VTB"))
     return { ...LEAGUE_DNA_PROFILES.RUSSIA, key: "RUSSIA" };
   if (lg.includes("GERMAN") || lg.includes("BBL") || lg.includes("BUNDESLIGA"))
     return { ...LEAGUE_DNA_PROFILES.GERMANY, key: "GERMANY" };

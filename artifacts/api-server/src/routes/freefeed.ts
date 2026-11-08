@@ -129,6 +129,23 @@ const parseEspnBoxscore = (summary: any): any => {
   const foulsH = Number(get(home, "fouls")), foulsA = Number(get(away, "fouls"));
   if (Number.isFinite(foulsH) && Number.isFinite(foulsA))
     out.totalFouls = { hv: foulsH, ht: null, av: foulsA, at: null };
+  // Counting stats: ESPN publishes these as plain display values, not
+  // made-attempted pairs (names verified live against the NBA summary
+  // payload, 2026-11-08). Banked under the same store keys the paid
+  // enrichment uses - ESPN calls rebounds "totalRebounds"; the store
+  // key is "rebounds" - so prematch averages both sources identically.
+  // Written only when BOTH sides report the stat.
+  const count = (name: string) => {
+    const hv = Number(get(home, name)), av = Number(get(away, name));
+    return Number.isFinite(hv) && Number.isFinite(av) ? { hv, ht: null, av, at: null } : null;
+  };
+  const stl = count("steals"); if (stl) out.steals = stl;
+  const tov = count("turnovers"); if (tov) out.turnovers = tov;
+  const ast = count("assists"); if (ast) out.assists = ast;
+  const blk = count("blocks"); if (blk) out.blocks = blk;
+  const reb = count("totalRebounds"); if (reb) out.rebounds = reb;
+  const oreb = count("offensiveRebounds"); if (oreb) out.offensiveRebounds = oreb;
+  const dreb = count("defensiveRebounds"); if (dreb) out.defensiveRebounds = dreb;
   return out;
 };
 

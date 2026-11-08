@@ -796,8 +796,16 @@ export function RangeEngine() {
   };
   const settleAndGrade = async (entry: HistoryEntry) => {
     try {
-      const r = await fetch(`${API_BASE}/api/v1/result?homeTeam=${encodeURIComponent(entry.homeTeam)}&awayTeam=${encodeURIComponent(entry.awayTeam)}`).then((x) => (x.ok ? x.json() : null));
+      const r = await fetch(`${API_BASE}/api/v1/result?homeTeam=${encodeURIComponent(entry.homeTeam)}&awayTeam=${encodeURIComponent(entry.awayTeam)}&date=${encodeURIComponent(entry.date)}`).then((x) => (x.ok ? x.json() : null));
       if (!r?.settled || r.total == null) return false;
+      // Settlement identity, verified client-side too: the returned
+      // game must have started within a day of THIS fixture's date.
+      // Without the date, the warehouse answered with the pair's
+      // previous meeting and receipts "settled" before tip-off.
+      if (r.startTimestamp != null && entry.date) {
+        const gameDay = new Date(r.startTimestamp * 1000).toISOString().slice(0, 10);
+        if (Math.abs(Date.parse(gameDay) - Date.parse(entry.date)) > 86400000) return false;
+      }
       const res: any = entry.result;
       const dec: string = res?.decision ?? "";
       let outcome: HistoryEntry["outcome"] = "PUSH";
@@ -1943,9 +1951,9 @@ MATCH CONTEXT — Rule 1 (Time Sync)
                                       HOME TEAM
                                     </span>
                                     <div className="flex gap-1 text-xs font-mono font-bold">
-                                      <span className="text-green-500">{(safeStringArray(researchData?.homeRecentForm).filter((v) => v === "W").length)}W</span>
+                                      <span className="text-green-500">{researchData?.h2hMeetings != null ? `${researchData.h2hHomeWins ?? 0}W` : "--"}</span>
                                       <span className="text-zinc-600">-</span>
-                                      <span className="text-red-500">{(safeStringArray(researchData?.homeRecentForm).filter((v) => v === "L").length)}L</span>
+                                      <span className="text-red-500">{researchData?.h2hMeetings != null ? `${researchData.h2hAwayWins ?? 0}L` : "--"}</span>
                                     </div>
                                     <span className="text-yellow-400 font-bold text-sm">
                                       AWAY TEAM
@@ -2025,6 +2033,50 @@ MATCH CONTEXT — Rule 1 (Time Sync)
                                     </span>
                                     <span className="text-yellow-300 w-12 text-center">
                                       {formatPercentValue(researchData?.awayFgPct)}
+                                    </span>
+                                  </div>
+                                  <div className="flex justify-between items-center border-b border-yellow-950 pb-1">
+                                    <span className="text-yellow-300 w-12 text-center">
+                                      {researchData?.homeSteals ?? "--"}
+                                    </span>
+                                    <span className="text-zinc-500 flex-1 text-center text-[10px]">
+                                      STEALS /G
+                                    </span>
+                                    <span className="text-yellow-300 w-12 text-center">
+                                      {researchData?.awaySteals ?? "--"}
+                                    </span>
+                                  </div>
+                                  <div className="flex justify-between items-center border-b border-yellow-950 pb-1">
+                                    <span className="text-yellow-300 w-12 text-center">
+                                      {researchData?.homeTurnovers ?? "--"}
+                                    </span>
+                                    <span className="text-zinc-500 flex-1 text-center text-[10px]">
+                                      TURNOVERS /G
+                                    </span>
+                                    <span className="text-yellow-300 w-12 text-center">
+                                      {researchData?.awayTurnovers ?? "--"}
+                                    </span>
+                                  </div>
+                                  <div className="flex justify-between items-center border-b border-yellow-950 pb-1">
+                                    <span className="text-yellow-300 w-12 text-center">
+                                      {researchData?.homeRebounds ?? "--"}
+                                    </span>
+                                    <span className="text-zinc-500 flex-1 text-center text-[10px]">
+                                      REBOUNDS /G
+                                    </span>
+                                    <span className="text-yellow-300 w-12 text-center">
+                                      {researchData?.awayRebounds ?? "--"}
+                                    </span>
+                                  </div>
+                                  <div className="flex justify-between items-center border-b border-yellow-950 pb-1">
+                                    <span className="text-yellow-300 w-12 text-center">
+                                      {researchData?.homeAssists ?? "--"}
+                                    </span>
+                                    <span className="text-zinc-500 flex-1 text-center text-[10px]">
+                                      ASSISTS /G
+                                    </span>
+                                    <span className="text-yellow-300 w-12 text-center">
+                                      {researchData?.awayAssists ?? "--"}
                                     </span>
                                   </div>
                                   <div className="flex justify-between items-center bg-black/30 rounded py-1 px-2 mt-2">
@@ -3352,7 +3404,7 @@ Unavailable data is labeled — never invented.`);
                     const level = worst > 6 ? "HIGH" : worst > 3 ? "MODERATE" : "LOW";
                     return (
                       <div className="space-y-1">
-                        <p className="text-[10px] text-zinc-300">2nd-half fade: {homeTeam} {fadeH > 0 ? `-${fadeH}` : `+${Math.abs(fadeH)}`} pts ({hn}g) · {awayTeam} {fadeA > 0 ? `-${fadeA}` : `+${Math.abs(fadeA)}`} pts ({an}g)</p>
+                        <p className="text-[10px] text-zinc-300">2nd-half fade: {homeTeam} {fadeH} pts ({hn}g) · {awayTeam} {fadeA} pts ({an}g)</p>
                         <p className={`text-[10px] font-bold ${level === "HIGH" ? "text-red-400" : level === "MODERATE" ? "text-yellow-400" : "text-zinc-400"}`}>
                           STALL RISK: {level} — fused with Collapse % {researchData?.collapsePct ?? 0}% feeding Rule 7 automatically.
                         </p>

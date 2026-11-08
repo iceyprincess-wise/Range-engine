@@ -100,6 +100,8 @@ const gamesForTeam = (teamId: number) =>
 const summarize = (games: any[], teamId: number) => {
   const homePts: number[] = [];
   const roadPts: number[] = [];
+  const homeAllowed: number[] = [];
+  const roadAllowed: number[] = [];
   const totals: number[] = [];
   const form: string[] = [];
   for (const g of games) {
@@ -107,6 +109,7 @@ const summarize = (games: any[], teamId: number) => {
     const scored = pts(g, isHome ? "home" : "away") as number;
     const allowed = pts(g, isHome ? "away" : "home") as number;
     (isHome ? homePts : roadPts).push(scored);
+    (isHome ? homeAllowed : roadAllowed).push(allowed);
     totals.push(scored + allowed);
     if (form.length < 5) form.push(scored > allowed ? "W" : "L");
   }
@@ -116,6 +119,13 @@ const summarize = (games: any[], teamId: number) => {
     formLast5: form.join(""),
     homeArenaPPG: avg(homePts),
     awayRoadPPG: avg(roadPts),
+    // Measured points-ALLOWED averages (the per-game `allowed` was
+    // computed but only ever used for totals and W/L form). Research
+    // maps these to defensive PPG; without them the UI fell back to
+    // printing the team's OFFENSIVE PPG as its "defense".
+    homeArenaAllowed: avg(homeAllowed),
+    awayRoadAllowed: avg(roadAllowed),
+    avgAllowed: avg([...homeAllowed, ...roadAllowed]),
     avgTotal: avg(totals),
     // Real per-game totals (newest first) so the client can run the
     // Rule 16 variance check against actual recent scoring, not averages.
@@ -178,6 +188,7 @@ const enrichStats = async (games: any[], max: number) => {
 
 const teamShooting = (games: any[], teamId: number) => {
   let ftM = 0, ftA = 0, p3M = 0, p3A = 0, fgM = 0, fgA = 0, p2M = 0, p2A = 0, fouls = 0, foulN = 0, n = 0;
+  let stlSum = 0, stlN = 0, tovSum = 0, tovN = 0, rebSum = 0, rebN = 0, astSum = 0, astN = 0, blkSum = 0, blkN = 0;
   for (const g of games) {
     const s = store.stats[g.id];
     if (!s) continue;
@@ -192,6 +203,15 @@ const teamShooting = (games: any[], teamId: number) => {
     if (fg?.a) { fgM += fg.m; fgA += fg.a; }
     if (fg?.a && p3?.a) { p2M += fg.m - p3.m; p2A += fg.a - p3.a; }
     if (fl != null) { fouls += fl; foulN++; }
+    // Counting stats (Ed's added parameters): banked by BOTH providers
+    // under these keys, previously averaged by nobody. Each stat keeps
+    // its own denominator - a game only counts toward stats it carries.
+    const cnt = (k: string) => { const it = s[k]; if (!it) return null; const v = isHome ? it.hv : it.av; return typeof v === "number" ? v : null; };
+    const stl = cnt("steals"); if (stl != null) { stlSum += stl; stlN++; }
+    const tov = cnt("turnovers"); if (tov != null) { tovSum += tov; tovN++; }
+    const reb = cnt("rebounds"); if (reb != null) { rebSum += reb; rebN++; }
+    const ast = cnt("assists"); if (ast != null) { astSum += ast; astN++; }
+    const blk = cnt("blocks"); if (blk != null) { blkSum += blk; blkN++; }
   }
   const pct = (m: number, a: number) => (a ? +((m / a) * 100).toFixed(1) : null);
   return {
@@ -204,6 +224,11 @@ const teamShooting = (games: any[], teamId: number) => {
     pt2Pct: pct(p2M, p2A),
     ftAttemptsPerGame: n ? +(ftA / n).toFixed(1) : null,
     foulsPerGame: foulN ? +(fouls / foulN).toFixed(1) : null,
+    stealsPerGame: stlN ? +(stlSum / stlN).toFixed(1) : null,
+    turnoversPerGame: tovN ? +(tovSum / tovN).toFixed(1) : null,
+    reboundsPerGame: rebN ? +(rebSum / rebN).toFixed(1) : null,
+    assistsPerGame: astN ? +(astSum / astN).toFixed(1) : null,
+    blocksPerGame: blkN ? +(blkSum / blkN).toFixed(1) : null,
   };
 };
 // Per-game foul / FT-attempt series for one team, OLDEST -> NEWEST:
@@ -275,6 +300,15 @@ router.get("/v1/prematch", async (req: Request, res: Response) => {
     });
     const h2hTotals = h2hGames.map((e: any) => (pts(e, "home") as number) + (pts(e, "away") as number));
     const h2hAvgTotal = h2hTotals.length ? h2hTotals.reduce((s, v) => s + v, 0) / h2hTotals.length : null;
+    // Real head-to-head record from the FIXTURE home team's
+    // perspective. The UI's H2H box previously counted the home
+    // team's last-5 FORM letters and presented them as an H2H record
+    // ("5W - 0L" from a single banked meeting, proven live 2026-11-08).
+    const h2hHomeWins = h2hGames.filter((e: any) => {
+      const hs = pts(e, "home") as number, as = pts(e, "away") as number;
+      return e.homeTeam?.id === home.id ? hs > as : as > hs;
+    }).length;
+    const h2hAwayWins = h2hGames.length - h2hHomeWins;
 
     persist();
     return res.json({
@@ -286,7 +320,7 @@ router.get("/v1/prematch", async (req: Request, res: Response) => {
       fetchedAt: new Date().toISOString(),
       home: { id: home.id, name: home.name, ...summarize(homeGames, home.id), quarters: quarterProfile(homeGames), shooting: teamShooting(homeGames, home.id), shootingSeries: shootingSeries(homeGames, home.id), restDays: homeGames[0]?.startTimestamp ? Math.max(0, Math.floor((Date.now() / 1000 - homeGames[0].startTimestamp) / 86400)) : null },
       away: { id: away.id, name: away.name, ...summarize(awayGames, away.id), quarters: quarterProfile(awayGames), shooting: teamShooting(awayGames, away.id), shootingSeries: shootingSeries(awayGames, away.id), restDays: awayGames[0]?.startTimestamp ? Math.max(0, Math.floor((Date.now() / 1000 - awayGames[0].startTimestamp) / 86400)) : null },
-      h2h: { meetings: h2hGames.length, avgTotal: h2hAvgTotal, totals: h2hTotals },
+      h2h: { meetings: h2hGames.length, avgTotal: h2hAvgTotal, totals: h2hTotals, homeWins: h2hHomeWins, awayWins: h2hAwayWins },
       warehouse: { storedGames: Object.keys(store.games).length, storedTeams: Object.keys(store.teams).length },
       quota,
     });
