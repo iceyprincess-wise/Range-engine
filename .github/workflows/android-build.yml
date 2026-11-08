@@ -40,7 +40,13 @@ jobs:
         env:
           PORT: 5173
           BASE_PATH: /
-          VITE_API_BASE: /
+          # The APK bundle is served by Capacitor's local server, which
+          # has no /api proxy (the vite dev proxy only exists in
+          # `pnpm dev`). A relative base ("/") makes every API call
+          # 404 inside the app, so the APK mounts but can never load
+          # data. Point at the deployed api-server (same backend the
+          # Render web UI uses; CORS is wide open).
+          VITE_API_BASE: https://range-engine-v3.onrender.com
         run: pnpm run build
         
       - name: Sync Capacitor Android
