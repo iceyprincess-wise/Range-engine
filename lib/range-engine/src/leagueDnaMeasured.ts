@@ -122,11 +122,14 @@ export function resolveMeasuredKey(leagueUpper: string): string | null {
 // ─── Shrinkage ───────────────────────────────────────────────────────────────
 // Continuous, no cliff: a 6-game league is not silently promoted to fact, and a
 // 12-game league is not thrown away. w = n / (n + SHRINK_K).
-//   n=4 -> 0.21 · n=10 -> 0.40 · n=17 -> 0.53 · n=40 -> 0.73 · n=82 -> 0.85
+//   n=4 -> 0.80 · n=10 -> 0.91 · n=17 -> 0.94 · n=40 -> 0.98 · n=82 -> 0.99
 export const dnaWeight = (n: number): number =>
   Math.round((n / (n + SHRINK_K)) * 1000) / 1000;
 
-export function isStale(lastGame: string, asOf: string = DNA_SNAPSHOT_AT): boolean {
+// Default asOf is TODAY, not the frozen snapshot date: staleness is a
+// property of the calendar, and comparing against 2026-11-07 forever
+// would silently stop flagging leagues as they age past 180 days.
+export function isStale(lastGame: string, asOf: string = new Date().toISOString().slice(0, 10)): boolean {
   const days = (Date.parse(asOf) - Date.parse(lastGame)) / 86400000;
   return days > STALE_DAYS;
 }

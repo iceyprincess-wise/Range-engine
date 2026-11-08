@@ -57,16 +57,26 @@ export const LiveMatrixHub: React.FC<LiveMatrixHubProps> = ({ history, setHistor
       let newRefMap: Record<string, any> = {};
 
       pendingGames.forEach(game => {
-        // Parse the fixture name (e.g., "Lakers vs Warriors")
+        // History entries carry homeTeam/awayTeam as separate fields —
+        // there is no `fixture` string on them, so the old parse produced
+        // two empty strings and the board could NEVER match a live game
+        // (live display + auto-settlement were dead for every current
+        // entry). The legacy fixture string stays as a fallback for old
+        // saved entries.
         const fixture = String(game.fixture || "");
-        const [homePart, awayPart] = fixture.split(" vs ");
-        const safeHome = homePart?.trim().toLowerCase() || "";
-        const safeAway = awayPart?.trim().toLowerCase() || "";
+        const [fixtureHome, fixtureAway] = fixture.split(" vs ");
+        const safeHome = String(game.homeTeam || fixtureHome || "").trim().toLowerCase();
+        const safeAway = String(game.awayTeam || fixtureAway || "").trim().toLowerCase();
 
-        // Hunt for the matching game in the API response
+        // Hunt for the matching game in the API response.
+        // BOTH sides must match (either direction per side, as in the
+        // server's safeMatch): the old OR test linked the first live game
+        // involving EITHER team — a wrong game could settle this entry.
+        const sideMatch = (stored: string, query: string) =>
+          stored.length > 0 && query.length > 0 && (stored.includes(query) || query.includes(stored));
         const matchedApiGame = liveEvents.find((evt: any) =>
-          (safeHome !== "" && evt.homeTeam?.name?.toLowerCase().includes(safeHome)) ||
-          (safeAway !== "" && evt.awayTeam?.name?.toLowerCase().includes(safeAway))
+          sideMatch((evt.homeTeam?.name || "").toLowerCase(), safeHome) &&
+          sideMatch((evt.awayTeam?.name || "").toLowerCase(), safeAway)
         );
 
         if (matchedApiGame) {

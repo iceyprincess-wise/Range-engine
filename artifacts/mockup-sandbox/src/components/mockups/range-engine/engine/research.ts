@@ -9,6 +9,8 @@ export async function fetchResearchData(
   gameId?: string,
   bookmaker?: string,
 ): Promise<ResearchData> {
+  const researchStartedAt = Date.now();
+  let sourcesScanned = 0;
   const params = new URLSearchParams({
     league: league || "",
     homeTeam: homeTeam || "",
@@ -25,7 +27,7 @@ export async function fetchResearchData(
       awayTeam: awayTeam || "",
     });
     const preResponse = await fetch(`${API_BASE}/api/v1/prematch?${preParams.toString()}`);
-    if (preResponse.ok) preData = await preResponse.json();
+    if (preResponse.ok) { preData = await preResponse.json(); sourcesScanned++; }
     else { try { preErr = (await preResponse.json())?.error ?? null; } catch { /* ignore */ } }
   } catch (e) {
     preData = null;
@@ -35,6 +37,7 @@ export async function fetchResearchData(
   try {
     const ldRes = await fetch(`${API_BASE}/api/v1/league-dna?league=${encodeURIComponent(league || "")}`);
     if (ldRes.ok) {
+      sourcesScanned++;
       const ld = await ldRes.json();
       if (ld?.measured) leagueDnaMeasured = { games: ld.games, avgTotal: ld.avgTotal, sd: ld.sd };
     }
@@ -47,6 +50,7 @@ export async function fetchResearchData(
   }
 
   const apiData: any = response && response.ok ? await response.json() : {};
+  if (response && response.ok) sourcesScanned++;
 
   if (preData) {
     apiData.provenance = "real";
@@ -72,6 +76,13 @@ export async function fetchResearchData(
     apiData.awayFoulRate = preData.away?.shooting?.foulsPerGame ?? apiData.awayFoulRate;
     apiData.homeRestDays = preData.home?.restDays ?? apiData.homeRestDays;
     apiData.awayRestDays = preData.away?.restDays ?? apiData.awayRestDays;
+    // Pool the REAL recent game totals (both teams + H2H meetings) for the
+    // Rule 16 variance gate in runEngine.
+    apiData.recentTotals = [
+      ...(Array.isArray(preData.home?.recentTotals) ? preData.home.recentTotals : []),
+      ...(Array.isArray(preData.away?.recentTotals) ? preData.away.recentTotals : []),
+      ...(Array.isArray(preData.h2h?.totals) ? preData.h2h.totals : []),
+    ];
     // Quarters-derived collapse must be computed BEFORE the fade note below,
     // which quotes it ("Peak collapse X%"); previously it was computed after.
     const qc = [preData.home?.quarters?.collapsePct, preData.away?.quarters?.collapsePct].filter(Boolean);
@@ -163,14 +174,18 @@ export async function fetchResearchData(
     apiData.awayRoadPPG ?? apiData.away_road_ppg ?? apiData.away_ppg,
     0,
   );
+  // Fallback is 0 ("no H2H data"), NEVER home+away PPG: the old fallback
+  // fabricated an H2H average from the arena splits, which then enabled
+  // the 60/40 weighted PPG in runEngine on invented data.
   const h2hAvgTotal = parseNumber(
     apiData.h2hAvgTotal ?? apiData.h2h_avg_total ?? apiData.h2h_total,
-    homeArenaPPG + awayRoadPPG,
+    0,
   );
   const collapsePct = parseNumber(
     apiData.collapsePct ?? apiData.collapse_pct ?? apiData.collapse_probability,
     0,
   );
+  const recentTotals = parseNumberArray(apiData.recentTotals ?? []);
 
   const seasonHomeInjuries = formatInjuryNotes(
     apiData.homeInjuries ?? apiData.home_injuries ?? apiData.home_injury_note,
@@ -311,15 +326,22 @@ export async function fetchResearchData(
     homeForm50,
     awayForm50,
     h2h50,
+    recentTotals,
     fatigueRisk,
     fatigueNote,
     foulEngineStatus,
     foulEngineNote,
-    sourcesScanned: apiData.sourcesScanned ?? 0,
-    researchMs: apiData.researchMs ?? 0,
+    // Truthful scan accounting: endpoints that actually returned data in
+    // THIS call, and the real elapsed time — the sync payload never
+    // carried these fields, so the panel previously always showed 0 / 0ms.
+    sourcesScanned,
+    researchMs: Date.now() - researchStartedAt,
     // Compatibility fields expected by UI
-    homeRecentForm: apiData.homeFormString ? String(apiData.homeFormString).split("") : (apiData.homeRecentForm ?? apiData.home_recent_form) || Array.from({ length: 5 }, (_, i) => (homeForm50[i] ?? 1) > (homeArenaPPG ? homeArenaPPG * 0.95 : 0) ? "W" : "L"),
-    awayRecentForm: apiData.awayFormString ? String(apiData.awayFormString).split("") : (apiData.awayRecentForm ?? apiData.away_recent_form) || Array.from({ length: 5 }, (_, i) => (awayForm50[i] ?? 1) > (awayRoadPPG ? awayRoadPPG * 0.95 : 0) ? "W" : "L"),
+    // No form string and no supplied form array means NO form data: the old
+    // fallback invented a W/L sequence by comparing a dummy 1 against the
+    // arena PPG (almost always five fabricated "L"s). Empty = honest.
+    homeRecentForm: apiData.homeFormString ? String(apiData.homeFormString).split("") : (apiData.homeRecentForm ?? apiData.home_recent_form) || [],
+    awayRecentForm: apiData.awayFormString ? String(apiData.awayFormString).split("") : (apiData.awayRecentForm ?? apiData.away_recent_form) || [],
     homeFreeThrowPct: homeFt,
     awayFreeThrowPct: awayFt,
     homeThreePtPct: homePt3,

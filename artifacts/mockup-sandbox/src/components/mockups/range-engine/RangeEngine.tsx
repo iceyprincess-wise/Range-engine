@@ -535,7 +535,7 @@ export function RangeEngine() {
               sourceNodes:
                 Array.isArray(apiData.sourceNodes) && apiData.sourceNodes.length > 0
                   ? apiData.sourceNodes
-                  : [`Live node connected to ${homeTeam} vs ${awayTeam}`],
+                  : [`BasketAPI prematch endpoint — warehouse + provider data for ${homeTeam} vs ${awayTeam} (no source-node list returned)`],
             });
             
             setResearch((r) => ({ ...r, progress: 70 }));
@@ -589,10 +589,10 @@ export function RangeEngine() {
                 progress: 100,
                 node: 8,
                 done: true,
-                cameo: "> GENUINE API DATA HUNT COMPLETE - AUTHENTIC PAYLOAD SECURED",
-                confidence: "100.00",
+                cameo: "> API DATA HUNT FAILED — DATA UNAVAILABLE (NO PAYLOAD SECURED)",
+                confidence: "0.00",
               }));
-              setScanPhase("Scan Complete ✓");
+              setScanPhase("Scan Failed — API Unavailable");
             }
           }
         })();
@@ -837,11 +837,30 @@ export function RangeEngine() {
       const finalInjuries = String(
         payload.lateScratches ?? payload.scratches ?? payload.late_injury_note ?? "",
       );
+      const lateScratch = /scratch|out|questionable|doubtful/i.test(finalInjuries);
+      // The sync payload carries NO closing-line fields (it is a live-score
+      // payload), so finalOver/finalUnder are 0 whenever they are absent —
+      // and |0 − line| made EVERY revalidation report a fake LATE_SHIFT.
+      // With no closing lines and no scratch notice there is nothing to
+      // verify against: say so honestly instead of inventing a shift.
+      if (finalOver <= 0 && finalUnder <= 0 && !lateScratch) {
+        const inconclusive = history.map((item) => {
+          if (item.id !== entry.id) return item;
+          return {
+            ...item,
+            revalidationRequested: true,
+            revalidationStatus: "AWAITING_SYNC" as HistoryEntry["revalidationStatus"],
+            lastRevalidationMsg: "Final sync returned no closing-line data — revalidation inconclusive; no shift claimed.",
+          };
+        });
+        setHistory(inconclusive);
+        saveHistory(inconclusive);
+        return;
+      }
       const lineShift = Math.max(
         Math.abs(finalOver - parseFloat(entry.overHigh)),
         Math.abs(finalUnder - parseFloat(entry.underHigh)),
       );
-      const lateScratch = /scratch|out|questionable|doubtful/i.test(finalInjuries);
       const lateShiftDetected = lineShift > 2 || lateScratch;
       const newStatus: HistoryEntry["revalidationStatus"] = lateShiftDetected
         ? "LATE_SHIFT"
@@ -917,26 +936,19 @@ export function RangeEngine() {
     setResearchPhase("researching");
     setResearchError(null);
 
-    // Start genuine async research intelligence scan (6-10 seconds)
+    // Genuine async research scan — the fetch below IS the scan
     const timer = setTimeout(async () => {
       try {
         // Phase 1: Initialize research scan
         setResearchData(null);
         setResearchProgress(0);
 
-        // Phase 2: Fetch league DNA and team profiles (2-3 seconds)
-        setResearchProgress(20);
-        await new Promise((r) => setTimeout(r, 2000 + Math.random() * 1000));
+        // League DNA, team profiles and H2H arrive in the single real
+        // fetch below — progress tracks that fetch, with no artificial
+        // delays staged in front of it.
         setResearchProgress(40);
-
-        // Phase 3: Cross-reference H2H records (2-3 seconds)
-        setResearchProgress(60);
-        await new Promise((r) => setTimeout(r, 2000 + Math.random() * 1000));
         setResearchProgress(80);
-
-        // Phase 4: Calculate statistical DNA (1-2 seconds)
         setResearchProgress(90);
-        await new Promise((r) => setTimeout(r, 1000 + Math.random() * 1000));
 
         // Retrieve expanded 50-game analytics from the live telemetry payload
         const data = await fetchResearchDataCached(homeTeam, awayTeam, league, gameId, bookmaker);
@@ -1042,6 +1054,7 @@ export function RangeEngine() {
             rd?.h2hAvgTotal
           ),
           collapse_pct: rd?.collapsePct ?? 0,
+          recent_totals: rd?.recentTotals,
           league_measured: rd?.leagueDnaMeasured ?? null,
         });
         setTimeout(() => {
@@ -1102,8 +1115,20 @@ export function RangeEngine() {
           home_ft: researchData?.homeFt, away_ft: researchData?.awayFt,
           home_pt3: researchData?.homePt3, away_pt3: researchData?.awayPt3,
           home_arena_ppg: researchData?.homeArenaPPG, away_arena_ppg: researchData?.awayRoadPPG,
-          h2h_avg_total: researchData?.h2hAvgTotal, use_weighted: true,
+          h2h_avg_total: researchData?.h2hAvgTotal,
+          // Same inputs as the primary analysis — the reconfirm previously
+          // omitted every foul/rest/referee/weighted field, so Rule 10 ran
+          // on different data and any "variance" could be an artifact of
+          // the missing inputs, not of the game.
+          homeFoulRate: researchData?.homeFoulRate, awayFoulRate: researchData?.awayFoulRate,
+          homeFtAttempts: researchData?.homeFtAttempts, awayFtAttempts: researchData?.awayFtAttempts,
+          leagueFoulAverage: researchData?.leagueFoulAverage, refereeStrictness: researchData?.refereeStrictness,
+          homeRestDays: researchData?.homeRestDays, awayRestDays: researchData?.awayRestDays,
+          homeFoulWeightedAvg: researchData?.homeFoulWeightedAvg, awayFoulWeightedAvg: researchData?.awayFoulWeightedAvg,
+          homeFtAttemptWeightedAvg: researchData?.homeFtAttemptWeightedAvg, awayFtAttemptWeightedAvg: researchData?.awayFtAttemptWeightedAvg,
+          use_weighted: !!(researchData?.homeArenaPPG && researchData?.awayRoadPPG && researchData?.h2hAvgTotal),
           collapse_pct: researchData?.collapsePct ?? 0,
+          recent_totals: researchData?.recentTotals,
           league_measured: researchData?.leagueDnaMeasured ?? null,
           is_rerun: true,
           rerun_timestamp: new Date().toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", second: "2-digit" }),
@@ -1918,7 +1943,7 @@ MATCH CONTEXT — Rule 1 (Time Sync)
                                       Home vs Other (L5)
                                     </h4>
                                     <div className="text-sm font-mono font-bold flex gap-1">
-                                      {(researchData?.homeRecentForm ?? ["W","W","L","W","L"]).map((item, index) => (
+                                      {(researchData?.homeRecentForm ?? []).map((item, index) => (
                                         <span key={index} className={item === "W" ? "text-green-500" : "text-red-500"}>
                                           {item}
                                         </span>
@@ -1930,7 +1955,7 @@ MATCH CONTEXT — Rule 1 (Time Sync)
                                       Away vs Other (L5)
                                     </h4>
                                     <div className="text-sm font-mono font-bold flex gap-1">
-                                      {(researchData?.awayRecentForm ?? ["L","W","L","L","W"]).map((item, index) => (
+                                      {(researchData?.awayRecentForm ?? []).map((item, index) => (
                                         <span key={index} className={item === "W" ? "text-green-500" : "text-red-500"}>
                                           {item}
                                         </span>
@@ -2630,7 +2655,7 @@ Unavailable data is labeled — never invented.`);
                     {research.done && (
                       <Button
                         onClick={() => {
-                          alert(`LIVE SYNC SOURCE: BasketAPI live feed — match found and connected. No third-party scrapers used.`);
+                          alert(`LIVE SYNC SOURCE: BasketAPI via the prematch endpoint. The Dynamic Data Matrix above shows what was actually returned for this fixture.`);
                           setIsReportOpen(true);
                         }}
                         className="mt-3 w-full py-2 bg-yellow-600/20 hover:bg-yellow-600/40 border border-yellow-500/50 rounded text-[10px] text-yellow-300 font-bold tracking-widest uppercase transition-all duration-300 flex justify-center items-center gap-2 h-auto min-h-0 [&_svg]:size-3 whitespace-normal"

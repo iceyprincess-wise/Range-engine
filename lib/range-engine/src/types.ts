@@ -129,6 +129,7 @@ export interface ResearchData {
   leagueFoulAverage: number;
   refereeStrictness: number;
   leagueDnaMeasured?: { games: number; avgTotal: number; sd: number } | null;
+  recentTotals?: number[];
   homeQuarters?: any;
   awayQuarters?: any;
   homeForm50: number[];

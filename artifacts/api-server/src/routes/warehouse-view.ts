@@ -1,11 +1,14 @@
 import { Router, type Request, type Response } from "express";
 import fs from "node:fs";
 import path from "node:path";
-import { store } from "../lib/warehouse";
+import { store, resolveDataDir } from "../lib/warehouse";
 import { quota } from "../lib/quotaTracker";
 
 const router = Router();
-const STORE_PATH = path.join(process.cwd(), "data", "store.json");
+// Same data-dir resolution as the store itself (see lib/warehouse.ts):
+// process.cwd() is not guaranteed to be the api-server directory, and a
+// cwd-based path silently reported null mtime/size for the real store.
+const STORE_PATH = path.join(resolveDataDir(), "store.json");
 const dt = (g: any) => (g.startTimestamp ? new Date(g.startTimestamp * 1000).toISOString().slice(0, 10) : "?");
 const row = (g: any) => ({
   id: g.id, date: dt(g),

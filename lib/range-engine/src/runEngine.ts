@@ -24,6 +24,8 @@ export function runEngine(opts: {
   h2h_avg_total?: number;
   collapse_pct?: number;
   league_measured?: { games: number; avgTotal: number } | null;
+  // Real recent game totals (both teams, pooled) for the Rule 16 variance gate
+  recent_totals?: number[];
   homeFoulRate?: number;
   awayFoulRate?: number;
   homeFtAttempts?: number;
@@ -63,8 +65,12 @@ export function runEngine(opts: {
   const ws = reliability === "Weak" ? 0.6 : 1.0;
 
   // ── Statistical DNA: Weighted PPG (60/40 Arena/H2H) ───────────────────────
-  let homeEffPPG = opts.home_arena_ppg ?? H.avg_pts;
-  let awayEffPPG = opts.away_arena_ppg ?? A.avg_pts;
+  // A supplied arena PPG of 0/null means "no arena split in the warehouse"
+  // (research.ts maps a missing split to 0) — it is NOT a real average.
+  // Fall back to the team's overall average instead of building the whole
+  // range on a fabricated zero.
+  let homeEffPPG = opts.home_arena_ppg != null && opts.home_arena_ppg > 0 ? opts.home_arena_ppg : H.avg_pts;
+  let awayEffPPG = opts.away_arena_ppg != null && opts.away_arena_ppg > 0 ? opts.away_arena_ppg : A.avg_pts;
   let dnaWeighted = false;
   if (
     opts.use_weighted &&
@@ -273,24 +279,28 @@ export function runEngine(opts: {
   // (the 50-game arrays are never normalised there); the raw fallback
   // is already normalised upstream, so it is used as-is. Callers that
   // pass neither (e.g. backtest) are unaffected.
+  // research.ts supplies weightedAverage([]) === 0 when the 50-game arrays
+  // are empty (no endpoint returns them today), so a weighted value of 0
+  // means "no weighted data" — never let it erase the real scalar rates.
+  const hasW = (v?: number) => v != null && v > 0;
   const weightedFoul =
-    opts.homeFoulWeightedAvg != null ||
-    opts.awayFoulWeightedAvg != null ||
-    opts.homeFtAttemptWeightedAvg != null ||
-    opts.awayFtAttemptWeightedAvg != null;
-  const homeFoulRate =
-    opts.homeFoulWeightedAvg != null
-      ? normalizePercent(opts.homeFoulWeightedAvg)
-      : (opts.homeFoulRate ?? 0);
-  const awayFoulRate =
-    opts.awayFoulWeightedAvg != null
-      ? normalizePercent(opts.awayFoulWeightedAvg)
-      : (opts.awayFoulRate ?? 0);
+    hasW(opts.homeFoulWeightedAvg) ||
+    hasW(opts.awayFoulWeightedAvg) ||
+    hasW(opts.homeFtAttemptWeightedAvg) ||
+    hasW(opts.awayFtAttemptWeightedAvg);
+  const homeFoulRate = hasW(opts.homeFoulWeightedAvg)
+    ? normalizePercent(opts.homeFoulWeightedAvg!)
+    : (opts.homeFoulRate ?? 0);
+  const awayFoulRate = hasW(opts.awayFoulWeightedAvg)
+    ? normalizePercent(opts.awayFoulWeightedAvg!)
+    : (opts.awayFoulRate ?? 0);
   const totalFoulRate = homeFoulRate + awayFoulRate;
-  const homeFtAttempts =
-    opts.homeFtAttemptWeightedAvg ?? opts.homeFtAttempts ?? 0;
-  const awayFtAttempts =
-    opts.awayFtAttemptWeightedAvg ?? opts.awayFtAttempts ?? 0;
+  const homeFtAttempts = hasW(opts.homeFtAttemptWeightedAvg)
+    ? opts.homeFtAttemptWeightedAvg!
+    : (opts.homeFtAttempts ?? 0);
+  const awayFtAttempts = hasW(opts.awayFtAttemptWeightedAvg)
+    ? opts.awayFtAttemptWeightedAvg!
+    : (opts.awayFtAttempts ?? 0);
   const totalFtAttempts = homeFtAttempts + awayFtAttempts;
   const homeRestDays = opts.homeRestDays ?? 1;
   const awayRestDays = opts.awayRestDays ?? 1;
@@ -377,6 +387,11 @@ export function runEngine(opts: {
     );
 
   // ── Rule 8 Width Cap (applied after all expansions) ───────────────────────
+  // Rule 14 must judge the PRE-CAP width: once the cap below has run, the
+  // width can never exceed dna.maxWidth again, which made the Rule 14
+  // Volatility Kill unreachable (dead code) — every capped game silently
+  // passed. Capture the width the rules actually produced first.
+  const preCapWidth = parseFloat((hb - lb).toFixed(1));
   const maxHalfWidth = dna.maxWidth / 2;
   const mid_raw = (lb + hb) / 2;
   let widthCapped = false;
@@ -458,8 +473,34 @@ export function runEngine(opts: {
       status: "n/a",
     });
   } else {
-    const over_hammer = best_over_line < lb - hammer_edge_used;
-    const under_hammer = best_under_line > hb + hammer_edge_used;
+    let over_hammer = best_over_line < lb - hammer_edge_used;
+    let under_hammer = best_under_line > hb + hammer_edge_used;
+    // Rule 16 variance gate (Master Rulebook): a Hammer must ALSO sit
+    // outside the combined recent-game scoring variance. runEngine never
+    // received any recent totals before, so every Hammer fired on edge
+    // distance alone. recent_totals carries the teams' real recent game
+    // totals (prematch warehouse history, pooled). With fewer than 5 real
+    // totals there is no variance evidence, so no Hammer may fire; a
+    // surviving edge still flows into the normal Rule 12/13 chain below.
+    let variance_blocked = false;
+    if (over_hammer || under_hammer) {
+      const recent = (opts.recent_totals ?? []).filter((v) => Number.isFinite(v) && v > 0);
+      if (recent.length < 5) {
+        variance_blocked = true;
+        over_hammer = false;
+        under_hammer = false;
+      } else {
+        const recentMin = Math.min(...recent);
+        const recentMax = Math.max(...recent);
+        if (over_hammer && !(best_over_line < recentMin)) { over_hammer = false; variance_blocked = true; }
+        if (under_hammer && !(best_under_line > recentMax)) { under_hammer = false; variance_blocked = true; }
+      }
+      if (variance_blocked) {
+        triggered.push(
+          "Rule 16 (Hammer BLOCKED — variance): edge present but the line is not outside the combined recent-game variance (or <5 real recent totals) → Hammer stands down",
+        );
+      }
+    }
 
     if ((over_hammer || under_hammer) && !reliabilityBlocks) {
       hammer = true;
@@ -534,23 +575,23 @@ export function runEngine(opts: {
         rule: "Rule 16 — Hammer Play",
         lb_adj: 0,
         hb_adj: 0,
-        note: `No Hammer edge — over gap: ${over_edge.toFixed(1)}pts, under gap: ${under_edge.toFixed(1)}pts, threshold: ${hammer_edge_used}pts`,
+        note: variance_blocked ? "Hammer edge present but BLOCKED by the Rule 16 variance check (see triggered rules)" : `No Hammer edge — over gap: ${over_edge.toFixed(1)}pts, under gap: ${under_edge.toFixed(1)}pts, threshold: ${hammer_edge_used}pts`,
         status: "checked",
       });
     }
 
     if (!hammer) {
       // Rule 14 — Volatility Kill
-      if (range_width > dna.maxWidth) {
+      if (preCapWidth > dna.maxWidth) {
         vol_killed = true;
         triggered.push(
-          `Rule 14 (Volatility Kill): Width ${range_width} > ${dna.maxWidth} → Hard Kill → NO ACTION`,
+          `Rule 14 (Volatility Kill): Pre-cap width ${preCapWidth} > ${dna.maxWidth} → Hard Kill → NO ACTION`,
         );
         adj_log.push({
           rule: "Rule 14 — Volatility Kill",
           lb_adj: 0,
           hb_adj: 0,
-          note: `Width ${range_width} > limit ${dna.maxWidth} → KILLED`,
+          note: `Pre-cap width ${preCapWidth} > limit ${dna.maxWidth} → KILLED`,
           status: "triggered",
         });
       } else if (reliabilityBlocks) {
@@ -559,7 +600,7 @@ export function runEngine(opts: {
           rule: "Rule 14 — Volatility Kill",
           lb_adj: 0,
           hb_adj: 0,
-          note: `Not triggered | Width ${range_width} ≤ ${dna.maxWidth}`,
+          note: `Not triggered | Pre-cap width ${preCapWidth} ≤ ${dna.maxWidth}`,
           status: "checked",
         });
       } else {
@@ -567,7 +608,7 @@ export function runEngine(opts: {
           rule: "Rule 14 — Volatility Kill",
           lb_adj: 0,
           hb_adj: 0,
-          note: `Width ${range_width} ≤ ${dna.maxWidth} — PASS`,
+          note: `Pre-cap width ${preCapWidth} ≤ ${dna.maxWidth} — PASS`,
           status: "checked",
         });
         if (over_edge > overBuf) {
@@ -660,7 +701,7 @@ export function runEngine(opts: {
     );
   if (vol_killed)
     whyParts.push(
-      `Rule 14 Volatility Kill (width ${range_width}pts > ${dna.maxWidth})`,
+      `Rule 14 Volatility Kill (pre-cap width ${preCapWidth}pts > ${dna.maxWidth})`,
     );
   if (buf_blocked)
     whyParts.push(

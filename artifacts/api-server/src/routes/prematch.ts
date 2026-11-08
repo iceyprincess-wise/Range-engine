@@ -102,6 +102,9 @@ const summarize = (games: any[], teamId: number) => {
     homeArenaPPG: avg(homePts),
     awayRoadPPG: avg(roadPts),
     avgTotal: avg(totals),
+    // Real per-game totals (newest first) so the client can run the
+    // Rule 16 variance check against actual recent scoring, not averages.
+    recentTotals: totals.slice(0, 10),
   };
 };
 
