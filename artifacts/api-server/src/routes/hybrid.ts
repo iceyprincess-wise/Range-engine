@@ -13,14 +13,57 @@ const INBOX_PATH = path.join(resolveDataDir(), "hybrid-inbox.json");
 // tournament / startTimestamp / status all ride inside), so importing
 // them is a plain add-if-missing into the live store — no provider call,
 // no re-fetch, zero quota.
-type InboxFile = { games: any[]; updatedAt: string | null };
+// Inbox v2 also carries the stats map + team list for its games: v1
+// moved games only, so every restore silently lost the enrichment and
+// the receiving server re-bought it from the provider (up to 6 calls
+// per prematch). Old v1 files still read fine (maps default empty).
+type InboxFile = { games: any[]; stats: Record<string, any>; teams: any[]; updatedAt: string | null; parseError?: boolean };
 
 const readInbox = (): InboxFile => {
+  let raw: string;
+  try { raw = fs.readFileSync(INBOX_PATH, "utf8"); }
+  catch { return { games: [], stats: {}, teams: [], updatedAt: null }; } // no inbox yet
   try {
-    const parsed = JSON.parse(fs.readFileSync(INBOX_PATH, "utf8"));
-    if (parsed && Array.isArray(parsed.games)) return { games: parsed.games, updatedAt: parsed.updatedAt ?? null };
-    return { games: [], updatedAt: null };
-  } catch { return { games: [], updatedAt: null }; }
+    const parsed = JSON.parse(raw);
+    if (parsed && Array.isArray(parsed.games)) {
+      return {
+        games: parsed.games,
+        stats: parsed.stats && typeof parsed.stats === "object" ? parsed.stats : {},
+        teams: Array.isArray(parsed.teams) ? parsed.teams : [],
+        updatedAt: parsed.updatedAt ?? null,
+      };
+    }
+    console.error("hybrid: inbox file has no games array — treating it as corrupt; export is disabled");
+    return { games: [], stats: {}, teams: [], updatedAt: null, parseError: true };
+  } catch (err) {
+    console.error("hybrid: inbox file is CORRUPT — reads see an empty inbox; export is disabled until the file is fixed:", err);
+    return { games: [], stats: {}, teams: [], updatedAt: null, parseError: true };
+  }
+};
+
+// The finished-only invariant every other intake path enforces via
+// rememberGames. Import/pull used to assign store.games directly with
+// only a truthy-id check, banking unfinished/scoreless objects that
+// then re-exported onward as if they were banked games.
+const bankable = (g: any) =>
+  !!g?.id && g?.status?.type === "finished" &&
+  typeof g?.homeScore?.current === "number" && typeof g?.awayScore?.current === "number";
+
+const mergeStatsTeams = (stats: any, teams: any) => {
+  let statsAdded = 0, teamsAdded = 0;
+  if (stats && typeof stats === "object") {
+    for (const [gid, st] of Object.entries(stats)) {
+      if (st && store.games[gid] && !store.stats[gid]) { store.stats[gid] = st; statsAdded++; }
+    }
+  }
+  if (Array.isArray(teams)) {
+    for (const tm of teams) {
+      const key = typeof tm?.name === "string" ? tm.name.trim().toLowerCase() : "";
+      if (key && tm?.id != null && !store.teams[key]) { store.teams[key] = { id: tm.id, name: tm.name }; teamsAdded++; }
+    }
+  }
+  if (statsAdded || teamsAdded) markDirty();
+  return { statsAdded, teamsAdded };
 };
 
 const writeInbox = (inbox: InboxFile) => {
@@ -61,22 +104,48 @@ router.get("/v1/hybrid/inbox", (_req: Request, res: Response) => {
 // bankable objects. Zero provider quota.
 router.get("/v1/hybrid/games", (_req: Request, res: Response) => {
   const games = Object.values(store.games) as any[];
-  return res.json({ total: games.length, games });
+  const stats: Record<string, any> = {};
+  for (const g of games) if (store.stats[g.id]) stats[g.id] = store.stats[g.id];
+  return res.json({ total: games.length, games, stats, teams: Object.values(store.teams) });
 });
 
 // POST /v1/hybrid/export — append live-store games not already in the
 // inbox. Append-only: exporting twice adds 0 the second time.
 router.post("/v1/hybrid/export", (_req: Request, res: Response) => {
   const inbox = readInbox();
+  // A corrupt inbox reads as empty; overwriting it with this store's
+  // games would permanently destroy the staged games it actually
+  // holds. Refuse instead.
+  if (inbox.parseError) {
+    return res.status(500).json({ error: "inbox file is corrupt — export refused so staged games are not destroyed; fix or remove hybrid-inbox.json first" });
+  }
   const have = new Set(inbox.games.map((g: any) => g.id));
   let added = 0;
   for (const g of Object.values(store.games) as any[]) {
     if (g?.id == null || have.has(g.id)) continue;
     inbox.games.push(g); have.add(g.id); added++;
   }
-  inbox.updatedAt = new Date().toISOString();
+  let statsAdded = 0;
+  for (const g of inbox.games) {
+    const st = store.stats[g.id];
+    if (st && !inbox.stats[g.id]) { inbox.stats[g.id] = st; statsAdded++; }
+  }
+  const teamByName = new Map<string, any>();
+  for (const g of inbox.games) {
+    for (const side of [g?.homeTeam, g?.awayTeam]) {
+      if (side?.name && side?.id != null) teamByName.set(side.name.trim().toLowerCase(), { id: side.id, name: side.name });
+    }
+  }
+  for (const t of Object.values(store.teams) as any[]) {
+    if (t?.name && t?.id != null) teamByName.set(t.name.trim().toLowerCase(), { id: t.id, name: t.name });
+  }
+  const teamsChanged = inbox.teams.length !== teamByName.size;
+  inbox.teams = [...teamByName.values()];
+  // updatedAt means "the inbox content changed" — the old code bumped
+  // it on every export, even one that added nothing.
+  if (added > 0 || statsAdded > 0 || teamsChanged) inbox.updatedAt = new Date().toISOString();
   writeInbox(inbox);
-  return res.json({ added, total: inbox.games.length });
+  return res.json({ added, statsAdded, teams: inbox.teams.length, total: inbox.games.length });
 });
 
 // POST /v1/hybrid/import — body {ids?: number[]} (all "new" inbox games
@@ -88,15 +157,17 @@ router.post("/v1/hybrid/import", (req: Request, res: Response) => {
   const wanted = Array.isArray(body.ids) && body.ids.length > 0
     ? new Set((body.ids as unknown[]).map((x) => Number(x)).filter((n) => Number.isFinite(n)))
     : null;
-  let added = 0, alreadyExist = 0;
+  let added = 0, alreadyExist = 0, skippedInvalid = 0;
   for (const g of inbox.games) {
-    if (!g?.id) continue;
+    if (!g?.id) { skippedInvalid++; continue; }
     if (wanted && !wanted.has(Number(g.id))) continue;
+    if (!bankable(g)) { skippedInvalid++; continue; }
     if (store.games[g.id]) { alreadyExist++; continue; }
     store.games[g.id] = g; markDirty(); added++;
   }
-  if (added > 0) persist();
-  return res.json({ added, alreadyExist, total: inbox.games.length });
+  const merged = mergeStatsTeams(inbox.stats, inbox.teams);
+  if (added > 0 || merged.statsAdded > 0 || merged.teamsAdded > 0) persist();
+  return res.json({ added, alreadyExist, skippedInvalid, ...merged, total: inbox.games.length });
 });
 
 // POST /v1/hybrid/pull — body {sourceUrl}. Fetches the source server's
@@ -116,16 +187,17 @@ router.post("/v1/hybrid/pull", async (req: Request, res: Response) => {
     if (!r.ok) {
       return res.status(502).json({ error: "pull failed: source returned HTTP " + r.status + " — is the source server on the hybrid-sync build?" });
     }
-    const data = (await r.json()) as { games?: unknown };
+    const data = (await r.json()) as { games?: unknown; stats?: unknown; teams?: unknown };
     const games = Array.isArray(data?.games) ? data.games as any[] : [];
-    let added = 0, alreadyExist = 0;
+    let added = 0, alreadyExist = 0, skippedInvalid = 0;
     for (const g of games) {
-      if (!g?.id) continue;
+      if (!bankable(g)) { skippedInvalid++; continue; }
       if (store.games[g.id]) { alreadyExist++; continue; }
       store.games[g.id] = g; markDirty(); added++;
     }
-    if (added > 0) persist();
-    return res.json({ added, alreadyExist, sourceGames: games.length });
+    const merged = mergeStatsTeams(data?.stats, data?.teams);
+    if (added > 0 || merged.statsAdded > 0 || merged.teamsAdded > 0) persist();
+    return res.json({ added, alreadyExist, skippedInvalid, ...merged, sourceGames: games.length });
   } catch (err: any) {
     const msg = err?.name === "AbortError"
       ? "pull failed: source did not respond within 90s (it may be waking from spin-down — try again)"

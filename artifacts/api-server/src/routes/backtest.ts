@@ -1,17 +1,14 @@
 import { Router, type Request, type Response } from "express";
-import fs from "node:fs";
-import path from "node:path";
 import { runEngine, lookupTeam, getLeagueDNA } from "@workspace/range-engine";
-import { resolveDataDir } from "../lib/warehouse";
+import { store } from "../lib/warehouse";
 
 const router = Router();
-const STORE_PATH = path.join(resolveDataDir(), "store.json");
 const pts = (e: any, side: "home" | "away") => e?.[side + "Score"]?.current ?? null;
 
 router.get("/v1/backtest", (_req: Request, res: Response) => {
-  let store: any;
-  try { store = JSON.parse(fs.readFileSync(STORE_PATH, "utf8")); }
-  catch { return res.status(500).json({ error: "warehouse not found" }); }
+  // Audit the LIVE store: the old private disk read lagged the real
+  // warehouse by up to the 30s persist interval and 500'd on a fresh
+  // boot (no store.json yet) even with a populated in-memory store.
 
   const games: any[] = Object.values(store.games || {})
     .filter((g: any) => pts(g, "home") != null && pts(g, "away") != null && g.startTimestamp)

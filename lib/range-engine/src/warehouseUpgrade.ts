@@ -26,11 +26,32 @@ export function upgradeWithWarehouse(
   const allowed =
     totalAvg != null ? +(totalAvg - scored).toFixed(1) : info.stats.avg_allowed;
 
-  return {
+  const stats = {
+    ...info.stats,
+    avg_pts: +(+scored).toFixed(1),
+    avg_allowed: allowed,
+    games,
+  };
+  // Replace the shooting rates too when the warehouse measured them
+  // (research carries them percent-scale; team stats are fractions).
+  // Zero means "no shooting data", not a real 0%.
+  const ftPct = side === "home" ? r.homeFt : r.awayFt;
+  const pt3Pct = side === "home" ? r.homePt3 : r.awayPt3;
+  if (typeof ftPct === "number" && ftPct > 0) stats.ft_pct = +(ftPct / 100).toFixed(3);
+  if (typeof pt3Pct === "number" && pt3Pct > 0) stats.pt3_pct = +(pt3Pct / 100).toFixed(3);
+
+  const upgraded = {
     ...info,
-    stats: { ...info.stats, avg_pts: +(+scored).toFixed(1), avg_allowed: allowed, games },
-    source: "WAREHOUSE",
+    stats,
+    source: "WAREHOUSE" as const,
     proxyCapped: false,
     capValue: 0,
   };
+  // Pace and defensive rating have NO warehouse source — they remain
+  // the league proxy constants even after the lift. Mark the profile
+  // partial so runEngine cannot present the matchup as fully measured
+  // ("Strong / DB data — no cap required") while Rules 5/6/10 still
+  // run on those invented inputs.
+  (upgraded as any).statsPartial = true;
+  return upgraded;
 }

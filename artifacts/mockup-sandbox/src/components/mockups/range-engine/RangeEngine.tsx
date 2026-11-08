@@ -1042,8 +1042,8 @@ export function RangeEngine() {
           awayFtAttempts: rd?.awayFtAttempts,
           leagueFoulAverage: rd?.leagueFoulAverage,
           refereeStrictness: rd?.refereeStrictness,
-          homeRestDays: rd?.homeRestDays,
-          awayRestDays: rd?.awayRestDays,
+          homeRestDays: rd?.homeRestDays ?? undefined,
+          awayRestDays: rd?.awayRestDays ?? undefined,
           homeFoulWeightedAvg: rd?.homeFoulWeightedAvg,
           awayFoulWeightedAvg: rd?.awayFoulWeightedAvg,
           homeFtAttemptWeightedAvg: rd?.homeFtAttemptWeightedAvg,
@@ -1123,7 +1123,7 @@ export function RangeEngine() {
           homeFoulRate: researchData?.homeFoulRate, awayFoulRate: researchData?.awayFoulRate,
           homeFtAttempts: researchData?.homeFtAttempts, awayFtAttempts: researchData?.awayFtAttempts,
           leagueFoulAverage: researchData?.leagueFoulAverage, refereeStrictness: researchData?.refereeStrictness,
-          homeRestDays: researchData?.homeRestDays, awayRestDays: researchData?.awayRestDays,
+          homeRestDays: researchData?.homeRestDays ?? undefined, awayRestDays: researchData?.awayRestDays ?? undefined,
           homeFoulWeightedAvg: researchData?.homeFoulWeightedAvg, awayFoulWeightedAvg: researchData?.awayFoulWeightedAvg,
           homeFtAttemptWeightedAvg: researchData?.homeFtAttemptWeightedAvg, awayFtAttemptWeightedAvg: researchData?.awayFtAttemptWeightedAvg,
           use_weighted: !!(researchData?.homeArenaPPG && researchData?.awayRoadPPG && researchData?.h2hAvgTotal),
@@ -2271,7 +2271,7 @@ MATCH CONTEXT — Rule 1 (Time Sync)
                           </p>
                           <div className="rounded-lg px-3 py-2 border border-yellow-950 bg-black/40">
                             <p className="text-[10px] text-zinc-400 leading-relaxed">
-                              {researchData?.fatigueNote ?? "Live API data unavailable."} Home rest: {researchData?.homeRestDays ?? 0}d / Away rest: {researchData?.awayRestDays ?? 0}d. This schedule stress directly boosts stall and foul-engine risk.
+                              {researchData?.fatigueNote ?? "Live API data unavailable."} Home rest: {researchData?.homeRestDays != null ? researchData.homeRestDays + "d" : "—"} / Away rest: {researchData?.awayRestDays != null ? researchData.awayRestDays + "d" : "—"}. This schedule stress directly boosts stall and foul-engine risk.
                             </p>
                           </div>
                         </div>

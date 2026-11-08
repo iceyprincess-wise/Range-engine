@@ -41,6 +41,7 @@ router.get("/v1/games/tournaments", async (req: Request, res: Response) => {
   const before = quota.remaining;
   try {
     const results = await Promise.all([1, 2, 3, 4, 5, 6].map((pg) => apiFetch("/api/basketball/scheduled-tournaments/" + seg + "/page/" + pg).catch(() => null)));
+    const pagesFailed = results.filter((r) => r === null).length;
     if (results.every((r) => r === null)) {
       // Every upstream page failed: report the failure instead of
       // presenting an empty list as fresh ("0 tournaments today").
@@ -54,8 +55,11 @@ router.get("/v1/games/tournaments", async (req: Request, res: Response) => {
       seen.add(uid);
       tours.push({ id: uid, name: s.tournament?.name ?? "Unknown", country: s.tournament?.category?.name ?? "" });
     }
-    const payload = { date: seg, updatedAt: new Date().toISOString(), count: tours.length, tournaments: tours };
-    if (tours.length > 0) { disk.tournaments = payload; saveDisk(); }
+    const payload = { date: seg, updatedAt: new Date().toISOString(), count: tours.length, tournaments: tours, partial: pagesFailed > 0, pagesFailed };
+    // A partial list is reported as partial and is NOT cached: caching
+    // it used to overwrite the last complete list with an incomplete
+    // one presented as fresh.
+    if (tours.length > 0 && pagesFailed === 0) { disk.tournaments = payload; saveDisk(); }
     return res.json({ ...payload, stale: false, fromDisk: false, quotaSpent: before != null && quota.remaining != null ? before - quota.remaining : null });
   } catch (error) {
     return res.status(502).json({ error: error instanceof Error ? error.message : "update failed" });

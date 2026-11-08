@@ -34,6 +34,19 @@ router.get("/v1/warehouse", (_req: Request, res: Response) => {
   }
 
   // LEAGUE DNA — measured, every game listed, nothing sliced
+  // "FEEDS ENGINE" is judged on the league FAMILY pool — same category
+  // + base tournament name (before any ", Playoffs"-style suffix) —
+  // because that is the pool the league-dna route and the engine
+  // actually measure. Judged per split row, the page claimed
+  // "NBA, Playoffs (14) needs 15g" while the engine's NBA pool (67)
+  // was already feeding it.
+  const familyOf = (g: any) =>
+    (g.tournament?.category?.name ?? "?") + " - " + String(g.tournament?.name ?? "?").split(",")[0].trim();
+  const familyScored = new Map<string, number>();
+  for (const g of games) {
+    if (g.homeScore?.current != null && g.awayScore?.current != null)
+      familyScored.set(familyOf(g), (familyScored.get(familyOf(g)) ?? 0) + 1);
+  }
   const leagues = Object.entries(byLeague).map(([league, gs]) => {
     const sorted = gs.slice().sort((a, b) => (b.startTimestamp ?? 0) - (a.startTimestamp ?? 0));
     const totals = gs.map((g) => (g.homeScore?.current ?? 0) + (g.awayScore?.current ?? 0)).filter((t) => t > 0);
@@ -41,9 +54,10 @@ router.get("/v1/warehouse", (_req: Request, res: Response) => {
     // Sample SD (n-1), matching league-dna-measure.cjs, the generator of the
     // DNA snapshot -- the live route must not disagree with the snapshot.
     const sd = avg != null ? (totals.length > 1 ? Math.sqrt(totals.reduce((s, v) => s + (v - avg) ** 2, 0) / (totals.length - 1)) : 0) : null;
+    const pooled = familyScored.get(familyOf(gs[0])) ?? totals.length;
     return {
       league, games: gs.length,
-      dna: avg != null ? { avgTotal: +avg.toFixed(1), sd: +sd!.toFixed(1), minTotal: Math.min(...totals), maxTotal: Math.max(...totals), measuredActive: totals.length >= 15 } : null,
+      dna: avg != null ? { avgTotal: +avg.toFixed(1), sd: +sd!.toFixed(1), minTotal: Math.min(...totals), maxTotal: Math.max(...totals), measuredActive: pooled >= 15, pooledGames: pooled } : null,
       allGames: sorted.map(row),
     };
   }).sort((a, b) => b.games - a.games);

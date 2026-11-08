@@ -1,4 +1,5 @@
 import { Router, type Request, type Response } from "express";
+import { updateQuotaFromResponse } from "../lib/quotaTracker";
 
 const router = Router();
 const RAPIDAPI_KEY = process.env.RAPIDAPI_KEY;
@@ -31,6 +32,10 @@ const basketFetch = async (path: string): Promise<any> => {
     },
   });
 
+  // Every live-route call spends provider quota; it must reach the
+  // tracker or /v1/quota (and every quota gate) decides on numbers
+  // that ignore all live spend. Other route modules already do this.
+  updateQuotaFromResponse(response);
   if (!response.ok) {
     const text = await response.text();
     throw new Error(`BasketAPI ${response.status} ${response.statusText}: ${text}`);

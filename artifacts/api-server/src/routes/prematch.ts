@@ -1,6 +1,8 @@
 import { Router, type Request, type Response } from "express";
 import { quota, updateQuotaFromResponse } from "../lib/quotaTracker";
-import { store, persist, markDirty, rememberGames } from "../lib/warehouse";
+import { store, persist, markDirty, rememberGames, resolveDataDir } from "../lib/warehouse";
+import fs from "node:fs";
+import path from "node:path";
 const router = Router();
 const RAPIDAPI_KEY = process.env.RAPIDAPI_KEY;
 const RAPIDAPI_HOST = process.env.RAPIDAPI_HOST || "basketapi1.p.rapidapi.com";
@@ -66,13 +68,26 @@ const searchTeam = async (name: string) => {
   throw new Error('Team not found in provider: "' + name + '" — check spelling or use the games browser tap-to-fill (exact names)');
 };
 
-const lastFetch: Record<number, number> = {};
+// Freshness is persisted: the in-memory-only map meant every server
+// restart (every Render redeploy / spin-down wake) marked EVERY team
+// stale and re-bought the same page-0 history at full quota price.
+const LASTFETCH_PATH = path.join(resolveDataDir(), "lastfetch.json");
+const lastFetch: Record<number, number> = (() => {
+  try { return JSON.parse(fs.readFileSync(LASTFETCH_PATH, "utf8")); } catch { return {}; }
+})();
+const saveLastFetch = () => {
+  try {
+    fs.mkdirSync(path.dirname(LASTFETCH_PATH), { recursive: true });
+    fs.writeFileSync(LASTFETCH_PATH, JSON.stringify(lastFetch));
+  } catch { /* non-fatal */ }
+};
 const FRESH_MS = 6 * 60 * 60 * 1000;
 
 const refreshTeam = async (id: number) => {
   const data = await apiFetch("/api/basketball/team/" + id + "/matches/previous/0");
   rememberGames(data?.events || []);
   lastFetch[id] = Date.now();
+  saveLastFetch();
 };
 
 const gamesForTeam = (teamId: number) =>
@@ -203,7 +218,17 @@ router.get("/v1/prematch", async (req: Request, res: Response) => {
     const now = Date.now();
     const stale = [home.id, away.id].filter((id) => now - (lastFetch[id] ?? 0) > FRESH_MS);
     let apiOk = true;
-    try { await Promise.all(stale.map(refreshTeam)); } catch (e) { apiOk = false; console.error("refresh failed, serving warehouse:", e); }
+    // Quota guard: refresh/search had no floor, so a run of stale
+    // prematches could drain the whole daily budget on re-fetches
+    // alone (enrichment and settle-fetch both stop at their gates).
+    // With <2 calls left, serve the warehouse instead of spending the
+    // reserve — and let provenance say so (apiOk = false).
+    if (stale.length > 0 && quota.remaining !== null && quota.remaining < 2) {
+      apiOk = false;
+      console.log(`prematch: refresh skipped — quota reserve (remaining=${quota.remaining})`);
+    } else {
+      try { await Promise.all(stale.map(refreshTeam)); } catch (e) { apiOk = false; console.error("refresh failed, serving warehouse:", e); }
+    }
 
     const homeGames = gamesForTeam(home.id);
     const awayGames = gamesForTeam(away.id);
@@ -217,8 +242,10 @@ router.get("/v1/prematch", async (req: Request, res: Response) => {
     // the warehouse, so the extra fetches are paid once per game, not
     // once per prematch. A home-side fetch failure no longer blocks the
     // away side either (each call breaks independently).
+    const statsBefore = Object.keys(store.stats).length;
     await enrichStats(homeGames, 3);
     await enrichStats(awayGames, 3);
+    const statsFetched = Object.keys(store.stats).length > statsBefore;
 
     const h2hGames = Object.values(store.games).filter((e: any) => {
       const ids = [e.homeTeam?.id, e.awayTeam?.id];
@@ -229,7 +256,11 @@ router.get("/v1/prematch", async (req: Request, res: Response) => {
 
     persist();
     return res.json({
-      provenance: apiOk ? "real" : "warehouse-stale",
+      // "real" only when THIS request actually fetched upstream data
+      // (a team refresh or a stats enrichment). The old flag tracked
+      // only refresh failure, so a fully warehouse-served response —
+      // zero provider calls — was still labelled "real".
+      provenance: (apiOk && stale.length > 0) || statsFetched ? "real" : "warehouse-stale",
       fetchedAt: new Date().toISOString(),
       home: { id: home.id, name: home.name, ...summarize(homeGames, home.id), quarters: quarterProfile(homeGames), shooting: teamShooting(homeGames, home.id), restDays: homeGames[0]?.startTimestamp ? Math.max(0, Math.floor((Date.now() / 1000 - homeGames[0].startTimestamp) / 86400)) : null },
       away: { id: away.id, name: away.name, ...summarize(awayGames, away.id), quarters: quarterProfile(awayGames), shooting: teamShooting(awayGames, away.id), restDays: awayGames[0]?.startTimestamp ? Math.max(0, Math.floor((Date.now() / 1000 - awayGames[0].startTimestamp) / 86400)) : null },

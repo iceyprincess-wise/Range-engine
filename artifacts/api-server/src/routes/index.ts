@@ -9,6 +9,7 @@ import resultsRouter from "./results";
 import leagueDnaRouter from "./league-dna";
 import warehouseViewRouter from "./warehouse-view";
 import hybridRouter from "./hybrid";
+import freefeedRouter from "./freefeed";
 
 const router: IRouter = Router();
 
@@ -22,5 +23,6 @@ router.use(resultsRouter);
 router.use(leagueDnaRouter);
 router.use(warehouseViewRouter);
 router.use(hybridRouter);
+router.use(freefeedRouter);
 
 export default router;

@@ -32,11 +32,31 @@ export type StoredTeam = { id: number; name: string };
 export type Store = { teams: Record<string, StoredTeam>; games: Record<string, any>; stats: Record<string, any> };
 
 const loadStore = (): Store => {
-  try { return JSON.parse(fs.readFileSync(STORE_PATH, "utf8")); }
-  catch { return { teams: {}, games: {}, stats: {} }; }
+  let raw: string;
+  try { raw = fs.readFileSync(STORE_PATH, "utf8"); }
+  catch { return { teams: {}, games: {}, stats: {} }; } // first run: no file yet
+  try {
+    const parsed = JSON.parse(raw);
+    // Shape backfill: a parseable file missing a map used to leave it
+    // undefined, and rememberGames then threw inside request handlers.
+    for (const k of ["teams", "games", "stats"] as const) {
+      if (!parsed[k] || typeof parsed[k] !== "object") {
+        console.error(`warehouse: store.json is missing the "${k}" map — starting that map empty`);
+        parsed[k] = {};
+      }
+    }
+    return parsed as Store;
+  } catch (err) {
+    // A corrupt store must never be silently replaced by an empty one:
+    // the next persist() would overwrite the only copy. Preserve the
+    // bytes for manual recovery and say so, loudly.
+    const backup = STORE_PATH + ".corrupt-" + Date.now();
+    try { fs.renameSync(STORE_PATH, backup); } catch { /* keep booting */ }
+    console.error(`warehouse: store.json is CORRUPT (${err instanceof Error ? err.message : err}) — preserved as ${backup}; starting with an empty store`);
+    return { teams: {}, games: {}, stats: {} };
+  }
 };
 export const store: Store = loadStore();
-if (!store.stats) store.stats = {};
 
 let dirty = false;
 export const markDirty = () => { dirty = true; };
@@ -45,16 +65,28 @@ export const persist = () => {
   if (!dirty) return;
   try {
     fs.mkdirSync(DATA_DIR, { recursive: true });
-    fs.writeFileSync(STORE_PATH, JSON.stringify(store));
+    // Atomic write: a kill mid-write used to truncate store.json in
+    // place; the truncated file then booted as an "empty" store.
+    const tmp = STORE_PATH + ".tmp";
+    fs.writeFileSync(tmp, JSON.stringify(store));
+    fs.renameSync(tmp, STORE_PATH);
     dirty = false;
   } catch (err) { console.error("warehouse persist failed:", err); }
 };
 setInterval(persist, 30_000).unref();
 
 const isFinished = (e: any) => e?.status?.type === "finished";
+const hasScores = (e: any) =>
+  typeof e?.homeScore?.current === "number" && typeof e?.awayScore?.current === "number";
 export const rememberGames = (events: any[]) => {
   for (const e of events) {
-    if (!e?.id || !isFinished(e)) continue;
-    if (!store.games[e.id]) { store.games[e.id] = e; markDirty(); }
+    if (!e?.id || !isFinished(e) || !hasScores(e)) continue;
+    const existing = store.games[e.id];
+    if (!existing) { store.games[e.id] = e; markDirty(); continue; }
+    // First-write-wins used to freeze a scoreless copy forever: every
+    // scored consumer skips it, and the corrected provider payload was
+    // discarded on every later fetch. A scored copy upgrades a
+    // scoreless stored copy; anything else about the stored copy stays.
+    if (!hasScores(existing)) { store.games[e.id] = e; markDirty(); }
   }
 };

@@ -145,14 +145,13 @@ export async function fetchResearchData(
     apiData.awayFtAttempts50 ?? apiData.away_ft_attempts_50 ?? apiData.awayFta50 ?? [],
   );
 
-  const homeRestDays = parseNumber(
-    apiData.homeRestDays ?? apiData.home_rest_days ?? apiData.home_rest ?? 1,
-    1,
-  );
-  const awayRestDays = parseNumber(
-    apiData.awayRestDays ?? apiData.away_rest_days ?? apiData.away_rest ?? 1,
-    1,
-  );
+  // Unknown rest stays UNKNOWN (null): defaulting it to 1 invented a
+  // fatigue signal — runEngine marked rest as "provided" and added its
+  // Rule 10 fatigue bonus on a number nobody measured.
+  const homeRestRaw = apiData.homeRestDays ?? apiData.home_rest_days ?? apiData.home_rest;
+  const awayRestRaw = apiData.awayRestDays ?? apiData.away_rest_days ?? apiData.away_rest;
+  const homeRestDays: number | null = homeRestRaw == null ? null : parseNumber(homeRestRaw, 1);
+  const awayRestDays: number | null = awayRestRaw == null ? null : parseNumber(awayRestRaw, 1);
 
   const homeFt = normalizePercent(
     apiData.homeFt ?? apiData.home_ft ?? apiData.homeFreeThrowPct,
@@ -217,7 +216,7 @@ export async function fetchResearchData(
     fatiguePoints >= 1 || leagueFoulHigh ? "HIGH" : totalFoulRate >= 38 ? "MODERATE" : "LOW";
   const fatigueNote =
     fatigueRisk === "HIGH"
-      ? `Schedule stress detected: ${homeRestDays}d rest / ${awayRestDays}d rest. Back-to-back / 3-in-4 fatigue is amplifying foul pressure and pace collapse risk.`
+      ? `Schedule stress detected: ${homeRestDays ?? "—"}d rest / ${awayRestDays ?? "—"}d rest. Back-to-back / 3-in-4 fatigue is amplifying foul pressure and pace collapse risk.`
       : fatigueRisk === "MODERATE"
       ? `Moderate rest imbalance. Monitor warmups and minutes management for late-game fatigue fouls.`
       : `Schedule profile stable. No critical back-to-back or 3-in-4 fatigue signal detected.`;
@@ -230,7 +229,7 @@ export async function fetchResearchData(
       : "LOW");
   const defStallNote = apiData.defStallNote ?? (
     defStallRisk === "HIGH"
-      ? `🚨 DEFENSIVE STALL TRIGGER: ${totalFoulRate.toFixed(1)} foul rate combined, ${totalFtAttempts} FT attempts, ${homeRestDays} / ${awayRestDays} rest. League avg ${leagueFoulAverage} fouls. Late-game clock stoppages likely.`
+      ? `🚨 DEFENSIVE STALL TRIGGER: ${totalFoulRate.toFixed(1)} foul rate combined, ${totalFtAttempts} FT attempts, ${homeRestDays ?? "—"} / ${awayRestDays ?? "—"} rest. League avg ${leagueFoulAverage} fouls. Late-game clock stoppages likely.`
       : defStallRisk === "MODERATE"
       ? `⚠ MODERATE stall risk: team foul pressure elevated and schedules are tight. Live possession management will decide the 4th quarter pace.`
       : `✓ LOW stall risk: historical pace remains stable and neither team is deep in fatigue territory.`);

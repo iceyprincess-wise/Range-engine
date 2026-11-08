@@ -124,8 +124,8 @@ export interface ResearchData {
   awayFoulWeightedAvg: number;
   homeFtAttemptWeightedAvg: number;
   awayFtAttemptWeightedAvg: number;
-  homeRestDays: number;
-  awayRestDays: number;
+  homeRestDays: number | null;
+  awayRestDays: number | null;
   leagueFoulAverage: number;
   refereeStrictness: number;
   leagueDnaMeasured?: { games: number; avgTotal: number; sd: number } | null;

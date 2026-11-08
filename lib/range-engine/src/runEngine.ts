@@ -55,13 +55,21 @@ export function runEngine(opts: {
   const minGames = Math.min(H.games, A.games);
   const proxyUsed =
     home_stats.source === "PROXY" || away_stats.source === "PROXY";
+  // A warehouse-lifted profile is only PARTIALLY measured: PPG/allowed
+  // (and shooting, when present) are real, but pace and defensive
+  // rating remain league proxy constants. It must not earn the
+  // "Strong / DB data — no cap required" grade.
+  const partialProxy =
+    (home_stats as any).statsPartial === true || (away_stats as any).statsPartial === true;
   const proxyCapped = home_stats.proxyCapped || away_stats.proxyCapped;
   const capValue = Math.max(home_stats.capValue, away_stats.capValue);
   const reliability =
-    minGames < 5 ? "Weak" : minGames < 8 || proxyUsed ? "Moderate" : "Strong";
+    minGames < 5 ? "Weak" : minGames < 8 || proxyUsed || partialProxy ? "Moderate" : "Strong";
   const reliability_reason = proxyCapped
     ? `Proxy cap APPLIED — PPG hard-capped at ${capValue} PPG (${dna.name}). Anti-hallucination active. Sample: ${minGames} games.`
-    : `Sample: ${H.games} (Home) × ${A.games} (Away) — ${reliability}. DB data — no cap required.`;
+    : partialProxy
+      ? `Sample: ${H.games} (Home) × ${A.games} (Away) — ${reliability}. Warehouse PPG real; pace/defence still league proxy — grade held at Moderate.`
+      : `Sample: ${H.games} (Home) × ${A.games} (Away) — ${reliability}. DB data — no cap required.`;
   const ws = reliability === "Weak" ? 0.6 : 1.0;
 
   // ── Statistical DNA: Weighted PPG (60/40 Arena/H2H) ───────────────────────
@@ -339,7 +347,7 @@ export function runEngine(opts: {
     hb -= stacking_cut;
   }
   const r10note = [
-    `FT%: ${(avg_ft * 100).toFixed(0)}%, Fouls: ${totalFoulRate.toFixed(1)}%, FTAs: ${totalFtAttempts}`,
+    `FT%: ${(avg_ft * 100).toFixed(0)}%, Fouls: ${totalFoulRate.toFixed(1)}/g, FTAs: ${totalFtAttempts}`,
     weightedFoul ? "| Weighted foul/FTA (recent-form)" : "",
     leagueFoulAverage ? `| League Fouls: ${leagueFoulAverage.toFixed(1)}` : "",
     refereeSignal ? "| Referee Strictness: Elevated" : "",
@@ -360,7 +368,7 @@ export function runEngine(opts: {
   });
   if (r10_hb > 0)
     triggered.push(
-      `Rule 10 (Foul Engine): HB+${r10_hb}${stacking_cut > 0 ? ` (Stack Cap -${stacking_cut})` : ""} | FT%: ${(avg_ft * 100).toFixed(0)}% | Fouls: ${totalFoulRate.toFixed(1)}% | FTAs: ${totalFtAttempts}${refereeSignal ? " 🚨" : ""}`,
+      `Rule 10 (Foul Engine): HB+${r10_hb}${stacking_cut > 0 ? ` (Stack Cap -${stacking_cut})` : ""} | FT%: ${(avg_ft * 100).toFixed(0)}% | Fouls: ${totalFoulRate.toFixed(1)}/g | FTAs: ${totalFtAttempts}${refereeSignal ? " 🚨" : ""}`,
     );
   if (key_player_out)
     triggered.push(
