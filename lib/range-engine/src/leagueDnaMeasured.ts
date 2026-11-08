@@ -83,6 +83,12 @@ export const LEAGUE_DNA_MEASURED: Record<string, DnaMeasurement> = {
   PBA_GOVERNORS:     { n:   7, lastGame: "2026-07-26", avgTotal: 218.0, sdTotal: 21.6, p10: 196.2, median: 213,   p90: 241,   homeEdge:   3.7, homeWinPct: 71.4, avgMargin: 16.3, blowout20Pct: 28.6, otPct: 0,    avgQuarterTotal: 54.5 },
   WASL:              { n:   6, lastGame: "2026-02-18", avgTotal: 191.3, sdTotal: 15.7, p10: 173.5, median: 196.5, p90: 204,   homeEdge:   5.0, homeWinPct: 50.0, avgMargin: 18.0, blowout20Pct: 33.3, otPct: 16.7, avgQuarterTotal: 46.9 },
   LDB:               { n:   6, lastGame: "2026-07-29", avgTotal: 156.5, sdTotal: 18.0, p10: 138.5, median: 155,   p90: 176,   homeEdge:  12.5, homeWinPct: 83.3, avgMargin: 23.8, blowout20Pct: 66.7, otPct: 0,    avgQuarterTotal: 39.1 },
+  // DTA measured 2026-11-09 from the same tracked 852-game inbox
+  // (12 scored DTA games; previously the family fell through to the
+  // DEFAULT proxy). Derivation identical to the tool's: proxyPPG =
+  // avgTotal/2 x 0.93, maxWidth = clamp(round(0.83 x sd), 16, 24),
+  // grind = avgQuarterTotal < 40.
+  DTA:               { n:  12, lastGame: "2025-10-19", avgTotal: 153.4, sdTotal: 23.7, p10: 124.9, median: 152,   p90: 179.7, homeEdge:  -0.1, homeWinPct: 58.3, avgMargin: 18.1, blowout20Pct: 41.7, otPct: 0,    avgQuarterTotal: 38.4 },
   U18_PAULISTA:      { n:   4, lastGame: "2026-07-29", avgTotal: 140.5, sdTotal: 17.5, p10: 126,   median: 137.5, p90: 157.4, homeEdge: -11.0, homeWinPct: 25.0, avgMargin: 20.5, blowout20Pct: 50.0, otPct: 0,    avgQuarterTotal: null },
   NBA_SUMMER:        { n:  13, lastGame: "2026-07-19", avgTotal: 176.8, sdTotal: 13.0, p10: 161.2, median: 180,   p90: 191,   homeEdge:   0.4, homeWinPct: 46.2, avgMargin: 11.6, blowout20Pct: 23.1, otPct: 15.4, avgQuarterTotal: 43.8 },
   NBA_PRESEASON:     { n:   9, lastGame: "2026-10-17", avgTotal: 225.8, sdTotal: 18.5, p10: 203.6, median: 227,   p90: 246,   homeEdge:   2.4, homeWinPct: 44.4, avgMargin: 17.3, blowout20Pct: 44.4, otPct: 11.1, avgQuarterTotal: 56.0 },
@@ -105,6 +111,7 @@ export const MEASURED_PROFILES: Record<string, DnaCore> = {
   CBI_U15_FEM:       { name: "CBI U15 Fem (youth girls)",          proxyPPG:  47.3, hbDNA: 0, lbDNA: 0, maxWidth: 17, hammerEdge: 8, buffer: 2.0, grind: true  },
   WASL:              { name: "WASL West Asia",                     proxyPPG:  89.0, hbDNA: 0, lbDNA: 0, maxWidth: 16, hammerEdge: 8, buffer: 2.0, grind: false },
   LDB:               { name: "LDB (thin sample)",                  proxyPPG:  72.8, hbDNA: 0, lbDNA: 0, maxWidth: 16, hammerEdge: 8, buffer: 2.0, grind: true  },
+  DTA:               { name: "Uruguay DTA (measured, aged sample)", proxyPPG:  71.3, hbDNA: 0, lbDNA: 0, maxWidth: 20, hammerEdge: 8, buffer: 2.0, grind: true  },
   U18_PAULISTA:      { name: "U18 Paulista (thin sample)",         proxyPPG:  65.3, hbDNA: 0, lbDNA: 0, maxWidth: 16, hammerEdge: 8, buffer: 2.0, grind: false },
   NBA_SUMMER:        { name: "NBA Summer League (measured)",       proxyPPG:  82.2, hbDNA: 0, lbDNA: 0, maxWidth: 16, hammerEdge: 8, buffer: 2.0, grind: false },
   NBA_PRESEASON:     { name: "NBA Preseason (measured)",           proxyPPG: 105.0, hbDNA: 0, lbDNA: 0, maxWidth: 16, hammerEdge: 8, buffer: 2.0, grind: false },
@@ -147,6 +154,7 @@ export function resolveMeasuredKey(leagueUpper: string): string | null {
   // "Uruguay - LUB" still resolves on the LUB word itself.
   if (/\bLUB\b/.test(lg)) return "URUGUAY_LUB";
   if (/\bLDB\b/.test(lg)) return "LDB";
+  if (/\bDTA\b/.test(lg)) return "DTA";
   if (lg.includes("ADMIRALBET") || /\bABA\b/.test(lg)) return "ABA";
   if (lg.includes("STOIXIMAN") || /\bGBL\b/.test(lg)) return "GBL";
   if (lg.includes("TURKISH")) return "TURKISH_SL";

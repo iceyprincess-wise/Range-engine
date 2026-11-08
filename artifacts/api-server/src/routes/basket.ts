@@ -98,6 +98,15 @@ router.get("/v1/sync", async (req: Request, res: Response) => {
       matchId: target.id,
       league: league || "",
       score: { home: homeScore, away: awayScore },
+      // Period scores + status detail from the SAME live event the
+      // score came from. The payload used to flatten the event to a
+      // single score pair, so no consumer could show the game's
+      // shape. Research now carries these through to the UI.
+      periods: {
+        home: [target.homeScore?.period1 ?? null, target.homeScore?.period2 ?? null, target.homeScore?.period3 ?? null, target.homeScore?.period4 ?? null],
+        away: [target.awayScore?.period1 ?? null, target.awayScore?.period2 ?? null, target.awayScore?.period3 ?? null, target.awayScore?.period4 ?? null],
+      },
+      statusDescription: target.status?.description ?? null,
       // No statistics payload: this handler used to spend a second
       // quota call fetching the live match's statistics, and NO
       // consumer ever read the field (research reads none of the sync

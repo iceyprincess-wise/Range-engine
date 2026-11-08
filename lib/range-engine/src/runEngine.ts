@@ -23,7 +23,7 @@ export function runEngine(opts: {
   away_arena_ppg?: number;
   h2h_avg_total?: number;
   collapse_pct?: number;
-  league_measured?: { games: number; avgTotal: number } | null;
+  league_measured?: { games: number; avgTotal: number; sd?: number } | null;
   // Real recent game totals (both teams, pooled) for the Rule 16 variance gate
   recent_totals?: number[];
   homeFoulRate?: number;
@@ -42,6 +42,19 @@ export function runEngine(opts: {
   use_weighted?: boolean;
   gender?: "Men" | "Women";
   is_live_match?: boolean;
+  // Measured points-ALLOWED per game (prematch warehouse averages).
+  // When both are supplied, Rule 6 prices defence from these real
+  // numbers instead of the static profile def_rating constants.
+  home_def_ppg?: number;
+  away_def_ppg?: number;
+  // Measured overtime frequency (0-1) across the teams' banked games
+  // (+ H2H), from prematch. Feeds Rule 18 alongside the margin gate.
+  ot_rate?: number | null;
+  // Fixture clock context so Rule 1 can actually validate something:
+  // minutes until tip-off (negative = already started), and the live
+  // score at analysis time when the sync feed found the match live.
+  minutes_to_tipoff?: number | null;
+  live_score?: { home: number; away: number } | null;
   is_rerun?: boolean;
   rerun_timestamp?: string;
 }): EngineOutput {
@@ -100,12 +113,8 @@ export function runEngine(opts: {
   const avg_ft = (eff_ft_home + eff_ft_away) / 2;
   const avg_pt3 = (eff_pt3_home + eff_pt3_away) / 2;
   const avg_pace = (H.pace + A.pace) / 2;
-  const home_def = H.def_rating;
-  const away_def = A.def_rating;
-  const margin = Math.abs(homeEffPPG - awayEffPPG);
   const leagueMeasuredActive = !!(opts.league_measured && opts.league_measured.games >= 15);
   const leagueAvg = leagueMeasuredActive ? +(opts.league_measured!.avgTotal / 2).toFixed(1) : dna.proxyPPG;
-  const avg_eff = (homeEffPPG / leagueAvg + awayEffPPG / leagueAvg) / 2;
 
   // TASK 12: Gender & Live Match adjustments
   // Women's discount - PER SIDE and PROVENANCE-AWARE. The 0.93 corrects
@@ -131,19 +140,67 @@ export function runEngine(opts: {
     genderNote = discounted.length
       ? `Women's fixture: proxy discount x0.93 applied to ${discounted.join(" + ")} PPG (proxy numbers are men's-calibrated). Measured PPGs are never discounted.`
       : "Women's fixture: both PPGs are measured (DB / warehouse / arena split) - no proxy discount applies. The selector changes nothing when the numbers are real, and this entry proves it was considered.";
+  } else {
+    genderNote = "Men's fixture: gender selector considered - no discount applies to men's pricing.";
+  }
+
+  // Margin / efficiency / defence are computed AFTER the gender
+  // adjustment: they must describe the PPGs the range is actually
+  // built from. Previously margin and avg_eff were computed from the
+  // PRE-discount PPGs, so a discounted women's fixture still fed
+  // Rules 5/7/10/18 the men's-calibrated margin (execution-proven:
+  // Rule 7 printed margin 39.6 where the priced margin was 45.3).
+  const margin = Math.abs(homeEffPPG - awayEffPPG);
+  const avg_eff = (homeEffPPG / leagueAvg + awayEffPPG / leagueAvg) / 2;
+  // Rule 6 defence: measured points-allowed (prematch warehouse
+  // averages) beats the static profile constants when both sides
+  // supplied it - def_rating is a league-level guess, while the
+  // measured allowed average is the team's real banked defence,
+  // expressed on the same scale (allowed per game / league average).
+  let home_def = H.def_rating;
+  let away_def = A.def_rating;
+  let defMeasured = false;
+  if (opts.home_def_ppg != null && opts.home_def_ppg > 0 && opts.away_def_ppg != null && opts.away_def_ppg > 0 && leagueAvg > 0) {
+    home_def = +(opts.home_def_ppg / leagueAvg).toFixed(3);
+    away_def = +(opts.away_def_ppg / leagueAvg).toFixed(3);
+    defMeasured = true;
   }
 
   const adj_log: AdjLog[] = [];
   const triggered: string[] = [];
   const collapsePct = opts.collapse_pct ?? 0;
 
-  // ── Rule 1 (Time Sync) — logged for audit ─────────────────────────────────
+  // ── Rule 1 (Time Sync) — validates the fixture clock against the
+  // live selection. It used to push a constant "confirmed" string no
+  // input could ever falsify. Now the caller supplies the real
+  // minutes-to-tipoff the UI computed, and Rule 1 cross-checks it
+  // against the Live checkbox: a started game priced as pre-match (or
+  // a future game ticked live) is flagged in the audit, not silently
+  // priced on a contradiction.
+  const minsToTip = opts.minutes_to_tipoff ?? null;
+  let r1Note = "Fixture timestamp confirmed via form input";
+  let r1Status: AdjLog["status"] = "checked";
+  if (minsToTip != null) {
+    if (minsToTip > 0) r1Note = `Tip-off in ${minsToTip} min (form KO time vs device clock)`;
+    else if (minsToTip === 0) r1Note = "Tip-off NOW (form KO time vs device clock)";
+    else r1Note = `Started ${Math.abs(minsToTip)} min ago per form KO time`;
+    if (minsToTip < 0 && !opts.is_live_match) {
+      r1Note += " — KO time has passed but Live Match is NOT ticked: pricing as PRE-MATCH. Tick Live if this game is in play.";
+      r1Status = "triggered";
+    } else if (minsToTip > 0 && opts.is_live_match) {
+      r1Note += " — Live Match is ticked but tip-off is still in the future: the +3 live widening will be applied to a game that has not started.";
+      r1Status = "triggered";
+    }
+    if (opts.is_live_match && opts.live_score) {
+      r1Note += ` | Live score at analysis: ${opts.live_score.home}-${opts.live_score.away} (total ${opts.live_score.home + opts.live_score.away} so far)`;
+    }
+  }
   adj_log.push({
     rule: "Rule 1 — Time Sync",
     lb_adj: 0,
     hb_adj: 0,
-    note: "Fixture timestamp confirmed via form input",
-    status: "checked",
+    note: r1Note,
+    status: r1Status,
   });
 
   // ── Rule 2 (Reliability + Proxy Cap) — logged for audit ───────────────────
@@ -151,7 +208,7 @@ export function runEngine(opts: {
     rule: "Rule 2 — Reliability",
     lb_adj: 0,
     hb_adj: 0,
-    note: `${reliability} | Proxy Cap: ${proxyCapped ? `YES — ${capValue} PPG cap applied` : "No"} | ${dna.name}`,
+    note: `${reliability} | Proxy Cap: ${proxyCapped ? `YES — ${capValue} PPG cap applied` : "No"} | ${dna.name}${leagueMeasuredActive && opts.league_measured?.sd ? ` | League totals SD ${opts.league_measured.sd} over ${opts.league_measured.games} banked games` : ""}`,
     status: "checked",
   });
   if (genderNote) {
@@ -218,6 +275,29 @@ export function runEngine(opts: {
       `Rule 5 (Eff/Pace): LB ${r5_lb >= 0 ? "+" : ""}${r5_lb}, HB ${r5_hb >= 0 ? "+" : ""}${r5_hb}`,
     );
 
+  // ── Rule 5b (3PT Volume — measured shooting only) ───────────────────────
+  // avg_pt3 used to be audit text only: a 20% and a 45% three-point
+  // fixture produced byte-identical ranges (execution-proven). When
+  // the caller supplied MEASURED 3PT% (research/prematch), elite
+  // combined shooting raises the ceiling (3-point variance + fouls on
+  // 3PT attempts) and poor combined shooting lowers it. The static
+  // profile fallback never fires this — only measured numbers do —
+  // so callers that pass no 3PT data (e.g. backtest) are unchanged.
+  const pt3Measured = opts.home_pt3 != null || opts.away_pt3 != null;
+  let r5b_hb = 0;
+  if (pt3Measured && avg_pt3 >= 0.38) r5b_hb = Math.round(2 * ws);
+  else if (pt3Measured && avg_pt3 <= 0.3) r5b_hb = -Math.round(2 * ws);
+  hb += r5b_hb;
+  adj_log.push({
+    rule: "Rule 5b — 3PT Volume",
+    lb_adj: 0,
+    hb_adj: r5b_hb,
+    note: pt3Measured ? `Measured 3PT%: H ${(eff_pt3_home * 100).toFixed(0)}% / A ${(eff_pt3_away * 100).toFixed(0)}% (avg ${(avg_pt3 * 100).toFixed(0)}%)${r5b_hb > 0 ? " — elite combined shooting raises the ceiling" : r5b_hb < 0 ? " — poor combined shooting compresses the ceiling" : " — inside the 30-38% neutral band"}` : "No measured 3PT% supplied — profile rates are not priced (neutral)",
+    status: r5b_hb !== 0 ? "triggered" : "checked",
+  });
+  if (r5b_hb !== 0)
+    triggered.push(`Rule 5b (3PT Volume): HB ${r5b_hb >= 0 ? "+" : ""}${r5b_hb} — measured avg 3PT% ${(avg_pt3 * 100).toFixed(0)}%`);
+
   // ── Rule 6 (Defensive Safety Lock — single-side only) ────────────────────
   let r6_lb = 0,
     r6_hb = 0;
@@ -234,7 +314,7 @@ export function runEngine(opts: {
     rule: "Rule 6 — Defense Safety Lock",
     lb_adj: r6_lb,
     hb_adj: r6_hb,
-    note: `H-Def: ${home_def} | A-Def: ${away_def} | Highest: ${higherDef} | Single-side only`,
+    note: `H-Def: ${home_def} | A-Def: ${away_def} | Highest: ${higherDef} | Single-side only${defMeasured ? " | MEASURED defence (warehouse points-allowed / league avg)" : " | profile def_rating (no measured allowed supplied)"}`,
     status: r6Status,
   });
   if (r6Status === "triggered")
@@ -406,20 +486,33 @@ export function runEngine(opts: {
   // ── Rule 18 (OT Hazard — tight margin adds HB only) ──────────────────────
   let r18_hb = 0;
   const otHazard = margin <= 5 && !dna.noOT;
+  // Measured OT history (banked games that actually reached overtime,
+  // served by prematch) is a second, independent signal: a fixture
+  // whose teams reach OT in >=15% of banked games carries real OT
+  // risk even at a 6-8pt margin, where the margin gate alone stands
+  // down. Half weight (+4) — the margin gate remains the primary.
+  const otMeasured = !dna.noOT && opts.ot_rate != null && opts.ot_rate >= 0.15 && margin <= 8 && !otHazard;
   if (otHazard) {
     r18_hb = 8;
+    hb += r18_hb;
+  } else if (otMeasured) {
+    r18_hb = 4;
     hb += r18_hb;
   }
   adj_log.push({
     rule: "Rule 18 — OT Hazard",
     lb_adj: 0,
     hb_adj: r18_hb,
-    note: `Margin: ${margin.toFixed(1)} pts${otHazard ? ` ≤5 → OT Risk → HB+8 (HB ONLY — LB stays grounded)` : (dna.noOT ? " — format has NO overtime → Rule 18 stands down" : " >5 — no OT hazard")}`,
-    status: otHazard ? "triggered" : "checked",
+    note: `Margin: ${margin.toFixed(1)} pts${otHazard ? ` ≤5 → OT Risk → HB+8 (HB ONLY — LB stays grounded)` : otMeasured ? ` — margin >5, but measured OT rate ${(opts.ot_rate! * 100).toFixed(0)}% of banked games reached overtime → HB+4` : (dna.noOT ? " — format has NO overtime → Rule 18 stands down" : ` >5 — no OT hazard${opts.ot_rate != null ? ` (measured OT rate ${(opts.ot_rate * 100).toFixed(0)}%)` : ""}`)}`,
+    status: otHazard || otMeasured ? "triggered" : "checked",
   });
   if (otHazard)
     triggered.push(
       `Rule 18 (OT Hazard): Margin ${margin.toFixed(1)} ≤5 → HB+8 (LB grounded in regulation)`,
+    );
+  if (otMeasured)
+    triggered.push(
+      `Rule 18 (OT Hazard — measured): OT rate ${(opts.ot_rate! * 100).toFixed(0)}% of banked games → HB+4`,
     );
 
   // ── Rule 8 Width Cap (applied after all expansions) ───────────────────────
@@ -760,6 +853,10 @@ export function runEngine(opts: {
       `Proxy cap ${capValue} PPG may not reflect actual team efficiency`,
     );
   if (otHazard) failParts.push(`OT risk — margin ≤5 adds ±8pt uncertainty`);
+  if (leagueMeasuredActive && opts.league_measured?.sd != null && opts.league_measured.sd >= 24)
+    failParts.push(
+      `High league scoring variance (totals SD ${opts.league_measured.sd}) — this league's totals swing widely around their average`,
+    );
   if (collapsePct > 0)
     failParts.push(`${collapsePct}% historical Q1-Q4 Structural Collapse`);
   if (avg_ft < 0.7)

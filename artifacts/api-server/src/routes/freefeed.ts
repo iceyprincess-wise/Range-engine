@@ -69,10 +69,20 @@ const convertEvent = (ev: any, leagueName: string, ids: Map<string, { id: number
     const cur = Number(c.score);
     if (!Number.isFinite(cur)) return null;
     const s: any = { current: cur, display: cur };
-    (c.linescores ?? []).slice(0, 4).forEach((l: any, i: number) => {
+    const lines: any[] = c.linescores ?? [];
+    lines.slice(0, 4).forEach((l: any, i: number) => {
       const v = Number(l?.displayValue);
       if (Number.isFinite(v)) s["period" + (i + 1)] = v;
     });
+    // Overtime linescores (5th+) were sliced away: an OT game banked
+    // as a plain regulation final, its OT points visible only inside
+    // `current`. Bank them in the paid feed's shape (overtime +
+    // normaltime) so prematch OT measurement sees both feeds alike.
+    if (lines.length > 4) {
+      const ot = lines.slice(4).reduce((sum: number, l: any) => sum + (Number(l?.displayValue) || 0), 0);
+      s.overtime = ot;
+      s.normaltime = cur - ot;
+    }
     return s;
   };
   const hs = scoreOf(home), as = scoreOf(away);
@@ -81,7 +91,7 @@ const convertEvent = (ev: any, leagueName: string, ids: Map<string, { id: number
     game: {
       id: Number(ev.id),
       startTimestamp: Math.floor(new Date(ev.date).getTime() / 1000),
-      status: { code: 100, description: "Ended", type: "finished" },
+      status: hs.overtime != null || as.overtime != null ? { code: 110, description: "AET", type: "finished" } : { code: 100, description: "Ended", type: "finished" },
       // The league determines the recorded gender deterministically
       // for this feed (NBA = M, WNBA = F). The paid provider's team
       // objects carry the same field; ESPN-converted games were the

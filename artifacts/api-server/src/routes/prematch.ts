@@ -104,6 +104,7 @@ const summarize = (games: any[], teamId: number) => {
   const roadAllowed: number[] = [];
   const totals: number[] = [];
   const form: string[] = [];
+  let otGames = 0;
   for (const g of games) {
     const isHome = g.homeTeam?.id === teamId;
     const scored = pts(g, isHome ? "home" : "away") as number;
@@ -111,6 +112,7 @@ const summarize = (games: any[], teamId: number) => {
     (isHome ? homePts : roadPts).push(scored);
     (isHome ? homeAllowed : roadAllowed).push(allowed);
     totals.push(scored + allowed);
+    if (g.homeScore?.overtime != null || g.awayScore?.overtime != null || g.status?.code === 110) otGames++;
     if (form.length < 5) form.push(scored > allowed ? "W" : "L");
   }
   const avg = (a: number[]) => (a.length ? a.reduce((s, v) => s + v, 0) / a.length : null);
@@ -130,6 +132,12 @@ const summarize = (games: any[], teamId: number) => {
     // Real per-game totals (newest first) so the client can run the
     // Rule 16 variance check against actual recent scoring, not averages.
     recentTotals: totals.slice(0, 10),
+    // Measured overtime frequency over this team's banked games.
+    // The overtime period scores / AET status were banked on every
+    // game but read by nobody; Rule 18 and the research OT label now
+    // consume the real rate instead of a closeness heuristic alone.
+    otGames,
+    otRate: games.length ? +(otGames / games.length).toFixed(3) : null,
   };
 };
 
@@ -365,6 +373,29 @@ router.get("/v1/prematch", async (req: Request, res: Response) => {
       return e.homeTeam?.id === home.id ? hs > as : as > hs;
     }).length;
     const h2hAwayWins = h2hGames.length - h2hHomeWins;
+    const h2hOtGames = h2hGames.filter((e: any) => e.homeScore?.overtime != null || e.awayScore?.overtime != null || e.status?.code === 110).length;
+    // "Vs Other" pools: each team's banked games EXCLUDING this
+    // fixture's opponent. The UI's "Home/Away vs Other (L5)" rows
+    // previously rendered the all-opponents form string, H2H games
+    // included — the label claimed a separation that did not exist.
+    const vsOther = (games: any[], teamId: number, oppId: number) => {
+      const pool = games.filter((g: any) => g.homeTeam?.id !== oppId && g.awayTeam?.id !== oppId);
+      const totals = pool.map((g: any) => (pts(g, "home") as number) + (pts(g, "away") as number));
+      const form = pool.slice(0, 5).map((g: any) => {
+        const isH = g.homeTeam?.id === teamId;
+        return (pts(g, isH ? "home" : "away") as number) > (pts(g, isH ? "away" : "home") as number) ? "W" : "L";
+      }).join("");
+      return { games: pool.length, avgTotal: totals.length ? +(totals.reduce((s, v) => s + v, 0) / totals.length).toFixed(1) : null, form };
+    };
+    const homeVsOther = vsOther(homeGames, home.id, away.id);
+    const awayVsOther = vsOther(awayGames, away.id, home.id);
+    // Venue: only ESPN-banked games carry one (82 in the warehouse).
+    // Serve the most recent banked venue for this pairing / home team
+    // instead of leaving the field unread in the store.
+    const byRecency = (a: any, b: any) => (b.startTimestamp ?? 0) - (a.startTimestamp ?? 0);
+    const venue = [...h2hGames].sort(byRecency).find((g: any) => g.venue?.name)?.venue?.name
+      ?? [...homeGames].sort(byRecency).find((g: any) => g.venue?.name)?.venue?.name
+      ?? null;
 
     persist();
     return res.json({
@@ -374,14 +405,15 @@ router.get("/v1/prematch", async (req: Request, res: Response) => {
       // zero provider calls — was still labelled "real".
       provenance: (apiOk && stale.length > 0) || statsFetched ? "real" : "warehouse-stale",
       fetchedAt: new Date().toISOString(),
-      home: { id: home.id, name: home.name, ...summarize(homeGames, home.id), quarters: quarterProfile(homeGames), shooting: teamShooting(homeGames, home.id), shootingSeries: shootingSeries(homeGames, home.id), restDays: homeGames[0]?.startTimestamp ? Math.max(0, Math.floor((Date.now() / 1000 - homeGames[0].startTimestamp) / 86400)) : null },
-      away: { id: away.id, name: away.name, ...summarize(awayGames, away.id), quarters: quarterProfile(awayGames), shooting: teamShooting(awayGames, away.id), shootingSeries: shootingSeries(awayGames, away.id), restDays: awayGames[0]?.startTimestamp ? Math.max(0, Math.floor((Date.now() / 1000 - awayGames[0].startTimestamp) / 86400)) : null },
-      h2h: { meetings: h2hGames.length, avgTotal: h2hAvgTotal, totals: h2hTotals, homeWins: h2hHomeWins, awayWins: h2hAwayWins },
+      home: { id: home.id, name: home.name, ...summarize(homeGames, home.id), quarters: quarterProfile(homeGames), shooting: teamShooting(homeGames, home.id), shootingSeries: shootingSeries(homeGames, home.id), restDays: homeGames[0]?.startTimestamp ? Math.max(0, Math.floor((Date.now() / 1000 - homeGames[0].startTimestamp) / 86400)) : null, vsOther: homeVsOther },
+      away: { id: away.id, name: away.name, ...summarize(awayGames, away.id), quarters: quarterProfile(awayGames), shooting: teamShooting(awayGames, away.id), shootingSeries: shootingSeries(awayGames, away.id), restDays: awayGames[0]?.startTimestamp ? Math.max(0, Math.floor((Date.now() / 1000 - awayGames[0].startTimestamp) / 86400)) : null, vsOther: awayVsOther },
+      h2h: { meetings: h2hGames.length, avgTotal: h2hAvgTotal, totals: h2hTotals, homeWins: h2hHomeWins, awayWins: h2hAwayWins, otGames: h2hOtGames, otRate: h2hGames.length ? +(h2hOtGames / h2hGames.length).toFixed(3) : null },
       // What the warehouse records say this fixture IS (see
       // detectFixtureGender). Detection only - the engine still
       // prices the selector the user chose; the UI warns on mismatch
       // instead of a men's/women's mix-up passing silently.
       detectedGender: detectFixtureGender(home.id, away.id),
+      venue,
       warehouse: { storedGames: Object.keys(store.games).length, storedTeams: Object.keys(store.teams).length },
       quota,
     });

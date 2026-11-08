@@ -124,6 +124,21 @@ export async function fetchResearchData(
     apiData.homeLeadPct = preData.home?.shooting?.timeInLeadPct ?? apiData.homeLeadPct;
     apiData.awayLeadPct = preData.away?.shooting?.timeInLeadPct ?? apiData.awayLeadPct;
     apiData.detectedGender = preData.detectedGender ?? apiData.detectedGender;
+    apiData.homeOtRate = preData.home?.otRate ?? apiData.homeOtRate;
+    apiData.awayOtRate = preData.away?.otRate ?? apiData.awayOtRate;
+    apiData.h2hOtRate = preData.h2h?.otRate ?? apiData.h2hOtRate;
+    // Pooled measured OT rate across both teams' banked games + H2H
+    // meetings (games-weighted, from the counts prematch serves).
+    {
+      const og = (preData.home?.otGames ?? 0) + (preData.away?.otGames ?? 0) + (preData.h2h?.otGames ?? 0);
+      const gn = (preData.home?.gamesAnalyzed ?? 0) + (preData.away?.gamesAnalyzed ?? 0) + (preData.h2h?.meetings ?? 0);
+      apiData.otRate = gn > 0 ? +(og / gn).toFixed(3) : null;
+    }
+    apiData.venue = preData.venue ?? apiData.venue;
+    apiData.homeVsOtherForm = preData.home?.vsOther?.form ?? apiData.homeVsOtherForm;
+    apiData.awayVsOtherForm = preData.away?.vsOther?.form ?? apiData.awayVsOtherForm;
+    apiData.homeVsOtherGames = preData.home?.vsOther?.games ?? apiData.homeVsOtherGames;
+    apiData.awayVsOtherGames = preData.away?.vsOther?.games ?? apiData.awayVsOtherGames;
     // Per-game series -> the *50 arrays the weighted Rule 10 averages
     // consume. No endpoint returned them before, so the weighted path
     // was dead code that always fell back to the season scalars.
@@ -385,12 +400,19 @@ export async function fetchResearchData(
 
   // The PPG-margin fallback fired on 0/0 PPG too: |0 - 0| <= 6 printed a
   // MODERATE close-finish claim for a matchup with no data at all.
-  const hasOtData = h2h50.length >= 10 || homeArenaPPG > 0 || awayRoadPPG > 0;
+  // OT risk is now measured, not guessed from closeness: the old
+  // branch compared H2H TOTALS against (homeArenaPPG + awayRoadPPG)/2
+  // — a per-team average, half the scale of a total — so its HIGH /
+  // MODERATE shares were computed against the wrong target. The
+  // pooled banked OT rate (prematch) is the primary signal; the PPG
+  // margin heuristic remains only as the no-OT-data fallback.
+  const otRateMeasured: number | null = apiData.otRate ?? null;
+  const hasOtData = otRateMeasured != null || homeArenaPPG > 0 || awayRoadPPG > 0;
   const otRisk: "LOW" | "MODERATE" | "HIGH" | "UNKNOWN" = !hasOtData ? "UNKNOWN" :
-    h2h50.length >= 10
-      ? h2h50.filter((value) => Math.abs(value - (homeArenaPPG + awayRoadPPG) / 2) <= 2).length / h2h50.length >= 0.32
+    otRateMeasured != null
+      ? otRateMeasured >= 0.15
         ? "HIGH"
-        : h2h50.filter((value) => Math.abs(value - (homeArenaPPG + awayRoadPPG) / 2) <= 2).length / h2h50.length >= 0.18
+        : otRateMeasured >= 0.07
         ? "MODERATE"
         : "LOW"
       : Math.abs(homeArenaPPG - awayRoadPPG) <= 6
@@ -399,8 +421,8 @@ export async function fetchResearchData(
   const otNote =
     otRisk === "UNKNOWN"
       ? `OT risk not assessed — no banked scoring or H2H data for either team.`
-      : otRisk === "HIGH"
-      ? `High OT probability. Deep H2H body of work shows frequent close finish signatures and tight totals around projected average.`
+      : otRateMeasured != null
+      ? `Measured from banked games: ${(otRateMeasured * 100).toFixed(0)}% of the teams' banked games (H2H included) reached overtime — ${otRisk} OT possibility on real history, not a closeness guess.`
       : otRisk === "MODERATE"
       ? `Moderate OT possibility. Margin and totals suggest a late-game close finish is possible.`
       : `Low OT probability. Historical spread and pace show a cleaner regulation finish.`;
@@ -513,6 +535,19 @@ export async function fetchResearchData(
     homeTurnoverPts,
     awayTurnoverPts,
     detectedGender: apiData.detectedGender ?? null,
+    otRate: apiData.otRate ?? null,
+    homeOtRate: apiData.homeOtRate ?? null,
+    awayOtRate: apiData.awayOtRate ?? null,
+    venue: apiData.venue ?? null,
+    // The sync payload's live score was fetched on every research run
+    // and discarded by every consumer. It is now carried through so
+    // the UI can acknowledge a live fixture with its real score and
+    // runEngine's Rule 1 can quote it in the audit.
+    liveScore: apiData.score && typeof apiData.score.home === "number" && typeof apiData.score.away === "number" ? { home: apiData.score.home, away: apiData.score.away, status: String(apiData.status ?? "") } : null,
+    homeVsOtherForm: apiData.homeVsOtherForm ?? null,
+    awayVsOtherForm: apiData.awayVsOtherForm ?? null,
+    homeVsOtherGames: apiData.homeVsOtherGames ?? null,
+    awayVsOtherGames: apiData.awayVsOtherGames ?? null,
     recentTotals,
     fatigueRisk,
     fatigueNote,

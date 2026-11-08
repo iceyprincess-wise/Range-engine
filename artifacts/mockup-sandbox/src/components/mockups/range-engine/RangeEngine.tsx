@@ -240,7 +240,11 @@ function SplendorLogo() {
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 export function RangeEngine() {
-  const today = new Date().toISOString().split("T")[0];
+  // Local calendar date, NOT toISOString(): that is UTC, so in WAT
+  // (UTC+1) the first hour after midnight still showed yesterday —
+  // the auto-selected fixture date was wrong exactly when late-night
+  // fixtures are entered.
+  const today = (() => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`; })();
   const [tab, setTab] = useState<"analyzer" | "live" | "history" | "football">("analyzer"); // ─── BASKETAPI LIVE ENGINE (FINAL MATRIX) ───
 
   const API_BASE = (import.meta.env.VITE_API_BASE || "").replace(/\/+$/, "");
@@ -443,6 +447,7 @@ export function RangeEngine() {
     if (g.startTimestamp) {
       const d = new Date(g.startTimestamp * 1000);
       setKoTime(String(d.getHours()).padStart(2, "0") + ":" + String(d.getMinutes()).padStart(2, "0"));
+      setDate(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`);
     }
     setShowGames(false);
   };
@@ -527,9 +532,8 @@ export function RangeEngine() {
 
             // ─ Phase 2: Fetching H2H Matrix ─
             setScanPhase("Fetching H2H Matrix...");
-            const params = new URLSearchParams({ league: league || "", homeTeam: homeTeam || "", awayTeam: awayTeam || "" });
-            if (gameId) params.set("gameId", gameId);
-            if (bookmaker) params.set("bookmaker", bookmaker);
+            // (A URLSearchParams built here was previously discarded —
+            // the fetch below only ever sent homeTeam/awayTeam.)
             const response = await fetch(`${API_BASE}/api/v1/prematch?homeTeam=${encodeURIComponent(homeTeam || "")}&awayTeam=${encodeURIComponent(awayTeam || "")}`);
             if (!response.ok) {
               throw new Error(`API request failed: ${response.status}`);
@@ -1083,6 +1087,11 @@ export function RangeEngine() {
           collapse_pct: rd?.collapsePct ?? 0,
           recent_totals: rd?.recentTotals,
           league_measured: rd?.leagueDnaMeasured ?? null,
+          home_def_ppg: rd?.homeDefPpg ?? undefined,
+          away_def_ppg: rd?.awayDefPpg ?? undefined,
+          ot_rate: rd?.otRate ?? undefined,
+          minutes_to_tipoff: tipOffMinutes,
+          live_score: rd?.liveScore ? { home: rd.liveScore.home, away: rd.liveScore.away } : undefined,
         });
         setTimeout(() => {
           setResult(res);
@@ -1157,6 +1166,11 @@ export function RangeEngine() {
           collapse_pct: researchData?.collapsePct ?? 0,
           recent_totals: researchData?.recentTotals,
           league_measured: researchData?.leagueDnaMeasured ?? null,
+          home_def_ppg: researchData?.homeDefPpg ?? undefined,
+          away_def_ppg: researchData?.awayDefPpg ?? undefined,
+          ot_rate: researchData?.otRate ?? undefined,
+          minutes_to_tipoff: tipOffMinutes,
+          live_score: researchData?.liveScore ? { home: researchData.liveScore.home, away: researchData.liveScore.away } : undefined,
           is_rerun: true,
           rerun_timestamp: new Date().toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", second: "2-digit" }),
         });
@@ -1657,9 +1671,19 @@ MATCH CONTEXT — Rule 1 (Time Sync)
                       <Label htmlFor="live" className="text-xs text-zinc-300 font-normal leading-normal">Live Match</Label>
                     </div>
                   </div>
+                  {isLiveMatch && (
+                    <div className="px-3 py-2 rounded-lg border border-red-800 bg-red-950/40 text-[10px] font-bold uppercase tracking-widest text-red-300">
+                      ● Live Match selected — the engine prices this as a LIVE game (HB +3 variance widening, Rule 1 clock check armed){researchData?.liveScore ? ` · Live score: ${researchData.liveScore.home}–${researchData.liveScore.away}` : ""}
+                    </div>
+                  )}
                   {researchData?.detectedGender && researchData.detectedGender !== matchGender && (
                     <p className="text-[11px] text-amber-400 font-mono">
                       ⚠ Warehouse records mark this fixture as a {researchData.detectedGender === "Women" ? "women's" : "men's"} game — the gender selector is set to {matchGender}. The engine prices what you selected; switch the selector if the warehouse is right.
+                    </p>
+                  )}
+                  {researchData?.venue && (
+                    <p className="text-[11px] text-zinc-400 font-mono">
+                      Venue (latest banked game): {researchData.venue}
                     </p>
                   )}
                   {league && (
@@ -1973,10 +1997,10 @@ MATCH CONTEXT — Rule 1 (Time Sync)
                                 <div className="grid grid-cols-2 gap-2">
                                   <div className="bg-zinc-900/50 rounded p-3 border border-yellow-950/50">
                                     <h4 className="text-[10px] text-zinc-400 font-mono mb-1 uppercase">
-                                      Home vs Other (L5)
+                                      {researchData?.homeVsOtherGames != null ? `Home vs Other (L5 · ${researchData.homeVsOtherGames} banked)` : "Home vs Other (L5)"}
                                     </h4>
                                     <div className="text-sm font-mono font-bold flex gap-1">
-                                      {(researchData?.homeRecentForm ?? []).map((item, index) => (
+                                      {(researchData?.homeVsOtherForm ? researchData.homeVsOtherForm.split("") : researchData?.homeRecentForm ?? []).map((item, index) => (
                                         <span key={index} className={item === "W" ? "text-green-500" : "text-red-500"}>
                                           {item}
                                         </span>
@@ -1985,10 +2009,10 @@ MATCH CONTEXT — Rule 1 (Time Sync)
                                   </div>
                                   <div className="bg-zinc-900/50 rounded p-3 border border-yellow-950/50">
                                     <h4 className="text-[10px] text-zinc-400 font-mono mb-1 uppercase">
-                                      Away vs Other (L5)
+                                      {researchData?.awayVsOtherGames != null ? `Away vs Other (L5 · ${researchData.awayVsOtherGames} banked)` : "Away vs Other (L5)"}
                                     </h4>
                                     <div className="text-sm font-mono font-bold flex gap-1">
-                                      {(researchData?.awayRecentForm ?? []).map((item, index) => (
+                                      {(researchData?.awayVsOtherForm ? researchData.awayVsOtherForm.split("") : researchData?.awayRecentForm ?? []).map((item, index) => (
                                         <span key={index} className={item === "W" ? "text-green-500" : "text-red-500"}>
                                           {item}
                                         </span>

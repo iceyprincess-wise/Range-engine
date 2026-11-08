@@ -140,6 +140,15 @@ export interface ResearchData {
   homeTurnoverPts: number | null;
   awayTurnoverPts: number | null;
   detectedGender: "Men" | "Women" | null;
+  otRate: number | null;
+  homeOtRate: number | null;
+  awayOtRate: number | null;
+  venue: string | null;
+  liveScore: { home: number; away: number; status: string } | null;
+  homeVsOtherForm: string | null;
+  awayVsOtherForm: string | null;
+  homeVsOtherGames: number | null;
+  awayVsOtherGames: number | null;
   homeLeadTime: string;
   awayLeadTime: string;
   homeLineup: { pos: string; name: string }[];
