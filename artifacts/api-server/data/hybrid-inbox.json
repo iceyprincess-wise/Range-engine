@@ -165620,158 +165620,6 @@
       }
     },
     {
-      "tournament": {
-        "name": "CBI U15 Fem, Série Prata",
-        "slug": "cbi-u15-fem-serie-prata",
-        "category": {
-          "name": "Brazil",
-          "slug": "brazil",
-          "sport": {
-            "name": "Basketball",
-            "slug": "basketball",
-            "id": 2
-          },
-          "priority": 0,
-          "country": {
-            "alpha2": "BR",
-            "alpha3": "BRA",
-            "name": "Brazil",
-            "slug": "brazil"
-          },
-          "id": 263,
-          "flag": "brazil",
-          "alpha2": "BR",
-          "fieldTranslations": {
-            "nameTranslation": {
-              "ar": "البرازيل",
-              "ru": "Бразилия"
-            },
-            "shortNameTranslation": {}
-          }
-        },
-        "uniqueTournament": {
-          "name": "CBI U15 Fem",
-          "slug": "cbi-u15-fem",
-          "category": {
-            "name": "Brazil",
-            "slug": "brazil",
-            "sport": {
-              "name": "Basketball",
-              "slug": "basketball",
-              "id": 2
-            },
-            "priority": 0,
-            "country": {
-              "alpha2": "BR",
-              "alpha3": "BRA",
-              "name": "Brazil",
-              "slug": "brazil"
-            },
-            "id": 263,
-            "flag": "brazil",
-            "alpha2": "BR",
-            "fieldTranslations": {
-              "nameTranslation": {
-                "ar": "البرازيل",
-                "ru": "Бразилия"
-              },
-              "shortNameTranslation": {}
-            }
-          },
-          "userCount": 19,
-          "country": {},
-          "id": 31450,
-          "displayInverseHomeAwayTeams": false,
-          "fieldTranslations": {
-            "nameTranslation": {
-              "ar": "كبي تحت 15 إناث",
-              "ru": "CBI U15 Fem"
-            },
-            "shortNameTranslation": {}
-          }
-        },
-        "priority": 0,
-        "id": 193716
-      },
-      "customId": "MXmjsDXZj",
-      "status": {
-        "code": 100,
-        "description": "Ended",
-        "type": "finished"
-      },
-      "homeTeam": {
-        "name": "Aeroclube U15",
-        "slug": "aeroclube-u15",
-        "gender": "F",
-        "sport": {
-          "name": "Basketball",
-          "slug": "basketball",
-          "id": 2
-        },
-        "userCount": 2,
-        "nameCode": "AU1",
-        "disabled": false,
-        "national": false,
-        "type": 0,
-        "country": {
-          "alpha2": "BR",
-          "alpha3": "BRA",
-          "name": "Brazil",
-          "slug": "brazil"
-        },
-        "id": 1249878,
-        "teamColors": {
-          "primary": "#374df5",
-          "secondary": "#374df5",
-          "text": "#ffffff"
-        }
-      },
-      "awayTeam": {
-        "name": "Sampaio Correa U15",
-        "slug": "sampaio-correa-u15",
-        "shortName": "Sampaio Correa U15",
-        "gender": "F",
-        "sport": {
-          "name": "Basketball",
-          "slug": "basketball",
-          "id": 2
-        },
-        "userCount": 6,
-        "nameCode": "SCU",
-        "disabled": false,
-        "national": false,
-        "type": 0,
-        "country": {
-          "alpha2": "BR",
-          "alpha3": "BRA",
-          "name": "Brazil",
-          "slug": "brazil"
-        },
-        "id": 1157387,
-        "teamColors": {
-          "primary": "#374df5",
-          "secondary": "#374df5",
-          "text": "#ffffff"
-        },
-        "fieldTranslations": {
-          "nameTranslation": {
-            "ar": "سامبايو كوريا تحت 15",
-            "ru": "Сампайо Корреа U15"
-          },
-          "shortNameTranslation": {
-            "ar": "سامبايو كوريا تحت 15",
-            "ru": "Сампайо Корреа U15"
-          }
-        }
-      },
-      "homeScore": {},
-      "awayScore": {},
-      "id": 16667843,
-      "slug": "aeroclube-u15-sampaio-correa-u15",
-      "startTimestamp": 1785329100,
-      "finalResultOnly": false
-    },
-    {
       "id": 401909277,
       "startTimestamp": 1793401200,
       "status": {
@@ -168780,6 +168628,6883 @@
         "name": "Chase Center"
       },
       "source": "espn-freefeed"
+    },
+    {
+      "tournament": {
+        "name": "Lega A Basket",
+        "slug": "serie-a",
+        "category": {
+          "name": "Italy",
+          "slug": "italy",
+          "sport": {
+            "name": "Basketball",
+            "slug": "basketball",
+            "id": 2
+          },
+          "priority": 0,
+          "country": {
+            "alpha2": "IT",
+            "alpha3": "ITA",
+            "name": "Italy",
+            "slug": "italy"
+          },
+          "id": 107,
+          "flag": "italy",
+          "alpha2": "IT",
+          "fieldTranslations": {
+            "nameTranslation": {
+              "ar": "إيطاليا",
+              "ru": "Италия"
+            },
+            "shortNameTranslation": {}
+          }
+        },
+        "uniqueTournament": {
+          "name": "Lega A Basket",
+          "slug": "serie-a",
+          "primaryColorHex": "#d3cea2",
+          "secondaryColorHex": "#333366",
+          "category": {
+            "name": "Italy",
+            "slug": "italy",
+            "sport": {
+              "name": "Basketball",
+              "slug": "basketball",
+              "id": 2
+            },
+            "priority": 0,
+            "country": {
+              "alpha2": "IT",
+              "alpha3": "ITA",
+              "name": "Italy",
+              "slug": "italy"
+            },
+            "id": 107,
+            "flag": "italy",
+            "alpha2": "IT",
+            "fieldTranslations": {
+              "nameTranslation": {
+                "ar": "إيطاليا",
+                "ru": "Италия"
+              },
+              "shortNameTranslation": {}
+            }
+          },
+          "userCount": 8554,
+          "liveActivityEnabled": false,
+          "country": {},
+          "id": 262,
+          "displayInverseHomeAwayTeams": false,
+          "fieldTranslations": {
+            "nameTranslation": {
+              "ar": "دوري الدرجة الأولى لكرة السلة",
+              "bn": "লেগা আ বাস্কেট",
+              "hi": "लेगा ए बास्केट",
+              "ru": "Лега A Баскет"
+            },
+            "shortNameTranslation": {}
+          }
+        },
+        "priority": 101,
+        "isLive": false,
+        "id": 269,
+        "fieldTranslations": {
+          "nameTranslation": {
+            "ar": "الدوري الممتاز لكرة السلة",
+            "bn": "লেগা এ বাস্কেট",
+            "hi": "लेगा ए बास्केट",
+            "ru": "Лига A Баскет"
+          },
+          "shortNameTranslation": {}
+        }
+      },
+      "roundInfo": {
+        "round": 7
+      },
+      "customId": "JgosoMZj",
+      "status": {
+        "code": 100,
+        "description": "Ended",
+        "type": "finished"
+      },
+      "winnerCode": 1,
+      "homeTeam": {
+        "name": "Pallacanestro Trieste",
+        "slug": "pallacanestro-trieste",
+        "shortName": "Trieste",
+        "gender": "M",
+        "sport": {
+          "name": "Basketball",
+          "slug": "basketball",
+          "id": 2
+        },
+        "userCount": 2163,
+        "nameCode": "PAL",
+        "disabled": false,
+        "national": false,
+        "type": 0,
+        "country": {
+          "alpha2": "IT",
+          "alpha3": "ITA",
+          "name": "Italy",
+          "slug": "italy"
+        },
+        "id": 35334,
+        "teamColors": {
+          "primary": "#ffffff",
+          "secondary": "#d41421",
+          "text": "#d41421"
+        },
+        "fieldTranslations": {
+          "nameTranslation": {
+            "ar": "بالاكانسترو ترييستي",
+            "ru": "Триест"
+          },
+          "shortNameTranslation": {
+            "ar": "ترييستي",
+            "bn": "ট্রিয়েস্ট",
+            "hi": "ट्राइस्टे"
+          }
+        }
+      },
+      "awayTeam": {
+        "name": "BC Roma",
+        "slug": "bc-roma-spqr",
+        "shortName": "BC Roma",
+        "gender": "M",
+        "sport": {
+          "name": "Basketball",
+          "slug": "basketball",
+          "id": 2
+        },
+        "userCount": 1139,
+        "nameCode": "ROM",
+        "disabled": false,
+        "national": false,
+        "type": 0,
+        "country": {},
+        "id": 1249364,
+        "teamColors": {
+          "primary": "#374df5",
+          "secondary": "#374df5",
+          "text": "#ffffff"
+        }
+      },
+      "homeScore": {
+        "current": 116,
+        "display": 116,
+        "period1": 28,
+        "period2": 30,
+        "period3": 34,
+        "period4": 24,
+        "normaltime": 116
+      },
+      "awayScore": {
+        "current": 100,
+        "display": 100,
+        "period1": 32,
+        "period2": 24,
+        "period3": 26,
+        "period4": 18,
+        "normaltime": 100
+      },
+      "id": 16722494,
+      "slug": "bc-roma-spqr-pallacanestro-trieste",
+      "startTimestamp": 1794135600,
+      "finalResultOnly": false
+    },
+    {
+      "tournament": {
+        "name": "Lega A Basket",
+        "slug": "serie-a",
+        "category": {
+          "name": "Italy",
+          "slug": "italy",
+          "sport": {
+            "name": "Basketball",
+            "slug": "basketball",
+            "id": 2
+          },
+          "priority": 0,
+          "country": {
+            "alpha2": "IT",
+            "alpha3": "ITA",
+            "name": "Italy",
+            "slug": "italy"
+          },
+          "id": 107,
+          "flag": "italy",
+          "alpha2": "IT",
+          "fieldTranslations": {
+            "nameTranslation": {
+              "ar": "إيطاليا",
+              "ru": "Италия"
+            },
+            "shortNameTranslation": {}
+          }
+        },
+        "uniqueTournament": {
+          "name": "Lega A Basket",
+          "slug": "serie-a",
+          "primaryColorHex": "#d3cea2",
+          "secondaryColorHex": "#333366",
+          "category": {
+            "name": "Italy",
+            "slug": "italy",
+            "sport": {
+              "name": "Basketball",
+              "slug": "basketball",
+              "id": 2
+            },
+            "priority": 0,
+            "country": {
+              "alpha2": "IT",
+              "alpha3": "ITA",
+              "name": "Italy",
+              "slug": "italy"
+            },
+            "id": 107,
+            "flag": "italy",
+            "alpha2": "IT",
+            "fieldTranslations": {
+              "nameTranslation": {
+                "ar": "إيطاليا",
+                "ru": "Италия"
+              },
+              "shortNameTranslation": {}
+            }
+          },
+          "userCount": 8554,
+          "liveActivityEnabled": false,
+          "country": {},
+          "id": 262,
+          "displayInverseHomeAwayTeams": false,
+          "fieldTranslations": {
+            "nameTranslation": {
+              "ar": "دوري الدرجة الأولى لكرة السلة",
+              "bn": "লেগা আ বাস্কেট",
+              "hi": "लेगा ए बास्केट",
+              "ru": "Лега A Баскет"
+            },
+            "shortNameTranslation": {}
+          }
+        },
+        "priority": 101,
+        "isLive": false,
+        "id": 269,
+        "fieldTranslations": {
+          "nameTranslation": {
+            "ar": "الدوري الممتاز لكرة السلة",
+            "bn": "লেগা এ বাস্কেট",
+            "hi": "लेगा ए बास्केट",
+            "ru": "Лига A Баскет"
+          },
+          "shortNameTranslation": {}
+        }
+      },
+      "roundInfo": {
+        "round": 7
+      },
+      "customId": "zmcskPj",
+      "status": {
+        "code": 100,
+        "description": "Ended",
+        "type": "finished"
+      },
+      "winnerCode": 2,
+      "homeTeam": {
+        "name": "UNAhotels Reggio Emilia",
+        "slug": "unahotels-reggio-emilia",
+        "shortName": "Reggio Emilia",
+        "gender": "M",
+        "sport": {
+          "name": "Basketball",
+          "slug": "basketball",
+          "id": 2
+        },
+        "userCount": 2248,
+        "nameCode": "REG",
+        "national": false,
+        "type": 0,
+        "country": {
+          "alpha2": "IT",
+          "alpha3": "ITA",
+          "name": "Italy",
+          "slug": "italy"
+        },
+        "id": 5624,
+        "teamColors": {
+          "primary": "#ffffff",
+          "secondary": "#f21111",
+          "text": "#f21111"
+        },
+        "fieldTranslations": {
+          "nameTranslation": {
+            "ar": "أونا هوتيلز ريجيو إميليا",
+            "ru": "Реджана"
+          },
+          "shortNameTranslation": {
+            "ar": "ريجيو إميليا",
+            "bn": "রেজিও এমিলিয়া",
+            "hi": "रेगियो एमिलिया"
+          }
+        }
+      },
+      "awayTeam": {
+        "name": "Umana Reyer Venezia",
+        "slug": "umana-reyer-venezia",
+        "shortName": "Venezia",
+        "gender": "M",
+        "sport": {
+          "name": "Basketball",
+          "slug": "basketball",
+          "id": 2
+        },
+        "userCount": 4053,
+        "nameCode": "REV",
+        "disabled": false,
+        "national": false,
+        "type": 0,
+        "country": {
+          "alpha2": "IT",
+          "alpha3": "ITA",
+          "name": "Italy",
+          "slug": "italy"
+        },
+        "id": 24510,
+        "teamColors": {
+          "primary": "#800000",
+          "secondary": "#cec499",
+          "text": "#cec499"
+        },
+        "fieldTranslations": {
+          "nameTranslation": {
+            "ar": "أومانا رير فينيسيا",
+            "ru": "Умана Рейер Венеция"
+          },
+          "shortNameTranslation": {
+            "ar": "فينيسيا",
+            "bn": "ভেনিস",
+            "hi": "वेनेज़िया"
+          }
+        }
+      },
+      "homeScore": {
+        "current": 78,
+        "display": 78,
+        "period1": 26,
+        "period2": 20,
+        "period3": 18,
+        "period4": 14,
+        "normaltime": 78
+      },
+      "awayScore": {
+        "current": 83,
+        "display": 83,
+        "period1": 18,
+        "period2": 21,
+        "period3": 20,
+        "period4": 24,
+        "normaltime": 83
+      },
+      "id": 16722495,
+      "slug": "umana-reyer-venezia-unahotels-reggio-emilia",
+      "startTimestamp": 1794078000,
+      "finalResultOnly": false
+    },
+    {
+      "tournament": {
+        "name": "Turkish Basketball Super League",
+        "slug": "turkiye-sigorta-basketbol-super-ligi",
+        "category": {
+          "name": "Turkey",
+          "slug": "turkey",
+          "sport": {
+            "name": "Basketball",
+            "slug": "basketball",
+            "id": 2
+          },
+          "priority": 0,
+          "country": {
+            "alpha2": "TR",
+            "alpha3": "TUR",
+            "name": "Türkiye",
+            "slug": "turkiye"
+          },
+          "id": 112,
+          "flag": "turkey",
+          "alpha2": "TR",
+          "fieldTranslations": {
+            "nameTranslation": {
+              "ar": "تركيا",
+              "ru": "Турция"
+            },
+            "shortNameTranslation": {}
+          }
+        },
+        "uniqueTournament": {
+          "name": "Turkish Basketball Super League",
+          "slug": "turkiye-sigorta-basketbol-super-ligi",
+          "primaryColorHex": "#009aad",
+          "secondaryColorHex": "#bd0821",
+          "category": {
+            "name": "Turkey",
+            "slug": "turkey",
+            "sport": {
+              "name": "Basketball",
+              "slug": "basketball",
+              "id": 2
+            },
+            "priority": 0,
+            "country": {
+              "alpha2": "TR",
+              "alpha3": "TUR",
+              "name": "Türkiye",
+              "slug": "turkiye"
+            },
+            "id": 112,
+            "flag": "turkey",
+            "alpha2": "TR",
+            "fieldTranslations": {
+              "nameTranslation": {
+                "ar": "تركيا",
+                "ru": "Турция"
+              },
+              "shortNameTranslation": {}
+            }
+          },
+          "userCount": 2991,
+          "liveActivityEnabled": false,
+          "country": {},
+          "id": 519,
+          "displayInverseHomeAwayTeams": false,
+          "fieldTranslations": {
+            "nameTranslation": {
+              "ar": "الدوري التركي الممتاز لكرة السلة",
+              "bn": "তুর্কিশ বাস্কেটবল সুপার লীগ",
+              "hi": "तुर्किश बास्केटबॉल सुपर लीग",
+              "ru": "Суперлига Турции по баскетболу"
+            },
+            "shortNameTranslation": {}
+          }
+        },
+        "priority": 93,
+        "isLive": false,
+        "id": 595,
+        "fieldTranslations": {
+          "nameTranslation": {
+            "ar": "دوري السلة التركي الممتاز",
+            "bn": "তুর্কি বাস্কেটবল সুপার লীগ",
+            "hi": "टर्किश बास्केटबॉल सुपर लीग",
+            "ru": "Суперлига баскетбола Турции"
+          },
+          "shortNameTranslation": {}
+        }
+      },
+      "roundInfo": {
+        "round": 7
+      },
+      "customId": "UrgcsQOwc",
+      "status": {
+        "code": 100,
+        "description": "Ended",
+        "type": "finished"
+      },
+      "winnerCode": 1,
+      "homeTeam": {
+        "name": "Bahçeşehir Koleji",
+        "slug": "bahcesehir-koleji",
+        "shortName": "Bahçeşehir Koleji",
+        "gender": "M",
+        "sport": {
+          "name": "Basketball",
+          "slug": "basketball",
+          "id": 2
+        },
+        "userCount": 2643,
+        "nameCode": "BAH",
+        "disabled": false,
+        "national": false,
+        "type": 0,
+        "country": {
+          "alpha2": "TR",
+          "alpha3": "TUR",
+          "name": "Türkiye",
+          "slug": "turkiye"
+        },
+        "id": 265894,
+        "teamColors": {
+          "primary": "#db1d27",
+          "secondary": "#132956",
+          "text": "#132956"
+        },
+        "fieldTranslations": {
+          "nameTranslation": {
+            "ar": "بهشة شهير كوليجي",
+            "bn": "বাহসেহির কোলেজি",
+            "hi": "बहससेहिर कोलेजी",
+            "ru": "Бахчешехир Университет"
+          },
+          "shortNameTranslation": {}
+        }
+      },
+      "awayTeam": {
+        "name": "Denizli Basket Spor Kulübü",
+        "slug": "yukatel-merkezefendi-belediyesi-basket",
+        "shortName": "Denizli Basket",
+        "gender": "M",
+        "sport": {
+          "name": "Basketball",
+          "slug": "basketball",
+          "id": 2
+        },
+        "userCount": 810,
+        "nameCode": "DEN",
+        "disabled": false,
+        "national": false,
+        "type": 0,
+        "country": {
+          "alpha2": "TR",
+          "alpha3": "TUR",
+          "name": "Türkiye",
+          "slug": "turkiye"
+        },
+        "id": 304491,
+        "teamColors": {
+          "primary": "#243faa",
+          "secondary": "#ffffff",
+          "text": "#ffffff"
+        },
+        "fieldTranslations": {
+          "nameTranslation": {
+            "ar": "يوكاتيل ميركزيفندي بلدية باسكت",
+            "ru": "Баскет Юкатель Меркецефенди"
+          },
+          "shortNameTranslation": {
+            "ar": "ميركزيفندي باسكت",
+            "bn": "মেরকেজেফেন্দি বাস্কেট",
+            "hi": "मर्केज़ेफ़ेंडी बास्केट",
+            "ru": "Баскет Меркецефенди"
+          }
+        }
+      },
+      "homeScore": {
+        "current": 97,
+        "display": 97,
+        "period1": 24,
+        "period2": 27,
+        "period3": 28,
+        "period4": 18,
+        "normaltime": 97
+      },
+      "awayScore": {
+        "current": 86,
+        "display": 86,
+        "period1": 27,
+        "period2": 23,
+        "period3": 11,
+        "period4": 25,
+        "normaltime": 86
+      },
+      "id": 16747309,
+      "slug": "yukatel-merkezefendi-belediyesi-basket-bahcesehir-koleji",
+      "startTimestamp": 1794132000,
+      "finalResultOnly": false
+    },
+    {
+      "tournament": {
+        "name": "Turkish Basketball Super League",
+        "slug": "turkiye-sigorta-basketbol-super-ligi",
+        "category": {
+          "name": "Turkey",
+          "slug": "turkey",
+          "sport": {
+            "name": "Basketball",
+            "slug": "basketball",
+            "id": 2
+          },
+          "priority": 0,
+          "country": {
+            "alpha2": "TR",
+            "alpha3": "TUR",
+            "name": "Türkiye",
+            "slug": "turkiye"
+          },
+          "id": 112,
+          "flag": "turkey",
+          "alpha2": "TR",
+          "fieldTranslations": {
+            "nameTranslation": {
+              "ar": "تركيا",
+              "ru": "Турция"
+            },
+            "shortNameTranslation": {}
+          }
+        },
+        "uniqueTournament": {
+          "name": "Turkish Basketball Super League",
+          "slug": "turkiye-sigorta-basketbol-super-ligi",
+          "primaryColorHex": "#009aad",
+          "secondaryColorHex": "#bd0821",
+          "category": {
+            "name": "Turkey",
+            "slug": "turkey",
+            "sport": {
+              "name": "Basketball",
+              "slug": "basketball",
+              "id": 2
+            },
+            "priority": 0,
+            "country": {
+              "alpha2": "TR",
+              "alpha3": "TUR",
+              "name": "Türkiye",
+              "slug": "turkiye"
+            },
+            "id": 112,
+            "flag": "turkey",
+            "alpha2": "TR",
+            "fieldTranslations": {
+              "nameTranslation": {
+                "ar": "تركيا",
+                "ru": "Турция"
+              },
+              "shortNameTranslation": {}
+            }
+          },
+          "userCount": 2991,
+          "liveActivityEnabled": false,
+          "country": {},
+          "id": 519,
+          "displayInverseHomeAwayTeams": false,
+          "fieldTranslations": {
+            "nameTranslation": {
+              "ar": "الدوري التركي الممتاز لكرة السلة",
+              "bn": "তুর্কিশ বাস্কেটবল সুপার লীগ",
+              "hi": "तुर्किश बास्केटबॉल सुपर लीग",
+              "ru": "Суперлига Турции по баскетболу"
+            },
+            "shortNameTranslation": {}
+          }
+        },
+        "priority": 93,
+        "isLive": false,
+        "id": 595,
+        "fieldTranslations": {
+          "nameTranslation": {
+            "ar": "دوري السلة التركي الممتاز",
+            "bn": "তুর্কি বাস্কেটবল সুপার লীগ",
+            "hi": "टर्किश बास्केटबॉल सुपर लीग",
+            "ru": "Суперлига баскетбола Турции"
+          },
+          "shortNameTranslation": {}
+        }
+      },
+      "roundInfo": {
+        "round": 7
+      },
+      "customId": "xatsoJTb",
+      "status": {
+        "code": 100,
+        "description": "Ended",
+        "type": "finished"
+      },
+      "winnerCode": 2,
+      "homeTeam": {
+        "name": "Trabzonspor",
+        "slug": "trabzonspor-bk",
+        "shortName": "Trabzonspor",
+        "gender": "M",
+        "sport": {
+          "name": "Basketball",
+          "slug": "basketball",
+          "id": 2
+        },
+        "userCount": 3003,
+        "nameCode": "TRA",
+        "disabled": false,
+        "national": false,
+        "type": 0,
+        "country": {
+          "alpha2": "TR",
+          "alpha3": "TUR",
+          "name": "Türkiye",
+          "slug": "turkiye"
+        },
+        "id": 45022,
+        "teamColors": {
+          "primary": "#98285c",
+          "secondary": "#81c0ff",
+          "text": "#81c0ff"
+        },
+        "fieldTranslations": {
+          "nameTranslation": {
+            "ar": "طرابزون سبور بي كيه",
+            "ru": "Трабзонспор Медикал Парк"
+          },
+          "shortNameTranslation": {
+            "ar": "طرابزون سبور"
+          }
+        }
+      },
+      "awayTeam": {
+        "name": "Petkim Spor",
+        "slug": "petkim-spor",
+        "shortName": "Petkim Spor",
+        "gender": "M",
+        "sport": {
+          "name": "Basketball",
+          "slug": "basketball",
+          "id": 2
+        },
+        "userCount": 901,
+        "nameCode": "PTK",
+        "national": false,
+        "type": 0,
+        "country": {
+          "alpha2": "TR",
+          "alpha3": "TUR",
+          "name": "Türkiye",
+          "slug": "turkiye"
+        },
+        "id": 234214,
+        "teamColors": {
+          "primary": "#ff0000",
+          "secondary": "#ffffff",
+          "text": "#ffffff"
+        },
+        "fieldTranslations": {
+          "nameTranslation": {
+            "ar": "بيتكيم سبور",
+            "bn": "পেটকিম স্পোর্টস",
+            "hi": "पेतकिम स्पोर",
+            "ru": "Coкaр Петким Cпop"
+          },
+          "shortNameTranslation": {}
+        }
+      },
+      "homeScore": {
+        "current": 81,
+        "display": 81,
+        "period1": 18,
+        "period2": 18,
+        "period3": 17,
+        "period4": 28,
+        "normaltime": 81,
+        "overtime": 0
+      },
+      "awayScore": {
+        "current": 91,
+        "display": 91,
+        "period1": 19,
+        "period2": 21,
+        "period3": 20,
+        "period4": 29,
+        "normaltime": 89,
+        "overtime": 2
+      },
+      "id": 16747311,
+      "slug": "petkim-spor-trabzonspor",
+      "startTimestamp": 1794063600,
+      "finalResultOnly": false
+    },
+    {
+      "tournament": {
+        "name": "Turkish Basketball Super League",
+        "slug": "turkiye-sigorta-basketbol-super-ligi",
+        "category": {
+          "name": "Turkey",
+          "slug": "turkey",
+          "sport": {
+            "name": "Basketball",
+            "slug": "basketball",
+            "id": 2
+          },
+          "priority": 0,
+          "country": {
+            "alpha2": "TR",
+            "alpha3": "TUR",
+            "name": "Türkiye",
+            "slug": "turkiye"
+          },
+          "id": 112,
+          "flag": "turkey",
+          "alpha2": "TR",
+          "fieldTranslations": {
+            "nameTranslation": {
+              "ar": "تركيا",
+              "ru": "Турция"
+            },
+            "shortNameTranslation": {}
+          }
+        },
+        "uniqueTournament": {
+          "name": "Turkish Basketball Super League",
+          "slug": "turkiye-sigorta-basketbol-super-ligi",
+          "primaryColorHex": "#009aad",
+          "secondaryColorHex": "#bd0821",
+          "category": {
+            "name": "Turkey",
+            "slug": "turkey",
+            "sport": {
+              "name": "Basketball",
+              "slug": "basketball",
+              "id": 2
+            },
+            "priority": 0,
+            "country": {
+              "alpha2": "TR",
+              "alpha3": "TUR",
+              "name": "Türkiye",
+              "slug": "turkiye"
+            },
+            "id": 112,
+            "flag": "turkey",
+            "alpha2": "TR",
+            "fieldTranslations": {
+              "nameTranslation": {
+                "ar": "تركيا",
+                "ru": "Турция"
+              },
+              "shortNameTranslation": {}
+            }
+          },
+          "userCount": 2991,
+          "liveActivityEnabled": false,
+          "country": {},
+          "id": 519,
+          "displayInverseHomeAwayTeams": false,
+          "fieldTranslations": {
+            "nameTranslation": {
+              "ar": "الدوري التركي الممتاز لكرة السلة",
+              "bn": "তুর্কিশ বাস্কেটবল সুপার লীগ",
+              "hi": "तुर्किश बास्केटबॉल सुपर लीग",
+              "ru": "Суперлига Турции по баскетболу"
+            },
+            "shortNameTranslation": {}
+          }
+        },
+        "priority": 93,
+        "isLive": false,
+        "id": 595,
+        "fieldTranslations": {
+          "nameTranslation": {
+            "ar": "دوري السلة التركي الممتاز",
+            "bn": "তুর্কি বাস্কেটবল সুপার লীগ",
+            "hi": "टर्किश बास्केटबॉल सुपर लीग",
+            "ru": "Суперлига баскетбола Турции"
+          },
+          "shortNameTranslation": {}
+        }
+      },
+      "roundInfo": {
+        "round": 7
+      },
+      "customId": "KGjsgphc",
+      "status": {
+        "code": 100,
+        "description": "Ended",
+        "type": "finished"
+      },
+      "winnerCode": 1,
+      "homeTeam": {
+        "name": "Türk Telekom B.K.",
+        "slug": "turk-telekom-bk",
+        "shortName": "Türk Telekom",
+        "gender": "M",
+        "sport": {
+          "name": "Basketball",
+          "slug": "basketball",
+          "id": 2
+        },
+        "userCount": 2733,
+        "nameCode": "TTS",
+        "disabled": false,
+        "national": false,
+        "type": 0,
+        "country": {
+          "alpha2": "TR",
+          "alpha3": "TUR",
+          "name": "Türkiye",
+          "slug": "turkiye"
+        },
+        "id": 24085,
+        "teamColors": {
+          "primary": "#0000cd",
+          "secondary": "#ffffff",
+          "text": "#ffffff"
+        },
+        "fieldTranslations": {
+          "nameTranslation": {
+            "ar": "ترك تيليكوم بي كيه",
+            "ru": "Турк Телеком"
+          },
+          "shortNameTranslation": {
+            "ar": "ترك تيليكوم",
+            "bn": "তুর্ক টেলিকম",
+            "hi": "तुर्क टेलीकॉम"
+          }
+        }
+      },
+      "awayTeam": {
+        "name": "Biotekno Körfez Basket",
+        "slug": "manisa-bbsk",
+        "shortName": "Körfez Basket",
+        "gender": "M",
+        "sport": {
+          "name": "Basketball",
+          "slug": "basketball",
+          "id": 2
+        },
+        "userCount": 932,
+        "nameCode": "MAN",
+        "disabled": false,
+        "national": false,
+        "type": 0,
+        "country": {
+          "alpha2": "TR",
+          "alpha3": "TUR",
+          "name": "Türkiye",
+          "slug": "turkiye"
+        },
+        "id": 268256,
+        "teamColors": {
+          "primary": "#3a865f",
+          "secondary": "#ffffff",
+          "text": "#ffffff"
+        },
+        "fieldTranslations": {
+          "nameTranslation": {
+            "ar": "مانيسا باسكت",
+            "bn": "মাইসা বিবিস্ক",
+            "ru": "Маниса Баскет"
+          },
+          "shortNameTranslation": {
+            "ar": "مانيسا",
+            "hi": "मनीसा",
+            "ru": "Маниса"
+          }
+        }
+      },
+      "homeScore": {
+        "current": 94,
+        "display": 94,
+        "period1": 23,
+        "period2": 17,
+        "period3": 24,
+        "period4": 30,
+        "normaltime": 94
+      },
+      "awayScore": {
+        "current": 82,
+        "display": 82,
+        "period1": 19,
+        "period2": 17,
+        "period3": 19,
+        "period4": 27,
+        "normaltime": 82
+      },
+      "id": 16747312,
+      "slug": "manisa-basket-turk-telekomk",
+      "startTimestamp": 1794054600,
+      "finalResultOnly": false
+    },
+    {
+      "tournament": {
+        "name": "Turkish Basketball Super League",
+        "slug": "turkiye-sigorta-basketbol-super-ligi",
+        "category": {
+          "name": "Turkey",
+          "slug": "turkey",
+          "sport": {
+            "name": "Basketball",
+            "slug": "basketball",
+            "id": 2
+          },
+          "priority": 0,
+          "country": {
+            "alpha2": "TR",
+            "alpha3": "TUR",
+            "name": "Türkiye",
+            "slug": "turkiye"
+          },
+          "id": 112,
+          "flag": "turkey",
+          "alpha2": "TR",
+          "fieldTranslations": {
+            "nameTranslation": {
+              "ar": "تركيا",
+              "ru": "Турция"
+            },
+            "shortNameTranslation": {}
+          }
+        },
+        "uniqueTournament": {
+          "name": "Turkish Basketball Super League",
+          "slug": "turkiye-sigorta-basketbol-super-ligi",
+          "primaryColorHex": "#009aad",
+          "secondaryColorHex": "#bd0821",
+          "category": {
+            "name": "Turkey",
+            "slug": "turkey",
+            "sport": {
+              "name": "Basketball",
+              "slug": "basketball",
+              "id": 2
+            },
+            "priority": 0,
+            "country": {
+              "alpha2": "TR",
+              "alpha3": "TUR",
+              "name": "Türkiye",
+              "slug": "turkiye"
+            },
+            "id": 112,
+            "flag": "turkey",
+            "alpha2": "TR",
+            "fieldTranslations": {
+              "nameTranslation": {
+                "ar": "تركيا",
+                "ru": "Турция"
+              },
+              "shortNameTranslation": {}
+            }
+          },
+          "userCount": 2991,
+          "liveActivityEnabled": false,
+          "country": {},
+          "id": 519,
+          "displayInverseHomeAwayTeams": false,
+          "fieldTranslations": {
+            "nameTranslation": {
+              "ar": "الدوري التركي الممتاز لكرة السلة",
+              "bn": "তুর্কিশ বাস্কেটবল সুপার লীগ",
+              "hi": "तुर्किश बास्केटबॉल सुपर लीग",
+              "ru": "Суперлига Турции по баскетболу"
+            },
+            "shortNameTranslation": {}
+          }
+        },
+        "priority": 93,
+        "isLive": false,
+        "id": 595,
+        "fieldTranslations": {
+          "nameTranslation": {
+            "ar": "دوري السلة التركي الممتاز",
+            "bn": "তুর্কি বাস্কেটবল সুপার লীগ",
+            "hi": "टर्किश बास्केटबॉल सुपर लीग",
+            "ru": "Суперлига баскетбола Турции"
+          },
+          "shortNameTranslation": {}
+        }
+      },
+      "roundInfo": {
+        "round": 7
+      },
+      "customId": "pvbskfp",
+      "status": {
+        "code": 100,
+        "description": "Ended",
+        "type": "finished"
+      },
+      "winnerCode": 2,
+      "homeTeam": {
+        "name": "Anadolu Efes",
+        "slug": "anadolu-efes",
+        "shortName": "Anadolu Efes",
+        "gender": "M",
+        "sport": {
+          "name": "Basketball",
+          "slug": "basketball",
+          "id": 2
+        },
+        "userCount": 15588,
+        "nameCode": "EFS",
+        "disabled": false,
+        "national": false,
+        "type": 0,
+        "country": {
+          "alpha2": "TR",
+          "alpha3": "TUR",
+          "name": "Türkiye",
+          "slug": "turkiye"
+        },
+        "id": 3515,
+        "teamColors": {
+          "primary": "#003366",
+          "secondary": "#c00000",
+          "text": "#c00000"
+        },
+        "fieldTranslations": {
+          "nameTranslation": {
+            "ar": "أنادولو إفيس",
+            "bn": "আনাতোলি এফিসাস",
+            "hi": "अनादोलु एफेस",
+            "ru": "Анадолу Эфес"
+          },
+          "shortNameTranslation": {}
+        }
+      },
+      "awayTeam": {
+        "name": "Tofaş Bursa",
+        "slug": "tofas-bursa",
+        "shortName": "Tofaş",
+        "gender": "M",
+        "sport": {
+          "name": "Basketball",
+          "slug": "basketball",
+          "id": 2
+        },
+        "userCount": 1910,
+        "nameCode": "TOF",
+        "disabled": false,
+        "national": false,
+        "type": 0,
+        "country": {
+          "alpha2": "TR",
+          "alpha3": "TUR",
+          "name": "Türkiye",
+          "slug": "turkiye"
+        },
+        "id": 37760,
+        "teamColors": {
+          "primary": "#ffffff",
+          "secondary": "#3bc37f",
+          "text": "#3bc37f"
+        },
+        "fieldTranslations": {
+          "nameTranslation": {
+            "ar": "توفاش بورصة",
+            "ru": "Тофас Бурса"
+          },
+          "shortNameTranslation": {
+            "ar": "توفاش",
+            "bn": "তোফাস",
+            "hi": "टोफ़ास"
+          }
+        }
+      },
+      "homeScore": {
+        "current": 87,
+        "display": 87,
+        "period1": 21,
+        "period2": 17,
+        "period3": 31,
+        "period4": 18,
+        "normaltime": 87
+      },
+      "awayScore": {
+        "current": 93,
+        "display": 93,
+        "period1": 21,
+        "period2": 25,
+        "period3": 21,
+        "period4": 26,
+        "normaltime": 93
+      },
+      "id": 16747313,
+      "slug": "tofas-bursa-anadolu-efes",
+      "startTimestamp": 1794141000,
+      "finalResultOnly": false
+    },
+    {
+      "tournament": {
+        "name": "Turkish Basketball Super League",
+        "slug": "turkiye-sigorta-basketbol-super-ligi",
+        "category": {
+          "name": "Turkey",
+          "slug": "turkey",
+          "sport": {
+            "name": "Basketball",
+            "slug": "basketball",
+            "id": 2
+          },
+          "priority": 0,
+          "country": {
+            "alpha2": "TR",
+            "alpha3": "TUR",
+            "name": "Türkiye",
+            "slug": "turkiye"
+          },
+          "id": 112,
+          "flag": "turkey",
+          "alpha2": "TR",
+          "fieldTranslations": {
+            "nameTranslation": {
+              "ar": "تركيا",
+              "ru": "Турция"
+            },
+            "shortNameTranslation": {}
+          }
+        },
+        "uniqueTournament": {
+          "name": "Turkish Basketball Super League",
+          "slug": "turkiye-sigorta-basketbol-super-ligi",
+          "primaryColorHex": "#009aad",
+          "secondaryColorHex": "#bd0821",
+          "category": {
+            "name": "Turkey",
+            "slug": "turkey",
+            "sport": {
+              "name": "Basketball",
+              "slug": "basketball",
+              "id": 2
+            },
+            "priority": 0,
+            "country": {
+              "alpha2": "TR",
+              "alpha3": "TUR",
+              "name": "Türkiye",
+              "slug": "turkiye"
+            },
+            "id": 112,
+            "flag": "turkey",
+            "alpha2": "TR",
+            "fieldTranslations": {
+              "nameTranslation": {
+                "ar": "تركيا",
+                "ru": "Турция"
+              },
+              "shortNameTranslation": {}
+            }
+          },
+          "userCount": 2991,
+          "liveActivityEnabled": false,
+          "country": {},
+          "id": 519,
+          "displayInverseHomeAwayTeams": false,
+          "fieldTranslations": {
+            "nameTranslation": {
+              "ar": "الدوري التركي الممتاز لكرة السلة",
+              "bn": "তুর্কিশ বাস্কেটবল সুপার লীগ",
+              "hi": "तुर्किश बास्केटबॉल सुपर लीग",
+              "ru": "Суперлига Турции по баскетболу"
+            },
+            "shortNameTranslation": {}
+          }
+        },
+        "priority": 93,
+        "isLive": false,
+        "id": 595,
+        "fieldTranslations": {
+          "nameTranslation": {
+            "ar": "دوري السلة التركي الممتاز",
+            "bn": "তুর্কি বাস্কেটবল সুপার লীগ",
+            "hi": "टर्किश बास्केटबॉल सुपर लीग",
+            "ru": "Суперлига баскетбола Турции"
+          },
+          "shortNameTranslation": {}
+        }
+      },
+      "roundInfo": {
+        "round": 7
+      },
+      "customId": "ovbsGAbc",
+      "status": {
+        "code": 100,
+        "description": "Ended",
+        "type": "finished"
+      },
+      "winnerCode": 2,
+      "homeTeam": {
+        "name": "Bursaspor Basketbol",
+        "slug": "bursaspor-info-yatirim",
+        "shortName": "Bursaspor",
+        "gender": "M",
+        "sport": {
+          "name": "Basketball",
+          "slug": "basketball",
+          "id": 2
+        },
+        "userCount": 1653,
+        "nameCode": "BRS",
+        "disabled": false,
+        "national": false,
+        "type": 0,
+        "country": {
+          "alpha2": "TR",
+          "alpha3": "TUR",
+          "name": "Türkiye",
+          "slug": "turkiye"
+        },
+        "id": 253781,
+        "teamColors": {
+          "primary": "#0b8643",
+          "secondary": "#ffffff",
+          "text": "#ffffff"
+        },
+        "fieldTranslations": {
+          "nameTranslation": {
+            "ar": "بورصا سبور إنفو ياتيريم",
+            "ru": "Бурсаспор"
+          },
+          "shortNameTranslation": {
+            "ar": "بورصا سبور",
+            "bn": "বিরসাস্পর",
+            "hi": "बर्सास्पोर"
+          }
+        }
+      },
+      "awayTeam": {
+        "name": "Fenerbahçe Tarfin",
+        "slug": "fenerbahce-beko",
+        "shortName": "Fenerbahçe",
+        "gender": "M",
+        "sport": {
+          "name": "Basketball",
+          "slug": "basketball",
+          "id": 2
+        },
+        "userCount": 53909,
+        "nameCode": "FBB",
+        "disabled": false,
+        "national": false,
+        "type": 0,
+        "country": {
+          "alpha2": "TR",
+          "alpha3": "TUR",
+          "name": "Türkiye",
+          "slug": "turkiye"
+        },
+        "id": 3514,
+        "teamColors": {
+          "primary": "#ffed00",
+          "secondary": "#133a61",
+          "text": "#133a61"
+        },
+        "fieldTranslations": {
+          "nameTranslation": {
+            "ar": "فنربخشة بيكو",
+            "ru": "Фенербахче"
+          },
+          "shortNameTranslation": {
+            "ar": "فنربخشة",
+            "bn": "ফেনারবাহচে",
+            "hi": "फेनरबाचे"
+          }
+        }
+      },
+      "homeScore": {
+        "current": 59,
+        "display": 59,
+        "period1": 15,
+        "period2": 21,
+        "period3": 11,
+        "period4": 12,
+        "normaltime": 59
+      },
+      "awayScore": {
+        "current": 78,
+        "display": 78,
+        "period1": 23,
+        "period2": 20,
+        "period3": 16,
+        "period4": 19,
+        "normaltime": 78
+      },
+      "id": 16747316,
+      "slug": "bursaspor-basketbol-fenerbahce-beko",
+      "startTimestamp": 1794072600,
+      "finalResultOnly": false
+    },
+    {
+      "tournament": {
+        "name": "NBA",
+        "slug": "nba",
+        "category": {
+          "name": "USA",
+          "slug": "usa",
+          "sport": {
+            "name": "Basketball",
+            "slug": "basketball",
+            "id": 2
+          },
+          "priority": 10,
+          "country": {
+            "alpha2": "US",
+            "alpha3": "USA",
+            "name": "USA",
+            "slug": "usa"
+          },
+          "id": 15,
+          "flag": "usa",
+          "alpha2": "US",
+          "fieldTranslations": {
+            "nameTranslation": {
+              "ar": "الولايات المتحدة",
+              "hi": "संयुक्त राज्य अमेरिका",
+              "bn": "যুক্তরাষ্ট্র",
+              "ru": "Соединенные Штаты"
+            },
+            "shortNameTranslation": {}
+          }
+        },
+        "uniqueTournament": {
+          "name": "NBA",
+          "slug": "nba",
+          "primaryColorHex": "#045daf",
+          "secondaryColorHex": "#cc2b31",
+          "category": {
+            "name": "USA",
+            "slug": "usa",
+            "sport": {
+              "name": "Basketball",
+              "slug": "basketball",
+              "id": 2
+            },
+            "priority": 10,
+            "country": {
+              "alpha2": "US",
+              "alpha3": "USA",
+              "name": "USA",
+              "slug": "usa"
+            },
+            "id": 15,
+            "flag": "usa",
+            "alpha2": "US",
+            "fieldTranslations": {
+              "nameTranslation": {
+                "ar": "الولايات المتحدة",
+                "hi": "संयुक्त राज्य अमेरिका",
+                "bn": "যুক্তরাষ্ট্র",
+                "ru": "Соединенные Штаты"
+              },
+              "shortNameTranslation": {}
+            }
+          },
+          "userCount": 194073,
+          "liveActivityEnabled": true,
+          "country": {},
+          "id": 132,
+          "displayInverseHomeAwayTeams": true,
+          "fieldTranslations": {
+            "nameTranslation": {
+              "bn": "এনবিএ",
+              "ar": "الدوري الأميركي للمحترفين",
+              "hi": "एनबीए",
+              "ru": "НБА"
+            },
+            "shortNameTranslation": {}
+          }
+        },
+        "priority": 176,
+        "isLive": false,
+        "id": 177,
+        "fieldTranslations": {
+          "nameTranslation": {
+            "hi": "एनबीए",
+            "ar": "دوري NBA",
+            "bn": "এনবিএ",
+            "ru": "НБА"
+          },
+          "shortNameTranslation": {}
+        }
+      },
+      "customId": "rtbsutb",
+      "status": {
+        "code": 100,
+        "description": "Ended",
+        "type": "finished"
+      },
+      "winnerCode": 2,
+      "homeTeam": {
+        "name": "Indiana Pacers",
+        "slug": "indiana-pacers",
+        "shortName": "Pacers",
+        "gender": "M",
+        "sport": {
+          "name": "Basketball",
+          "slug": "basketball",
+          "id": 2
+        },
+        "userCount": 53527,
+        "nameCode": "IND",
+        "disabled": false,
+        "national": false,
+        "type": 0,
+        "country": {
+          "alpha2": "US",
+          "alpha3": "USA",
+          "name": "USA",
+          "slug": "usa"
+        },
+        "id": 3419,
+        "teamColors": {
+          "primary": "#00275d",
+          "secondary": "#ffc633",
+          "text": "#ffc633"
+        },
+        "fieldTranslations": {
+          "nameTranslation": {
+            "ar": "اينديانا پايسيرس",
+            "ru": "Индиана Пэйсерс"
+          },
+          "shortNameTranslation": {
+            "ar": "بيسرز",
+            "bn": "প্যাকার্স",
+            "hi": "पेसर्स"
+          }
+        }
+      },
+      "awayTeam": {
+        "name": "Denver Nuggets",
+        "slug": "denver-nuggets",
+        "shortName": "Nuggets",
+        "gender": "M",
+        "sport": {
+          "name": "Basketball",
+          "slug": "basketball",
+          "id": 2
+        },
+        "userCount": 117589,
+        "nameCode": "DEN",
+        "disabled": false,
+        "national": false,
+        "type": 0,
+        "country": {
+          "alpha2": "US",
+          "alpha3": "USA",
+          "name": "USA",
+          "slug": "usa"
+        },
+        "id": 3417,
+        "teamColors": {
+          "primary": "#4fa8ff",
+          "secondary": "#f3bb4b",
+          "text": "#f3bb4b"
+        },
+        "fieldTranslations": {
+          "nameTranslation": {
+            "ar": "دنفر ناغتس",
+            "ru": "Денвер Наггетс"
+          },
+          "shortNameTranslation": {
+            "ar": "ناغتس",
+            "bn": "নাগেটস",
+            "hi": "नगेट्स"
+          }
+        }
+      },
+      "homeScore": {
+        "current": 102,
+        "display": 102,
+        "period1": 19,
+        "period2": 22,
+        "period3": 37,
+        "period4": 24,
+        "normaltime": 102
+      },
+      "awayScore": {
+        "current": 114,
+        "display": 114,
+        "period1": 27,
+        "period2": 37,
+        "period3": 26,
+        "period4": 24,
+        "normaltime": 114
+      },
+      "id": 16823740,
+      "slug": "indiana-pacers-denver-nuggets",
+      "startTimestamp": 1794088800,
+      "finalResultOnly": false
+    },
+    {
+      "tournament": {
+        "name": "NBA",
+        "slug": "nba",
+        "category": {
+          "name": "USA",
+          "slug": "usa",
+          "sport": {
+            "name": "Basketball",
+            "slug": "basketball",
+            "id": 2
+          },
+          "priority": 10,
+          "country": {
+            "alpha2": "US",
+            "alpha3": "USA",
+            "name": "USA",
+            "slug": "usa"
+          },
+          "id": 15,
+          "flag": "usa",
+          "alpha2": "US",
+          "fieldTranslations": {
+            "nameTranslation": {
+              "ar": "الولايات المتحدة",
+              "hi": "संयुक्त राज्य अमेरिका",
+              "bn": "যুক্তরাষ্ট্র",
+              "ru": "Соединенные Штаты"
+            },
+            "shortNameTranslation": {}
+          }
+        },
+        "uniqueTournament": {
+          "name": "NBA",
+          "slug": "nba",
+          "primaryColorHex": "#045daf",
+          "secondaryColorHex": "#cc2b31",
+          "category": {
+            "name": "USA",
+            "slug": "usa",
+            "sport": {
+              "name": "Basketball",
+              "slug": "basketball",
+              "id": 2
+            },
+            "priority": 10,
+            "country": {
+              "alpha2": "US",
+              "alpha3": "USA",
+              "name": "USA",
+              "slug": "usa"
+            },
+            "id": 15,
+            "flag": "usa",
+            "alpha2": "US",
+            "fieldTranslations": {
+              "nameTranslation": {
+                "ar": "الولايات المتحدة",
+                "hi": "संयुक्त राज्य अमेरिका",
+                "bn": "যুক্তরাষ্ট্র",
+                "ru": "Соединенные Штаты"
+              },
+              "shortNameTranslation": {}
+            }
+          },
+          "userCount": 194073,
+          "liveActivityEnabled": true,
+          "country": {},
+          "id": 132,
+          "displayInverseHomeAwayTeams": true,
+          "fieldTranslations": {
+            "nameTranslation": {
+              "bn": "এনবিএ",
+              "ar": "الدوري الأميركي للمحترفين",
+              "hi": "एनबीए",
+              "ru": "НБА"
+            },
+            "shortNameTranslation": {}
+          }
+        },
+        "priority": 176,
+        "isLive": false,
+        "id": 177,
+        "fieldTranslations": {
+          "nameTranslation": {
+            "hi": "एनबीए",
+            "ar": "دوري NBA",
+            "bn": "এনবিএ",
+            "ru": "НБА"
+          },
+          "shortNameTranslation": {}
+        }
+      },
+      "customId": "wtbsHtb",
+      "status": {
+        "code": 100,
+        "description": "Ended",
+        "type": "finished"
+      },
+      "winnerCode": 2,
+      "homeTeam": {
+        "name": "Cleveland Cavaliers",
+        "slug": "cleveland-cavaliers",
+        "shortName": "Cavaliers",
+        "gender": "M",
+        "sport": {
+          "name": "Basketball",
+          "slug": "basketball",
+          "id": 2
+        },
+        "userCount": 71299,
+        "nameCode": "CLE",
+        "disabled": false,
+        "national": false,
+        "type": 0,
+        "country": {
+          "alpha2": "US",
+          "alpha3": "USA",
+          "name": "USA",
+          "slug": "usa"
+        },
+        "id": 3432,
+        "teamColors": {
+          "primary": "#871539",
+          "secondary": "#000000",
+          "text": "#000000"
+        },
+        "fieldTranslations": {
+          "nameTranslation": {
+            "ar": "كليفلاند كافالييرز",
+            "ru": "Кливленд Кавальерс"
+          },
+          "shortNameTranslation": {
+            "ar": "كافالييرز",
+            "bn": "ক্যাভালিয়ার্স",
+            "hi": "कैवेलियर्स"
+          }
+        }
+      },
+      "awayTeam": {
+        "name": "New York Knicks",
+        "slug": "new-york-knicks",
+        "shortName": "Knicks",
+        "gender": "M",
+        "sport": {
+          "name": "Basketball",
+          "slug": "basketball",
+          "id": 2
+        },
+        "userCount": 97052,
+        "nameCode": "NYK",
+        "disabled": false,
+        "national": false,
+        "type": 0,
+        "country": {
+          "alpha2": "US",
+          "alpha3": "USA",
+          "name": "USA",
+          "slug": "usa"
+        },
+        "id": 3421,
+        "teamColors": {
+          "primary": "#006bb6",
+          "secondary": "#f58426",
+          "text": "#f58426"
+        },
+        "fieldTranslations": {
+          "nameTranslation": {
+            "ar": "نيويورك نيكس",
+            "ru": "Нью-Йорк Никс"
+          },
+          "shortNameTranslation": {
+            "ar": "نيكس",
+            "bn": "নিক্স",
+            "hi": "निक्स"
+          }
+        }
+      },
+      "homeScore": {
+        "current": 97,
+        "display": 97,
+        "period1": 27,
+        "period2": 26,
+        "period3": 17,
+        "period4": 27,
+        "normaltime": 97
+      },
+      "awayScore": {
+        "current": 109,
+        "display": 109,
+        "period1": 26,
+        "period2": 37,
+        "period3": 25,
+        "period4": 21,
+        "normaltime": 109
+      },
+      "id": 16824824,
+      "slug": "cleveland-cavaliers-new-york-knicks",
+      "startTimestamp": 1794099600,
+      "finalResultOnly": false
+    },
+    {
+      "tournament": {
+        "name": "NBA",
+        "slug": "nba",
+        "category": {
+          "name": "USA",
+          "slug": "usa",
+          "sport": {
+            "name": "Basketball",
+            "slug": "basketball",
+            "id": 2
+          },
+          "priority": 10,
+          "country": {
+            "alpha2": "US",
+            "alpha3": "USA",
+            "name": "USA",
+            "slug": "usa"
+          },
+          "id": 15,
+          "flag": "usa",
+          "alpha2": "US",
+          "fieldTranslations": {
+            "nameTranslation": {
+              "ar": "الولايات المتحدة",
+              "hi": "संयुक्त राज्य अमेरिका",
+              "bn": "যুক্তরাষ্ট্র",
+              "ru": "Соединенные Штаты"
+            },
+            "shortNameTranslation": {}
+          }
+        },
+        "uniqueTournament": {
+          "name": "NBA",
+          "slug": "nba",
+          "primaryColorHex": "#045daf",
+          "secondaryColorHex": "#cc2b31",
+          "category": {
+            "name": "USA",
+            "slug": "usa",
+            "sport": {
+              "name": "Basketball",
+              "slug": "basketball",
+              "id": 2
+            },
+            "priority": 10,
+            "country": {
+              "alpha2": "US",
+              "alpha3": "USA",
+              "name": "USA",
+              "slug": "usa"
+            },
+            "id": 15,
+            "flag": "usa",
+            "alpha2": "US",
+            "fieldTranslations": {
+              "nameTranslation": {
+                "ar": "الولايات المتحدة",
+                "hi": "संयुक्त राज्य अमेरिका",
+                "bn": "যুক্তরাষ্ট্র",
+                "ru": "Соединенные Штаты"
+              },
+              "shortNameTranslation": {}
+            }
+          },
+          "userCount": 194073,
+          "liveActivityEnabled": true,
+          "country": {},
+          "id": 132,
+          "displayInverseHomeAwayTeams": true,
+          "fieldTranslations": {
+            "nameTranslation": {
+              "bn": "এনবিএ",
+              "ar": "الدوري الأميركي للمحترفين",
+              "hi": "एनबीए",
+              "ru": "НБА"
+            },
+            "shortNameTranslation": {}
+          }
+        },
+        "priority": 176,
+        "isLive": false,
+        "id": 177,
+        "fieldTranslations": {
+          "nameTranslation": {
+            "hi": "एनबीए",
+            "ar": "دوري NBA",
+            "bn": "এনবিএ",
+            "ru": "НБА"
+          },
+          "shortNameTranslation": {}
+        }
+      },
+      "customId": "ytbsLtb",
+      "status": {
+        "code": 100,
+        "description": "Ended",
+        "type": "finished"
+      },
+      "winnerCode": 1,
+      "homeTeam": {
+        "name": "Atlanta Hawks",
+        "slug": "atlanta-hawks",
+        "shortName": "Hawks",
+        "gender": "M",
+        "sport": {
+          "name": "Basketball",
+          "slug": "basketball",
+          "id": 2
+        },
+        "userCount": 41313,
+        "nameCode": "ATL",
+        "disabled": false,
+        "national": false,
+        "type": 0,
+        "country": {
+          "alpha2": "US",
+          "alpha3": "USA",
+          "name": "USA",
+          "slug": "usa"
+        },
+        "id": 3423,
+        "teamColors": {
+          "primary": "#e03a3e",
+          "secondary": "#ffffff",
+          "text": "#ffffff"
+        },
+        "fieldTranslations": {
+          "nameTranslation": {
+            "ar": "أتلانتا هوكس",
+            "ru": "Атланта Хоукс"
+          },
+          "shortNameTranslation": {
+            "ar": "هوكس",
+            "bn": "হকস",
+            "hi": "हॉक्स"
+          }
+        }
+      },
+      "awayTeam": {
+        "name": "Brooklyn Nets",
+        "slug": "brooklyn-nets",
+        "shortName": "Nets",
+        "gender": "M",
+        "sport": {
+          "name": "Basketball",
+          "slug": "basketball",
+          "id": 2
+        },
+        "userCount": 42905,
+        "nameCode": "BKN",
+        "disabled": false,
+        "national": false,
+        "type": 0,
+        "country": {
+          "alpha2": "US",
+          "alpha3": "USA",
+          "name": "USA",
+          "slug": "usa"
+        },
+        "id": 3436,
+        "teamColors": {
+          "primary": "#ffffff",
+          "secondary": "#000000",
+          "text": "#000000"
+        },
+        "fieldTranslations": {
+          "nameTranslation": {
+            "ar": "بروكلين نيتس",
+            "ru": "Бруклин Нетс"
+          },
+          "shortNameTranslation": {
+            "ar": "نتس",
+            "bn": "নেটস",
+            "hi": "नेट्स"
+          }
+        }
+      },
+      "homeScore": {
+        "current": 124,
+        "display": 124,
+        "period1": 27,
+        "period2": 39,
+        "period3": 22,
+        "period4": 36,
+        "normaltime": 124
+      },
+      "awayScore": {
+        "current": 121,
+        "display": 121,
+        "period1": 37,
+        "period2": 33,
+        "period3": 25,
+        "period4": 26,
+        "normaltime": 121
+      },
+      "id": 16824825,
+      "slug": "brooklyn-nets-atlanta-hawks",
+      "startTimestamp": 1794097800,
+      "finalResultOnly": false
+    },
+    {
+      "tournament": {
+        "name": "NBA",
+        "slug": "nba",
+        "category": {
+          "name": "USA",
+          "slug": "usa",
+          "sport": {
+            "name": "Basketball",
+            "slug": "basketball",
+            "id": 2
+          },
+          "priority": 10,
+          "country": {
+            "alpha2": "US",
+            "alpha3": "USA",
+            "name": "USA",
+            "slug": "usa"
+          },
+          "id": 15,
+          "flag": "usa",
+          "alpha2": "US",
+          "fieldTranslations": {
+            "nameTranslation": {
+              "ar": "الولايات المتحدة",
+              "hi": "संयुक्त राज्य अमेरिका",
+              "bn": "যুক্তরাষ্ট্র",
+              "ru": "Соединенные Штаты"
+            },
+            "shortNameTranslation": {}
+          }
+        },
+        "uniqueTournament": {
+          "name": "NBA",
+          "slug": "nba",
+          "primaryColorHex": "#045daf",
+          "secondaryColorHex": "#cc2b31",
+          "category": {
+            "name": "USA",
+            "slug": "usa",
+            "sport": {
+              "name": "Basketball",
+              "slug": "basketball",
+              "id": 2
+            },
+            "priority": 10,
+            "country": {
+              "alpha2": "US",
+              "alpha3": "USA",
+              "name": "USA",
+              "slug": "usa"
+            },
+            "id": 15,
+            "flag": "usa",
+            "alpha2": "US",
+            "fieldTranslations": {
+              "nameTranslation": {
+                "ar": "الولايات المتحدة",
+                "hi": "संयुक्त राज्य अमेरिका",
+                "bn": "যুক্তরাষ্ট্র",
+                "ru": "Соединенные Штаты"
+              },
+              "shortNameTranslation": {}
+            }
+          },
+          "userCount": 194073,
+          "liveActivityEnabled": true,
+          "country": {},
+          "id": 132,
+          "displayInverseHomeAwayTeams": true,
+          "fieldTranslations": {
+            "nameTranslation": {
+              "bn": "এনবিএ",
+              "ar": "الدوري الأميركي للمحترفين",
+              "hi": "एनबीए",
+              "ru": "НБА"
+            },
+            "shortNameTranslation": {}
+          }
+        },
+        "priority": 176,
+        "isLive": false,
+        "id": 177,
+        "fieldTranslations": {
+          "nameTranslation": {
+            "hi": "एनबीए",
+            "ar": "دوري NBA",
+            "bn": "এনবিএ",
+            "ru": "НБА"
+          },
+          "shortNameTranslation": {}
+        }
+      },
+      "customId": "ttbsGtb",
+      "status": {
+        "code": 100,
+        "description": "Ended",
+        "type": "finished"
+      },
+      "winnerCode": 1,
+      "homeTeam": {
+        "name": "Oklahoma City Thunder",
+        "slug": "oklahoma-city-thunder",
+        "shortName": "Thunder",
+        "gender": "M",
+        "sport": {
+          "name": "Basketball",
+          "slug": "basketball",
+          "id": 2
+        },
+        "userCount": 98940,
+        "nameCode": "OKC",
+        "disabled": false,
+        "national": false,
+        "type": 0,
+        "country": {
+          "alpha2": "US",
+          "alpha3": "USA",
+          "name": "USA",
+          "slug": "usa"
+        },
+        "id": 3418,
+        "teamColors": {
+          "primary": "#3479bc",
+          "secondary": "#dd4b33",
+          "text": "#dd4b33"
+        },
+        "fieldTranslations": {
+          "nameTranslation": {
+            "ar": "أوكلاهوما سيتي ثاندر",
+            "ru": "Оклахома-Сити Тандер"
+          },
+          "shortNameTranslation": {
+            "ar": "ثاندر",
+            "bn": "থান্ডার",
+            "hi": "थंडर"
+          }
+        }
+      },
+      "awayTeam": {
+        "name": "Washington Wizards",
+        "slug": "washington-wizards",
+        "shortName": "Wizards",
+        "gender": "M",
+        "sport": {
+          "name": "Basketball",
+          "slug": "basketball",
+          "id": 2
+        },
+        "userCount": 30669,
+        "nameCode": "WAS",
+        "disabled": false,
+        "national": false,
+        "type": 0,
+        "country": {
+          "alpha2": "US",
+          "alpha3": "USA",
+          "name": "USA",
+          "slug": "usa"
+        },
+        "id": 3431,
+        "teamColors": {
+          "primary": "#f5002f",
+          "secondary": "#002566",
+          "text": "#002566"
+        },
+        "fieldTranslations": {
+          "nameTranslation": {
+            "ar": "واشنطن ويزاردس",
+            "ru": "Вашингтон Уизардс"
+          },
+          "shortNameTranslation": {
+            "ar": "ويزاردز",
+            "bn": "উইজার্ডস",
+            "hi": "विजार्ड्स"
+          }
+        }
+      },
+      "homeScore": {
+        "current": 114,
+        "display": 114,
+        "period1": 25,
+        "period2": 32,
+        "period3": 33,
+        "period4": 24,
+        "normaltime": 114
+      },
+      "awayScore": {
+        "current": 75,
+        "display": 75,
+        "period1": 19,
+        "period2": 17,
+        "period3": 23,
+        "period4": 16,
+        "normaltime": 75
+      },
+      "id": 16824827,
+      "slug": "washington-wizards-oklahoma-city-thunder",
+      "startTimestamp": 1794099600,
+      "finalResultOnly": false
+    },
+    {
+      "tournament": {
+        "name": "NBA",
+        "slug": "nba",
+        "category": {
+          "name": "USA",
+          "slug": "usa",
+          "sport": {
+            "name": "Basketball",
+            "slug": "basketball",
+            "id": 2
+          },
+          "priority": 10,
+          "country": {
+            "alpha2": "US",
+            "alpha3": "USA",
+            "name": "USA",
+            "slug": "usa"
+          },
+          "id": 15,
+          "flag": "usa",
+          "alpha2": "US",
+          "fieldTranslations": {
+            "nameTranslation": {
+              "ar": "الولايات المتحدة",
+              "hi": "संयुक्त राज्य अमेरिका",
+              "bn": "যুক্তরাষ্ট্র",
+              "ru": "Соединенные Штаты"
+            },
+            "shortNameTranslation": {}
+          }
+        },
+        "uniqueTournament": {
+          "name": "NBA",
+          "slug": "nba",
+          "primaryColorHex": "#045daf",
+          "secondaryColorHex": "#cc2b31",
+          "category": {
+            "name": "USA",
+            "slug": "usa",
+            "sport": {
+              "name": "Basketball",
+              "slug": "basketball",
+              "id": 2
+            },
+            "priority": 10,
+            "country": {
+              "alpha2": "US",
+              "alpha3": "USA",
+              "name": "USA",
+              "slug": "usa"
+            },
+            "id": 15,
+            "flag": "usa",
+            "alpha2": "US",
+            "fieldTranslations": {
+              "nameTranslation": {
+                "ar": "الولايات المتحدة",
+                "hi": "संयुक्त राज्य अमेरिका",
+                "bn": "যুক্তরাষ্ট্র",
+                "ru": "Соединенные Штаты"
+              },
+              "shortNameTranslation": {}
+            }
+          },
+          "userCount": 194073,
+          "liveActivityEnabled": true,
+          "country": {},
+          "id": 132,
+          "displayInverseHomeAwayTeams": true,
+          "fieldTranslations": {
+            "nameTranslation": {
+              "bn": "এনবিএ",
+              "ar": "الدوري الأميركي للمحترفين",
+              "hi": "एनबीए",
+              "ru": "НБА"
+            },
+            "shortNameTranslation": {}
+          }
+        },
+        "priority": 176,
+        "isLive": false,
+        "id": 177,
+        "fieldTranslations": {
+          "nameTranslation": {
+            "hi": "एनबीए",
+            "ar": "دوري NBA",
+            "bn": "এনবিএ",
+            "ru": "НБА"
+          },
+          "shortNameTranslation": {}
+        }
+      },
+      "customId": "DtbsMtb",
+      "status": {
+        "code": 110,
+        "description": "AET",
+        "type": "finished"
+      },
+      "winnerCode": 1,
+      "homeTeam": {
+        "name": "Golden State Warriors",
+        "slug": "golden-state-warriors",
+        "shortName": "Warriors",
+        "gender": "M",
+        "sport": {
+          "name": "Basketball",
+          "slug": "basketball",
+          "id": 2
+        },
+        "userCount": 232303,
+        "nameCode": "GSW",
+        "disabled": false,
+        "national": false,
+        "type": 0,
+        "country": {
+          "alpha2": "US",
+          "alpha3": "USA",
+          "name": "USA",
+          "slug": "usa"
+        },
+        "id": 3428,
+        "teamColors": {
+          "primary": "#fdb927",
+          "secondary": "#006bb6",
+          "text": "#006bb6"
+        },
+        "fieldTranslations": {
+          "nameTranslation": {
+            "ar": "جولدن ستايت وورييرس",
+            "ru": "Голден Стэйт Уорриорз"
+          },
+          "shortNameTranslation": {
+            "ar": "ووريورز",
+            "bn": "ওয়ারিয়র্স",
+            "hi": "वॉरियर्स"
+          }
+        }
+      },
+      "awayTeam": {
+        "name": "Orlando Magic",
+        "slug": "orlando-magic",
+        "shortName": "Magic",
+        "gender": "M",
+        "sport": {
+          "name": "Basketball",
+          "slug": "basketball",
+          "id": 2
+        },
+        "userCount": 42434,
+        "nameCode": "ORL",
+        "disabled": false,
+        "national": false,
+        "type": 0,
+        "country": {
+          "alpha2": "US",
+          "alpha3": "USA",
+          "name": "USA",
+          "slug": "usa"
+        },
+        "id": 3437,
+        "teamColors": {
+          "primary": "#007dc5",
+          "secondary": "#c4ced3",
+          "text": "#c4ced3"
+        },
+        "fieldTranslations": {
+          "nameTranslation": {
+            "ar": "اورلاندو ماجيك",
+            "ru": "Орландо Мэджик"
+          },
+          "shortNameTranslation": {
+            "ar": "ماجيك",
+            "bn": "ম্যাজিক",
+            "hi": "मैजिक"
+          }
+        }
+      },
+      "homeScore": {
+        "current": 126,
+        "display": 126,
+        "period1": 31,
+        "period2": 26,
+        "period3": 20,
+        "period4": 33,
+        "normaltime": 110,
+        "overtime": 16
+      },
+      "awayScore": {
+        "current": 119,
+        "display": 119,
+        "period1": 19,
+        "period2": 22,
+        "period3": 37,
+        "period4": 32,
+        "normaltime": 110,
+        "overtime": 9
+      },
+      "id": 16824828,
+      "slug": "orlando-magic-golden-state-warriors",
+      "startTimestamp": 1794101400,
+      "finalResultOnly": false
+    },
+    {
+      "tournament": {
+        "name": "NBA",
+        "slug": "nba",
+        "category": {
+          "name": "USA",
+          "slug": "usa",
+          "sport": {
+            "name": "Basketball",
+            "slug": "basketball",
+            "id": 2
+          },
+          "priority": 10,
+          "country": {
+            "alpha2": "US",
+            "alpha3": "USA",
+            "name": "USA",
+            "slug": "usa"
+          },
+          "id": 15,
+          "flag": "usa",
+          "alpha2": "US",
+          "fieldTranslations": {
+            "nameTranslation": {
+              "ar": "الولايات المتحدة",
+              "hi": "संयुक्त राज्य अमेरिका",
+              "bn": "যুক্তরাষ্ট্র",
+              "ru": "Соединенные Штаты"
+            },
+            "shortNameTranslation": {}
+          }
+        },
+        "uniqueTournament": {
+          "name": "NBA",
+          "slug": "nba",
+          "primaryColorHex": "#045daf",
+          "secondaryColorHex": "#cc2b31",
+          "category": {
+            "name": "USA",
+            "slug": "usa",
+            "sport": {
+              "name": "Basketball",
+              "slug": "basketball",
+              "id": 2
+            },
+            "priority": 10,
+            "country": {
+              "alpha2": "US",
+              "alpha3": "USA",
+              "name": "USA",
+              "slug": "usa"
+            },
+            "id": 15,
+            "flag": "usa",
+            "alpha2": "US",
+            "fieldTranslations": {
+              "nameTranslation": {
+                "ar": "الولايات المتحدة",
+                "hi": "संयुक्त राज्य अमेरिका",
+                "bn": "যুক্তরাষ্ট্র",
+                "ru": "Соединенные Штаты"
+              },
+              "shortNameTranslation": {}
+            }
+          },
+          "userCount": 194073,
+          "liveActivityEnabled": true,
+          "country": {},
+          "id": 132,
+          "displayInverseHomeAwayTeams": true,
+          "fieldTranslations": {
+            "nameTranslation": {
+              "bn": "এনবিএ",
+              "ar": "الدوري الأميركي للمحترفين",
+              "hi": "एनबीए",
+              "ru": "НБА"
+            },
+            "shortNameTranslation": {}
+          }
+        },
+        "priority": 176,
+        "isLive": false,
+        "id": 177,
+        "fieldTranslations": {
+          "nameTranslation": {
+            "hi": "एनबीए",
+            "ar": "دوري NBA",
+            "bn": "এনবিএ",
+            "ru": "НБА"
+          },
+          "shortNameTranslation": {}
+        }
+      },
+      "customId": "mtbsqtb",
+      "status": {
+        "code": 100,
+        "description": "Ended",
+        "type": "finished"
+      },
+      "winnerCode": 1,
+      "homeTeam": {
+        "name": "Phoenix Suns",
+        "slug": "phoenix-suns",
+        "shortName": "Suns",
+        "gender": "M",
+        "sport": {
+          "name": "Basketball",
+          "slug": "basketball",
+          "id": 2
+        },
+        "userCount": 51705,
+        "nameCode": "PHX",
+        "disabled": false,
+        "national": false,
+        "type": 0,
+        "country": {
+          "alpha2": "US",
+          "alpha3": "USA",
+          "name": "USA",
+          "slug": "usa"
+        },
+        "id": 3416,
+        "teamColors": {
+          "primary": "#e56020",
+          "secondary": "#1d1160",
+          "text": "#1d1160"
+        },
+        "fieldTranslations": {
+          "nameTranslation": {
+            "ar": "فونيكس سانز",
+            "ru": "Финикс Санз"
+          },
+          "shortNameTranslation": {
+            "ar": "صنز",
+            "bn": "সানস",
+            "hi": "सन्स"
+          }
+        }
+      },
+      "awayTeam": {
+        "name": "Houston Rockets",
+        "slug": "houston-rockets",
+        "shortName": "Rockets",
+        "gender": "M",
+        "sport": {
+          "name": "Basketball",
+          "slug": "basketball",
+          "id": 2
+        },
+        "userCount": 62976,
+        "nameCode": "HOU",
+        "disabled": false,
+        "national": false,
+        "type": 0,
+        "country": {
+          "alpha2": "US",
+          "alpha3": "USA",
+          "name": "USA",
+          "slug": "usa"
+        },
+        "id": 3412,
+        "teamColors": {
+          "primary": "#ffffff",
+          "secondary": "#ce1141",
+          "text": "#ce1141"
+        },
+        "fieldTranslations": {
+          "nameTranslation": {
+            "ar": "هيوستن روكتس",
+            "ru": "Хьюстон Рокетс"
+          },
+          "shortNameTranslation": {
+            "ar": "روكتس",
+            "bn": "রকেট",
+            "hi": "रॉकेट्स"
+          }
+        }
+      },
+      "homeScore": {
+        "current": 102,
+        "display": 102,
+        "period1": 35,
+        "period2": 12,
+        "period3": 29,
+        "period4": 26,
+        "normaltime": 102
+      },
+      "awayScore": {
+        "current": 99,
+        "display": 99,
+        "period1": 23,
+        "period2": 24,
+        "period3": 28,
+        "period4": 24,
+        "normaltime": 99
+      },
+      "id": 16824829,
+      "slug": "phoenix-suns-houston-rockets",
+      "startTimestamp": 1794103200,
+      "finalResultOnly": false
+    },
+    {
+      "tournament": {
+        "name": "NBA",
+        "slug": "nba",
+        "category": {
+          "name": "USA",
+          "slug": "usa",
+          "sport": {
+            "name": "Basketball",
+            "slug": "basketball",
+            "id": 2
+          },
+          "priority": 10,
+          "country": {
+            "alpha2": "US",
+            "alpha3": "USA",
+            "name": "USA",
+            "slug": "usa"
+          },
+          "id": 15,
+          "flag": "usa",
+          "alpha2": "US",
+          "fieldTranslations": {
+            "nameTranslation": {
+              "ar": "الولايات المتحدة",
+              "hi": "संयुक्त राज्य अमेरिका",
+              "bn": "যুক্তরাষ্ট্র",
+              "ru": "Соединенные Штаты"
+            },
+            "shortNameTranslation": {}
+          }
+        },
+        "uniqueTournament": {
+          "name": "NBA",
+          "slug": "nba",
+          "primaryColorHex": "#045daf",
+          "secondaryColorHex": "#cc2b31",
+          "category": {
+            "name": "USA",
+            "slug": "usa",
+            "sport": {
+              "name": "Basketball",
+              "slug": "basketball",
+              "id": 2
+            },
+            "priority": 10,
+            "country": {
+              "alpha2": "US",
+              "alpha3": "USA",
+              "name": "USA",
+              "slug": "usa"
+            },
+            "id": 15,
+            "flag": "usa",
+            "alpha2": "US",
+            "fieldTranslations": {
+              "nameTranslation": {
+                "ar": "الولايات المتحدة",
+                "hi": "संयुक्त राज्य अमेरिका",
+                "bn": "যুক্তরাষ্ট্র",
+                "ru": "Соединенные Штаты"
+              },
+              "shortNameTranslation": {}
+            }
+          },
+          "userCount": 194073,
+          "liveActivityEnabled": true,
+          "country": {},
+          "id": 132,
+          "displayInverseHomeAwayTeams": true,
+          "fieldTranslations": {
+            "nameTranslation": {
+              "bn": "এনবিএ",
+              "ar": "الدوري الأميركي للمحترفين",
+              "hi": "एनबीए",
+              "ru": "НБА"
+            },
+            "shortNameTranslation": {}
+          }
+        },
+        "priority": 176,
+        "isLive": false,
+        "id": 177,
+        "fieldTranslations": {
+          "nameTranslation": {
+            "hi": "एनबीए",
+            "ar": "دوري NBA",
+            "bn": "এনবিএ",
+            "ru": "НБА"
+          },
+          "shortNameTranslation": {}
+        }
+      },
+      "customId": "otbsEtb",
+      "status": {
+        "code": 100,
+        "description": "Ended",
+        "type": "finished"
+      },
+      "winnerCode": 2,
+      "homeTeam": {
+        "name": "Portland Trail Blazers",
+        "slug": "portland-trail-blazers",
+        "shortName": "Trail Blazers",
+        "gender": "M",
+        "sport": {
+          "name": "Basketball",
+          "slug": "basketball",
+          "id": 2
+        },
+        "userCount": 36648,
+        "nameCode": "POR",
+        "disabled": false,
+        "national": false,
+        "type": 0,
+        "country": {
+          "alpha2": "US",
+          "alpha3": "USA",
+          "name": "USA",
+          "slug": "usa"
+        },
+        "id": 3414,
+        "teamColors": {
+          "primary": "#f0163a",
+          "secondary": "#ffffff",
+          "text": "#ffffff"
+        },
+        "fieldTranslations": {
+          "nameTranslation": {
+            "ar": "بورتلاند ترايل بلايزرز",
+            "ru": "Портленд Трэйл Блэйзерс"
+          },
+          "shortNameTranslation": {
+            "ar": "ترايل بلايزرز",
+            "bn": "ট্রেইল ব্লেজার",
+            "hi": "ट्रेल ब्लेज़र्स"
+          }
+        }
+      },
+      "awayTeam": {
+        "name": "San Antonio Spurs",
+        "slug": "san-antonio-spurs",
+        "shortName": "Spurs",
+        "gender": "M",
+        "sport": {
+          "name": "Basketball",
+          "slug": "basketball",
+          "id": 2
+        },
+        "userCount": 121096,
+        "nameCode": "SAS",
+        "disabled": false,
+        "national": false,
+        "type": 0,
+        "country": {
+          "alpha2": "US",
+          "alpha3": "USA",
+          "name": "USA",
+          "slug": "usa"
+        },
+        "id": 3429,
+        "teamColors": {
+          "primary": "#a6afaf",
+          "secondary": "#000000",
+          "text": "#000000"
+        },
+        "fieldTranslations": {
+          "nameTranslation": {
+            "ar": "سان أنطونيو سبرز",
+            "ru": "Сан-Антонио Спёрс"
+          },
+          "shortNameTranslation": {
+            "ar": "سبرز",
+            "bn": "স্পার্স",
+            "hi": "स्पर्स"
+          }
+        }
+      },
+      "homeScore": {
+        "current": 103,
+        "display": 103,
+        "period1": 20,
+        "period2": 29,
+        "period3": 27,
+        "period4": 27,
+        "normaltime": 103
+      },
+      "awayScore": {
+        "current": 125,
+        "display": 125,
+        "period1": 22,
+        "period2": 42,
+        "period3": 45,
+        "period4": 16,
+        "normaltime": 125
+      },
+      "id": 16824831,
+      "slug": "san-antonio-spurs-portland-trail-blazers",
+      "startTimestamp": 1794106800,
+      "finalResultOnly": false
+    },
+    {
+      "tournament": {
+        "name": "Liga ACB",
+        "slug": "liga-acb",
+        "category": {
+          "name": "Spain",
+          "slug": "spain",
+          "sport": {
+            "name": "Basketball",
+            "slug": "basketball",
+            "id": 2
+          },
+          "priority": 0,
+          "country": {
+            "alpha2": "ES",
+            "alpha3": "ESP",
+            "name": "Spain",
+            "slug": "spain"
+          },
+          "id": 109,
+          "flag": "spain",
+          "alpha2": "ES",
+          "fieldTranslations": {
+            "nameTranslation": {
+              "hi": "एटीपी",
+              "ar": "إسبانيا",
+              "bn": "স্পেন",
+              "ru": "Испания"
+            },
+            "shortNameTranslation": {}
+          }
+        },
+        "uniqueTournament": {
+          "name": "Liga ACB",
+          "slug": "liga-acb",
+          "primaryColorHex": "#e9510e",
+          "secondaryColorHex": "#b23c0a",
+          "category": {
+            "name": "Spain",
+            "slug": "spain",
+            "sport": {
+              "name": "Basketball",
+              "slug": "basketball",
+              "id": 2
+            },
+            "priority": 0,
+            "country": {
+              "alpha2": "ES",
+              "alpha3": "ESP",
+              "name": "Spain",
+              "slug": "spain"
+            },
+            "id": 109,
+            "flag": "spain",
+            "alpha2": "ES",
+            "fieldTranslations": {
+              "nameTranslation": {
+                "hi": "एटीपी",
+                "ar": "إسبانيا",
+                "bn": "স্পেন",
+                "ru": "Испания"
+              },
+              "shortNameTranslation": {}
+            }
+          },
+          "userCount": 9212,
+          "liveActivityEnabled": false,
+          "country": {},
+          "id": 264,
+          "displayInverseHomeAwayTeams": false,
+          "fieldTranslations": {
+            "nameTranslation": {
+              "bn": "এসিবি লীগ",
+              "ar": "الدوري الإسباني لكرة السلة",
+              "hi": "लीगा एसीबी",
+              "ru": "Лига ACB"
+            },
+            "shortNameTranslation": {}
+          }
+        },
+        "priority": 97,
+        "isLive": false,
+        "id": 271,
+        "fieldTranslations": {
+          "nameTranslation": {
+            "ar": "دوري ACB",
+            "hi": "लीगा एसीबी",
+            "bn": "এসিবি লীগ",
+            "ru": "Лига ACB"
+          },
+          "shortNameTranslation": {}
+        }
+      },
+      "roundInfo": {
+        "round": 7
+      },
+      "customId": "kwbswTo",
+      "status": {
+        "code": 110,
+        "description": "AET",
+        "type": "finished"
+      },
+      "winnerCode": 1,
+      "homeTeam": {
+        "name": "Kids&Us Manresa",
+        "slug": "baxi-manresa",
+        "shortName": "Manresa",
+        "gender": "M",
+        "sport": {
+          "name": "Basketball",
+          "slug": "basketball",
+          "id": 2
+        },
+        "userCount": 2435,
+        "nameCode": "MAN",
+        "disabled": false,
+        "national": false,
+        "type": 0,
+        "country": {
+          "alpha2": "ES",
+          "alpha3": "ESP",
+          "name": "Spain",
+          "slug": "spain"
+        },
+        "id": 3560,
+        "teamColors": {
+          "primary": "#ff0000",
+          "secondary": "#ffffff",
+          "text": "#ffffff"
+        },
+        "fieldTranslations": {
+          "nameTranslation": {
+            "ar": "باكسي مانريسا",
+            "ru": "Манреса"
+          },
+          "shortNameTranslation": {
+            "ar": "مانريسا",
+            "bn": "মানরেসা",
+            "hi": "मनरेसा"
+          }
+        }
+      },
+      "awayTeam": {
+        "name": "Monbus Obradoiro",
+        "slug": "monbus-obradoiro",
+        "shortName": "Obradoiro",
+        "gender": "M",
+        "sport": {
+          "name": "Basketball",
+          "slug": "basketball",
+          "id": 2
+        },
+        "userCount": 1349,
+        "nameCode": "OBR",
+        "national": false,
+        "type": 0,
+        "country": {
+          "alpha2": "ES",
+          "alpha3": "ESP",
+          "name": "Spain",
+          "slug": "spain"
+        },
+        "id": 37171,
+        "teamColors": {
+          "primary": "#4b90cc",
+          "secondary": "#222226",
+          "text": "#222226"
+        },
+        "fieldTranslations": {
+          "nameTranslation": {
+            "ar": "مونبوس أوبرادويرو",
+            "ru": "Обрадойро"
+          },
+          "shortNameTranslation": {
+            "ar": "أوبرادويرو",
+            "bn": "ওব্রাডোইরো",
+            "hi": "ओब्राडोइरो"
+          }
+        }
+      },
+      "homeScore": {
+        "current": 100,
+        "display": 100,
+        "period1": 19,
+        "period2": 16,
+        "period3": 20,
+        "period4": 18,
+        "normaltime": 73,
+        "overtime": 27
+      },
+      "awayScore": {
+        "current": 99,
+        "display": 99,
+        "period1": 19,
+        "period2": 17,
+        "period3": 12,
+        "period4": 25,
+        "normaltime": 73,
+        "overtime": 26
+      },
+      "id": 16830248,
+      "slug": "monbus-obradoiro-kids-and-us-manresa",
+      "startTimestamp": 1794070800,
+      "finalResultOnly": false
+    },
+    {
+      "tournament": {
+        "name": "Liga ACB",
+        "slug": "liga-acb",
+        "category": {
+          "name": "Spain",
+          "slug": "spain",
+          "sport": {
+            "name": "Basketball",
+            "slug": "basketball",
+            "id": 2
+          },
+          "priority": 0,
+          "country": {
+            "alpha2": "ES",
+            "alpha3": "ESP",
+            "name": "Spain",
+            "slug": "spain"
+          },
+          "id": 109,
+          "flag": "spain",
+          "alpha2": "ES",
+          "fieldTranslations": {
+            "nameTranslation": {
+              "hi": "एटीपी",
+              "ar": "إسبانيا",
+              "bn": "স্পেন",
+              "ru": "Испания"
+            },
+            "shortNameTranslation": {}
+          }
+        },
+        "uniqueTournament": {
+          "name": "Liga ACB",
+          "slug": "liga-acb",
+          "primaryColorHex": "#e9510e",
+          "secondaryColorHex": "#b23c0a",
+          "category": {
+            "name": "Spain",
+            "slug": "spain",
+            "sport": {
+              "name": "Basketball",
+              "slug": "basketball",
+              "id": 2
+            },
+            "priority": 0,
+            "country": {
+              "alpha2": "ES",
+              "alpha3": "ESP",
+              "name": "Spain",
+              "slug": "spain"
+            },
+            "id": 109,
+            "flag": "spain",
+            "alpha2": "ES",
+            "fieldTranslations": {
+              "nameTranslation": {
+                "hi": "एटीपी",
+                "ar": "إسبانيا",
+                "bn": "স্পেন",
+                "ru": "Испания"
+              },
+              "shortNameTranslation": {}
+            }
+          },
+          "userCount": 9212,
+          "liveActivityEnabled": false,
+          "country": {},
+          "id": 264,
+          "displayInverseHomeAwayTeams": false,
+          "fieldTranslations": {
+            "nameTranslation": {
+              "bn": "এসিবি লীগ",
+              "ar": "الدوري الإسباني لكرة السلة",
+              "hi": "लीगा एसीबी",
+              "ru": "Лига ACB"
+            },
+            "shortNameTranslation": {}
+          }
+        },
+        "priority": 97,
+        "isLive": false,
+        "id": 271,
+        "fieldTranslations": {
+          "nameTranslation": {
+            "ar": "دوري ACB",
+            "hi": "लीगा एसीबी",
+            "bn": "এসিবি লীগ",
+            "ru": "Лига ACB"
+          },
+          "shortNameTranslation": {}
+        }
+      },
+      "roundInfo": {
+        "round": 7
+      },
+      "customId": "pmcsFtXc",
+      "status": {
+        "code": 100,
+        "description": "Ended",
+        "type": "finished"
+      },
+      "winnerCode": 1,
+      "homeTeam": {
+        "name": "Bàsquet Girona",
+        "slug": "basquet-girona",
+        "shortName": "Girona",
+        "gender": "M",
+        "sport": {
+          "name": "Basketball",
+          "slug": "basketball",
+          "id": 2
+        },
+        "userCount": 2073,
+        "nameCode": "BAS",
+        "national": false,
+        "type": 0,
+        "country": {
+          "alpha2": "ES",
+          "alpha3": "ESP",
+          "name": "Spain",
+          "slug": "spain"
+        },
+        "id": 368430,
+        "teamColors": {
+          "primary": "#374df5",
+          "secondary": "#374df5",
+          "text": "#ffffff"
+        },
+        "fieldTranslations": {
+          "nameTranslation": {
+            "ar": "جيرونا باسكت",
+            "bn": "বাস্কেট জিরোনা",
+            "hi": "बास्केट गिरोना",
+            "ru": "Баскет Жирона"
+          },
+          "shortNameTranslation": {
+            "ru": "Жирона"
+          }
+        }
+      },
+      "awayTeam": {
+        "name": "Surne Bilbao Basket",
+        "slug": "retabet-bilbao-basket",
+        "shortName": "Bilbao Basket",
+        "gender": "M",
+        "sport": {
+          "name": "Basketball",
+          "slug": "basketball",
+          "id": 2
+        },
+        "userCount": 3141,
+        "nameCode": "BIL",
+        "national": false,
+        "type": 0,
+        "country": {
+          "alpha2": "ES",
+          "alpha3": "ESP",
+          "name": "Spain",
+          "slug": "spain"
+        },
+        "id": 5615,
+        "teamColors": {
+          "primary": "#000000",
+          "secondary": "#9a9a9a",
+          "text": "#9a9a9a"
+        },
+        "fieldTranslations": {
+          "nameTranslation": {
+            "ar": "سورني بلباو باسكت",
+            "ru": "Бильбао"
+          },
+          "shortNameTranslation": {
+            "ar": "بلباو باسكت",
+            "bn": "বিলবাও বাস্কেট",
+            "hi": "बिलबाओ बास्केट"
+          }
+        }
+      },
+      "homeScore": {
+        "current": 92,
+        "display": 92,
+        "period1": 19,
+        "period2": 27,
+        "period3": 20,
+        "period4": 26,
+        "normaltime": 92
+      },
+      "awayScore": {
+        "current": 87,
+        "display": 87,
+        "period1": 25,
+        "period2": 19,
+        "period3": 23,
+        "period4": 20,
+        "normaltime": 87
+      },
+      "id": 16830251,
+      "slug": "basquet-girona-surne-bilbao-basket",
+      "startTimestamp": 1794076200,
+      "finalResultOnly": false
+    },
+    {
+      "tournament": {
+        "name": "Liga ACB",
+        "slug": "liga-acb",
+        "category": {
+          "name": "Spain",
+          "slug": "spain",
+          "sport": {
+            "name": "Basketball",
+            "slug": "basketball",
+            "id": 2
+          },
+          "priority": 0,
+          "country": {
+            "alpha2": "ES",
+            "alpha3": "ESP",
+            "name": "Spain",
+            "slug": "spain"
+          },
+          "id": 109,
+          "flag": "spain",
+          "alpha2": "ES",
+          "fieldTranslations": {
+            "nameTranslation": {
+              "hi": "एटीपी",
+              "ar": "إسبانيا",
+              "bn": "স্পেন",
+              "ru": "Испания"
+            },
+            "shortNameTranslation": {}
+          }
+        },
+        "uniqueTournament": {
+          "name": "Liga ACB",
+          "slug": "liga-acb",
+          "primaryColorHex": "#e9510e",
+          "secondaryColorHex": "#b23c0a",
+          "category": {
+            "name": "Spain",
+            "slug": "spain",
+            "sport": {
+              "name": "Basketball",
+              "slug": "basketball",
+              "id": 2
+            },
+            "priority": 0,
+            "country": {
+              "alpha2": "ES",
+              "alpha3": "ESP",
+              "name": "Spain",
+              "slug": "spain"
+            },
+            "id": 109,
+            "flag": "spain",
+            "alpha2": "ES",
+            "fieldTranslations": {
+              "nameTranslation": {
+                "hi": "एटीपी",
+                "ar": "إسبانيا",
+                "bn": "স্পেন",
+                "ru": "Испания"
+              },
+              "shortNameTranslation": {}
+            }
+          },
+          "userCount": 9212,
+          "liveActivityEnabled": false,
+          "country": {},
+          "id": 264,
+          "displayInverseHomeAwayTeams": false,
+          "fieldTranslations": {
+            "nameTranslation": {
+              "bn": "এসিবি লীগ",
+              "ar": "الدوري الإسباني لكرة السلة",
+              "hi": "लीगा एसीबी",
+              "ru": "Лига ACB"
+            },
+            "shortNameTranslation": {}
+          }
+        },
+        "priority": 97,
+        "isLive": false,
+        "id": 271,
+        "fieldTranslations": {
+          "nameTranslation": {
+            "ar": "دوري ACB",
+            "hi": "लीगा एसीबी",
+            "bn": "এসিবি লীগ",
+            "ru": "Лига ACB"
+          },
+          "shortNameTranslation": {}
+        }
+      },
+      "roundInfo": {
+        "round": 7
+      },
+      "customId": "dwbshwb",
+      "status": {
+        "code": 100,
+        "description": "Ended",
+        "type": "finished"
+      },
+      "winnerCode": 2,
+      "homeTeam": {
+        "name": "Força Lleida CE",
+        "slug": "forca-lleida-ce",
+        "shortName": "Lleida",
+        "gender": "M",
+        "sport": {
+          "name": "Basketball",
+          "slug": "basketball",
+          "id": 2
+        },
+        "userCount": 1744,
+        "nameCode": "LLE",
+        "national": false,
+        "type": 0,
+        "country": {
+          "alpha2": "ES",
+          "alpha3": "ESP",
+          "name": "Spain",
+          "slug": "spain"
+        },
+        "id": 3557,
+        "teamColors": {
+          "primary": "#ff7f00",
+          "secondary": "#000000",
+          "text": "#000000"
+        },
+        "fieldTranslations": {
+          "nameTranslation": {
+            "ar": "نادي لاردة",
+            "ru": "Капрабо Лерида"
+          },
+          "shortNameTranslation": {
+            "ar": "لاردة",
+            "bn": "লেইডা",
+            "hi": "लेइडा"
+          }
+        }
+      },
+      "awayTeam": {
+        "name": "Kosner Baskonia",
+        "slug": "saski-baskonia",
+        "shortName": "Baskonia",
+        "gender": "M",
+        "sport": {
+          "name": "Basketball",
+          "slug": "basketball",
+          "id": 2
+        },
+        "userCount": 11579,
+        "nameCode": "BVG",
+        "disabled": false,
+        "national": false,
+        "type": 0,
+        "country": {
+          "alpha2": "ES",
+          "alpha3": "ESP",
+          "name": "Spain",
+          "slug": "spain"
+        },
+        "id": 3553,
+        "teamColors": {
+          "primary": "#da291c",
+          "secondary": "#003153",
+          "text": "#003153"
+        },
+        "fieldTranslations": {
+          "nameTranslation": {
+            "ar": "ساسكي باسكونيا",
+            "ru": "Баскония Витория"
+          },
+          "shortNameTranslation": {
+            "ar": "باسكونيا",
+            "bn": "বাসকোনিয়া",
+            "hi": "बास्कोनिया"
+          }
+        }
+      },
+      "homeScore": {
+        "current": 93,
+        "display": 93,
+        "period1": 20,
+        "period2": 19,
+        "period3": 23,
+        "period4": 31,
+        "normaltime": 93
+      },
+      "awayScore": {
+        "current": 98,
+        "display": 98,
+        "period1": 27,
+        "period2": 27,
+        "period3": 24,
+        "period4": 20,
+        "normaltime": 98
+      },
+      "id": 16830254,
+      "slug": "forca-lleida-ce-kosner-baskonia",
+      "startTimestamp": 1794081600,
+      "finalResultOnly": false
+    },
+    {
+      "tournament": {
+        "name": "Liga ACB",
+        "slug": "liga-acb",
+        "category": {
+          "name": "Spain",
+          "slug": "spain",
+          "sport": {
+            "name": "Basketball",
+            "slug": "basketball",
+            "id": 2
+          },
+          "priority": 0,
+          "country": {
+            "alpha2": "ES",
+            "alpha3": "ESP",
+            "name": "Spain",
+            "slug": "spain"
+          },
+          "id": 109,
+          "flag": "spain",
+          "alpha2": "ES",
+          "fieldTranslations": {
+            "nameTranslation": {
+              "hi": "एटीपी",
+              "ar": "إسبانيا",
+              "bn": "স্পেন",
+              "ru": "Испания"
+            },
+            "shortNameTranslation": {}
+          }
+        },
+        "uniqueTournament": {
+          "name": "Liga ACB",
+          "slug": "liga-acb",
+          "primaryColorHex": "#e9510e",
+          "secondaryColorHex": "#b23c0a",
+          "category": {
+            "name": "Spain",
+            "slug": "spain",
+            "sport": {
+              "name": "Basketball",
+              "slug": "basketball",
+              "id": 2
+            },
+            "priority": 0,
+            "country": {
+              "alpha2": "ES",
+              "alpha3": "ESP",
+              "name": "Spain",
+              "slug": "spain"
+            },
+            "id": 109,
+            "flag": "spain",
+            "alpha2": "ES",
+            "fieldTranslations": {
+              "nameTranslation": {
+                "hi": "एटीपी",
+                "ar": "إسبانيا",
+                "bn": "স্পেন",
+                "ru": "Испания"
+              },
+              "shortNameTranslation": {}
+            }
+          },
+          "userCount": 9212,
+          "liveActivityEnabled": false,
+          "country": {},
+          "id": 264,
+          "displayInverseHomeAwayTeams": false,
+          "fieldTranslations": {
+            "nameTranslation": {
+              "bn": "এসিবি লীগ",
+              "ar": "الدوري الإسباني لكرة السلة",
+              "hi": "लीगा एसीबी",
+              "ru": "Лига ACB"
+            },
+            "shortNameTranslation": {}
+          }
+        },
+        "priority": 97,
+        "isLive": false,
+        "id": 271,
+        "fieldTranslations": {
+          "nameTranslation": {
+            "ar": "دوري ACB",
+            "hi": "लीगा एसीबी",
+            "bn": "এসিবি লীগ",
+            "ru": "Лига ACB"
+          },
+          "shortNameTranslation": {}
+        }
+      },
+      "roundInfo": {
+        "round": 7
+      },
+      "customId": "TvbsXvb",
+      "status": {
+        "code": 100,
+        "description": "Ended",
+        "type": "finished"
+      },
+      "winnerCode": 1,
+      "homeTeam": {
+        "name": "Barça Basket",
+        "slug": "barca-basket",
+        "shortName": "Barça",
+        "gender": "M",
+        "sport": {
+          "name": "Basketball",
+          "slug": "basketball",
+          "id": 2
+        },
+        "userCount": 58922,
+        "nameCode": "FCB",
+        "disabled": false,
+        "national": false,
+        "type": 0,
+        "country": {
+          "alpha2": "ES",
+          "alpha3": "ESP",
+          "name": "Spain",
+          "slug": "spain"
+        },
+        "id": 3543,
+        "teamColors": {
+          "primary": "#c32148",
+          "secondary": "#26559b",
+          "text": "#26559b"
+        },
+        "fieldTranslations": {
+          "nameTranslation": {
+            "ar": "بارسا باسكت",
+            "ru": "Барселона"
+          },
+          "shortNameTranslation": {
+            "ar": "بارسا",
+            "bn": "বার্সা",
+            "hi": "बार्सा"
+          }
+        }
+      },
+      "awayTeam": {
+        "name": "Río Breogán",
+        "slug": "rio-breogan",
+        "shortName": "Breogán",
+        "gender": "M",
+        "sport": {
+          "name": "Basketball",
+          "slug": "basketball",
+          "id": 2
+        },
+        "userCount": 1894,
+        "nameCode": "BRE",
+        "disabled": false,
+        "national": false,
+        "type": 0,
+        "country": {
+          "alpha2": "ES",
+          "alpha3": "ESP",
+          "name": "Spain",
+          "slug": "spain"
+        },
+        "id": 3547,
+        "teamColors": {
+          "primary": "#87ceeb",
+          "secondary": "#000080",
+          "text": "#000080"
+        },
+        "fieldTranslations": {
+          "nameTranslation": {
+            "ar": "ريو بريوجان",
+            "ru": "Рио Бреоган"
+          },
+          "shortNameTranslation": {
+            "ar": "بريوجان",
+            "bn": "ব্রোগান",
+            "hi": "ब्रेओगान",
+            "ru": "Бреоган"
+          }
+        }
+      },
+      "homeScore": {
+        "current": 99,
+        "display": 99,
+        "period1": 23,
+        "period2": 16,
+        "period3": 30,
+        "period4": 30,
+        "normaltime": 99
+      },
+      "awayScore": {
+        "current": 91,
+        "display": 91,
+        "period1": 20,
+        "period2": 20,
+        "period3": 30,
+        "period4": 21,
+        "normaltime": 91
+      },
+      "id": 16830257,
+      "slug": "rio-breogan-barca-basket",
+      "startTimestamp": 1794135600,
+      "finalResultOnly": false
+    },
+    {
+      "tournament": {
+        "name": "Liga ACB",
+        "slug": "liga-acb",
+        "category": {
+          "name": "Spain",
+          "slug": "spain",
+          "sport": {
+            "name": "Basketball",
+            "slug": "basketball",
+            "id": 2
+          },
+          "priority": 0,
+          "country": {
+            "alpha2": "ES",
+            "alpha3": "ESP",
+            "name": "Spain",
+            "slug": "spain"
+          },
+          "id": 109,
+          "flag": "spain",
+          "alpha2": "ES",
+          "fieldTranslations": {
+            "nameTranslation": {
+              "hi": "एटीपी",
+              "ar": "إسبانيا",
+              "bn": "স্পেন",
+              "ru": "Испания"
+            },
+            "shortNameTranslation": {}
+          }
+        },
+        "uniqueTournament": {
+          "name": "Liga ACB",
+          "slug": "liga-acb",
+          "primaryColorHex": "#e9510e",
+          "secondaryColorHex": "#b23c0a",
+          "category": {
+            "name": "Spain",
+            "slug": "spain",
+            "sport": {
+              "name": "Basketball",
+              "slug": "basketball",
+              "id": 2
+            },
+            "priority": 0,
+            "country": {
+              "alpha2": "ES",
+              "alpha3": "ESP",
+              "name": "Spain",
+              "slug": "spain"
+            },
+            "id": 109,
+            "flag": "spain",
+            "alpha2": "ES",
+            "fieldTranslations": {
+              "nameTranslation": {
+                "hi": "एटीपी",
+                "ar": "إسبانيا",
+                "bn": "স্পেন",
+                "ru": "Испания"
+              },
+              "shortNameTranslation": {}
+            }
+          },
+          "userCount": 9212,
+          "liveActivityEnabled": false,
+          "country": {},
+          "id": 264,
+          "displayInverseHomeAwayTeams": false,
+          "fieldTranslations": {
+            "nameTranslation": {
+              "bn": "এসিবি লীগ",
+              "ar": "الدوري الإسباني لكرة السلة",
+              "hi": "लीगा एसीबी",
+              "ru": "Лига ACB"
+            },
+            "shortNameTranslation": {}
+          }
+        },
+        "priority": 97,
+        "isLive": false,
+        "id": 271,
+        "fieldTranslations": {
+          "nameTranslation": {
+            "ar": "دوري ACB",
+            "hi": "लीगा एसीबी",
+            "bn": "এসিবি লীগ",
+            "ru": "Лига ACB"
+          },
+          "shortNameTranslation": {}
+        }
+      },
+      "roundInfo": {
+        "round": 7
+      },
+      "customId": "VvbsQaIb",
+      "status": {
+        "code": 100,
+        "description": "Ended",
+        "type": "finished"
+      },
+      "winnerCode": 2,
+      "homeTeam": {
+        "name": "Hereda San Pablo Burgos",
+        "slug": "hereda-san-pablo-burgos",
+        "shortName": "San Pablo",
+        "gender": "M",
+        "sport": {
+          "name": "Basketball",
+          "slug": "basketball",
+          "id": 2
+        },
+        "userCount": 2143,
+        "nameCode": "SPB",
+        "disabled": false,
+        "national": false,
+        "type": 0,
+        "country": {
+          "alpha2": "ES",
+          "alpha3": "ESP",
+          "name": "Spain",
+          "slug": "spain"
+        },
+        "id": 207541,
+        "teamColors": {
+          "primary": "#0d406f",
+          "secondary": "#f08233",
+          "text": "#f08233"
+        },
+        "fieldTranslations": {
+          "nameTranslation": {
+            "ar": "هيريدا سان بابلو بورغوس",
+            "ru": "Мирафлорес"
+          },
+          "shortNameTranslation": {
+            "ar": "سان بابلو",
+            "bn": "বার্গোস",
+            "hi": "बर्गोस"
+          }
+        }
+      },
+      "awayTeam": {
+        "name": "Valencia Basket",
+        "slug": "valencia-basket",
+        "shortName": "Valencia",
+        "gender": "M",
+        "sport": {
+          "name": "Basketball",
+          "slug": "basketball",
+          "id": 2
+        },
+        "userCount": 16938,
+        "nameCode": "VAL",
+        "disabled": false,
+        "national": false,
+        "type": 0,
+        "country": {
+          "alpha2": "ES",
+          "alpha3": "ESP",
+          "name": "Spain",
+          "slug": "spain"
+        },
+        "id": 3545,
+        "teamColors": {
+          "primary": "#fe5900",
+          "secondary": "#000000",
+          "text": "#000000"
+        },
+        "fieldTranslations": {
+          "nameTranslation": {
+            "ar": "فالنسيا باسكت",
+            "ru": "Валенсия Баскет"
+          },
+          "shortNameTranslation": {
+            "ar": "فالنسيا",
+            "bn": "ভ্যালেন্সিয়া",
+            "hi": "वेलेंसिया"
+          }
+        }
+      },
+      "homeScore": {
+        "current": 93,
+        "display": 93,
+        "period1": 27,
+        "period2": 25,
+        "period3": 20,
+        "period4": 21,
+        "normaltime": 93
+      },
+      "awayScore": {
+        "current": 100,
+        "display": 100,
+        "period1": 22,
+        "period2": 19,
+        "period3": 30,
+        "period4": 29,
+        "normaltime": 100
+      },
+      "id": 16830260,
+      "slug": "hereda-san-pablo-burgos-valencia-basket",
+      "startTimestamp": 1794137400,
+      "finalResultOnly": false
+    },
+    {
+      "tournament": {
+        "name": "Liga ACB",
+        "slug": "liga-acb",
+        "category": {
+          "name": "Spain",
+          "slug": "spain",
+          "sport": {
+            "name": "Basketball",
+            "slug": "basketball",
+            "id": 2
+          },
+          "priority": 0,
+          "country": {
+            "alpha2": "ES",
+            "alpha3": "ESP",
+            "name": "Spain",
+            "slug": "spain"
+          },
+          "id": 109,
+          "flag": "spain",
+          "alpha2": "ES",
+          "fieldTranslations": {
+            "nameTranslation": {
+              "hi": "एटीपी",
+              "ar": "إسبانيا",
+              "bn": "স্পেন",
+              "ru": "Испания"
+            },
+            "shortNameTranslation": {}
+          }
+        },
+        "uniqueTournament": {
+          "name": "Liga ACB",
+          "slug": "liga-acb",
+          "primaryColorHex": "#e9510e",
+          "secondaryColorHex": "#b23c0a",
+          "category": {
+            "name": "Spain",
+            "slug": "spain",
+            "sport": {
+              "name": "Basketball",
+              "slug": "basketball",
+              "id": 2
+            },
+            "priority": 0,
+            "country": {
+              "alpha2": "ES",
+              "alpha3": "ESP",
+              "name": "Spain",
+              "slug": "spain"
+            },
+            "id": 109,
+            "flag": "spain",
+            "alpha2": "ES",
+            "fieldTranslations": {
+              "nameTranslation": {
+                "hi": "एटीपी",
+                "ar": "إسبانيا",
+                "bn": "স্পেন",
+                "ru": "Испания"
+              },
+              "shortNameTranslation": {}
+            }
+          },
+          "userCount": 9212,
+          "liveActivityEnabled": false,
+          "country": {},
+          "id": 264,
+          "displayInverseHomeAwayTeams": false,
+          "fieldTranslations": {
+            "nameTranslation": {
+              "bn": "এসিবি লীগ",
+              "ar": "الدوري الإسباني لكرة السلة",
+              "hi": "लीगा एसीबी",
+              "ru": "Лига ACB"
+            },
+            "shortNameTranslation": {}
+          }
+        },
+        "priority": 97,
+        "isLive": false,
+        "id": 271,
+        "fieldTranslations": {
+          "nameTranslation": {
+            "ar": "دوري ACB",
+            "hi": "लीगा एसीबी",
+            "bn": "এসিবি লীগ",
+            "ru": "Лига ACB"
+          },
+          "shortNameTranslation": {}
+        }
+      },
+      "roundInfo": {
+        "round": 7
+      },
+      "customId": "UvbsTkG",
+      "status": {
+        "code": 100,
+        "description": "Ended",
+        "type": "finished"
+      },
+      "winnerCode": 1,
+      "homeTeam": {
+        "name": "La Laguna Tenerife",
+        "slug": "lenovo-tenerife",
+        "shortName": "La Laguna Tenerife",
+        "gender": "M",
+        "sport": {
+          "name": "Basketball",
+          "slug": "basketball",
+          "id": 2
+        },
+        "userCount": 3847,
+        "nameCode": "CAN",
+        "disabled": false,
+        "national": false,
+        "type": 0,
+        "country": {
+          "alpha2": "ES",
+          "alpha3": "ESP",
+          "name": "Spain",
+          "slug": "spain"
+        },
+        "id": 78043,
+        "teamColors": {
+          "primary": "#000000",
+          "secondary": "#ffd700",
+          "text": "#ffd700"
+        },
+        "fieldTranslations": {
+          "nameTranslation": {
+            "ar": "لينوفو تينيريفي",
+            "bn": "লেনোভো টেনেরিফ",
+            "hi": "लेनोवो टेनेरिफ़",
+            "ru": "Канариас"
+          },
+          "shortNameTranslation": {}
+        }
+      },
+      "awayTeam": {
+        "name": "Joventut Badalona",
+        "slug": "club-joventut-de-badalona",
+        "shortName": "Joventut",
+        "gender": "M",
+        "sport": {
+          "name": "Basketball",
+          "slug": "basketball",
+          "id": 2
+        },
+        "userCount": 4520,
+        "nameCode": "BAD",
+        "disabled": false,
+        "national": false,
+        "type": 0,
+        "country": {
+          "alpha2": "ES",
+          "alpha3": "ESP",
+          "name": "Spain",
+          "slug": "spain"
+        },
+        "id": 3544,
+        "teamColors": {
+          "primary": "#007809",
+          "secondary": "#000000",
+          "text": "#000000"
+        },
+        "fieldTranslations": {
+          "nameTranslation": {
+            "ar": "جوفينتوت بادالونا",
+            "ru": "Ховентут Бадалона"
+          },
+          "shortNameTranslation": {
+            "ar": "جوفينتوت",
+            "bn": "জোভেন্টুট",
+            "hi": "जोवेनटुट"
+          }
+        }
+      },
+      "homeScore": {
+        "current": 80,
+        "display": 80,
+        "period1": 25,
+        "period2": 14,
+        "period3": 21,
+        "period4": 20,
+        "normaltime": 80
+      },
+      "awayScore": {
+        "current": 74,
+        "display": 74,
+        "period1": 24,
+        "period2": 21,
+        "period3": 15,
+        "period4": 14,
+        "normaltime": 74
+      },
+      "id": 16830262,
+      "slug": "la-laguna-tenerife-joventut-badalona",
+      "startTimestamp": 1794139200,
+      "finalResultOnly": false
+    },
+    {
+      "tournament": {
+        "name": "AdmiralBet ABA League, Group B",
+        "slug": "aba-liga-group-b",
+        "category": {
+          "name": "International",
+          "slug": "international",
+          "sport": {
+            "name": "Basketball",
+            "slug": "basketball",
+            "id": 2
+          },
+          "priority": 11,
+          "country": {},
+          "id": 103,
+          "flag": "international",
+          "fieldTranslations": {
+            "nameTranslation": {
+              "ar": "دولي",
+              "hi": "अंतर्राष्ट्रीय",
+              "bn": "আন্তর্জাতিক",
+              "ru": "Международные"
+            },
+            "shortNameTranslation": {}
+          }
+        },
+        "uniqueTournament": {
+          "name": "AdmiralBet ABA League",
+          "slug": "admiralbet-aba-league",
+          "primaryColorHex": "#182651",
+          "secondaryColorHex": "#f47321",
+          "category": {
+            "name": "International",
+            "slug": "international",
+            "sport": {
+              "name": "Basketball",
+              "slug": "basketball",
+              "id": 2
+            },
+            "priority": 11,
+            "country": {},
+            "id": 103,
+            "flag": "international",
+            "fieldTranslations": {
+              "nameTranslation": {
+                "ar": "دولي",
+                "hi": "अंतर्राष्ट्रीय",
+                "bn": "আন্তর্জাতিক",
+                "ru": "Международные"
+              },
+              "shortNameTranslation": {}
+            }
+          },
+          "userCount": 6818,
+          "liveActivityEnabled": false,
+          "country": {},
+          "id": 235,
+          "displayInverseHomeAwayTeams": false,
+          "fieldTranslations": {
+            "nameTranslation": {
+              "ar": "دوري اتحاد البلقان",
+              "bn": "এবিএ লীগ",
+              "hi": "एबीए लीग",
+              "ru": "Лига АБА AdmiralBet"
+            },
+            "shortNameTranslation": {}
+          }
+        },
+        "priority": 106,
+        "groupSign": "B",
+        "id": 160509,
+        "fieldTranslations": {
+          "nameTranslation": {
+            "ar": "الدوري الأدرياتيكي، المجموعة B",
+            "ru": "Лига АБА AdmiralBet, Группа B"
+          },
+          "shortNameTranslation": {}
+        }
+      },
+      "roundInfo": {
+        "round": 7
+      },
+      "customId": "RocsafUb",
+      "status": {
+        "code": 100,
+        "description": "Ended",
+        "type": "finished"
+      },
+      "winnerCode": 2,
+      "homeTeam": {
+        "name": "Perspektiva Ilirija",
+        "slug": "kk-ilirija",
+        "shortName": "Ilirija",
+        "gender": "M",
+        "sport": {
+          "name": "Basketball",
+          "slug": "basketball",
+          "id": 2
+        },
+        "userCount": 1109,
+        "nameCode": "ILI",
+        "disabled": false,
+        "national": false,
+        "type": 0,
+        "country": {
+          "alpha2": "SI",
+          "alpha3": "SVN",
+          "name": "Slovenia",
+          "slug": "slovenia"
+        },
+        "id": 235250,
+        "teamColors": {
+          "primary": "#008000",
+          "secondary": "#ffffff",
+          "text": "#ffffff"
+        },
+        "fieldTranslations": {
+          "nameTranslation": {
+            "ar": "نادي ايليريجا",
+            "ru": "Перспектива Илирия"
+          },
+          "shortNameTranslation": {
+            "ru": "Илирия"
+          }
+        }
+      },
+      "awayTeam": {
+        "name": "BC Vienna",
+        "slug": "bc-vienna",
+        "shortName": "Vienna",
+        "gender": "M",
+        "sport": {
+          "name": "Basketball",
+          "slug": "basketball",
+          "id": 2
+        },
+        "userCount": 1023,
+        "nameCode": "VIE",
+        "disabled": false,
+        "national": false,
+        "type": 0,
+        "country": {
+          "alpha2": "AT",
+          "alpha3": "AUT",
+          "name": "Austria",
+          "slug": "austria"
+        },
+        "id": 5742,
+        "teamColors": {
+          "primary": "#db3831",
+          "secondary": "#000000",
+          "text": "#000000"
+        },
+        "fieldTranslations": {
+          "nameTranslation": {
+            "ar": "فيينا بي سي",
+            "bn": "বিসি ভিয়েনা",
+            "hi": "बीसी वियना",
+            "ru": "БК Вена"
+          },
+          "shortNameTranslation": {
+            "ru": "Вена"
+          }
+        }
+      },
+      "homeScore": {
+        "current": 60,
+        "display": 60,
+        "period1": 13,
+        "period2": 18,
+        "period3": 12,
+        "period4": 17,
+        "normaltime": 60
+      },
+      "awayScore": {
+        "current": 74,
+        "display": 74,
+        "period1": 21,
+        "period2": 16,
+        "period3": 22,
+        "period4": 15,
+        "normaltime": 74
+      },
+      "id": 16943107,
+      "slug": "perspektiva-ilirija-bc-vienna",
+      "startTimestamp": 1794074400,
+      "finalResultOnly": false
+    },
+    {
+      "tournament": {
+        "name": "AdmiralBet ABA League, Group A",
+        "slug": "aba-liga-group-a",
+        "category": {
+          "name": "International",
+          "slug": "international",
+          "sport": {
+            "name": "Basketball",
+            "slug": "basketball",
+            "id": 2
+          },
+          "priority": 11,
+          "country": {},
+          "id": 103,
+          "flag": "international",
+          "fieldTranslations": {
+            "nameTranslation": {
+              "ar": "دولي",
+              "hi": "अंतर्राष्ट्रीय",
+              "bn": "আন্তর্জাতিক",
+              "ru": "Международные"
+            },
+            "shortNameTranslation": {}
+          }
+        },
+        "uniqueTournament": {
+          "name": "AdmiralBet ABA League",
+          "slug": "admiralbet-aba-league",
+          "primaryColorHex": "#182651",
+          "secondaryColorHex": "#f47321",
+          "category": {
+            "name": "International",
+            "slug": "international",
+            "sport": {
+              "name": "Basketball",
+              "slug": "basketball",
+              "id": 2
+            },
+            "priority": 11,
+            "country": {},
+            "id": 103,
+            "flag": "international",
+            "fieldTranslations": {
+              "nameTranslation": {
+                "ar": "دولي",
+                "hi": "अंतर्राष्ट्रीय",
+                "bn": "আন্তর্জাতিক",
+                "ru": "Международные"
+              },
+              "shortNameTranslation": {}
+            }
+          },
+          "userCount": 6818,
+          "liveActivityEnabled": false,
+          "country": {},
+          "id": 235,
+          "displayInverseHomeAwayTeams": false,
+          "fieldTranslations": {
+            "nameTranslation": {
+              "ar": "دوري اتحاد البلقان",
+              "bn": "এবিএ লীগ",
+              "hi": "एबीए लीग",
+              "ru": "Лига АБА AdmiralBet"
+            },
+            "shortNameTranslation": {}
+          }
+        },
+        "priority": 107,
+        "groupSign": "A",
+        "id": 160513,
+        "fieldTranslations": {
+          "nameTranslation": {
+            "ar": "الدوري الأدرياتيكي، المجموعة A",
+            "ru": "Лига АБА AdmiralBet, Группа A"
+          },
+          "shortNameTranslation": {}
+        }
+      },
+      "roundInfo": {
+        "round": 7
+      },
+      "customId": "KHcsjrp",
+      "status": {
+        "code": 100,
+        "description": "Ended",
+        "type": "finished"
+      },
+      "winnerCode": 2,
+      "homeTeam": {
+        "name": "FMP Beograd",
+        "slug": "fmp-beograd",
+        "shortName": "FMP",
+        "gender": "M",
+        "sport": {
+          "name": "Basketball",
+          "slug": "basketball",
+          "id": 2
+        },
+        "userCount": 1378,
+        "nameCode": "FMP",
+        "disabled": false,
+        "national": false,
+        "type": 0,
+        "country": {
+          "alpha2": "RS",
+          "alpha3": "SRB",
+          "name": "Serbia",
+          "slug": "serbia"
+        },
+        "id": 38359,
+        "teamColors": {
+          "primary": "#ffffff",
+          "secondary": "#b22222",
+          "text": "#b22222"
+        },
+        "fieldTranslations": {
+          "nameTranslation": {
+            "ar": "إف إم بي بلغراد",
+            "ru": "ФМП Белград"
+          },
+          "shortNameTranslation": {
+            "ar": "إف إم بي",
+            "bn": "এফএমপি",
+            "hi": "एफएमपी"
+          }
+        }
+      },
+      "awayTeam": {
+        "name": "KK Budućnost VOLI",
+        "slug": "kk-buducnost-voli",
+        "shortName": "Budućnost",
+        "gender": "M",
+        "sport": {
+          "name": "Basketball",
+          "slug": "basketball",
+          "id": 2
+        },
+        "userCount": 5549,
+        "nameCode": "BUD",
+        "disabled": false,
+        "national": false,
+        "type": 0,
+        "country": {
+          "alpha2": "ME",
+          "alpha3": "MNE",
+          "name": "Montenegro",
+          "slug": "montenegro"
+        },
+        "id": 6635,
+        "teamColors": {
+          "primary": "#0000ff",
+          "secondary": "#ffffff",
+          "text": "#ffffff"
+        },
+        "fieldTranslations": {
+          "nameTranslation": {
+            "ar": "كي كي بودوجنست فولي",
+            "ru": "Будучност Подгорица"
+          },
+          "shortNameTranslation": {
+            "ar": "بودوجنست",
+            "bn": "বুদুকনস",
+            "hi": "बुडुकनोस्ट"
+          }
+        }
+      },
+      "homeScore": {
+        "current": 73,
+        "display": 73,
+        "period1": 14,
+        "period2": 24,
+        "period3": 23,
+        "period4": 12,
+        "normaltime": 73
+      },
+      "awayScore": {
+        "current": 76,
+        "display": 76,
+        "period1": 28,
+        "period2": 16,
+        "period3": 15,
+        "period4": 17,
+        "normaltime": 76
+      },
+      "id": 16943108,
+      "slug": "fmp-beograd-kk-buducnost-voli",
+      "startTimestamp": 1794074400,
+      "finalResultOnly": false
+    },
+    {
+      "tournament": {
+        "name": "AdmiralBet ABA League, Group A",
+        "slug": "aba-liga-group-a",
+        "category": {
+          "name": "International",
+          "slug": "international",
+          "sport": {
+            "name": "Basketball",
+            "slug": "basketball",
+            "id": 2
+          },
+          "priority": 11,
+          "country": {},
+          "id": 103,
+          "flag": "international",
+          "fieldTranslations": {
+            "nameTranslation": {
+              "ar": "دولي",
+              "hi": "अंतर्राष्ट्रीय",
+              "bn": "আন্তর্জাতিক",
+              "ru": "Международные"
+            },
+            "shortNameTranslation": {}
+          }
+        },
+        "uniqueTournament": {
+          "name": "AdmiralBet ABA League",
+          "slug": "admiralbet-aba-league",
+          "primaryColorHex": "#182651",
+          "secondaryColorHex": "#f47321",
+          "category": {
+            "name": "International",
+            "slug": "international",
+            "sport": {
+              "name": "Basketball",
+              "slug": "basketball",
+              "id": 2
+            },
+            "priority": 11,
+            "country": {},
+            "id": 103,
+            "flag": "international",
+            "fieldTranslations": {
+              "nameTranslation": {
+                "ar": "دولي",
+                "hi": "अंतर्राष्ट्रीय",
+                "bn": "আন্তর্জাতিক",
+                "ru": "Международные"
+              },
+              "shortNameTranslation": {}
+            }
+          },
+          "userCount": 6818,
+          "liveActivityEnabled": false,
+          "country": {},
+          "id": 235,
+          "displayInverseHomeAwayTeams": false,
+          "fieldTranslations": {
+            "nameTranslation": {
+              "ar": "دوري اتحاد البلقان",
+              "bn": "এবিএ লীগ",
+              "hi": "एबीए लीग",
+              "ru": "Лига АБА AdmiralBet"
+            },
+            "shortNameTranslation": {}
+          }
+        },
+        "priority": 107,
+        "groupSign": "A",
+        "id": 160513,
+        "fieldTranslations": {
+          "nameTranslation": {
+            "ar": "الدوري الأدرياتيكي، المجموعة A",
+            "ru": "Лига АБА AdmiralBet, Группа A"
+          },
+          "shortNameTranslation": {}
+        }
+      },
+      "roundInfo": {
+        "round": 7
+      },
+      "customId": "YHcsnqp",
+      "status": {
+        "code": 100,
+        "description": "Ended",
+        "type": "finished"
+      },
+      "winnerCode": 2,
+      "homeTeam": {
+        "name": "KK Borac Mozzart",
+        "slug": "kk-borac-mozzart",
+        "shortName": "Borac Mozzart",
+        "gender": "M",
+        "sport": {
+          "name": "Basketball",
+          "slug": "basketball",
+          "id": 2
+        },
+        "userCount": 1850,
+        "nameCode": "BCK",
+        "disabled": false,
+        "national": false,
+        "type": 0,
+        "country": {
+          "alpha2": "RS",
+          "alpha3": "SRB",
+          "name": "Serbia",
+          "slug": "serbia"
+        },
+        "id": 38313,
+        "teamColors": {
+          "primary": "#cc0000",
+          "secondary": "#ee853c",
+          "text": "#ee853c"
+        },
+        "fieldTranslations": {
+          "nameTranslation": {
+            "ar": "كي كي بوراكس موزارت",
+            "ru": "БК Борац Чачак"
+          },
+          "shortNameTranslation": {
+            "ar": "بوراكس موزارت",
+            "bn": "ভোরাস মোজার্ট",
+            "hi": "बोरैक मोज़ार्ट"
+          }
+        }
+      },
+      "awayTeam": {
+        "name": "KK Cedevita Olimpija",
+        "slug": "kk-cedevita-olimpija",
+        "shortName": "Cedevita Olimpija",
+        "gender": "M",
+        "sport": {
+          "name": "Basketball",
+          "slug": "basketball",
+          "id": 2
+        },
+        "userCount": 4843,
+        "nameCode": "CEO",
+        "disabled": false,
+        "national": false,
+        "type": 0,
+        "country": {
+          "alpha2": "SI",
+          "alpha3": "SVN",
+          "name": "Slovenia",
+          "slug": "slovenia"
+        },
+        "id": 6648,
+        "teamColors": {
+          "primary": "#007a3f",
+          "secondary": "#f58233",
+          "text": "#f58233"
+        },
+        "fieldTranslations": {
+          "nameTranslation": {
+            "ar": "كي كي سيديفيتا أوليمبيا",
+            "ru": "Олимпия Любляна"
+          },
+          "shortNameTranslation": {
+            "ar": "سيديفيتا أوليمبيا",
+            "bn": "কেদিভিটা অলিম্পিয়াক্সা",
+            "hi": "सेडेविटा ओलम्पिया"
+          }
+        }
+      },
+      "homeScore": {
+        "current": 71,
+        "display": 71,
+        "period1": 21,
+        "period2": 18,
+        "period3": 19,
+        "period4": 13,
+        "normaltime": 71
+      },
+      "awayScore": {
+        "current": 85,
+        "display": 85,
+        "period1": 18,
+        "period2": 30,
+        "period3": 16,
+        "period4": 21,
+        "normaltime": 85
+      },
+      "id": 16943110,
+      "slug": "kk-borac-mozzart-kk-cedevita-olimpija",
+      "startTimestamp": 1794067200,
+      "finalResultOnly": false
+    },
+    {
+      "tournament": {
+        "name": "AdmiralBet ABA League, Group A",
+        "slug": "aba-liga-group-a",
+        "category": {
+          "name": "International",
+          "slug": "international",
+          "sport": {
+            "name": "Basketball",
+            "slug": "basketball",
+            "id": 2
+          },
+          "priority": 11,
+          "country": {},
+          "id": 103,
+          "flag": "international",
+          "fieldTranslations": {
+            "nameTranslation": {
+              "ar": "دولي",
+              "hi": "अंतर्राष्ट्रीय",
+              "bn": "আন্তর্জাতিক",
+              "ru": "Международные"
+            },
+            "shortNameTranslation": {}
+          }
+        },
+        "uniqueTournament": {
+          "name": "AdmiralBet ABA League",
+          "slug": "admiralbet-aba-league",
+          "primaryColorHex": "#182651",
+          "secondaryColorHex": "#f47321",
+          "category": {
+            "name": "International",
+            "slug": "international",
+            "sport": {
+              "name": "Basketball",
+              "slug": "basketball",
+              "id": 2
+            },
+            "priority": 11,
+            "country": {},
+            "id": 103,
+            "flag": "international",
+            "fieldTranslations": {
+              "nameTranslation": {
+                "ar": "دولي",
+                "hi": "अंतर्राष्ट्रीय",
+                "bn": "আন্তর্জাতিক",
+                "ru": "Международные"
+              },
+              "shortNameTranslation": {}
+            }
+          },
+          "userCount": 6818,
+          "liveActivityEnabled": false,
+          "country": {},
+          "id": 235,
+          "displayInverseHomeAwayTeams": false,
+          "fieldTranslations": {
+            "nameTranslation": {
+              "ar": "دوري اتحاد البلقان",
+              "bn": "এবিএ লীগ",
+              "hi": "एबीए लीग",
+              "ru": "Лига АБА AdmiralBet"
+            },
+            "shortNameTranslation": {}
+          }
+        },
+        "priority": 107,
+        "groupSign": "A",
+        "id": 160513,
+        "fieldTranslations": {
+          "nameTranslation": {
+            "ar": "الدوري الأدرياتيكي، المجموعة A",
+            "ru": "Лига АБА AdmiralBet, Группа A"
+          },
+          "shortNameTranslation": {}
+        }
+      },
+      "roundInfo": {
+        "round": 7
+      },
+      "customId": "VJjsrOr",
+      "status": {
+        "code": 100,
+        "description": "Ended",
+        "type": "finished"
+      },
+      "winnerCode": 1,
+      "homeTeam": {
+        "name": "KK Krka Novo Mesto",
+        "slug": "kk-krka-novo-mesto",
+        "shortName": "Krka",
+        "gender": "M",
+        "sport": {
+          "name": "Basketball",
+          "slug": "basketball",
+          "id": 2
+        },
+        "userCount": 1630,
+        "nameCode": "KRK",
+        "disabled": false,
+        "national": false,
+        "type": 0,
+        "country": {
+          "alpha2": "SI",
+          "alpha3": "SVN",
+          "name": "Slovenia",
+          "slug": "slovenia"
+        },
+        "id": 24245,
+        "teamColors": {
+          "primary": "#ffffff",
+          "secondary": "#006633",
+          "text": "#006633"
+        },
+        "fieldTranslations": {
+          "nameTranslation": {
+            "ar": "كي كي كركا نوفو ميستو",
+            "ru": "КК Крка Ново Место"
+          },
+          "shortNameTranslation": {
+            "ar": "كركا",
+            "bn": "ক্রকা",
+            "hi": "क्रका",
+            "ru": "Крка"
+          }
+        }
+      },
+      "awayTeam": {
+        "name": "Igokea m:tel",
+        "slug": "kk-igokea-aleksandrovac-mtl",
+        "shortName": "Igokea",
+        "gender": "M",
+        "sport": {
+          "name": "Basketball",
+          "slug": "basketball",
+          "id": 2
+        },
+        "userCount": 1625,
+        "nameCode": "IGA",
+        "disabled": false,
+        "national": false,
+        "type": 0,
+        "country": {
+          "alpha2": "BA",
+          "alpha3": "BIH",
+          "name": "Bosnia & Herzegovina",
+          "slug": "bosnia-and-herzegovina"
+        },
+        "id": 44467,
+        "teamColors": {
+          "primary": "#000099",
+          "secondary": "#ffffff",
+          "text": "#ffffff"
+        },
+        "fieldTranslations": {
+          "nameTranslation": {
+            "ar": "كي كي إيغوكيا ألكسندروفاتس م ت ل",
+            "ru": "Игокеа Александровач"
+          },
+          "shortNameTranslation": {
+            "ar": "إيغوكيا",
+            "bn": "ইয়োগোকিয়া",
+            "hi": "इगोकिया"
+          }
+        }
+      },
+      "homeScore": {
+        "current": 73,
+        "display": 73,
+        "period1": 21,
+        "period2": 11,
+        "period3": 22,
+        "period4": 19,
+        "normaltime": 73
+      },
+      "awayScore": {
+        "current": 67,
+        "display": 67,
+        "period1": 16,
+        "period2": 23,
+        "period3": 18,
+        "period4": 10,
+        "normaltime": 67
+      },
+      "id": 16943112,
+      "slug": "igokea-mtel-kk-krka-novo-mesto",
+      "startTimestamp": 1794067200,
+      "finalResultOnly": false
+    },
+    {
+      "tournament": {
+        "name": "AdmiralBet ABA League, Group B",
+        "slug": "aba-liga-group-b",
+        "category": {
+          "name": "International",
+          "slug": "international",
+          "sport": {
+            "name": "Basketball",
+            "slug": "basketball",
+            "id": 2
+          },
+          "priority": 11,
+          "country": {},
+          "id": 103,
+          "flag": "international",
+          "fieldTranslations": {
+            "nameTranslation": {
+              "ar": "دولي",
+              "hi": "अंतर्राष्ट्रीय",
+              "bn": "আন্তর্জাতিক",
+              "ru": "Международные"
+            },
+            "shortNameTranslation": {}
+          }
+        },
+        "uniqueTournament": {
+          "name": "AdmiralBet ABA League",
+          "slug": "admiralbet-aba-league",
+          "primaryColorHex": "#182651",
+          "secondaryColorHex": "#f47321",
+          "category": {
+            "name": "International",
+            "slug": "international",
+            "sport": {
+              "name": "Basketball",
+              "slug": "basketball",
+              "id": 2
+            },
+            "priority": 11,
+            "country": {},
+            "id": 103,
+            "flag": "international",
+            "fieldTranslations": {
+              "nameTranslation": {
+                "ar": "دولي",
+                "hi": "अंतर्राष्ट्रीय",
+                "bn": "আন্তর্জাতিক",
+                "ru": "Международные"
+              },
+              "shortNameTranslation": {}
+            }
+          },
+          "userCount": 6818,
+          "liveActivityEnabled": false,
+          "country": {},
+          "id": 235,
+          "displayInverseHomeAwayTeams": false,
+          "fieldTranslations": {
+            "nameTranslation": {
+              "ar": "دوري اتحاد البلقان",
+              "bn": "এবিএ লীগ",
+              "hi": "एबीए लीग",
+              "ru": "Лига АБА AdmiralBet"
+            },
+            "shortNameTranslation": {}
+          }
+        },
+        "priority": 106,
+        "groupSign": "B",
+        "id": 160509,
+        "fieldTranslations": {
+          "nameTranslation": {
+            "ar": "الدوري الأدرياتيكي، المجموعة B",
+            "ru": "Лига АБА AdmiralBet, Группа B"
+          },
+          "shortNameTranslation": {}
+        }
+      },
+      "roundInfo": {
+        "round": 7
+      },
+      "customId": "MHcsOCac",
+      "status": {
+        "code": 100,
+        "description": "Ended",
+        "type": "finished"
+      },
+      "winnerCode": 1,
+      "homeTeam": {
+        "name": "KK Partizan Mozzart Bet",
+        "slug": "kk-partizan-mozzart-bet",
+        "shortName": "Partizan Mozzart",
+        "gender": "M",
+        "sport": {
+          "name": "Basketball",
+          "slug": "basketball",
+          "id": 2
+        },
+        "userCount": 98854,
+        "nameCode": "PAR",
+        "disabled": false,
+        "national": false,
+        "type": 0,
+        "country": {
+          "alpha2": "RS",
+          "alpha3": "SRB",
+          "name": "Serbia",
+          "slug": "serbia"
+        },
+        "id": 6637,
+        "teamColors": {
+          "primary": "#000000",
+          "secondary": "#ffffff",
+          "text": "#ffffff"
+        },
+        "fieldTranslations": {
+          "nameTranslation": {
+            "ar": "كي كي بارتيزان موزارت بيت",
+            "ru": "Партизан Белград"
+          },
+          "shortNameTranslation": {
+            "ar": "بارتيزان موزارت",
+            "bn": "পার্টিজান মোৎজার্ট",
+            "hi": "पार्टिज़न मोज़ार्ट"
+          }
+        }
+      },
+      "awayTeam": {
+        "name": "KK SC Derby",
+        "slug": "kk-sc-derby",
+        "shortName": "SC Derby",
+        "gender": "M",
+        "sport": {
+          "name": "Basketball",
+          "slug": "basketball",
+          "id": 2
+        },
+        "userCount": 980,
+        "nameCode": "CEN",
+        "disabled": false,
+        "national": false,
+        "type": 0,
+        "country": {
+          "alpha2": "ME",
+          "alpha3": "MNE",
+          "name": "Montenegro",
+          "slug": "montenegro"
+        },
+        "id": 251389,
+        "teamColors": {
+          "primary": "#374df5",
+          "secondary": "#374df5",
+          "text": "#ffffff"
+        },
+        "fieldTranslations": {
+          "nameTranslation": {
+            "ar": "كي كي إس سي ديربي",
+            "ru": "КК СК Дерби"
+          },
+          "shortNameTranslation": {
+            "ar": "إس سي ديربي",
+            "bn": "এসসি ডার্বি",
+            "hi": "एससी डर्बी",
+            "ru": "СК Дерби"
+          }
+        }
+      },
+      "homeScore": {
+        "current": 92,
+        "display": 92,
+        "period1": 16,
+        "period2": 26,
+        "period3": 22,
+        "period4": 28,
+        "normaltime": 92
+      },
+      "awayScore": {
+        "current": 80,
+        "display": 80,
+        "period1": 25,
+        "period2": 22,
+        "period3": 17,
+        "period4": 16,
+        "normaltime": 80
+      },
+      "id": 16943113,
+      "slug": "kk-sc-derby-kk-partizan-mozzart-bet",
+      "startTimestamp": 1794139200,
+      "finalResultOnly": false
+    },
+    {
+      "tournament": {
+        "name": "AdmiralBet ABA League, Group B",
+        "slug": "aba-liga-group-b",
+        "category": {
+          "name": "International",
+          "slug": "international",
+          "sport": {
+            "name": "Basketball",
+            "slug": "basketball",
+            "id": 2
+          },
+          "priority": 11,
+          "country": {},
+          "id": 103,
+          "flag": "international",
+          "fieldTranslations": {
+            "nameTranslation": {
+              "ar": "دولي",
+              "hi": "अंतर्राष्ट्रीय",
+              "bn": "আন্তর্জাতিক",
+              "ru": "Международные"
+            },
+            "shortNameTranslation": {}
+          }
+        },
+        "uniqueTournament": {
+          "name": "AdmiralBet ABA League",
+          "slug": "admiralbet-aba-league",
+          "primaryColorHex": "#182651",
+          "secondaryColorHex": "#f47321",
+          "category": {
+            "name": "International",
+            "slug": "international",
+            "sport": {
+              "name": "Basketball",
+              "slug": "basketball",
+              "id": 2
+            },
+            "priority": 11,
+            "country": {},
+            "id": 103,
+            "flag": "international",
+            "fieldTranslations": {
+              "nameTranslation": {
+                "ar": "دولي",
+                "hi": "अंतर्राष्ट्रीय",
+                "bn": "আন্তর্জাতিক",
+                "ru": "Международные"
+              },
+              "shortNameTranslation": {}
+            }
+          },
+          "userCount": 6818,
+          "liveActivityEnabled": false,
+          "country": {},
+          "id": 235,
+          "displayInverseHomeAwayTeams": false,
+          "fieldTranslations": {
+            "nameTranslation": {
+              "ar": "دوري اتحاد البلقان",
+              "bn": "এবিএ লীগ",
+              "hi": "एबीए लीग",
+              "ru": "Лига АБА AdmiralBet"
+            },
+            "shortNameTranslation": {}
+          }
+        },
+        "priority": 106,
+        "groupSign": "B",
+        "id": 160509,
+        "fieldTranslations": {
+          "nameTranslation": {
+            "ar": "الدوري الأدرياتيكي، المجموعة B",
+            "ru": "Лига АБА AdmiralBet, Группа B"
+          },
+          "shortNameTranslation": {}
+        }
+      },
+      "roundInfo": {
+        "round": 7
+      },
+      "customId": "kIcsdFy",
+      "status": {
+        "code": 100,
+        "description": "Ended",
+        "type": "finished"
+      },
+      "winnerCode": 2,
+      "homeTeam": {
+        "name": "U-Banca Transilvania Cluj-Napoca",
+        "slug": "u-banca-transilvania-cluj-napoca",
+        "shortName": "U-BT Cluj-Napoca",
+        "gender": "M",
+        "sport": {
+          "name": "Basketball",
+          "slug": "basketball",
+          "id": 2
+        },
+        "userCount": 2768,
+        "nameCode": "UCN",
+        "disabled": false,
+        "national": false,
+        "type": 0,
+        "country": {
+          "alpha2": "RO",
+          "alpha3": "ROU",
+          "name": "Romania",
+          "slug": "romania"
+        },
+        "id": 59003,
+        "teamColors": {
+          "primary": "#ffffff",
+          "secondary": "#000000",
+          "text": "#000000"
+        },
+        "fieldTranslations": {
+          "nameTranslation": {
+            "ar": "تحت بانكا ترانسيلفانيا كلوج-نابوكا",
+            "ru": "У-Банка Трансильвания"
+          },
+          "shortNameTranslation": {
+            "ar": "تحت بي تي كلوج-نابوكا",
+            "bn": "ইউ-বিটি ক্লুজ-নাপোকা",
+            "hi": "यू-बीटी क्लुज-नपोका"
+          }
+        }
+      },
+      "awayTeam": {
+        "name": "KK Bosna",
+        "slug": "kk-bosna-meridianbet",
+        "shortName": "Bosna",
+        "gender": "M",
+        "sport": {
+          "name": "Basketball",
+          "slug": "basketball",
+          "id": 2
+        },
+        "userCount": 4749,
+        "nameCode": "BOS",
+        "disabled": false,
+        "national": false,
+        "type": 0,
+        "country": {
+          "alpha2": "BA",
+          "alpha3": "BIH",
+          "name": "Bosnia & Herzegovina",
+          "slug": "bosnia-and-herzegovina"
+        },
+        "id": 6660,
+        "teamColors": {
+          "primary": "#732727",
+          "secondary": "#f3ac01",
+          "text": "#f3ac01"
+        },
+        "fieldTranslations": {
+          "nameTranslation": {
+            "ar": "كي كي بوسنا",
+            "ru": "Босна Сараево"
+          },
+          "shortNameTranslation": {
+            "ar": "بوسنا",
+            "bn": "বসনা",
+            "hi": "बोस्ना"
+          }
+        }
+      },
+      "homeScore": {
+        "current": 91,
+        "display": 91,
+        "period1": 23,
+        "period2": 29,
+        "period3": 21,
+        "period4": 18,
+        "normaltime": 91
+      },
+      "awayScore": {
+        "current": 93,
+        "display": 93,
+        "period1": 25,
+        "period2": 17,
+        "period3": 23,
+        "period4": 28,
+        "normaltime": 93
+      },
+      "id": 16943114,
+      "slug": "u-banca-transilvania-cluj-napoca-kk-bosna",
+      "startTimestamp": 1794132000,
+      "finalResultOnly": false
+    },
+    {
+      "tournament": {
+        "name": "Stoiximan GBL",
+        "slug": "stoiximan-basket-league",
+        "category": {
+          "name": "Greece",
+          "slug": "greece",
+          "sport": {
+            "name": "Basketball",
+            "slug": "basketball",
+            "id": 2
+          },
+          "priority": 0,
+          "country": {
+            "alpha2": "GR",
+            "alpha3": "GRC",
+            "name": "Greece",
+            "slug": "greece"
+          },
+          "id": 108,
+          "flag": "greece",
+          "alpha2": "GR",
+          "fieldTranslations": {
+            "nameTranslation": {
+              "ar": "اليونان",
+              "ru": "Греция"
+            },
+            "shortNameTranslation": {}
+          }
+        },
+        "uniqueTournament": {
+          "name": "Stoiximan GBL",
+          "slug": "stoiximan-basket-league",
+          "primaryColorHex": "#214579",
+          "secondaryColorHex": "#b1b0b4",
+          "category": {
+            "name": "Greece",
+            "slug": "greece",
+            "sport": {
+              "name": "Basketball",
+              "slug": "basketball",
+              "id": 2
+            },
+            "priority": 0,
+            "country": {
+              "alpha2": "GR",
+              "alpha3": "GRC",
+              "name": "Greece",
+              "slug": "greece"
+            },
+            "id": 108,
+            "flag": "greece",
+            "alpha2": "GR",
+            "fieldTranslations": {
+              "nameTranslation": {
+                "ar": "اليونان",
+                "ru": "Греция"
+              },
+              "shortNameTranslation": {}
+            }
+          },
+          "userCount": 6120,
+          "liveActivityEnabled": false,
+          "country": {},
+          "id": 304,
+          "displayInverseHomeAwayTeams": false,
+          "fieldTranslations": {
+            "nameTranslation": {
+              "ar": "دوري ستويكيمان اليوناني لكرة السلة",
+              "bn": "স্টোইক্সিম্যান জিবিএল",
+              "hi": "स्टोक्सिमन जीबीएल",
+              "ru": "Stoiximan GBL"
+            },
+            "shortNameTranslation": {}
+          }
+        },
+        "priority": 95,
+        "isLive": false,
+        "id": 270,
+        "fieldTranslations": {
+          "nameTranslation": {
+            "ar": "دوري ستويكيمان اليوناني لكرة السلة",
+            "bn": "স্টয়ক্সিমান জিবিএল",
+            "hi": "स्टोक्सिमन जीबीएल",
+            "ru": "Лига GBL Stoiximan"
+          },
+          "shortNameTranslation": {}
+        }
+      },
+      "roundInfo": {
+        "round": 6
+      },
+      "customId": "fvbspFId",
+      "status": {
+        "code": 100,
+        "description": "Ended",
+        "type": "finished"
+      },
+      "winnerCode": 2,
+      "homeTeam": {
+        "name": "AE Doxa Lefkadas",
+        "slug": "doxa-lefkadas-bc",
+        "shortName": "Doxa Lefkadas",
+        "gender": "M",
+        "sport": {
+          "name": "Basketball",
+          "slug": "basketball",
+          "id": 2
+        },
+        "userCount": 419,
+        "nameCode": "DOX",
+        "national": false,
+        "type": 0,
+        "country": {
+          "alpha2": "GR",
+          "alpha3": "GRC",
+          "name": "Greece",
+          "slug": "greece"
+        },
+        "id": 459015,
+        "teamColors": {
+          "primary": "#374df5",
+          "secondary": "#374df5",
+          "text": "#ffffff"
+        },
+        "fieldTranslations": {
+          "nameTranslation": {
+            "ar": "دوكسا ليفكاداس بي سي",
+            "ru": "Докса Лефкада БК"
+          },
+          "shortNameTranslation": {
+            "ar": "دوكسا ليفكاداس",
+            "bn": "ডক্সা লেফকাদাস",
+            "hi": "डॉक्सा लेफकाडास",
+            "ru": "Докса Лефкада"
+          }
+        }
+      },
+      "awayTeam": {
+        "name": "Aris BC",
+        "slug": "aris-bc",
+        "shortName": "Aris",
+        "gender": "M",
+        "sport": {
+          "name": "Basketball",
+          "slug": "basketball",
+          "id": 2
+        },
+        "userCount": 10657,
+        "nameCode": "ARI",
+        "disabled": false,
+        "national": false,
+        "type": 0,
+        "country": {
+          "alpha2": "GR",
+          "alpha3": "GRC",
+          "name": "Greece",
+          "slug": "greece"
+        },
+        "id": 3505,
+        "teamColors": {
+          "primary": "#ffdf00",
+          "secondary": "#000000",
+          "text": "#000000"
+        },
+        "fieldTranslations": {
+          "nameTranslation": {
+            "ar": "أريس بي سي",
+            "ru": "Арис"
+          },
+          "shortNameTranslation": {
+            "ar": "أريس",
+            "bn": "আরিস",
+            "hi": "एरिस"
+          }
+        }
+      },
+      "homeScore": {
+        "current": 77,
+        "display": 77,
+        "period1": 23,
+        "period2": 12,
+        "period3": 19,
+        "period4": 23,
+        "normaltime": 77
+      },
+      "awayScore": {
+        "current": 88,
+        "display": 88,
+        "period1": 32,
+        "period2": 19,
+        "period3": 17,
+        "period4": 20,
+        "normaltime": 88
+      },
+      "id": 17111509,
+      "slug": "doxa-lefkadas-bc-aris-bc",
+      "startTimestamp": 1794056400,
+      "finalResultOnly": false
+    },
+    {
+      "tournament": {
+        "name": "Stoiximan GBL",
+        "slug": "stoiximan-basket-league",
+        "category": {
+          "name": "Greece",
+          "slug": "greece",
+          "sport": {
+            "name": "Basketball",
+            "slug": "basketball",
+            "id": 2
+          },
+          "priority": 0,
+          "country": {
+            "alpha2": "GR",
+            "alpha3": "GRC",
+            "name": "Greece",
+            "slug": "greece"
+          },
+          "id": 108,
+          "flag": "greece",
+          "alpha2": "GR",
+          "fieldTranslations": {
+            "nameTranslation": {
+              "ar": "اليونان",
+              "ru": "Греция"
+            },
+            "shortNameTranslation": {}
+          }
+        },
+        "uniqueTournament": {
+          "name": "Stoiximan GBL",
+          "slug": "stoiximan-basket-league",
+          "primaryColorHex": "#214579",
+          "secondaryColorHex": "#b1b0b4",
+          "category": {
+            "name": "Greece",
+            "slug": "greece",
+            "sport": {
+              "name": "Basketball",
+              "slug": "basketball",
+              "id": 2
+            },
+            "priority": 0,
+            "country": {
+              "alpha2": "GR",
+              "alpha3": "GRC",
+              "name": "Greece",
+              "slug": "greece"
+            },
+            "id": 108,
+            "flag": "greece",
+            "alpha2": "GR",
+            "fieldTranslations": {
+              "nameTranslation": {
+                "ar": "اليونان",
+                "ru": "Греция"
+              },
+              "shortNameTranslation": {}
+            }
+          },
+          "userCount": 6120,
+          "liveActivityEnabled": false,
+          "country": {},
+          "id": 304,
+          "displayInverseHomeAwayTeams": false,
+          "fieldTranslations": {
+            "nameTranslation": {
+              "ar": "دوري ستويكيمان اليوناني لكرة السلة",
+              "bn": "স্টোইক্সিম্যান জিবিএল",
+              "hi": "स्टोक्सिमन जीबीएल",
+              "ru": "Stoiximan GBL"
+            },
+            "shortNameTranslation": {}
+          }
+        },
+        "priority": 95,
+        "isLive": false,
+        "id": 270,
+        "fieldTranslations": {
+          "nameTranslation": {
+            "ar": "دوري ستويكيمان اليوناني لكرة السلة",
+            "bn": "স্টয়ক্সিমান জিবিএল",
+            "hi": "स्टोक्सिमन जीबीएल",
+            "ru": "Лига GBL Stoiximan"
+          },
+          "shortNameTranslation": {}
+        }
+      },
+      "roundInfo": {
+        "round": 6
+      },
+      "customId": "dvbstmc",
+      "status": {
+        "code": 100,
+        "description": "Ended",
+        "type": "finished"
+      },
+      "winnerCode": 1,
+      "homeTeam": {
+        "name": "Kolossos Rodou",
+        "slug": "kolossos-rodou",
+        "shortName": "Kolossos Rodou",
+        "gender": "M",
+        "sport": {
+          "name": "Basketball",
+          "slug": "basketball",
+          "id": 2
+        },
+        "userCount": 1487,
+        "nameCode": "KOR",
+        "national": false,
+        "type": 0,
+        "country": {
+          "alpha2": "GR",
+          "alpha3": "GRC",
+          "name": "Greece",
+          "slug": "greece"
+        },
+        "id": 5618,
+        "teamColors": {
+          "primary": "#080421",
+          "secondary": "#8dcaf2",
+          "text": "#8dcaf2"
+        },
+        "fieldTranslations": {
+          "nameTranslation": {
+            "ar": "كولوسوس رودو",
+            "bn": "কোলোসোস রোডু",
+            "hi": "कोलोस्सोस रोडू",
+            "ru": "Колоссос Родос"
+          },
+          "shortNameTranslation": {}
+        }
+      },
+      "awayTeam": {
+        "name": "Peristeri BC",
+        "slug": "peristeri-bc",
+        "shortName": "Peristeri",
+        "gender": "M",
+        "sport": {
+          "name": "Basketball",
+          "slug": "basketball",
+          "id": 2
+        },
+        "userCount": 2008,
+        "nameCode": "PEA",
+        "national": false,
+        "type": 0,
+        "country": {
+          "alpha2": "GR",
+          "alpha3": "GRC",
+          "name": "Greece",
+          "slug": "greece"
+        },
+        "id": 3503,
+        "teamColors": {
+          "primary": "#ffe500",
+          "secondary": "#226bd1",
+          "text": "#226bd1"
+        },
+        "fieldTranslations": {
+          "nameTranslation": {
+            "ar": "بيرستيرى بي سي",
+            "ru": "Перистери"
+          },
+          "shortNameTranslation": {
+            "ar": "بيرستيرى",
+            "bn": "পেরিস্টারি ভিকে",
+            "hi": "पेरिस्टेरी"
+          }
+        }
+      },
+      "homeScore": {
+        "current": 81,
+        "display": 81,
+        "period1": 15,
+        "period2": 25,
+        "period3": 17,
+        "period4": 24,
+        "normaltime": 81
+      },
+      "awayScore": {
+        "current": 78,
+        "display": 78,
+        "period1": 23,
+        "period2": 19,
+        "period3": 17,
+        "period4": 19,
+        "normaltime": 78
+      },
+      "id": 17111510,
+      "slug": "kolossos-rodou-peristeri-bc",
+      "startTimestamp": 1794060000,
+      "finalResultOnly": false
+    },
+    {
+      "tournament": {
+        "name": "Stoiximan GBL",
+        "slug": "stoiximan-basket-league",
+        "category": {
+          "name": "Greece",
+          "slug": "greece",
+          "sport": {
+            "name": "Basketball",
+            "slug": "basketball",
+            "id": 2
+          },
+          "priority": 0,
+          "country": {
+            "alpha2": "GR",
+            "alpha3": "GRC",
+            "name": "Greece",
+            "slug": "greece"
+          },
+          "id": 108,
+          "flag": "greece",
+          "alpha2": "GR",
+          "fieldTranslations": {
+            "nameTranslation": {
+              "ar": "اليونان",
+              "ru": "Греция"
+            },
+            "shortNameTranslation": {}
+          }
+        },
+        "uniqueTournament": {
+          "name": "Stoiximan GBL",
+          "slug": "stoiximan-basket-league",
+          "primaryColorHex": "#214579",
+          "secondaryColorHex": "#b1b0b4",
+          "category": {
+            "name": "Greece",
+            "slug": "greece",
+            "sport": {
+              "name": "Basketball",
+              "slug": "basketball",
+              "id": 2
+            },
+            "priority": 0,
+            "country": {
+              "alpha2": "GR",
+              "alpha3": "GRC",
+              "name": "Greece",
+              "slug": "greece"
+            },
+            "id": 108,
+            "flag": "greece",
+            "alpha2": "GR",
+            "fieldTranslations": {
+              "nameTranslation": {
+                "ar": "اليونان",
+                "ru": "Греция"
+              },
+              "shortNameTranslation": {}
+            }
+          },
+          "userCount": 6120,
+          "liveActivityEnabled": false,
+          "country": {},
+          "id": 304,
+          "displayInverseHomeAwayTeams": false,
+          "fieldTranslations": {
+            "nameTranslation": {
+              "ar": "دوري ستويكيمان اليوناني لكرة السلة",
+              "bn": "স্টোইক্সিম্যান জিবিএল",
+              "hi": "स्टोक्सिमन जीबीएल",
+              "ru": "Stoiximan GBL"
+            },
+            "shortNameTranslation": {}
+          }
+        },
+        "priority": 95,
+        "isLive": false,
+        "id": 270,
+        "fieldTranslations": {
+          "nameTranslation": {
+            "ar": "دوري ستويكيمان اليوناني لكرة السلة",
+            "bn": "স্টয়ক্সিমান জিবিএল",
+            "hi": "स्टोक्सिमन जीबीएल",
+            "ru": "Лига GBL Stoiximan"
+          },
+          "shortNameTranslation": {}
+        }
+      },
+      "roundInfo": {
+        "round": 6
+      },
+      "customId": "ZubsaXUd",
+      "status": {
+        "code": 100,
+        "description": "Ended",
+        "type": "finished"
+      },
+      "winnerCode": 1,
+      "homeTeam": {
+        "name": "Iraklis BC",
+        "slug": "iraklis-bc",
+        "shortName": "Iraklis",
+        "gender": "M",
+        "sport": {
+          "name": "Basketball",
+          "slug": "basketball",
+          "id": 2
+        },
+        "userCount": 2552,
+        "nameCode": "IRA",
+        "national": false,
+        "type": 0,
+        "country": {
+          "alpha2": "GR",
+          "alpha3": "GRC",
+          "name": "Greece",
+          "slug": "greece"
+        },
+        "id": 3499,
+        "teamColors": {
+          "primary": "#045fb4",
+          "secondary": "#ffffff",
+          "text": "#ffffff"
+        },
+        "fieldTranslations": {
+          "nameTranslation": {
+            "ar": "إيراكليس بي سي",
+            "ru": "Ираклис"
+          },
+          "shortNameTranslation": {
+            "ar": "إيراكليس",
+            "bn": "ইরাক্লিস",
+            "hi": "इराकलिस"
+          }
+        }
+      },
+      "awayTeam": {
+        "name": "AO Mykonou",
+        "slug": "ao-mykonoy",
+        "shortName": "AO Mykonou",
+        "gender": "M",
+        "sport": {
+          "name": "Basketball",
+          "slug": "basketball",
+          "id": 2
+        },
+        "userCount": 978,
+        "nameCode": "MYK",
+        "disabled": false,
+        "national": false,
+        "type": 0,
+        "country": {
+          "alpha2": "GR",
+          "alpha3": "GRC",
+          "name": "Greece",
+          "slug": "greece"
+        },
+        "id": 487350,
+        "teamColors": {
+          "primary": "#374df5",
+          "secondary": "#374df5",
+          "text": "#ffffff"
+        },
+        "fieldTranslations": {
+          "nameTranslation": {
+            "ar": "إيه أو ميكونو",
+            "ru": "АО Микону"
+          },
+          "shortNameTranslation": {
+            "ar": "إيه أو ميكونو",
+            "ru": "Микону"
+          }
+        }
+      },
+      "homeScore": {
+        "current": 95,
+        "display": 95,
+        "period1": 24,
+        "period2": 25,
+        "period3": 29,
+        "period4": 17,
+        "normaltime": 95
+      },
+      "awayScore": {
+        "current": 64,
+        "display": 64,
+        "period1": 16,
+        "period2": 10,
+        "period3": 19,
+        "period4": 19,
+        "normaltime": 64
+      },
+      "id": 17111511,
+      "slug": "ao-mykonou-iraklis-bc",
+      "startTimestamp": 1794063600,
+      "finalResultOnly": false
+    },
+    {
+      "tournament": {
+        "name": "Stoiximan GBL",
+        "slug": "stoiximan-basket-league",
+        "category": {
+          "name": "Greece",
+          "slug": "greece",
+          "sport": {
+            "name": "Basketball",
+            "slug": "basketball",
+            "id": 2
+          },
+          "priority": 0,
+          "country": {
+            "alpha2": "GR",
+            "alpha3": "GRC",
+            "name": "Greece",
+            "slug": "greece"
+          },
+          "id": 108,
+          "flag": "greece",
+          "alpha2": "GR",
+          "fieldTranslations": {
+            "nameTranslation": {
+              "ar": "اليونان",
+              "ru": "Греция"
+            },
+            "shortNameTranslation": {}
+          }
+        },
+        "uniqueTournament": {
+          "name": "Stoiximan GBL",
+          "slug": "stoiximan-basket-league",
+          "primaryColorHex": "#214579",
+          "secondaryColorHex": "#b1b0b4",
+          "category": {
+            "name": "Greece",
+            "slug": "greece",
+            "sport": {
+              "name": "Basketball",
+              "slug": "basketball",
+              "id": 2
+            },
+            "priority": 0,
+            "country": {
+              "alpha2": "GR",
+              "alpha3": "GRC",
+              "name": "Greece",
+              "slug": "greece"
+            },
+            "id": 108,
+            "flag": "greece",
+            "alpha2": "GR",
+            "fieldTranslations": {
+              "nameTranslation": {
+                "ar": "اليونان",
+                "ru": "Греция"
+              },
+              "shortNameTranslation": {}
+            }
+          },
+          "userCount": 6120,
+          "liveActivityEnabled": false,
+          "country": {},
+          "id": 304,
+          "displayInverseHomeAwayTeams": false,
+          "fieldTranslations": {
+            "nameTranslation": {
+              "ar": "دوري ستويكيمان اليوناني لكرة السلة",
+              "bn": "স্টোইক্সিম্যান জিবিএল",
+              "hi": "स्टोक्सिमन जीबीएल",
+              "ru": "Stoiximan GBL"
+            },
+            "shortNameTranslation": {}
+          }
+        },
+        "priority": 95,
+        "isLive": false,
+        "id": 270,
+        "fieldTranslations": {
+          "nameTranslation": {
+            "ar": "دوري ستويكيمان اليوناني لكرة السلة",
+            "bn": "স্টয়ক্সিমান জিবিএল",
+            "hi": "स्टोक्सिमन जीबीएल",
+            "ru": "Лига GBL Stoiximan"
+          },
+          "shortNameTranslation": {}
+        }
+      },
+      "roundInfo": {
+        "round": 6
+      },
+      "customId": "rdTbsOFgc",
+      "status": {
+        "code": 100,
+        "description": "Ended",
+        "type": "finished"
+      },
+      "winnerCode": 2,
+      "homeTeam": {
+        "name": "Promitheas Patras BC Vikos Cola",
+        "slug": "promitheas-patras",
+        "shortName": "Promitheas",
+        "gender": "M",
+        "sport": {
+          "name": "Basketball",
+          "slug": "basketball",
+          "id": 2
+        },
+        "userCount": 1983,
+        "nameCode": "PRO",
+        "disabled": false,
+        "national": false,
+        "type": 0,
+        "country": {
+          "alpha2": "GR",
+          "alpha3": "GRC",
+          "name": "Greece",
+          "slug": "greece"
+        },
+        "id": 232667,
+        "teamColors": {
+          "primary": "#ffffff",
+          "secondary": "#1e191a",
+          "text": "#1e191a"
+        },
+        "fieldTranslations": {
+          "nameTranslation": {
+            "ar": "بروميثاس باتراس",
+            "ru": "АСП Промитеас"
+          },
+          "shortNameTranslation": {
+            "ar": "بروميثاس",
+            "bn": "প্রমিথিউস",
+            "hi": "प्रोमेथियस"
+          }
+        }
+      },
+      "awayTeam": {
+        "name": "Karditsa Iaponiki",
+        "slug": "as-karditsas",
+        "shortName": "Karditsa Iaponiki",
+        "gender": "M",
+        "sport": {
+          "name": "Basketball",
+          "slug": "basketball",
+          "id": 2
+        },
+        "userCount": 1320,
+        "nameCode": "KAR",
+        "disabled": false,
+        "national": false,
+        "type": 0,
+        "country": {
+          "alpha2": "GR",
+          "alpha3": "GRC",
+          "name": "Greece",
+          "slug": "greece"
+        },
+        "id": 266539,
+        "teamColors": {
+          "primary": "#064277",
+          "secondary": "#ffffff",
+          "text": "#ffffff"
+        },
+        "fieldTranslations": {
+          "nameTranslation": {
+            "ar": "أي أس كارديتساس",
+            "bn": "এএস কার্ডিটসাস",
+            "hi": "एएस कार्डित्सास",
+            "ru": "АС Кардица"
+          },
+          "shortNameTranslation": {}
+        }
+      },
+      "homeScore": {
+        "current": 73,
+        "display": 73,
+        "period1": 17,
+        "period2": 20,
+        "period3": 14,
+        "period4": 22,
+        "normaltime": 73
+      },
+      "awayScore": {
+        "current": 90,
+        "display": 90,
+        "period1": 15,
+        "period2": 32,
+        "period3": 20,
+        "period4": 23,
+        "normaltime": 90
+      },
+      "id": 17111512,
+      "slug": "karditsa-iaponiki-promitheas-patras-bc-vikos-cola",
+      "startTimestamp": 1794063600,
+      "finalResultOnly": false
+    },
+    {
+      "tournament": {
+        "name": "Stoiximan GBL",
+        "slug": "stoiximan-basket-league",
+        "category": {
+          "name": "Greece",
+          "slug": "greece",
+          "sport": {
+            "name": "Basketball",
+            "slug": "basketball",
+            "id": 2
+          },
+          "priority": 0,
+          "country": {
+            "alpha2": "GR",
+            "alpha3": "GRC",
+            "name": "Greece",
+            "slug": "greece"
+          },
+          "id": 108,
+          "flag": "greece",
+          "alpha2": "GR",
+          "fieldTranslations": {
+            "nameTranslation": {
+              "ar": "اليونان",
+              "ru": "Греция"
+            },
+            "shortNameTranslation": {}
+          }
+        },
+        "uniqueTournament": {
+          "name": "Stoiximan GBL",
+          "slug": "stoiximan-basket-league",
+          "primaryColorHex": "#214579",
+          "secondaryColorHex": "#b1b0b4",
+          "category": {
+            "name": "Greece",
+            "slug": "greece",
+            "sport": {
+              "name": "Basketball",
+              "slug": "basketball",
+              "id": 2
+            },
+            "priority": 0,
+            "country": {
+              "alpha2": "GR",
+              "alpha3": "GRC",
+              "name": "Greece",
+              "slug": "greece"
+            },
+            "id": 108,
+            "flag": "greece",
+            "alpha2": "GR",
+            "fieldTranslations": {
+              "nameTranslation": {
+                "ar": "اليونان",
+                "ru": "Греция"
+              },
+              "shortNameTranslation": {}
+            }
+          },
+          "userCount": 6120,
+          "liveActivityEnabled": false,
+          "country": {},
+          "id": 304,
+          "displayInverseHomeAwayTeams": false,
+          "fieldTranslations": {
+            "nameTranslation": {
+              "ar": "دوري ستويكيمان اليوناني لكرة السلة",
+              "bn": "স্টোইক্সিম্যান জিবিএল",
+              "hi": "स्टोक्सिमन जीबीएल",
+              "ru": "Stoiximan GBL"
+            },
+            "shortNameTranslation": {}
+          }
+        },
+        "priority": 95,
+        "isLive": false,
+        "id": 270,
+        "fieldTranslations": {
+          "nameTranslation": {
+            "ar": "دوري ستويكيمان اليوناني لكرة السلة",
+            "bn": "স্টয়ক্সিমান জিবিএল",
+            "hi": "स्टोक्सिमन जीबीएल",
+            "ru": "Лига GBL Stoiximan"
+          },
+          "shortNameTranslation": {}
+        }
+      },
+      "roundInfo": {
+        "round": 6
+      },
+      "customId": "jvbsTNEd",
+      "status": {
+        "code": 100,
+        "description": "Ended",
+        "type": "finished"
+      },
+      "winnerCode": 1,
+      "homeTeam": {
+        "name": "PAOK BC",
+        "slug": "paok-bc",
+        "shortName": "PAOK",
+        "gender": "M",
+        "sport": {
+          "name": "Basketball",
+          "slug": "basketball",
+          "id": 2
+        },
+        "userCount": 19650,
+        "nameCode": "PAO",
+        "disabled": false,
+        "national": false,
+        "type": 0,
+        "country": {
+          "alpha2": "GR",
+          "alpha3": "GRC",
+          "name": "Greece",
+          "slug": "greece"
+        },
+        "id": 3509,
+        "teamColors": {
+          "primary": "#ffffff",
+          "secondary": "#231f20",
+          "text": "#231f20"
+        },
+        "fieldTranslations": {
+          "nameTranslation": {
+            "ar": "باوك بي سي",
+            "ru": "ПАОК БК"
+          },
+          "shortNameTranslation": {
+            "ar": "باوك",
+            "bn": "পিএওকে",
+            "hi": "पाओक"
+          }
+        }
+      },
+      "awayTeam": {
+        "name": "AS Vikos Ioanninon",
+        "slug": "vikos-bc",
+        "shortName": "Vikos",
+        "gender": "M",
+        "sport": {
+          "name": "Basketball",
+          "slug": "basketball",
+          "id": 2
+        },
+        "userCount": 581,
+        "nameCode": "VIK",
+        "disabled": false,
+        "national": false,
+        "type": 0,
+        "country": {
+          "alpha2": "GR",
+          "alpha3": "GRC",
+          "name": "Greece",
+          "slug": "greece"
+        },
+        "id": 449443,
+        "teamColors": {
+          "primary": "#374df5",
+          "secondary": "#374df5",
+          "text": "#ffffff"
+        },
+        "fieldTranslations": {
+          "nameTranslation": {
+            "ar": "فيكوس بي سي",
+            "ru": "Викос Соколы БК"
+          },
+          "shortNameTranslation": {
+            "ar": "فيكوس",
+            "bn": "ভিকোস",
+            "hi": "विकोस",
+            "ru": "Викос"
+          }
+        }
+      },
+      "homeScore": {
+        "current": 93,
+        "display": 93,
+        "period1": 30,
+        "period2": 24,
+        "period3": 20,
+        "period4": 19,
+        "normaltime": 93
+      },
+      "awayScore": {
+        "current": 67,
+        "display": 67,
+        "period1": 15,
+        "period2": 18,
+        "period3": 11,
+        "period4": 23,
+        "normaltime": 67
+      },
+      "id": 17111579,
+      "slug": "vikos-falcons-bc-paok-bc",
+      "startTimestamp": 1794065400,
+      "finalResultOnly": false
+    },
+    {
+      "tournament": {
+        "name": "Stoiximan GBL",
+        "slug": "stoiximan-basket-league",
+        "category": {
+          "name": "Greece",
+          "slug": "greece",
+          "sport": {
+            "name": "Basketball",
+            "slug": "basketball",
+            "id": 2
+          },
+          "priority": 0,
+          "country": {
+            "alpha2": "GR",
+            "alpha3": "GRC",
+            "name": "Greece",
+            "slug": "greece"
+          },
+          "id": 108,
+          "flag": "greece",
+          "alpha2": "GR",
+          "fieldTranslations": {
+            "nameTranslation": {
+              "ar": "اليونان",
+              "ru": "Греция"
+            },
+            "shortNameTranslation": {}
+          }
+        },
+        "uniqueTournament": {
+          "name": "Stoiximan GBL",
+          "slug": "stoiximan-basket-league",
+          "primaryColorHex": "#214579",
+          "secondaryColorHex": "#b1b0b4",
+          "category": {
+            "name": "Greece",
+            "slug": "greece",
+            "sport": {
+              "name": "Basketball",
+              "slug": "basketball",
+              "id": 2
+            },
+            "priority": 0,
+            "country": {
+              "alpha2": "GR",
+              "alpha3": "GRC",
+              "name": "Greece",
+              "slug": "greece"
+            },
+            "id": 108,
+            "flag": "greece",
+            "alpha2": "GR",
+            "fieldTranslations": {
+              "nameTranslation": {
+                "ar": "اليونان",
+                "ru": "Греция"
+              },
+              "shortNameTranslation": {}
+            }
+          },
+          "userCount": 6120,
+          "liveActivityEnabled": false,
+          "country": {},
+          "id": 304,
+          "displayInverseHomeAwayTeams": false,
+          "fieldTranslations": {
+            "nameTranslation": {
+              "ar": "دوري ستويكيمان اليوناني لكرة السلة",
+              "bn": "স্টোইক্সিম্যান জিবিএল",
+              "hi": "स्टोक्सिमन जीबीएल",
+              "ru": "Stoiximan GBL"
+            },
+            "shortNameTranslation": {}
+          }
+        },
+        "priority": 95,
+        "isLive": false,
+        "id": 270,
+        "fieldTranslations": {
+          "nameTranslation": {
+            "ar": "دوري ستويكيمان اليوناني لكرة السلة",
+            "bn": "স্টয়ক্সিমান জিবিএল",
+            "hi": "स्टोक्सिमन जीबीएल",
+            "ru": "Лига GBL Stoiximan"
+          },
+          "shortNameTranslation": {}
+        }
+      },
+      "roundInfo": {
+        "round": 6
+      },
+      "customId": "cvbsivb",
+      "status": {
+        "code": 100,
+        "description": "Ended",
+        "type": "finished"
+      },
+      "winnerCode": 2,
+      "homeTeam": {
+        "name": "AEK BC",
+        "slug": "aek-athens-bc",
+        "shortName": "AEK",
+        "gender": "M",
+        "sport": {
+          "name": "Basketball",
+          "slug": "basketball",
+          "id": 2
+        },
+        "userCount": 13697,
+        "nameCode": "AEK",
+        "disabled": false,
+        "national": false,
+        "type": 0,
+        "country": {
+          "alpha2": "GR",
+          "alpha3": "GRC",
+          "name": "Greece",
+          "slug": "greece"
+        },
+        "id": 3502,
+        "teamColors": {
+          "primary": "#fadf00",
+          "secondary": "#000000",
+          "text": "#000000"
+        },
+        "fieldTranslations": {
+          "nameTranslation": {
+            "ar": "أيك أثينا",
+            "ru": "АЕК Афины"
+          },
+          "shortNameTranslation": {
+            "ar": "أيك أثينا",
+            "bn": "এইকে",
+            "hi": "एईके"
+          }
+        }
+      },
+      "awayTeam": {
+        "name": "Panathinaikos BC",
+        "slug": "panathinaikos-bc",
+        "shortName": "Panathinaikos",
+        "gender": "M",
+        "sport": {
+          "name": "Basketball",
+          "slug": "basketball",
+          "id": 2
+        },
+        "userCount": 84362,
+        "nameCode": "PAN",
+        "disabled": false,
+        "national": false,
+        "type": 0,
+        "country": {
+          "alpha2": "GR",
+          "alpha3": "GRC",
+          "name": "Greece",
+          "slug": "greece"
+        },
+        "id": 3508,
+        "teamColors": {
+          "primary": "#007942",
+          "secondary": "#ffffff",
+          "text": "#ffffff"
+        },
+        "fieldTranslations": {
+          "nameTranslation": {
+            "ar": "باناثينايكوس بي سي",
+            "ru": "Панатинайкос"
+          },
+          "shortNameTranslation": {
+            "ar": "باناثينايكوس",
+            "bn": "পানাথিনাইকোস",
+            "hi": "पानाथिनाइकोस"
+          }
+        }
+      },
+      "homeScore": {
+        "current": 74,
+        "display": 74,
+        "period1": 19,
+        "period2": 21,
+        "period3": 15,
+        "period4": 19,
+        "normaltime": 74
+      },
+      "awayScore": {
+        "current": 83,
+        "display": 83,
+        "period1": 14,
+        "period2": 23,
+        "period3": 21,
+        "period4": 25,
+        "normaltime": 83
+      },
+      "id": 17111580,
+      "slug": "panathinaikos-bc-aek-bc",
+      "startTimestamp": 1794135600,
+      "finalResultOnly": false
+    },
+    {
+      "tournament": {
+        "name": "Israeli Basketball Super League",
+        "slug": "super-league",
+        "category": {
+          "name": "Israel",
+          "slug": "israel",
+          "sport": {
+            "name": "Basketball",
+            "slug": "basketball",
+            "id": 2
+          },
+          "priority": 0,
+          "country": {
+            "alpha2": "IL",
+            "alpha3": "ISR",
+            "name": "Israel",
+            "slug": "israel"
+          },
+          "id": 188,
+          "flag": "israel",
+          "alpha2": "IL",
+          "fieldTranslations": {
+            "nameTranslation": {
+              "ar": "إسرائيل",
+              "ru": "Израиль"
+            },
+            "shortNameTranslation": {}
+          }
+        },
+        "uniqueTournament": {
+          "name": "Israeli Basketball Super League",
+          "slug": "super-league",
+          "primaryColorHex": "#f48035",
+          "secondaryColorHex": "#fbb035",
+          "category": {
+            "name": "Israel",
+            "slug": "israel",
+            "sport": {
+              "name": "Basketball",
+              "slug": "basketball",
+              "id": 2
+            },
+            "priority": 0,
+            "country": {
+              "alpha2": "IL",
+              "alpha3": "ISR",
+              "name": "Israel",
+              "slug": "israel"
+            },
+            "id": 188,
+            "flag": "israel",
+            "alpha2": "IL",
+            "fieldTranslations": {
+              "nameTranslation": {
+                "ar": "إسرائيل",
+                "ru": "Израиль"
+              },
+              "shortNameTranslation": {}
+            }
+          },
+          "userCount": 919,
+          "liveActivityEnabled": false,
+          "country": {},
+          "id": 1197,
+          "displayInverseHomeAwayTeams": false,
+          "fieldTranslations": {
+            "nameTranslation": {
+              "ar": "الدوري الإسرائيلي الممتاز لكرة السلة",
+              "ru": "Суперлига по баскетболу Израиля"
+            },
+            "shortNameTranslation": {}
+          }
+        },
+        "priority": 60,
+        "isLive": false,
+        "id": 1804,
+        "fieldTranslations": {
+          "nameTranslation": {
+            "ar": "الدوري الممتاز لكرة السلة الإسرائيلي",
+            "ru": "Суперлига баскетбола Израиля"
+          },
+          "shortNameTranslation": {}
+        }
+      },
+      "roundInfo": {
+        "round": 5
+      },
+      "customId": "ATHsHoYc",
+      "status": {
+        "code": 100,
+        "description": "Ended",
+        "type": "finished"
+      },
+      "winnerCode": 2,
+      "homeTeam": {
+        "name": "Maccabi Urban Ramat Gan",
+        "slug": "maccabi-urban-ramat-gan",
+        "gender": "M",
+        "sport": {
+          "name": "Basketball",
+          "slug": "basketball",
+          "id": 2
+        },
+        "userCount": 495,
+        "nameCode": "IRG",
+        "national": false,
+        "type": 0,
+        "country": {
+          "alpha2": "IL",
+          "alpha3": "ISR",
+          "name": "Israel",
+          "slug": "israel"
+        },
+        "id": 370732,
+        "teamColors": {
+          "primary": "#374df5",
+          "secondary": "#374df5",
+          "text": "#ffffff"
+        },
+        "fieldTranslations": {
+          "nameTranslation": {
+            "ar": "مكابي أوربان رامات غان",
+            "ru": "Маккаби Урбан Рамат Ган"
+          },
+          "shortNameTranslation": {}
+        }
+      },
+      "awayTeam": {
+        "name": "Maccabi Rishon",
+        "slug": "maccabi-rishon",
+        "shortName": "Rishon",
+        "gender": "M",
+        "sport": {
+          "name": "Basketball",
+          "slug": "basketball",
+          "id": 2
+        },
+        "userCount": 365,
+        "nameCode": "RIS",
+        "national": false,
+        "type": 0,
+        "country": {
+          "alpha2": "IL",
+          "alpha3": "ISR",
+          "name": "Israel",
+          "slug": "israel"
+        },
+        "id": 82175,
+        "teamColors": {
+          "primary": "#ffffff",
+          "secondary": "#ff7b00",
+          "text": "#ff7b00"
+        },
+        "fieldTranslations": {
+          "nameTranslation": {
+            "ar": "مكابي ريشون",
+            "ru": "Маккаби Ришон"
+          },
+          "shortNameTranslation": {
+            "ar": "ريشون",
+            "bn": "রিশন",
+            "hi": "रिशोन"
+          }
+        }
+      },
+      "homeScore": {
+        "current": 61,
+        "display": 61,
+        "period1": 16,
+        "period2": 14,
+        "period3": 18,
+        "period4": 13,
+        "normaltime": 61
+      },
+      "awayScore": {
+        "current": 97,
+        "display": 97,
+        "period1": 30,
+        "period2": 16,
+        "period3": 26,
+        "period4": 25,
+        "normaltime": 97
+      },
+      "id": 17111748,
+      "slug": "maccabi-urban-ramat-gan-maccabi-rishon",
+      "startTimestamp": 1794071700,
+      "finalResultOnly": false
+    },
+    {
+      "tournament": {
+        "name": "Superliga, Women",
+        "slug": "superliga-women-kkf-2026-27",
+        "category": {
+          "name": "Albania",
+          "slug": "albania",
+          "sport": {
+            "name": "Basketball",
+            "slug": "basketball",
+            "id": 2
+          },
+          "priority": 0,
+          "country": {
+            "alpha2": "AL",
+            "alpha3": "ALB",
+            "name": "Albania",
+            "slug": "albania"
+          },
+          "id": 1178,
+          "flag": "albania",
+          "alpha2": "AL",
+          "fieldTranslations": {
+            "nameTranslation": {
+              "ar": "ألبانيا",
+              "ru": "Албания"
+            },
+            "shortNameTranslation": {}
+          }
+        },
+        "uniqueTournament": {
+          "name": "Superliga, Women",
+          "slug": "superkupa-women",
+          "category": {
+            "name": "Albania",
+            "slug": "albania",
+            "sport": {
+              "name": "Basketball",
+              "slug": "basketball",
+              "id": 2
+            },
+            "priority": 0,
+            "country": {
+              "alpha2": "AL",
+              "alpha3": "ALB",
+              "name": "Albania",
+              "slug": "albania"
+            },
+            "id": 1178,
+            "flag": "albania",
+            "alpha2": "AL",
+            "fieldTranslations": {
+              "nameTranslation": {
+                "ar": "ألبانيا",
+                "ru": "Албания"
+              },
+              "shortNameTranslation": {}
+            }
+          },
+          "userCount": 13,
+          "liveActivityEnabled": false,
+          "country": {},
+          "id": 29874,
+          "displayInverseHomeAwayTeams": false,
+          "fieldTranslations": {
+            "nameTranslation": {
+              "ar": "السوبرليغا للسيدات",
+              "ru": "Суперлига, среди женщин"
+            },
+            "shortNameTranslation": {}
+          }
+        },
+        "priority": 0,
+        "id": 203439
+      },
+      "customId": "hYcjsuvrk",
+      "status": {
+        "code": 100,
+        "description": "Ended",
+        "type": "finished"
+      },
+      "winnerCode": 2,
+      "homeTeam": {
+        "name": "Sopoti Eagles",
+        "slug": "sopoti-eagles",
+        "shortName": "Sopoti",
+        "gender": "F",
+        "sport": {
+          "name": "Basketball",
+          "slug": "basketball",
+          "id": 2
+        },
+        "userCount": 3,
+        "nameCode": "SEA",
+        "disabled": false,
+        "national": false,
+        "type": 0,
+        "country": {
+          "alpha2": "AL",
+          "alpha3": "ALB",
+          "name": "Albania",
+          "slug": "albania"
+        },
+        "id": 1293519,
+        "teamColors": {
+          "primary": "#374df5",
+          "secondary": "#374df5",
+          "text": "#ffffff"
+        }
+      },
+      "awayTeam": {
+        "name": "KK Vllaznia",
+        "slug": "kk-vllaznia",
+        "gender": "F",
+        "sport": {
+          "name": "Basketball",
+          "slug": "basketball",
+          "id": 2
+        },
+        "userCount": 12,
+        "nameCode": "KVL",
+        "disabled": false,
+        "national": false,
+        "type": 0,
+        "country": {
+          "alpha2": "AL",
+          "alpha3": "ALB",
+          "name": "Albania",
+          "slug": "albania"
+        },
+        "id": 1132407,
+        "teamColors": {
+          "primary": "#374df5",
+          "secondary": "#374df5",
+          "text": "#ffffff"
+        },
+        "fieldTranslations": {
+          "nameTranslation": {
+            "ar": "كي كي فلاشنيا",
+            "ru": "КК Вллазния"
+          },
+          "shortNameTranslation": {}
+        }
+      },
+      "homeScore": {
+        "current": 51,
+        "display": 51,
+        "period1": 13,
+        "period2": 6,
+        "period3": 13,
+        "period4": 19,
+        "normaltime": 51
+      },
+      "awayScore": {
+        "current": 91,
+        "display": 91,
+        "period1": 27,
+        "period2": 20,
+        "period3": 27,
+        "period4": 17,
+        "normaltime": 91
+      },
+      "id": 17480206,
+      "slug": "sopoti-eagles-kk-vllaznia",
+      "startTimestamp": 1794142800,
+      "finalResultOnly": false
+    },
+    {
+      "tournament": {
+        "name": "Superliga, Women",
+        "slug": "superliga-women-kkf-2026-27",
+        "category": {
+          "name": "Albania",
+          "slug": "albania",
+          "sport": {
+            "name": "Basketball",
+            "slug": "basketball",
+            "id": 2
+          },
+          "priority": 0,
+          "country": {
+            "alpha2": "AL",
+            "alpha3": "ALB",
+            "name": "Albania",
+            "slug": "albania"
+          },
+          "id": 1178,
+          "flag": "albania",
+          "alpha2": "AL",
+          "fieldTranslations": {
+            "nameTranslation": {
+              "ar": "ألبانيا",
+              "ru": "Албания"
+            },
+            "shortNameTranslation": {}
+          }
+        },
+        "uniqueTournament": {
+          "name": "Superliga, Women",
+          "slug": "superkupa-women",
+          "category": {
+            "name": "Albania",
+            "slug": "albania",
+            "sport": {
+              "name": "Basketball",
+              "slug": "basketball",
+              "id": 2
+            },
+            "priority": 0,
+            "country": {
+              "alpha2": "AL",
+              "alpha3": "ALB",
+              "name": "Albania",
+              "slug": "albania"
+            },
+            "id": 1178,
+            "flag": "albania",
+            "alpha2": "AL",
+            "fieldTranslations": {
+              "nameTranslation": {
+                "ar": "ألبانيا",
+                "ru": "Албания"
+              },
+              "shortNameTranslation": {}
+            }
+          },
+          "userCount": 13,
+          "liveActivityEnabled": false,
+          "country": {},
+          "id": 29874,
+          "displayInverseHomeAwayTeams": false,
+          "fieldTranslations": {
+            "nameTranslation": {
+              "ar": "السوبرليغا للسيدات",
+              "ru": "Суперлига, среди женщин"
+            },
+            "shortNameTranslation": {}
+          }
+        },
+        "priority": 0,
+        "id": 203439
+      },
+      "customId": "RNmdsgwnd",
+      "status": {
+        "code": 100,
+        "description": "Ended",
+        "type": "finished"
+      },
+      "winnerCode": 1,
+      "homeTeam": {
+        "name": "KB Tirana",
+        "slug": "kb-tirana",
+        "shortName": "KB Tirana",
+        "gender": "F",
+        "sport": {
+          "name": "Basketball",
+          "slug": "basketball",
+          "id": 2
+        },
+        "userCount": 35,
+        "nameCode": "KTI",
+        "disabled": false,
+        "national": false,
+        "type": 0,
+        "country": {
+          "alpha2": "AL",
+          "alpha3": "ALB",
+          "name": "Albania",
+          "slug": "albania"
+        },
+        "id": 406942,
+        "teamColors": {
+          "primary": "#374df5",
+          "secondary": "#374df5",
+          "text": "#ffffff"
+        },
+        "fieldTranslations": {
+          "nameTranslation": {
+            "ar": "كي بي تيرانا",
+            "ru": "КБ Тирана"
+          },
+          "shortNameTranslation": {
+            "ar": "كي بي تيرانا",
+            "ru": "КБ Тирана"
+          }
+        }
+      },
+      "awayTeam": {
+        "name": "BC Partizani Tirana",
+        "slug": "bc-partizani-tirana",
+        "shortName": "Partizani ",
+        "gender": "F",
+        "sport": {
+          "name": "Basketball",
+          "slug": "basketball",
+          "id": 2
+        },
+        "userCount": 29,
+        "nameCode": "BPT",
+        "disabled": false,
+        "national": false,
+        "type": 0,
+        "country": {
+          "alpha2": "AL",
+          "alpha3": "ALB",
+          "name": "Albania",
+          "slug": "albania"
+        },
+        "id": 408556,
+        "teamColors": {
+          "primary": "#374df5",
+          "secondary": "#374df5",
+          "text": "#ffffff"
+        },
+        "fieldTranslations": {
+          "nameTranslation": {
+            "ar": "BC بارتيزاني تيرانا",
+            "ru": "БК Партизан Тирана"
+          },
+          "shortNameTranslation": {
+            "ru": "Партизан"
+          }
+        }
+      },
+      "homeScore": {
+        "current": 60,
+        "display": 60,
+        "period1": 15,
+        "period2": 16,
+        "period3": 14,
+        "period4": 15,
+        "normaltime": 60
+      },
+      "awayScore": {
+        "current": 58,
+        "display": 58,
+        "period1": 17,
+        "period2": 16,
+        "period3": 12,
+        "period4": 13,
+        "normaltime": 58
+      },
+      "id": 17480208,
+      "slug": "bc-partizani-tirana-kb-tirana",
+      "startTimestamp": 1794078000,
+      "finalResultOnly": false
     }
   ],
   "stats": {
@@ -178178,6 +184903,238 @@
       "name": "Denver Nuggets"
     },
     {
+      "id": 35334,
+      "name": "Pallacanestro Trieste"
+    },
+    {
+      "id": 1249364,
+      "name": "BC Roma"
+    },
+    {
+      "id": 5624,
+      "name": "UNAhotels Reggio Emilia"
+    },
+    {
+      "id": 24510,
+      "name": "Umana Reyer Venezia"
+    },
+    {
+      "id": 265894,
+      "name": "Bahçeşehir Koleji"
+    },
+    {
+      "id": 304491,
+      "name": "Denizli Basket Spor Kulübü"
+    },
+    {
+      "id": 45022,
+      "name": "Trabzonspor"
+    },
+    {
+      "id": 234214,
+      "name": "Petkim Spor"
+    },
+    {
+      "id": 24085,
+      "name": "Türk Telekom B.K."
+    },
+    {
+      "id": 268256,
+      "name": "Biotekno Körfez Basket"
+    },
+    {
+      "id": 3515,
+      "name": "Anadolu Efes"
+    },
+    {
+      "id": 37760,
+      "name": "Tofaş Bursa"
+    },
+    {
+      "id": 253781,
+      "name": "Bursaspor Basketbol"
+    },
+    {
+      "id": 3514,
+      "name": "Fenerbahçe Tarfin"
+    },
+    {
+      "id": 3419,
+      "name": "Indiana Pacers"
+    },
+    {
+      "id": 3416,
+      "name": "Phoenix Suns"
+    },
+    {
+      "id": 3560,
+      "name": "Kids&Us Manresa"
+    },
+    {
+      "id": 37171,
+      "name": "Monbus Obradoiro"
+    },
+    {
+      "id": 368430,
+      "name": "Bàsquet Girona"
+    },
+    {
+      "id": 5615,
+      "name": "Surne Bilbao Basket"
+    },
+    {
+      "id": 3557,
+      "name": "Força Lleida CE"
+    },
+    {
+      "id": 3553,
+      "name": "Kosner Baskonia"
+    },
+    {
+      "id": 3543,
+      "name": "Barça Basket"
+    },
+    {
+      "id": 3547,
+      "name": "Río Breogán"
+    },
+    {
+      "id": 207541,
+      "name": "Hereda San Pablo Burgos"
+    },
+    {
+      "id": 3545,
+      "name": "Valencia Basket"
+    },
+    {
+      "id": 78043,
+      "name": "La Laguna Tenerife"
+    },
+    {
+      "id": 3544,
+      "name": "Joventut Badalona"
+    },
+    {
+      "id": 235250,
+      "name": "Perspektiva Ilirija"
+    },
+    {
+      "id": 5742,
+      "name": "BC Vienna"
+    },
+    {
+      "id": 38359,
+      "name": "FMP Beograd"
+    },
+    {
+      "id": 6635,
+      "name": "KK Budućnost VOLI"
+    },
+    {
+      "id": 38313,
+      "name": "KK Borac Mozzart"
+    },
+    {
+      "id": 6648,
+      "name": "KK Cedevita Olimpija"
+    },
+    {
+      "id": 24245,
+      "name": "KK Krka Novo Mesto"
+    },
+    {
+      "id": 44467,
+      "name": "Igokea m:tel"
+    },
+    {
+      "id": 6637,
+      "name": "KK Partizan Mozzart Bet"
+    },
+    {
+      "id": 251389,
+      "name": "KK SC Derby"
+    },
+    {
+      "id": 59003,
+      "name": "U-Banca Transilvania Cluj-Napoca"
+    },
+    {
+      "id": 6660,
+      "name": "KK Bosna"
+    },
+    {
+      "id": 459015,
+      "name": "AE Doxa Lefkadas"
+    },
+    {
+      "id": 3505,
+      "name": "Aris BC"
+    },
+    {
+      "id": 5618,
+      "name": "Kolossos Rodou"
+    },
+    {
+      "id": 3503,
+      "name": "Peristeri BC"
+    },
+    {
+      "id": 3499,
+      "name": "Iraklis BC"
+    },
+    {
+      "id": 487350,
+      "name": "AO Mykonou"
+    },
+    {
+      "id": 232667,
+      "name": "Promitheas Patras BC Vikos Cola"
+    },
+    {
+      "id": 266539,
+      "name": "Karditsa Iaponiki"
+    },
+    {
+      "id": 3509,
+      "name": "PAOK BC"
+    },
+    {
+      "id": 449443,
+      "name": "AS Vikos Ioanninon"
+    },
+    {
+      "id": 3502,
+      "name": "AEK BC"
+    },
+    {
+      "id": 3508,
+      "name": "Panathinaikos BC"
+    },
+    {
+      "id": 370732,
+      "name": "Maccabi Urban Ramat Gan"
+    },
+    {
+      "id": 82175,
+      "name": "Maccabi Rishon"
+    },
+    {
+      "id": 1293519,
+      "name": "Sopoti Eagles"
+    },
+    {
+      "id": 1132407,
+      "name": "KK Vllaznia"
+    },
+    {
+      "id": 406942,
+      "name": "KB Tirana"
+    },
+    {
+      "id": 408556,
+      "name": "BC Partizani Tirana"
+    },
+    {
       "id": 1249878,
       "name": "Aeroclube U15"
     },
@@ -178186,5 +185143,5 @@
       "name": "Sampaio Correa U15"
     }
   ],
-  "updatedAt": "2026-11-08T15:31:03.517Z"
+  "updatedAt": "2026-11-08T16:44:41.743Z"
 }
