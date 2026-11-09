@@ -311,12 +311,9 @@ export function RangeEngine() {
   const [gSel, setGSel] = useState<{ id: number; name: string; country: string } | null>(null);
   const [gLoading, setGLoading] = useState(false);
   const [quotaInfo, setQuotaInfo] = useState<{ limit: number | null; remaining: number | null }>({ limit: null, remaining: null });
-  useEffect(() => {
-    fetch(`${API_BASE}/api/v1/quota`)
-      .then((r) => (r.ok ? r.json() : null))
-      .then((q) => { if (q) setQuotaInfo({ limit: (q as any).limit ?? null, remaining: (q as any).remaining ?? null }); })
-      .catch(() => {});
-  }, []);
+  // (No standalone quota effect: the AUTO-LOAD effect below owns entry
+  // loading — quota included — and retries, where this one-shot fetch
+  // used to swallow a cold-start failure silently and never retry.)
 
   // Re-read the server quota snapshot. EVERY provider call already
   // reports its spend to the tracker server-side — the display simply
@@ -350,6 +347,7 @@ export function RangeEngine() {
       try {
         const t = await fetch(url).then((r) => (r.ok ? r.json() : { tournaments: [] }));
         setGTours(t.tournaments || []);
+        setGMeta(t);
       } catch { setGTours([]); }
       setGSel(null);
       setGGames([]);
@@ -358,6 +356,72 @@ export function RangeEngine() {
       setRefreshing(false);
     }
   };
+  // ── AUTO-LOAD ON ENTRY: the page arrives updated, no ⟳ tap needed ──
+  // Everything refreshAll does used to run ONLY from the ⟳ button
+  // beside System Status (its sole caller), so on entry the
+  // tournaments list was never loaded at all and a failed one-shot
+  // quota fetch left the header stale until the user tapped ⟳.
+  // This effect runs once on mount:
+  //   1. FREE loads with retry — quota + today's tournaments from the
+  //      server's disk cache (the server guarantees quotaSpent: 0 for
+  //      the no-flag request), up to 3 attempts with backoff, so a
+  //      sleeping Render instance waking up still lands the data
+  //      without a tap.
+  //   2. ONE conditional update — only when that free payload is
+  //      stale (a previous day's list) or empty (wiped/fresh server),
+  //      quota remains, and this browser has not already auto-updated
+  //      today (localStorage day flag), it performs the same ?force=1
+  //      update the ⟳ tap performs. After one success the disk
+  //      payload is fresh for today, so later entries the same day
+  //      spend nothing; quota-exhausted (remaining <= 0) never forces.
+  // The research cache is NOT cleared here: clearing it is the manual
+  // ⟳'s explicit force-fresh act, and entry loads must not defeat
+  // the 6h research cache on every visit.
+  const autoLoadRef = useRef(false);
+  useEffect(() => {
+    if (autoLoadRef.current) return;
+    autoLoadRef.current = true;
+    void (async () => {
+      setRefreshing(true);
+      try {
+        let tours: any = null;
+        let remaining: number | null = null;
+        for (let attempt = 0; attempt < 3 && !tours; attempt++) {
+          try {
+            const [t, q] = await Promise.all([
+              fetch(`${API_BASE}/api/v1/games/tournaments`).then((r) => (r.ok ? r.json() : null)),
+              fetch(`${API_BASE}/api/v1/quota`).then((r) => (r.ok ? r.json() : null)),
+            ]);
+            if (q) { remaining = (q as any).remaining ?? null; setQuotaInfo({ limit: (q as any).limit ?? null, remaining }); }
+            if (t) tours = t;
+          } catch { /* cold start / network — the loop retries */ }
+          if (!tours && attempt < 2) await new Promise((resolve) => setTimeout(resolve, 4000 * (attempt + 1)));
+        }
+        if (tours) {
+          setGTours(tours.tournaments || []);
+          setGMeta(tours);
+          const needsUpdate = tours.stale === true || !Array.isArray(tours.tournaments) || tours.tournaments.length === 0;
+          const forceKey = `rangengine_autoload_v1:${today}`;
+          let alreadyForced = false;
+          try { alreadyForced = localStorage.getItem(forceKey) === "1"; } catch { /* storage unavailable — server freshness still gates repeats */ }
+          if (needsUpdate && !alreadyForced && !(remaining !== null && remaining <= 0)) {
+            try {
+              const t2 = await fetch(`${API_BASE}/api/v1/games/tournaments?force=1`).then((r) => (r.ok ? r.json() : null));
+              if (t2) {
+                setGTours(t2.tournaments || []);
+                setGMeta(t2);
+                try { localStorage.setItem(forceKey, "1"); } catch { /* best-effort */ }
+              }
+            } catch { /* best-effort — the free payload above still stands */ }
+          }
+        }
+      } finally {
+        void refreshQuota();
+        setRefreshing(false);
+      }
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   // ── MY WAREHOUSE: self-refreshes the instant it opens — local backend, zero quota ──
   const [showWh, setShowWh] = useState(false);
   const [wh, setWh] = useState<any>(null);
@@ -420,6 +484,7 @@ export function RangeEngine() {
         fetch(`${API_BASE}/api/v1/quota`).then((r) => (r.ok ? r.json() : {})),
       ]);
       setGTours(t.tournaments || []);
+      setGMeta(t);
       setQuotaInfo({ limit: (q as any).limit ?? null, remaining: (q as any).remaining ?? null });
     } catch {
       setGTours([]);

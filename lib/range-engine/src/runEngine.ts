@@ -236,6 +236,16 @@ export function runEngine(opts: {
   let hb = homeEffPPG + awayEffPPG + 6;
   let base_lb = lb;
   let base_hb = hb;
+  // Rule 4's audit note must describe THIS range — the pure inputs
+  // ±6. Snapshot it now: the Live Match widening (HB +3) and the
+  // Live Projection shift below both move lb/hb (and base_lb/base_hb)
+  // before the Rule 4 entry is pushed, and the note used to print
+  // those moved values as if they came straight from the inputs, so
+  // its numbers never reconciled (execution-proven: 114.2 + 120.6
+  // ± 6 printed "→ 222.8 – 237.8" instead of 228.8 – 240.8). The +3
+  // and the shift keep their own audit entries; Rule 4 prints base.
+  const rule4_lb = lb;
+  const rule4_hb = hb;
   if (opts.is_live_match) {
     hb += 3;
     triggered.push("Live Match: HB +3 — in-game variance widening (momentum swings, foul games, garbage time)");
@@ -273,7 +283,7 @@ export function runEngine(opts: {
     rule: "Rule 4 — Base Range",
     lb_adj: 0,
     hb_adj: 0,
-    note: `${homeEffPPG.toFixed(1)} + ${awayEffPPG.toFixed(1)} ± 6 → ${lb.toFixed(1)} – ${hb.toFixed(1)}`,
+    note: `${homeEffPPG.toFixed(1)} + ${awayEffPPG.toFixed(1)} ± 6 → ${rule4_lb.toFixed(1)} – ${rule4_hb.toFixed(1)}`,
     status: "triggered",
   });
 
