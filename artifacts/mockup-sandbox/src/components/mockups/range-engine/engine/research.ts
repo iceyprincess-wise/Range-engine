@@ -8,6 +8,7 @@ export async function fetchResearchData(
   league: string,
   gameId?: string,
   bookmaker?: string,
+  fixtureDate?: string,
 ): Promise<ResearchData> {
   const researchStartedAt = Date.now();
   let sourcesScanned = 0;
@@ -26,6 +27,7 @@ export async function fetchResearchData(
       homeTeam: homeTeam || "",
       awayTeam: awayTeam || "",
     });
+    if (fixtureDate) preParams.set("date", fixtureDate);
     const preResponse = await fetch(`${API_BASE}/api/v1/prematch?${preParams.toString()}`);
     if (preResponse.ok) { preData = await preResponse.json(); sourcesScanned++; }
     else { try { preErr = (await preResponse.json())?.error ?? null; } catch { /* ignore */ } }
@@ -196,6 +198,37 @@ export async function fetchResearchData(
         if (awayInjLines) apiData.awayInjuries = awayInjLines;
       }
     } catch { /* feed unavailable: placeholder text stays */ }
+    // Referee crew + measured strictness (NBA Official assignments x
+    // ESPN banked crew history). Fills refereeStrictness — Rule 10's
+    // referee branch never had a source before this — and carries
+    // the crew names for display. Nulls leave the sync value / 0.
+    try {
+      const refRes = await fetch(`${API_BASE}/api/v1/freefeed/referees?home=${encodeURIComponent(homeTeam)}&away=${encodeURIComponent(awayTeam)}&league=${injuryLeague}`);
+      if (refRes.ok) {
+        const refData = await refRes.json();
+        if (Array.isArray(refData?.officials) && refData.officials.length) {
+          apiData.officials = refData.officials;
+          sourcesScanned++;
+        }
+        if (typeof refData?.refereeStrictness === "number") apiData.refereeStrictness = refData.refereeStrictness;
+      }
+    } catch { /* source unavailable: strictness stays unmeasured */ }
+    // Starting fives (RotoWire confirmed/expected, else each team's
+    // last banked actual starters from ESPN). Fills the lineup
+    // payload fields that until now no producer ever set.
+    try {
+      const linRes = await fetch(`${API_BASE}/api/v1/freefeed/lineups?home=${encodeURIComponent(homeTeam)}&away=${encodeURIComponent(awayTeam)}&league=${injuryLeague}`);
+      if (linRes.ok) {
+        const linData = await linRes.json();
+        if ((Array.isArray(linData?.homeLineup) && linData.homeLineup.length) || (Array.isArray(linData?.awayLineup) && linData.awayLineup.length)) {
+          apiData.homeLineup = linData.homeLineup;
+          apiData.awayLineup = linData.awayLineup;
+          apiData.lineupStatus = linData.status ?? null;
+          apiData.lineupSource = linData.source ?? null;
+          sourcesScanned++;
+        }
+      }
+    } catch { /* source unavailable: lineups stay unverified */ }
   }
 
   const homeForm50 = parseNumberArray(
@@ -465,6 +498,8 @@ export async function fetchResearchData(
   const awayLeadTime = apiData.awayLeadTime ?? apiData.away_lead_time ?? (apiData.awayLeadPct != null ? `${Math.floor(apiData.awayLeadPct)}% in lead` : "--");
 
   return {
+    homeTeam,
+    awayTeam,
     homeArenaPPG,
     awayRoadPPG,
     h2hAvgTotal,
@@ -543,7 +578,10 @@ export async function fetchResearchData(
     // and discarded by every consumer. It is now carried through so
     // the UI can acknowledge a live fixture with its real score and
     // runEngine's Rule 1 can quote it in the audit.
-    liveScore: apiData.score && typeof apiData.score.home === "number" && typeof apiData.score.away === "number" ? { home: apiData.score.home, away: apiData.score.away, status: String(apiData.status ?? "") } : null,
+    liveScore: apiData.score && typeof apiData.score.home === "number" && typeof apiData.score.away === "number" ? { home: apiData.score.home, away: apiData.score.away, status: String(apiData.statusDescription ?? apiData.status ?? ""), periods: apiData.periods ?? null } : null,
+    officials: Array.isArray(apiData.officials) && apiData.officials.length ? apiData.officials : null,
+    lineupStatus: apiData.lineupStatus ?? null,
+    lineupSource: apiData.lineupSource ?? null,
     homeVsOtherForm: apiData.homeVsOtherForm ?? null,
     awayVsOtherForm: apiData.awayVsOtherForm ?? null,
     homeVsOtherGames: apiData.homeVsOtherGames ?? null,
@@ -589,8 +627,9 @@ export async function fetchResearchDataCached(
   gameId: string | undefined = undefined,
   bookmaker: string | undefined = undefined,
   forceRefresh = false,
+  fixtureDate?: string,
 ): Promise<ResearchData> {
-  const key = makeResearchCacheKey(league, homeTeam, awayTeam, gameId ?? "", bookmaker ?? "");
+  const key = makeResearchCacheKey(league, homeTeam, awayTeam, gameId ?? "", bookmaker ?? "", fixtureDate ?? "");
   if (!forceRefresh) {
     const entry = loadResearchCache(key);
     if (isResearchCacheValid(entry)) {
@@ -601,7 +640,7 @@ export async function fetchResearchDataCached(
       }
     }
   }
-  const fresh = await fetchResearchData(homeTeam, awayTeam, league, gameId, bookmaker);
+  const fresh = await fetchResearchData(homeTeam, awayTeam, league, gameId, bookmaker, fixtureDate);
   try {
     saveResearchCache(key, fresh);
   } catch (e) {

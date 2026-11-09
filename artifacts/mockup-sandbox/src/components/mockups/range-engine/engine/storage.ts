@@ -53,6 +53,7 @@ export function makeResearchCacheKey(
   away: string,
   gameId = "",
   bookmaker = "",
+  fixtureDate = "",
 ) {
   const parts = [
     encodeURIComponent(league.trim().toLowerCase()),
@@ -61,6 +62,7 @@ export function makeResearchCacheKey(
   ];
   if (gameId) parts.push(encodeURIComponent(String(gameId).trim().toLowerCase()));
   if (bookmaker) parts.push(encodeURIComponent(String(bookmaker).trim().toLowerCase()));
+  if (fixtureDate) parts.push(encodeURIComponent(String(fixtureDate).trim()));
   return RESEARCH_CACHE_PREFIX + parts.join(":");
 }
 

@@ -489,153 +489,6 @@ export function RangeEngine() {
   }, []);
 
 
-  // ─── Truth Protocol: Realistic Multi-Phase Scanning Engine ────────────────
-  useEffect(() => {
-    let active = true;
-    let timeouts = [];
-    let jitterInterval;
-
-    if (homeTeam && awayTeam) {
-      // STRICT RESET: Forces the engine to completely reset if teams change
-      setResearch((r) => ({
-        ...r,
-        scanning: false,
-        progress: 0,
-        node: -1,
-        done: false,
-        cameo: "",
-        confidence: "0.00",
-      }));
-      setScanPhase("Awaiting Target...");
-
-      const timer = setTimeout(() => {
-        if (!active) return;
-
-        // Start genuine async scanning with real API data hunt
-        (async () => {
-          try {
-            // Initialize scan
-            setResearch((r) => ({
-              ...r,
-              scanning: true,
-              progress: 0,
-              node: 0,
-              done: false,
-              cameo: "> INITIATING GENUINE API DATA HUNT...",
-              confidence: "0.00",
-            }));
-
-            // ─ Phase 1: Connecting to Live Nodes ─
-            setScanPhase("Connecting to Live Nodes...");
-            await new Promise((r) => setTimeout(r, 1500 + Math.random() * 1000));
-            setResearch((r) => ({ ...r, progress: 20 }));
-
-            // ─ Phase 2: Fetching H2H Matrix ─
-            setScanPhase("Fetching H2H Matrix...");
-            // (A URLSearchParams built here was previously discarded —
-            // the fetch below only ever sent homeTeam/awayTeam.)
-            const response = await fetch(`${API_BASE}/api/v1/prematch?homeTeam=${encodeURIComponent(homeTeam || "")}&awayTeam=${encodeURIComponent(awayTeam || "")}`);
-            if (!response.ok) {
-              throw new Error(`API request failed: ${response.status}`);
-            }
-            const apiData = await response.json();
-            setResearch((r) => ({ ...r, progress: 45 }));
-
-            // ─ Phase 3: Calculating Volatility ─
-            setScanPhase("Calculating Volatility...");
-            await new Promise((r) => setTimeout(r, 1500 + Math.random() * 500));
-            
-            // Populate live matrix data from API payload
-            setLiveMatrixData({
-              homeForm: apiData.home?.formLast5 || "Data Unavailable",
-              awayForm: apiData.away?.formLast5 || "Data Unavailable",
-              h2h: apiData.h2h?.meetings ? `${apiData.h2h.meetings} meeting(s) · avg total ${Math.round(apiData.h2h.avgTotal)}` : "No recent H2H found",
-              sourceNodes:
-                Array.isArray(apiData.sourceNodes) && apiData.sourceNodes.length > 0
-                  ? apiData.sourceNodes
-                  : [`BasketAPI prematch endpoint — warehouse + provider data for ${homeTeam} vs ${awayTeam} (no source-node list returned)`],
-            });
-            
-            setResearch((r) => ({ ...r, progress: 70 }));
-
-            // ─ Phase 4: Compiling Final Range ─
-            setScanPhase("Compiling Final Range...");
-            await new Promise((r) => setTimeout(r, 1500 + Math.random() * 500));
-            setResearch((r) => ({ ...r, progress: 95 }));
-
-            // Final micro-jitter (realistic uncertainty resolution)
-            await new Promise((r) => setTimeout(r, 500));
-            
-            if (!active) return;
-
-            // Mark as complete
-            setResearch((r) => ({
-              ...r,
-              scanning: false,
-              progress: 100,
-              node: 8,
-              done: true,
-              cameo: "> GENUINE API DATA HUNT COMPLETE - AUTHENTIC PAYLOAD SECURED",
-              confidence: "100.00",
-            }));
-            setScanPhase("Scan Complete ✓");
-          } catch (err) {
-            if (active) {
-              console.error("Scan error:", err);
-              // Gracefully handle API failure - continue scan and mark data as unavailable
-              setLiveMatrixData({
-                homeForm: "DATA UNAVAILABLE (API OFFLINE)",
-                awayForm: "DATA UNAVAILABLE",
-                h2h: "DATA UNAVAILABLE",
-                sourceNodes: [`Live API bridge unavailable for ${homeTeam} vs ${awayTeam}`],
-              });
-              
-              // Continue with remaining phases
-              setScanPhase("Calculating Volatility...");
-              await new Promise((r) => setTimeout(r, 1500 + Math.random() * 500));
-              setResearch((r) => ({ ...r, progress: 70 }));
-
-              setScanPhase("Compiling Final Range...");
-              await new Promise((r) => setTimeout(r, 1500 + Math.random() * 500));
-              setResearch((r) => ({ ...r, progress: 95 }));
-
-              await new Promise((r) => setTimeout(r, 500));
-              
-              setResearch((r) => ({
-                ...r,
-                scanning: false,
-                progress: 100,
-                node: 8,
-                done: true,
-                cameo: "> API DATA HUNT FAILED — DATA UNAVAILABLE (NO PAYLOAD SECURED)",
-                confidence: "0.00",
-              }));
-              setScanPhase("Scan Failed — API Unavailable");
-            }
-          }
-        })();
-      }, 1500); // 1.5s debounce before scan starts
-      timeouts.push(timer);
-    } else {
-      setResearch({
-        scanning: false,
-        progress: 0,
-        node: -1,
-        done: false,
-        cameo: "",
-        confidence: "0.00",
-      });
-      setScanPhase("Awaiting Target...");
-    }
-
-    return () => {
-      active = false;
-      timeouts.forEach(clearTimeout);
-      clearInterval(jitterInterval);
-    };
-  }, [homeTeam, awayTeam, league]);
-  // ─────────────────────────────────────────────────────────────────────────
-
   // 2. LIVE SYNC TICKER (60s loop)
   // (Reanalysis effect relocated below after researchData state declaration)
 
@@ -700,7 +553,7 @@ export function RangeEngine() {
         }, 200);
 
         // Force bypass cache and fetch fresh research payload
-        const fresh = await fetchResearchDataCached(homeTeam, awayTeam, league, gameId, bookmaker, true);
+        const fresh = await fetchResearchDataCached(homeTeam, awayTeam, league, gameId, bookmaker, true, date);
 
         // finalize progress
         setReanalysisProgress(100);
@@ -980,7 +833,7 @@ export function RangeEngine() {
         setResearchProgress(90);
 
         // Retrieve expanded 50-game analytics from the live telemetry payload
-        const data = await fetchResearchDataCached(homeTeam, awayTeam, league, gameId, bookmaker);
+        const data = await fetchResearchDataCached(homeTeam, awayTeam, league, gameId, bookmaker, false, date);
         setResearchData(data);
         void refreshQuota();
         setResearchError(null);
@@ -1001,6 +854,42 @@ export function RangeEngine() {
       if (researchTimer.current) clearTimeout(researchTimer.current);
     };
   }, [homeTeam, awayTeam, league]);
+
+  // ─── Deep Scan panel: derived from the REAL research pipeline ────
+  // (Replaces the legacy duplicate scan effect, which ran its own
+  // prematch fetch behind ~5-7s of staged delays and duplicated the
+  // research effect. The panel now mirrors researchPhase/researchData:
+  // one fetch path, progress = the real pipeline, completion = its
+  // real source count and duration.)
+  useEffect(() => {
+    if (!homeTeam || !awayTeam) {
+      setResearch({ scanning: false, progress: 0, node: -1, done: false, cameo: "", confidence: "0.00" });
+      setScanPhase("Awaiting Target...");
+      return;
+    }
+    const forThisFixture = researchData && researchData.homeTeam === homeTeam && researchData.awayTeam === awayTeam;
+    if (researchPhase === "researching" || (researchPhase === "done" && !forThisFixture && !researchError)) {
+      setResearch((r) => ({ ...r, scanning: true, progress: 45, node: 2, done: false, cameo: "> RESEARCH PIPELINE RUNNING — PREMATCH + LEAGUE DNA + SYNC + FREE FEEDS", confidence: "0.00" }));
+      setScanPhase("Researching…");
+      return;
+    }
+    if (researchPhase === "done" && forThisFixture && researchData) {
+      setLiveMatrixData({
+        homeForm: researchData.homeRecentForm.length ? researchData.homeRecentForm.join("") : "Data Unavailable",
+        awayForm: researchData.awayRecentForm.length ? researchData.awayRecentForm.join("") : "Data Unavailable",
+        h2h: researchData.h2hMeetings ? `${researchData.h2hMeetings} meeting(s) · avg total ${Math.round(researchData.h2hAvgTotal ?? 0)}` : "No recent H2H found",
+        sourceNodes: [`Research pipeline — ${researchData.sourcesScanned} source(s) returned data in ${researchData.researchMs}ms (prematch warehouse/provider, league DNA, sync, ESPN free feeds)`],
+      });
+      setResearch({ scanning: false, progress: 100, node: 8, done: true, cameo: `> RESEARCH COMPLETE — ${researchData.sourcesScanned} SOURCE(S) · ${researchData.researchMs}MS`, confidence: researchData.sourcesScanned > 0 ? "100.00" : "0.00" });
+      setScanPhase("Scan Complete ✓");
+      return;
+    }
+    if (researchPhase === "done" && researchError) {
+      setLiveMatrixData({ homeForm: "DATA UNAVAILABLE", awayForm: "DATA UNAVAILABLE", h2h: "DATA UNAVAILABLE", sourceNodes: [`Research failed for ${homeTeam} vs ${awayTeam}: ${researchError}`] });
+      setResearch({ scanning: false, progress: 100, node: 8, done: true, cameo: "> RESEARCH FAILED — DATA UNAVAILABLE (NO PAYLOAD SECURED)", confidence: "0.00" });
+      setScanPhase("Scan Failed — Research Unavailable");
+    }
+  }, [researchPhase, researchData, researchError, homeTeam, awayTeam]);
 
   // ── Auto Key-Player-Out detection: manual override first, else strong signals in real headlines ──
   const detectKeyOut = () => {
@@ -1673,7 +1562,7 @@ MATCH CONTEXT — Rule 1 (Time Sync)
                   </div>
                   {isLiveMatch && (
                     <div className="px-3 py-2 rounded-lg border border-red-800 bg-red-950/40 text-[10px] font-bold uppercase tracking-widest text-red-300">
-                      ● Live Match selected — the engine prices this as a LIVE game (HB +3 variance widening, Rule 1 clock check armed){researchData?.liveScore ? ` · Live score: ${researchData.liveScore.home}–${researchData.liveScore.away}` : ""}
+                      ● Live Match selected — the engine prices this as a LIVE game (HB +3 variance widening, Rule 1 clock check armed){researchData?.liveScore ? ` · Live score: ${researchData.liveScore.home}–${researchData.liveScore.away}` : ""}{researchData?.liveScore?.periods ? ` · Quarters: ${researchData.liveScore.periods.home.map((h, i) => `${h ?? "–"}:${researchData.liveScore!.periods!.away[i] ?? "–"}`).join(" ")}` : ""}
                     </div>
                   )}
                   {researchData?.detectedGender && researchData.detectedGender !== matchGender && (
@@ -2340,10 +2229,10 @@ MATCH CONTEXT — Rule 1 (Time Sync)
                                 {homeTeam}
                               </p>
 
-                              <div className="flex items-center gap-1.5 mb-2 bg-yellow-950/30 border border-yellow-900/50 p-1 rounded">
-                                <div className="w-1.5 h-1.5 rounded-full bg-yellow-500 animate-pulse"></div>
-                                <span className="text-[8px] text-yellow-500 font-bold uppercase tracking-wider">
-                                  No lineup feed — unverified
+                              <div className={`flex items-center gap-1.5 mb-2 border p-1 rounded ${researchData?.lineupStatus ? "bg-emerald-950/30 border-emerald-900/50" : "bg-yellow-950/30 border-yellow-900/50"}`}>
+                                <div className={`w-1.5 h-1.5 rounded-full animate-pulse ${researchData?.lineupStatus ? "bg-emerald-500" : "bg-yellow-500"}`}></div>
+                                <span className={`text-[8px] font-bold uppercase tracking-wider ${researchData?.lineupStatus ? "text-emerald-500" : "text-yellow-500"}`}>
+                                  {researchData?.lineupStatus ? `${researchData.lineupStatus} lineup — ${researchData.lineupSource ?? "feed"}` : "No lineup feed — unverified"}
                                 </span>
                               </div>
                               <div className="flex flex-col gap-1">
@@ -2367,10 +2256,10 @@ MATCH CONTEXT — Rule 1 (Time Sync)
                                 {awayTeam}
                               </p>
 
-                              <div className="flex items-center gap-1.5 mb-2 bg-yellow-950/30 border border-yellow-900/50 p-1 rounded">
-                                <div className="w-1.5 h-1.5 rounded-full bg-yellow-500 animate-pulse"></div>
-                                <span className="text-[8px] text-yellow-500 font-bold uppercase tracking-wider">
-                                  No lineup feed — unverified
+                              <div className={`flex items-center gap-1.5 mb-2 border p-1 rounded ${researchData?.lineupStatus ? "bg-emerald-950/30 border-emerald-900/50" : "bg-yellow-950/30 border-yellow-900/50"}`}>
+                                <div className={`w-1.5 h-1.5 rounded-full animate-pulse ${researchData?.lineupStatus ? "bg-emerald-500" : "bg-yellow-500"}`}></div>
+                                <span className={`text-[8px] font-bold uppercase tracking-wider ${researchData?.lineupStatus ? "text-emerald-500" : "text-yellow-500"}`}>
+                                  {researchData?.lineupStatus ? `${researchData.lineupStatus} lineup — ${researchData.lineupSource ?? "feed"}` : "No lineup feed — unverified"}
                                 </span>
                               </div>
                               <div className="flex flex-col gap-1">
@@ -2474,6 +2363,20 @@ MATCH CONTEXT — Rule 1 (Time Sync)
                             </p>
                           </div>
                         </div>
+
+                        {/* Officials — NBA Official assignments + measured crew strictness */}
+                        {researchData?.officials && researchData.officials.length > 0 && (
+                          <div className="px-4 py-3 space-y-2">
+                            <p className="text-[9px] font-bold uppercase tracking-widest text-zinc-500">
+                              👨‍⚖️ OFFICIALS — NBA OFFICIAL + ESPN HISTORY
+                            </p>
+                            <div className="rounded-lg px-3 py-2 border border-yellow-950 bg-black/40">
+                              <p className="text-[10px] text-zinc-400 leading-relaxed">
+                                Crew: {researchData.officials.join(", ")}. Measured strictness: {researchData.refereeStrictness > 0 ? `${researchData.refereeStrictness}/10` : "not enough banked crew history yet"} (Rule 10's referee branch fires at ≥7).
+                              </p>
+                            </div>
+                          </div>
+                        )}
 
                         {/* Fatigue & Schedule Indicator */}
                         <div className="px-4 py-3 space-y-2">

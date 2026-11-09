@@ -82,6 +82,8 @@ export interface AnalysisArchiveEntry {
 }
 
 export interface ResearchData {
+  homeTeam: string;
+  awayTeam: string;
   homeArenaPPG: number;
   awayRoadPPG: number;
   h2hAvgTotal: number;
@@ -144,7 +146,10 @@ export interface ResearchData {
   homeOtRate: number | null;
   awayOtRate: number | null;
   venue: string | null;
-  liveScore: { home: number; away: number; status: string } | null;
+  liveScore: { home: number; away: number; status: string; periods: { home: (number | null)[]; away: (number | null)[] } | null } | null;
+  officials: string[] | null;
+  lineupStatus: string | null;
+  lineupSource: string | null;
   homeVsOtherForm: string | null;
   awayVsOtherForm: string | null;
   homeVsOtherGames: number | null;

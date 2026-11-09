@@ -314,7 +314,14 @@ const detectFixtureGender = (homeId: number, awayId: number): "Men" | "Women" | 
   return null;
 };
 router.get("/v1/prematch", async (req: Request, res: Response) => {
-  const { homeTeam, awayTeam } = req.query as Record<string, string>;
+  const { homeTeam, awayTeam, date } = req.query as Record<string, string>;
+  // Rest days are measured against the fixture date when the caller
+  // supplies one (research does): "days since the last game" only
+  // means something relative to when THIS game tips off. Falls back
+  // to today for dateless callers.
+  const fixtureTs = date && /^\d{4}-\d{2}-\d{2}$/.test(date)
+    ? Math.floor(new Date(`${date}T12:00:00Z`).getTime() / 1000)
+    : Math.floor(Date.now() / 1000);
   if (!homeTeam || !awayTeam) {
     return res.status(400).json({ error: "homeTeam and awayTeam are required" });
   }
@@ -405,8 +412,8 @@ router.get("/v1/prematch", async (req: Request, res: Response) => {
       // zero provider calls — was still labelled "real".
       provenance: (apiOk && stale.length > 0) || statsFetched ? "real" : "warehouse-stale",
       fetchedAt: new Date().toISOString(),
-      home: { id: home.id, name: home.name, ...summarize(homeGames, home.id), quarters: quarterProfile(homeGames), shooting: teamShooting(homeGames, home.id), shootingSeries: shootingSeries(homeGames, home.id), restDays: homeGames[0]?.startTimestamp ? Math.max(0, Math.floor((Date.now() / 1000 - homeGames[0].startTimestamp) / 86400)) : null, vsOther: homeVsOther },
-      away: { id: away.id, name: away.name, ...summarize(awayGames, away.id), quarters: quarterProfile(awayGames), shooting: teamShooting(awayGames, away.id), shootingSeries: shootingSeries(awayGames, away.id), restDays: awayGames[0]?.startTimestamp ? Math.max(0, Math.floor((Date.now() / 1000 - awayGames[0].startTimestamp) / 86400)) : null, vsOther: awayVsOther },
+      home: { id: home.id, name: home.name, ...summarize(homeGames, home.id), quarters: quarterProfile(homeGames), shooting: teamShooting(homeGames, home.id), shootingSeries: shootingSeries(homeGames, home.id), restDays: homeGames[0]?.startTimestamp ? Math.max(0, Math.floor((fixtureTs - homeGames[0].startTimestamp) / 86400)) : null, vsOther: homeVsOther },
+      away: { id: away.id, name: away.name, ...summarize(awayGames, away.id), quarters: quarterProfile(awayGames), shooting: teamShooting(awayGames, away.id), shootingSeries: shootingSeries(awayGames, away.id), restDays: awayGames[0]?.startTimestamp ? Math.max(0, Math.floor((fixtureTs - awayGames[0].startTimestamp) / 86400)) : null, vsOther: awayVsOther },
       h2h: { meetings: h2hGames.length, avgTotal: h2hAvgTotal, totals: h2hTotals, homeWins: h2hHomeWins, awayWins: h2hAwayWins, otGames: h2hOtGames, otRate: h2hGames.length ? +(h2hOtGames / h2hGames.length).toFixed(3) : null },
       // What the warehouse records say this fixture IS (see
       // detectFixtureGender). Detection only - the engine still

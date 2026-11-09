@@ -171,6 +171,35 @@ const parseEspnBoxscore = (summary: any): any => {
   return out;
 };
 
+// Officials for a finished game, from the same ESPN summary payload
+// the box score comes from (gameInfo.officials — full names, crew
+// chief first). Absent on some games: fail open with null.
+const parseEspnOfficials = (summary: any): string[] | null => {
+  const list = summary?.gameInfo?.officials;
+  if (!Array.isArray(list) || !list.length) return null;
+  const names = list.map((o: any) => String(o?.fullName ?? o?.displayName ?? "").trim()).filter(Boolean);
+  return names.length ? names : null;
+};
+
+// Starting fives for a finished game: boxscore players carry a
+// per-athlete starter flag. Sides are aligned to the STORED game's
+// home/away by exact team-name match; unresolved side stays empty.
+const parseEspnStarters = (summary: any, homeName: string, awayName: string): { home: { pos: string; name: string }[]; away: { pos: string; name: string }[] } | null => {
+  const entries: any[] = summary?.boxscore?.players ?? [];
+  const out: { home: { pos: string; name: string }[]; away: { pos: string; name: string }[] } = { home: [], away: [] };
+  for (const entry of entries) {
+    const teamName = normName(String(entry?.team?.displayName ?? ""));
+    const side = teamName === normName(homeName) ? "home" : teamName === normName(awayName) ? "away" : null;
+    if (!side) continue;
+    const athletes: any[] = entry?.statistics?.[0]?.athletes ?? [];
+    out[side] = athletes
+      .filter((a: any) => a?.starter && !a?.didNotPlay)
+      .map((a: any) => ({ pos: String(a?.athlete?.position?.abbreviation ?? ""), name: String(a?.athlete?.displayName ?? "").trim() }))
+      .filter((p: any) => p.name);
+  }
+  return out.home.length || out.away.length ? out : null;
+};
+
 // GET /v1/freefeed/bank?league=nba|wnba&dates=YYYYMMDD[,YYYYMMDD...]
 // Banks finished games for those dates (max 14 dates per call), then
 // fills box-score stats for ESPN-sourced games that lack them
@@ -210,25 +239,44 @@ router.get("/v1/freefeed/bank", async (req: Request, res: Response) => {
       if (store.games[g.id]) banked++;
     }
   }
-  let statsFilled = 0, statsFailed = 0;
-  const needStats = (Object.values(store.games) as any[])
-    .filter((g) => g.source === "espn-freefeed" && g.tournament?.name === lg.name && !store.stats[g.id])
+  // One summary fetch per game fills whichever of stats / officials /
+  // starters is still missing (max 20 summary fetches per call — call
+  // again to continue). Officials + starters ride the game object, so
+  // they travel through the hybrid inbox like everything else banked.
+  let statsFilled = 0, officialsFilled = 0, startersFilled = 0, enrichFailed = 0;
+  const needEnrich = (Object.values(store.games) as any[])
+    .filter((g) => g.source === "espn-freefeed" && g.tournament?.name === lg.name &&
+      (!store.stats[g.id] || !Array.isArray(g.officials) || !g.starters))
     .slice(0, 20);
-  for (const g of needStats) {
+  for (const g of needEnrich) {
     try {
       const summary = await espnFetch(`${ESPN}/${lg.path}/summary?event=${g.id}`);
-      const st = parseEspnBoxscore(summary);
-      if (st) { store.stats[g.id] = st; markDirty(); statsFilled++; }
-      else statsFailed++;
-    } catch { statsFailed++; }
+      let touched = false;
+      if (!store.stats[g.id]) {
+        const st = parseEspnBoxscore(summary);
+        if (st) { store.stats[g.id] = st; statsFilled++; touched = true; }
+      }
+      if (!Array.isArray(g.officials)) {
+        const off = parseEspnOfficials(summary);
+        if (off) { g.officials = off; officialsFilled++; touched = true; }
+      }
+      if (!g.starters) {
+        const starters = parseEspnStarters(summary, g.homeTeam?.name ?? "", g.awayTeam?.name ?? "");
+        if (starters) { g.starters = starters; startersFilled++; touched = true; }
+      }
+      if (touched) markDirty(); else enrichFailed++;
+    } catch { enrichFailed++; }
   }
-  if (banked > 0 || statsFilled > 0) persist();
-  const statsRemaining = (Object.values(store.games) as any[])
-    .filter((g) => g.source === "espn-freefeed" && g.tournament?.name === lg.name && !store.stats[g.id]).length;
+  if (banked > 0 || statsFilled > 0 || officialsFilled > 0 || startersFilled > 0) persist();
+  const espnGames = (Object.values(store.games) as any[])
+    .filter((g) => g.source === "espn-freefeed" && g.tournament?.name === lg.name);
   return res.json({
     league: lg.name, dates: dates.length, seen, banked, alreadyBanked, notFinal,
     unresolvedTeams: [...new Set(unresolved)], crossProviderDuplicates,
-    statsFilled, statsFailed, statsRemaining,
+    statsFilled, officialsFilled, startersFilled, enrichFailed,
+    statsRemaining: espnGames.filter((g) => !store.stats[g.id]).length,
+    officialsRemaining: espnGames.filter((g) => !Array.isArray(g.officials)).length,
+    startersRemaining: espnGames.filter((g) => !g.starters).length,
     provenance: "ESPN public feed — zero RapidAPI quota spent",
   });
 });
@@ -270,6 +318,191 @@ router.get("/v1/freefeed/injuries", async (req: Request, res: Response) => {
   } catch (e) {
     return res.status(502).json({ error: `ESPN injuries failed: ${e instanceof Error ? e.message : String(e)}` });
   }
+});
+
+// ─── Free referee + lineup sources ─────────────────────────────────
+// Rule 10's referee branch and the Lineup panel never had a data
+// source. These routes chain free public sources, first hit wins:
+//   referees: NBA Official's published game-day assignments (crew
+//     names) + strictness MEASURED from banked ESPN crew history
+//     (officials x total fouls vs the league average).
+//   lineups: RotoWire's published starting fives (Confirmed /
+//     Expected, with positions), falling back to each team's last
+//     banked ACTUAL starters from ESPN summaries.
+// Anything not found returns nulls — never an invented value.
+
+const pageFetch = async (url: string): Promise<string> => {
+  const r = await fetch(url, { headers: { "user-agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120 Safari/537.36" } });
+  if (!r.ok) throw new Error("HTTP " + r.status);
+  return r.text();
+};
+
+const sideTokens = (s: string): string[] =>
+  s.toLowerCase().replace(/[^a-z ]/g, " ").split(/\s+/).filter(Boolean)
+    .flatMap((t) => (t === "la" ? ["los", "angeles"] : [t]));
+const sideMatches = (pageSide: string, warehouseName: string): boolean => {
+  const w = new Set(sideTokens(warehouseName));
+  const toks = sideTokens(pageSide);
+  return toks.length > 0 && toks.every((t) => w.has(t));
+};
+
+let assignCache: { at: number; games: { home: string; away: string; crew: string[] }[] } | null = null;
+const fetchNbaAssignments = async (): Promise<{ home: string; away: string; crew: string[] }[]> => {
+  if (assignCache && Date.now() - assignCache.at < 30 * 60 * 1000) return assignCache.games;
+  const html = await pageFetch("https://official.nba.com/referee-assignments/");
+  const text = html
+    .replace(/<script[\s\S]*?<\/script>|<style[\s\S]*?<\/style>/g, " ")
+    .replace(/&#(\d+);/g, (_m, n) => String.fromCharCode(Number(n)))
+    .replace(/&amp;/g, "&")
+    .replace(/<[^>]+>/g, "\n");
+  const lines = text.split("\n").map((s) => s.replace(/\s+/g, " ").trim()).filter(Boolean);
+  const start = lines.findIndex((l) => l === "NBA Referee Assignments");
+  const end = lines.findIndex((l, i) => i > start && l === "G League Referee Assignments");
+  const section = start >= 0 ? lines.slice(start, end > start ? end : undefined) : [];
+  const games: { home: string; away: string; crew: string[] }[] = [];
+  for (let i = 0; i < section.length; i++) {
+    const m = section[i].match(/^(.+?) @ (.+?)$/);
+    if (!m) continue;
+    const crew: string[] = [];
+    for (let j = i + 1; j < Math.min(i + 6, section.length); j++) {
+      const nm = section[j].match(/^([A-Z][A-Za-z'.-]+ [A-Z][A-Za-z'.-]+) \(#\d+\)$/);
+      if (nm) crew.push(nm[1]);
+      else if (crew.length) break;
+    }
+    // Page format is "Away @ Home".
+    if (crew.length) games.push({ away: m[1].trim(), home: m[2].trim(), crew });
+  }
+  assignCache = { at: Date.now(), games };
+  return games;
+};
+
+// GET /v1/freefeed/referees?home=<warehouse name>&away=<name>&league=nba|wnba
+router.get("/v1/freefeed/referees", async (req: Request, res: Response) => {
+  const key = String(req.query.league ?? "nba").toLowerCase();
+  const lg = LEAGUES[key];
+  if (!lg) return res.status(400).json({ error: "league must be nba or wnba" });
+  const home = String(req.query.home ?? "");
+  const away = String(req.query.away ?? "");
+  let crew: string[] | null = null;
+  if (key === "nba" && home && away) {
+    try {
+      const games = await fetchNbaAssignments();
+      const match =
+        games.find((g) => sideMatches(g.home, home) && sideMatches(g.away, away)) ??
+        games.find((g) => sideMatches(g.home, away) && sideMatches(g.away, home));
+      if (match) crew = match.crew;
+    } catch { /* assignments unavailable: strictness stays null */ }
+  }
+  // Measured crew history: every banked game with officials + foul
+  // totals contributes its combined fouls to each official's average.
+  const refMap = new Map<string, { n: number; sum: number }>();
+  let lgSum = 0, lgN = 0;
+  for (const g of Object.values(store.games) as any[]) {
+    if (g.tournament?.name !== lg.name || !Array.isArray(g.officials) || !g.officials.length) continue;
+    const tf = store.stats[g.id]?.totalFouls;
+    const combined = tf && typeof tf.hv === "number" && typeof tf.av === "number" ? tf.hv + tf.av : 0;
+    if (!combined) continue;
+    lgSum += combined; lgN++;
+    for (const name of g.officials) {
+      const r = refMap.get(name) ?? { n: 0, sum: 0 };
+      r.n++; r.sum += combined;
+      refMap.set(name, r);
+    }
+  }
+  const leagueAvg = lgN ? lgSum / lgN : null;
+  let strictness: number | null = null, sampleGames = 0;
+  if (crew && leagueAvg != null) {
+    const avgs: number[] = [];
+    for (const name of crew) {
+      const r = refMap.get(name);
+      if (r && r.n >= 2) { avgs.push(r.sum / r.n); sampleGames += r.n; }
+    }
+    if (avgs.length && sampleGames >= 4) {
+      const crewAvg = avgs.reduce((a, b) => a + b, 0) / avgs.length;
+      strictness = Math.max(0, Math.min(10, Math.round((5 + (crewAvg - leagueAvg)) * 10) / 10));
+    }
+  }
+  return res.json({
+    league: lg.name, officials: crew, refereeStrictness: strictness,
+    sampleGames, leagueAvgFouls: leagueAvg != null ? Math.round(leagueAvg * 10) / 10 : null,
+    source: crew ? "NBA Official assignments + ESPN banked crew history" : null,
+    provenance: "Free public sources — zero RapidAPI quota spent",
+  });
+});
+
+let rotoCache: { at: number; games: any[] } | null = null;
+const fetchRotoLineups = async (): Promise<any[]> => {
+  if (rotoCache && Date.now() - rotoCache.at < 10 * 60 * 1000) return rotoCache.games;
+  const html = await pageFetch("https://www.rotowire.com/basketball/nba-lineups.php");
+  const teams: { side: string; name: string }[] = [];
+  for (const m of html.matchAll(/lineup__mteam is-(visit|home) white">\s*([^<]+?)\s*<span/g))
+    teams.push({ side: m[1], name: m[2].trim() });
+  const lists: { side: string; status: string | null; players: { pos: string; name: string }[] }[] = [];
+  for (const m of html.matchAll(/<ul class="lineup__list is-(visit|home)">([\s\S]*?)<\/ul>/g)) {
+    const ul = m[2];
+    const st = ul.match(/lineup__status is-(confirmed|expected)/);
+    const players: { pos: string; name: string }[] = [];
+    for (const p of ul.matchAll(/<li class="lineup__player[^"]*"[^>]*>\s*<div class="lineup__pos"\s*>([^<]*)<\/div>\s*<a title="([^"]+)"/g))
+      players.push({ pos: p[1].trim(), name: p[2].trim() });
+    lists.push({ side: m[1], status: st ? (st[1] === "confirmed" ? "Confirmed" : "Expected") : null, players });
+  }
+  const games: any[] = [];
+  for (let i = 0; i + 1 < teams.length && i + 1 < lists.length; i += 2) {
+    games.push({
+      visit: { team: teams[i].name, ...lists[i] },
+      home: { team: teams[i + 1].name, ...lists[i + 1] },
+    });
+  }
+  rotoCache = { at: Date.now(), games };
+  return games;
+};
+
+// GET /v1/freefeed/lineups?home=<warehouse name>&away=<name>&league=nba|wnba
+router.get("/v1/freefeed/lineups", async (req: Request, res: Response) => {
+  const key = String(req.query.league ?? "nba").toLowerCase();
+  const lg = LEAGUES[key];
+  if (!lg) return res.status(400).json({ error: "league must be nba or wnba" });
+  const home = String(req.query.home ?? "");
+  const away = String(req.query.away ?? "");
+  if (key === "nba" && home && away) {
+    try {
+      const games = await fetchRotoLineups();
+      const m =
+        games.find((g) => sideMatches(g.home.team, home) && sideMatches(g.visit.team, away)) ??
+        games.find((g) => sideMatches(g.home.team, away) && sideMatches(g.visit.team, home));
+      if (m && (m.home.players.length || m.visit.players.length))
+        return res.json({
+          league: lg.name, homeLineup: m.home.players, awayLineup: m.visit.players,
+          status: m.home.status ?? m.visit.status, source: "RotoWire",
+          provenance: "Free public source — zero RapidAPI quota spent",
+        });
+    } catch { /* fall through to banked starters */ }
+  }
+  // Fallback: each team's last banked ACTUAL starting five (ESPN).
+  const lastStarters = (team: string): { pos: string; name: string }[] | null => {
+    let best: any = null;
+    for (const g of Object.values(store.games) as any[]) {
+      if (!g.starters) continue;
+      const isHome = normName(String(g.homeTeam?.name ?? "")) === normName(team);
+      const isAway = normName(String(g.awayTeam?.name ?? "")) === normName(team);
+      if (!isHome && !isAway) continue;
+      if (!best || (g.startTimestamp ?? 0) > (best.g.startTimestamp ?? 0))
+        best = { g, side: isHome ? "home" : "away" };
+    }
+    return best ? best.g.starters[best.side] : null;
+  };
+  const homeLineup = home ? lastStarters(home) : null;
+  const awayLineup = away ? lastStarters(away) : null;
+  if (homeLineup || awayLineup)
+    return res.json({
+      league: lg.name, homeLineup: homeLineup ?? [], awayLineup: awayLineup ?? [],
+      status: "Last game", source: "ESPN banked starters",
+      provenance: "Free public source — zero RapidAPI quota spent",
+    });
+  return res.json({
+    league: lg.name, homeLineup: [], awayLineup: [], status: null, source: null,
+    provenance: "Free public sources — zero RapidAPI quota spent",
+  });
 });
 
 export default router;
