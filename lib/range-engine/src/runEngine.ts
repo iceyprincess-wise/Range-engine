@@ -55,6 +55,7 @@ export function runEngine(opts: {
   // score at analysis time when the sync feed found the match live.
   minutes_to_tipoff?: number | null;
   live_score?: { home: number; away: number } | null;
+  live_clock?: { elapsedSeconds: number; gameSeconds: number } | null;
   is_rerun?: boolean;
   rerun_timestamp?: string;
 }): EngineOutput {
@@ -233,13 +234,41 @@ export function runEngine(opts: {
   // ── Rule 4 (Base Range) ───────────────────────────────────────────────────
   let lb = homeEffPPG + awayEffPPG - 6;
   let hb = homeEffPPG + awayEffPPG + 6;
-  const base_lb = lb;
-  const base_hb = hb;
+  let base_lb = lb;
+  let base_hb = hb;
   if (opts.is_live_match) {
     hb += 3;
     triggered.push("Live Match: HB +3 — in-game variance widening (momentum swings, foul games, garbage time)");
     adj_log.push({ rule: "Live Match Variance", lb_adj: 0, hb_adj: 3, note: "Live volatility — HB widened +3, LB stays grounded in regulation math", status: "triggered" });
   }
+  // ── Live Projection (range shift on a real clock) ──────────────
+  // Only with a measured live score AND clock: project the final
+  // total by blending the game's current pace with the current
+  // range midpoint (live pace weighted by elapsed fraction, capped
+  // 0.7), cap the shift at ±12 and apply it at half strength. The
+  // base anchors move with the shift, so Rule 15's expansion
+  // accounting keeps measuring rule adjustments only.
+  if (opts.is_live_match && opts.live_clock && opts.live_score) {
+    const E = opts.live_clock.elapsedSeconds;
+    const G = opts.live_clock.gameSeconds;
+    const T = opts.live_score.home + opts.live_score.away;
+    if (E >= 240 && T > 0 && G > E) {
+      const paceTotal = (T * G) / E;
+      const wgt = Math.min(0.7, E / G);
+      const midNow = (lb + hb) / 2;
+      const projected = wgt * paceTotal + (1 - wgt) * midNow;
+      const capped = Math.max(-12, Math.min(12, projected - midNow));
+      const shift = Math.round(capped * 0.5 * 2) / 2;
+      if (shift !== 0) {
+        lb += shift; hb += shift; base_lb += shift; base_hb += shift;
+        triggered.push(`Live Projection: pace-blended projection ${projected.toFixed(1)} vs range mid ${midNow.toFixed(1)} → range shifted ${shift > 0 ? "+" : ""}${shift}`);
+      }
+      adj_log.push({ rule: "Live Projection — Range Shift", lb_adj: shift, hb_adj: shift, note: `Live ${opts.live_score.home}-${opts.live_score.away} (total ${T}) at ${Math.floor(E / 60)}:${String(E % 60).padStart(2, "0")} of ${G / 60} min | current-pace total ${paceTotal.toFixed(1)} | pace weight ${(wgt * 100).toFixed(0)}% | blended projection ${projected.toFixed(1)} | shift applied ${shift > 0 ? "+" : ""}${shift} (raw capped ±12, half strength)`, status: shift !== 0 ? "triggered" : "checked" });
+    } else {
+      adj_log.push({ rule: "Live Projection — Range Shift", lb_adj: 0, hb_adj: 0, note: `Live clock present but projection not applied (elapsed ${E}s, total ${T}, game ${G}s — needs ≥240s played, a score, and time remaining)`, status: "checked" });
+    }
+  }
+
   adj_log.push({
     rule: "Rule 4 — Base Range",
     lb_adj: 0,

@@ -107,6 +107,29 @@ router.get("/v1/sync", async (req: Request, res: Response) => {
         away: [target.awayScore?.period1 ?? null, target.awayScore?.period2 ?? null, target.awayScore?.period3 ?? null, target.awayScore?.period4 ?? null],
       },
       statusDescription: target.status?.description ?? null,
+      // Live clock from the SAME event: the provider time object
+      // (played seconds, period length/count, current-period start)
+      // — the shape every banked game object carries. Elapsed
+      // prefers the provider's played counter; the fallback derives
+      // it from the current period's start + completed period
+      // scores. This is the input the Live Projection prices from.
+      clock: (() => {
+        const t: any = (target as any).time ?? {};
+        const periodLength = typeof t.periodLength === "number" ? t.periodLength : null;
+        if (!periodLength) return null;
+        const totalPeriods = typeof t.totalPeriodCount === "number" ? t.totalPeriodCount : 4;
+        const overtimeLength = typeof t.overtimeLength === "number" ? t.overtimeLength : 300;
+        let elapsed: number | null = typeof t.played === "number" && t.played > 0 ? t.played : null;
+        if (elapsed == null && typeof t.currentPeriodStartTimestamp === "number") {
+          const started = [target.homeScore?.period1, target.homeScore?.period2, target.homeScore?.period3, target.homeScore?.period4].filter((v: any) => v != null).length;
+          const inPeriod = Math.max(0, Math.min(periodLength, Math.floor(Date.now() / 1000) - t.currentPeriodStartTimestamp));
+          elapsed = started > 0 ? (started - 1) * periodLength + inPeriod : inPeriod;
+        }
+        if (elapsed == null) return null;
+        const otActive = target.homeScore?.overtime != null || target.awayScore?.overtime != null;
+        const gameSeconds = periodLength * totalPeriods + (otActive ? overtimeLength : 0);
+        return { elapsedSeconds: Math.max(0, Math.min(elapsed, gameSeconds)), gameSeconds, periodLength, totalPeriods };
+      })(),
       // No statistics payload: this handler used to spend a second
       // quota call fetching the live match's statistics, and NO
       // consumer ever read the field (research reads none of the sync

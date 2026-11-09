@@ -203,7 +203,7 @@ export async function fetchResearchData(
     // referee branch never had a source before this — and carries
     // the crew names for display. Nulls leave the sync value / 0.
     try {
-      const refRes = await fetch(`${API_BASE}/api/v1/freefeed/referees?home=${encodeURIComponent(homeTeam)}&away=${encodeURIComponent(awayTeam)}&league=${injuryLeague}`);
+      const refRes = await fetch(`${API_BASE}/api/v1/freefeed/referees?home=${encodeURIComponent(homeTeam)}&away=${encodeURIComponent(awayTeam)}&league=${injuryLeague}${fixtureDate ? `&date=${fixtureDate}` : ""}`);
       if (refRes.ok) {
         const refData = await refRes.json();
         if (Array.isArray(refData?.officials) && refData.officials.length) {
@@ -578,7 +578,7 @@ export async function fetchResearchData(
     // and discarded by every consumer. It is now carried through so
     // the UI can acknowledge a live fixture with its real score and
     // runEngine's Rule 1 can quote it in the audit.
-    liveScore: apiData.score && typeof apiData.score.home === "number" && typeof apiData.score.away === "number" ? { home: apiData.score.home, away: apiData.score.away, status: String(apiData.statusDescription ?? apiData.status ?? ""), periods: apiData.periods ?? null } : null,
+    liveScore: apiData.score && typeof apiData.score.home === "number" && typeof apiData.score.away === "number" ? { home: apiData.score.home, away: apiData.score.away, status: String(apiData.statusDescription ?? apiData.status ?? ""), periods: apiData.periods ?? null, clock: apiData.clock ?? null } : null,
     officials: Array.isArray(apiData.officials) && apiData.officials.length ? apiData.officials : null,
     lineupStatus: apiData.lineupStatus ?? null,
     lineupSource: apiData.lineupSource ?? null,

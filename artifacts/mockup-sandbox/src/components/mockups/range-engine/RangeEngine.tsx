@@ -981,6 +981,7 @@ export function RangeEngine() {
           ot_rate: rd?.otRate ?? undefined,
           minutes_to_tipoff: tipOffMinutes,
           live_score: rd?.liveScore ? { home: rd.liveScore.home, away: rd.liveScore.away } : undefined,
+          live_clock: rd?.liveScore?.clock ?? undefined,
         });
         setTimeout(() => {
           setResult(res);
@@ -1060,6 +1061,7 @@ export function RangeEngine() {
           ot_rate: researchData?.otRate ?? undefined,
           minutes_to_tipoff: tipOffMinutes,
           live_score: researchData?.liveScore ? { home: researchData.liveScore.home, away: researchData.liveScore.away } : undefined,
+          live_clock: researchData?.liveScore?.clock ?? undefined,
           is_rerun: true,
           rerun_timestamp: new Date().toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", second: "2-digit" }),
         });
@@ -1562,7 +1564,7 @@ MATCH CONTEXT — Rule 1 (Time Sync)
                   </div>
                   {isLiveMatch && (
                     <div className="px-3 py-2 rounded-lg border border-red-800 bg-red-950/40 text-[10px] font-bold uppercase tracking-widest text-red-300">
-                      ● Live Match selected — the engine prices this as a LIVE game (HB +3 variance widening, Rule 1 clock check armed){researchData?.liveScore ? ` · Live score: ${researchData.liveScore.home}–${researchData.liveScore.away}` : ""}{researchData?.liveScore?.periods ? ` · Quarters: ${researchData.liveScore.periods.home.map((h, i) => `${h ?? "–"}:${researchData.liveScore!.periods!.away[i] ?? "–"}`).join(" ")}` : ""}
+                      ● Live Match selected — the engine prices this as a LIVE game (HB +3 variance widening, Rule 1 clock check armed){researchData?.liveScore ? ` · Live score: ${researchData.liveScore.home}–${researchData.liveScore.away}` : ""}{researchData?.liveScore?.periods ? ` · Quarters: ${researchData.liveScore.periods.home.map((h, i) => `${h ?? "–"}:${researchData.liveScore!.periods!.away[i] ?? "–"}`).join(" ")}` : ""}{researchData?.liveScore?.clock ? ` · ${Math.floor(researchData.liveScore.clock.elapsedSeconds / 60)}:${String(researchData.liveScore.clock.elapsedSeconds % 60).padStart(2, "0")} played` : ""}
                     </div>
                   )}
                   {researchData?.detectedGender && researchData.detectedGender !== matchGender && (

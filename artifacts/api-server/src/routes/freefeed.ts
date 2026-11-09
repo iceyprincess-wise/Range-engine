@@ -376,22 +376,72 @@ const fetchNbaAssignments = async (): Promise<{ home: string; away: string; crew
   return games;
 };
 
-// GET /v1/freefeed/referees?home=<warehouse name>&away=<name>&league=nba|wnba
+// NBA Official's structured officials feed (the same feed the
+// officiating pages run on): ONE call carries nba + wnba + gl
+// assignment blocks for a date — this is the WNBA prematch source
+// the HTML page never provided (it renders NBA only). Rows carry
+// city names + abbreviations + up to 4 officials. Cached per date.
+const officialsFeedCache = new Map<string, { at: number; payload: any }>();
+const fetchOfficialsFeed = async (dateStr: string): Promise<any> => {
+  const cached = officialsFeedCache.get(dateStr);
+  if (cached && Date.now() - cached.at < 30 * 60 * 1000) return cached.payload;
+  const r = await fetch(`https://official.nba.com/wp-json/api/v1/get-game-officials?date=${dateStr}`, {
+    headers: {
+      "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36",
+      accept: "application/json, text/html;q=0.9, */*;q=0.8",
+      referer: "https://official.nba.com/",
+    },
+  });
+  if (!r.ok) throw new Error("officials feed HTTP " + r.status);
+  const payload = await r.json();
+  officialsFeedCache.set(dateStr, { at: Date.now(), payload });
+  return payload;
+};
+const feedGamesFor = (payload: any, key: string): { home: string; away: string; crew: string[] }[] => {
+  const rows: any[] = payload?.[key]?.Table?.rows ?? [];
+  return rows
+    .map((row: any) => ({
+      home: String(row?.home_team ?? ""),
+      away: String(row?.away_team ?? ""),
+      crew: [row?.official1, row?.official2, row?.official3, row?.official4]
+        .map((n: any) => String(n ?? "").trim()).filter(Boolean),
+    }))
+    .filter((g: any) => g.crew.length && g.home && g.away);
+};
+
+// GET /v1/freefeed/referees?home=<warehouse name>&away=<name>&league=nba|wnba[&date=YYYY-MM-DD]
+// Source chain, first hit wins: (1) NBA Official get-game-officials
+// feed (NBA + WNBA), (2) NBA Official assignments page scrape (NBA).
 router.get("/v1/freefeed/referees", async (req: Request, res: Response) => {
   const key = String(req.query.league ?? "nba").toLowerCase();
   const lg = LEAGUES[key];
   if (!lg) return res.status(400).json({ error: "league must be nba or wnba" });
   const home = String(req.query.home ?? "");
   const away = String(req.query.away ?? "");
+  const dateParam = String(req.query.date ?? "");
   let crew: string[] | null = null;
-  if (key === "nba" && home && away) {
+  let assignmentSource: string | null = null;
+  if (home && away) {
+    const dateStr = /^\d{4}-\d{2}-\d{2}$/.test(dateParam)
+      ? dateParam
+      : new Date().toISOString().slice(0, 10);
     try {
-      const games = await fetchNbaAssignments();
+      const payload = await fetchOfficialsFeed(dateStr);
+      const games = feedGamesFor(payload, key);
       const match =
         games.find((g) => sideMatches(g.home, home) && sideMatches(g.away, away)) ??
         games.find((g) => sideMatches(g.home, away) && sideMatches(g.away, home));
-      if (match) crew = match.crew;
-    } catch { /* assignments unavailable: strictness stays null */ }
+      if (match) { crew = match.crew; assignmentSource = "NBA Official feed (get-game-officials)"; }
+    } catch { /* feed unavailable: page scrape is the failover */ }
+    if (!crew && key === "nba") {
+      try {
+        const games = await fetchNbaAssignments();
+        const match =
+          games.find((g) => sideMatches(g.home, home) && sideMatches(g.away, away)) ??
+          games.find((g) => sideMatches(g.home, away) && sideMatches(g.away, home));
+        if (match) { crew = match.crew; assignmentSource = "NBA Official assignments page"; }
+      } catch { /* assignments unavailable: strictness stays null */ }
+    }
   }
   // Measured crew history: every banked game with officials + foul
   // totals contributes its combined fouls to each official's average.
@@ -425,7 +475,7 @@ router.get("/v1/freefeed/referees", async (req: Request, res: Response) => {
   return res.json({
     league: lg.name, officials: crew, refereeStrictness: strictness,
     sampleGames, leagueAvgFouls: leagueAvg != null ? Math.round(leagueAvg * 10) / 10 : null,
-    source: crew ? "NBA Official assignments + ESPN banked crew history" : null,
+    source: crew ? `${assignmentSource} + ESPN banked crew history` : null,
     provenance: "Free public sources — zero RapidAPI quota spent",
   });
 });

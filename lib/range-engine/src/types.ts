@@ -146,7 +146,7 @@ export interface ResearchData {
   homeOtRate: number | null;
   awayOtRate: number | null;
   venue: string | null;
-  liveScore: { home: number; away: number; status: string; periods: { home: (number | null)[]; away: (number | null)[] } | null } | null;
+  liveScore: { home: number; away: number; status: string; periods: { home: (number | null)[]; away: (number | null)[] } | null; clock: { elapsedSeconds: number; gameSeconds: number; periodLength: number; totalPeriods: number } | null } | null;
   officials: string[] | null;
   lineupStatus: string | null;
   lineupSource: string | null;
