@@ -310,7 +310,13 @@ export function RangeEngine() {
   const [gGames, setGGames] = useState<any[]>([]);
   const [gSel, setGSel] = useState<{ id: number; name: string; country: string } | null>(null);
   const [gLoading, setGLoading] = useState(false);
-  const [quotaInfo, setQuotaInfo] = useState<{ limit: number | null; remaining: number | null }>({ limit: null, remaining: null });
+  const [quotaInfo, setQuotaInfo] = useState<{ limit: number | null; remaining: number | null; resetAt: number | null }>({ limit: null, remaining: null, resetAt: null });
+  // When the provider says the daily quota returns (banked server-side
+  // from its reset header), say so next to the quota numbers instead
+  // of leaving the user to guess while remaining sits at 0.
+  const quotaResetLabel = quotaInfo.resetAt && quotaInfo.resetAt > Date.now()
+    ? `resets in ${Math.floor((quotaInfo.resetAt - Date.now()) / 3600000)}h ${Math.floor(((quotaInfo.resetAt - Date.now()) % 3600000) / 60000)}m`
+    : null;
   // (No standalone quota effect: the AUTO-LOAD effect below owns entry
   // loading — quota included — and retries, where this one-shot fetch
   // used to swallow a cold-start failure silently and never retry.)
@@ -323,7 +329,7 @@ export function RangeEngine() {
   const refreshQuota = async () => {
     try {
       const q = await fetch(`${API_BASE}/api/v1/quota`).then((r) => (r.ok ? r.json() : null));
-      if (q) setQuotaInfo({ limit: (q as any).limit ?? null, remaining: (q as any).remaining ?? null });
+      if (q) setQuotaInfo({ limit: (q as any).limit ?? null, remaining: (q as any).remaining ?? null, resetAt: (q as any).resetAt ?? null });
     } catch { /* best-effort */ }
   };
 
@@ -339,11 +345,11 @@ export function RangeEngine() {
       let remaining: number | null = null;
       try {
         const q = await fetch(`${API_BASE}/api/v1/quota`).then((r) => (r.ok ? r.json() : null));
-        if (q) { remaining = (q as any).remaining ?? null; setQuotaInfo({ limit: (q as any).limit ?? null, remaining }); }
+        if (q) { remaining = (q as any).remaining ?? null; setQuotaInfo({ limit: (q as any).limit ?? null, remaining, resetAt: (q as any).resetAt ?? null }); }
       } catch { /* best-effort */ }
       const url = remaining !== null && remaining <= 0
-        ? `${API_BASE}/api/v1/games/tournaments`
-        : `${API_BASE}/api/v1/games/tournaments?force=1`;
+        ? `${API_BASE}/api/v1/games/tournaments?date=${today}`
+        : `${API_BASE}/api/v1/games/tournaments?force=1&date=${today}`;
       try {
         const t = await fetch(url).then((r) => (r.ok ? r.json() : { tournaments: [] }));
         setGTours(t.tournaments || []);
@@ -389,10 +395,10 @@ export function RangeEngine() {
         for (let attempt = 0; attempt < 3 && !tours; attempt++) {
           try {
             const [t, q] = await Promise.all([
-              fetch(`${API_BASE}/api/v1/games/tournaments`).then((r) => (r.ok ? r.json() : null)),
+              fetch(`${API_BASE}/api/v1/games/tournaments?date=${today}`).then((r) => (r.ok ? r.json() : null)),
               fetch(`${API_BASE}/api/v1/quota`).then((r) => (r.ok ? r.json() : null)),
             ]);
-            if (q) { remaining = (q as any).remaining ?? null; setQuotaInfo({ limit: (q as any).limit ?? null, remaining }); }
+            if (q) { remaining = (q as any).remaining ?? null; setQuotaInfo({ limit: (q as any).limit ?? null, remaining, resetAt: (q as any).resetAt ?? null }); }
             if (t) tours = t;
           } catch { /* cold start / network — the loop retries */ }
           if (!tours && attempt < 2) await new Promise((resolve) => setTimeout(resolve, 4000 * (attempt + 1)));
@@ -406,7 +412,7 @@ export function RangeEngine() {
           try { alreadyForced = localStorage.getItem(forceKey) === "1"; } catch { /* storage unavailable — server freshness still gates repeats */ }
           if (needsUpdate && !alreadyForced && !(remaining !== null && remaining <= 0)) {
             try {
-              const t2 = await fetch(`${API_BASE}/api/v1/games/tournaments?force=1`).then((r) => (r.ok ? r.json() : null));
+              const t2 = await fetch(`${API_BASE}/api/v1/games/tournaments?force=1&date=${today}`).then((r) => (r.ok ? r.json() : null));
               if (t2) {
                 setGTours(t2.tournaments || []);
                 setGMeta(t2);
@@ -444,10 +450,10 @@ export function RangeEngine() {
     if (refreshing) return;
     setRefreshing(true);
     try {
-      const t = await fetch(`${API_BASE}/api/v1/games/tournaments?update=1`).then((r) => (r.ok ? r.json() : null));
+      const t = await fetch(`${API_BASE}/api/v1/games/tournaments?update=1&date=${today}`).then((r) => (r.ok ? r.json() : null));
       if (t) { setGTours(t.tournaments || []); setGMeta(t); }
       const q = await fetch(`${API_BASE}/api/v1/quota`).then((r) => (r.ok ? r.json() : null));
-      if (q) setQuotaInfo({ limit: (q as any).limit ?? null, remaining: (q as any).remaining ?? null });
+      if (q) setQuotaInfo({ limit: (q as any).limit ?? null, remaining: (q as any).remaining ?? null, resetAt: (q as any).resetAt ?? null });
     } catch { /* best-effort */ } finally { setRefreshing(false); }
   };
   // FREE self-ticker (every 30s while page open): clock-derived phase + warehouse-confirmed finals. Zero quota, always.
@@ -480,12 +486,12 @@ export function RangeEngine() {
     setGGames([]);
     try {
       const [t, q] = await Promise.all([
-        fetch(`${API_BASE}/api/v1/games/tournaments`).then((r) => (r.ok ? r.json() : { tournaments: [] })),
+        fetch(`${API_BASE}/api/v1/games/tournaments?date=${today}`).then((r) => (r.ok ? r.json() : { tournaments: [] })),
         fetch(`${API_BASE}/api/v1/quota`).then((r) => (r.ok ? r.json() : {})),
       ]);
       setGTours(t.tournaments || []);
       setGMeta(t);
-      setQuotaInfo({ limit: (q as any).limit ?? null, remaining: (q as any).remaining ?? null });
+      setQuotaInfo({ limit: (q as any).limit ?? null, remaining: (q as any).remaining ?? null, resetAt: (q as any).resetAt ?? null });
     } catch {
       setGTours([]);
     }
@@ -495,7 +501,7 @@ export function RangeEngine() {
     setGSel(t);
     setGLoading(true);
     try {
-      const d = await fetch(`${API_BASE}/api/v1/games/schedule?tid=${t.id}`).then((r) => (r.ok ? r.json() : { games: [] }));
+      const d = await fetch(`${API_BASE}/api/v1/games/schedule?tid=${t.id}&date=${today}`).then((r) => (r.ok ? r.json() : { games: [] }));
       setGGames((d.games || []).slice().sort((x: any, y: any) => (x.startTimestamp ?? 0) - (y.startTimestamp ?? 0)));
       void refreshQuota();
     } catch {
@@ -1192,7 +1198,7 @@ export function RangeEngine() {
             <p className="text-yellow-400 font-black text-sm uppercase tracking-widest">📡 Covered Games — Today</p>
             <span className="flex items-center gap-2"><Button onClick={() => updateTournaments()} className="text-yellow-300 text-[10px] font-black px-2 py-1 rounded border border-yellow-700 bg-yellow-950/40 uppercase h-auto min-h-0">{refreshing ? "⬆ UPDATING…" : "⬆ UPDATE (spends quota)"}</Button><Button onClick={() => setShowGames(false)} className="text-zinc-400 text-xl px-2 py-0 h-auto min-h-0 border-0 bg-transparent">✕</Button></span>
           </div>
-          <p className="text-[10px] text-zinc-500 mb-3">API quota: {quotaInfo.remaining ?? "—"}/{quotaInfo.limit ?? "—"} remaining · {gMeta?.fromDisk === false ? "fresh UPDATE" : "showing last saved update"}{typeof gMeta?.quotaSpent === "number" ? ` — cost ${gMeta.quotaSpent} calls` : ""}</p>
+          <p className="text-[10px] text-zinc-500 mb-3">API quota: {quotaInfo.remaining ?? "—"}/{quotaInfo.limit ?? "—"} remaining · {gMeta?.fromDisk === false ? "fresh UPDATE" : "showing last saved update"}{typeof gMeta?.quotaSpent === "number" ? ` — cost ${gMeta.quotaSpent} calls` : ""}{quotaResetLabel ? ` · ${quotaResetLabel}` : ""}</p>
           {!gSel ? (
             <div className="space-y-1.5">
               {gTours.length === 0 && <p className="text-zinc-500 text-xs">No tournaments loaded — daily API quota exhausted or nothing scheduled yet. Quota resets in the afternoon.</p>}

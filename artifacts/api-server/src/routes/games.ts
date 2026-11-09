@@ -25,12 +25,28 @@ const apiFetch = async (p: string): Promise<any> => {
   return response.json();
 };
 
-const daySegments = () => { const d = new Date(); return d.getDate() + "/" + (d.getMonth() + 1) + "/" + d.getFullYear(); };
+// The provider's day segment is D/M/YYYY. "Today" must be the USER's
+// day: the server clock is UTC, so between 00:00 and 00:59 WAT the
+// server's own date is still yesterday and every tournaments/schedule
+// request fetched (and cached under) the wrong day. The client sends
+// its local date as ?date=YYYY-MM-DD; when present and valid it wins,
+// otherwise the server date remains the fallback for dateless callers.
+const segOf = (d: Date) => d.getDate() + "/" + (d.getMonth() + 1) + "/" + d.getFullYear();
+const daySegments = (req?: Request) => {
+  const raw = typeof req?.query?.date === "string" ? req.query.date : "";
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(raw);
+  if (m) {
+    const y = Number(m[1]), mo = Number(m[2]), da = Number(m[3]);
+    const d = new Date(y, mo - 1, da);
+    if (d.getFullYear() === y && d.getMonth() === mo - 1 && d.getDate() === da) return segOf(d);
+  }
+  return segOf(new Date());
+};
 
 // TOURNAMENTS — opening is ALWAYS free (serves last saved update from disk).
 // Only ?update=1 spends quota. Response reports the REAL cost via quota delta.
 router.get("/v1/games/tournaments", async (req: Request, res: Response) => {
-  const seg = daySegments();
+  const seg = daySegments(req);
   // "force" is the alias the mockup's Master Refresh sends (?force=1);
   // "update" is the documented one. Both refresh.
   if (req.query.update !== "1" && req.query.force !== "1") {
@@ -70,11 +86,11 @@ router.get("/v1/games/tournaments", async (req: Request, res: Response) => {
 router.get("/v1/games/schedule", async (req: Request, res: Response) => {
   const tid = Number(req.query.tid);
   if (!tid) return res.status(400).json({ error: "tid is required" });
-  const key = tid + "-" + daySegments();
+  const key = tid + "-" + daySegments(req);
   if (disk.schedules[key]) return res.json({ ...disk.schedules[key], fromDisk: true, quotaSpent: 0 });
   if (!RAPIDAPI_KEY) return res.status(500).json({ error: "Missing RAPIDAPI_KEY" });
   try {
-    const data = await apiFetch("/api/basketball/tournament/" + tid + "/schedules/" + daySegments());
+    const data = await apiFetch("/api/basketball/tournament/" + tid + "/schedules/" + daySegments(req));
     rememberGames(data?.events || []);
     persist();
     const games = (data?.events || []).map((e: any) => ({
@@ -82,8 +98,13 @@ router.get("/v1/games/schedule", async (req: Request, res: Response) => {
       startTimestamp: e.startTimestamp ?? null, status: e.status?.type ?? "notstarted",
       tournament: e.tournament?.name ?? "", country: e.tournament?.category?.name ?? "",
     }));
-    const payload = { tid, date: daySegments(), count: games.length, games };
-    if (games.length > 0) { disk.schedules[key] = payload; saveDisk(); }
+    const payload = { tid, date: daySegments(req), count: games.length, games };
+    // Cache EVERY successful fetch, including a genuine 0-game day:
+    // apiFetch already throws on a non-OK response, so reaching here
+    // means the empty list is the provider's real answer. The old
+    // length gate left empty schedules uncached, so a 0-game
+    // tournament cost 1 provider call on EVERY tap, forever.
+    disk.schedules[key] = payload; saveDisk();
     return res.json({ ...payload, fromDisk: false, quotaSpent: 1 });
   } catch (error) {
     return res.status(502).json({ error: error instanceof Error ? error.message : "schedule fetch failed" });

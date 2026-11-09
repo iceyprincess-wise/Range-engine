@@ -364,6 +364,44 @@ export const TEAM_DB: Record<
   },
 };
 
+const TEAM_FULL_NAMES: Record<string, string[]> = {
+  lakers: ["los angeles lakers", "la lakers"],
+  celtics: ["boston celtics"],
+  warriors: ["golden state warriors"],
+  heat: ["miami heat"],
+  nuggets: ["denver nuggets"],
+  bucks: ["milwaukee bucks"],
+  "76ers": ["philadelphia 76ers"],
+  sixers: ["philadelphia 76ers", "philadelphia sixers"],
+  clippers: ["los angeles clippers", "la clippers"],
+  suns: ["phoenix suns"],
+  mavericks: ["dallas mavericks"],
+  mavs: ["dallas mavericks", "dallas mavs"],
+  knicks: ["new york knicks"],
+  nets: ["brooklyn nets"],
+  bulls: ["chicago bulls"],
+  spurs: ["san antonio spurs"],
+  raptors: ["toronto raptors"],
+  thunder: ["oklahoma city thunder"],
+  timberwolves: ["minnesota timberwolves"],
+  wolves: ["minnesota timberwolves", "minnesota wolves"],
+  pacers: ["indiana pacers"],
+  hawks: ["atlanta hawks"],
+  magic: ["orlando magic"],
+  grizzlies: ["memphis grizzlies"],
+  pelicans: ["new orleans pelicans"],
+  jazz: ["utah jazz"],
+  rockets: ["houston rockets"],
+  kings: ["sacramento kings"],
+  pistons: ["detroit pistons"],
+  cavaliers: ["cleveland cavaliers"],
+  cavs: ["cleveland cavaliers", "cleveland cavs"],
+  hornets: ["charlotte hornets"],
+  wizards: ["washington wizards"],
+  trailblazers: ["portland trail blazers", "portland trailblazers"],
+  blazers: ["portland trail blazers", "portland blazers"],
+};
+
 export function lookupTeam(
   name: string,
   dna: ReturnType<typeof getLeagueDNA>,
@@ -373,17 +411,26 @@ export function lookupTeam(
   proxyCapped: boolean;
   capValue: number;
 } {
-  const normalized = name.toLowerCase().trim();
+  const normalized = name.toLowerCase().trim().replace(/\s+/g, " ");
   const compact = normalized.replace(/[^a-z0-9]/g, "");
-  const tokens = new Set(normalized.match(/[a-z0-9]+/g) ?? []);
 
-  // Prefer exact aliases before whole-name-token matching.
+  // Prefer exact aliases (the nickname alone) before full-name matching.
   for (const [k, v] of Object.entries(TEAM_DB)) {
     if (compact === k)
       return { stats: v, source: "DB", proxyCapped: false, capValue: 0 };
   }
+  // Full-name pass ONLY: a DB hit requires the WHOLE name to be a known
+  // full name of that NBA team. The old token pass matched any name
+  // merely CONTAINING a nickname token, so "NLEX Road Warriors" was
+  // served Golden State's measured stats (116.3 PPG, source DB, no
+  // proxy cap), "Sydney Kings" got Sacramento's and a fictional
+  // "Brisbane Heat" got Miami's — and because the hit claimed source
+  // DB, warehouseUpgrade could never lift it with the team's real
+  // banked games. A shared nickname inside an unrelated name is not
+  // this team: it falls through to the honest league proxy below.
   for (const [k, v] of Object.entries(TEAM_DB)) {
-    if (tokens.has(k))
+    const full = TEAM_FULL_NAMES[k];
+    if (full && full.includes(normalized))
       return { stats: v, source: "DB", proxyCapped: false, capValue: 0 };
   }
   // Tier 2 Proxy — PPG STRICTLY capped at league DNA proxy PPG (anti-hallucination)

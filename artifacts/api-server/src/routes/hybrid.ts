@@ -99,7 +99,7 @@ router.get("/v1/hybrid/inbox", (_req: Request, res: Response) => {
   const games = inbox.games.map((g) => ({ ...view(g), status: statusOf(g) }));
   const newCount = games.filter((g) => g.status === "new").length;
   const invalidCount = games.filter((g) => g.status === "invalid").length;
-  return res.json({ updatedAt: inbox.updatedAt, total: games.length, newCount, invalidCount, alreadyExistCount: games.length - newCount - invalidCount, games });
+  return res.json({ updatedAt: inbox.updatedAt, parseError: inbox.parseError === true, total: games.length, newCount, invalidCount, alreadyExistCount: games.length - newCount - invalidCount, games });
 });
 
 // GET /v1/hybrid/games — the live store's full raw game objects, for the
@@ -165,6 +165,12 @@ router.post("/v1/hybrid/export", (_req: Request, res: Response) => {
 // land in store.json. Idempotent: a second call adds 0.
 router.post("/v1/hybrid/import", (req: Request, res: Response) => {
   const inbox = readInbox();
+  // Same refusal as export: a corrupt inbox reads as empty, and
+  // importing from it would report "added 0" as if the send had
+  // worked while the staged games stay invisible.
+  if (inbox.parseError) {
+    return res.status(500).json({ error: "inbox file is corrupt — import refused; fix or remove hybrid-inbox.json first" });
+  }
   const body = (req.body ?? {}) as { ids?: unknown };
   const wanted = Array.isArray(body.ids) && body.ids.length > 0
     ? new Set((body.ids as unknown[]).map((x) => Number(x)).filter((n) => Number.isFinite(n)))

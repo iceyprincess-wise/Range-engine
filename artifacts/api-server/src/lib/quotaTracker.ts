@@ -4,10 +4,12 @@ import { resolveDataDir } from "./warehouse";
 
 const QPATH = path.join(resolveDataDir(), "quota.json");
 
-export const quota: { limit: number | null; remaining: number | null; updatedAt: number | null } = {
+export const quota: { limit: number | null; remaining: number | null; updatedAt: number | null; resetInSec: number | null; resetAt: number | null } = {
   limit: null,
   remaining: null,
   updatedAt: null,
+  resetInSec: null,
+  resetAt: null,
 };
 
 try { Object.assign(quota, JSON.parse(fs.readFileSync(QPATH, "utf8"))); } catch { /* first run */ }
@@ -22,7 +24,7 @@ const startOfUtcDay = (t: number) => { const d = new Date(t); return Date.UTC(d.
 export const rolloverQuotaIfStaleDay = () => {
   if (quota.updatedAt == null) return;
   if (startOfUtcDay(quota.updatedAt) >= startOfUtcDay(Date.now())) return;
-  quota.limit = null; quota.remaining = null; quota.updatedAt = Date.now();
+  quota.limit = null; quota.remaining = null; quota.updatedAt = Date.now(); quota.resetInSec = null; quota.resetAt = null;
   try {
     fs.mkdirSync(path.dirname(QPATH), { recursive: true });
     fs.writeFileSync(QPATH, JSON.stringify(quota));
@@ -35,15 +37,23 @@ setInterval(rolloverQuotaIfStaleDay, 60 * 60 * 1000).unref();
 export const updateQuotaFromResponse = (response: Response) => {
   const lim = response.headers.get("x-ratelimit-requests-limit");
   const rem = response.headers.get("x-ratelimit-requests-remaining");
+  const rst = response.headers.get("x-ratelimit-requests-reset");
   // Assign each header independently when it parses to a finite
   // number: the old code returned early when `remaining` was absent,
   // so `limit` never updated either, and a non-numeric header wrote
   // NaN into quota.json (serialised as null on disk).
   const limN = lim !== null ? Number(lim) : NaN;
   const remN = rem !== null ? Number(rem) : NaN;
+  const rstN = rst !== null ? Number(rst) : NaN;
   if (Number.isFinite(limN)) quota.limit = limN;
   if (Number.isFinite(remN)) quota.remaining = remN;
-  if (!Number.isFinite(limN) && !Number.isFinite(remN)) return;
+  // The provider also reports WHEN the daily quota returns
+  // (x-ratelimit-requests-reset: seconds until the reset). Nothing
+  // read it, so with the quota exhausted the app could not say when
+  // it comes back — the reset time had to be inferred from RapidAPI's
+  // FAQ instead. Bank both the raw seconds and the absolute time.
+  if (Number.isFinite(rstN) && rstN >= 0) { quota.resetInSec = rstN; quota.resetAt = Date.now() + rstN * 1000; }
+  if (!Number.isFinite(limN) && !Number.isFinite(remN) && !Number.isFinite(rstN)) return;
   quota.updatedAt = Date.now();
   try {
     fs.mkdirSync(path.dirname(QPATH), { recursive: true });

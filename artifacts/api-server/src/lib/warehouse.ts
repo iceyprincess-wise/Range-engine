@@ -125,10 +125,22 @@ export const rememberGames = (events: any[]) => {
 const autoRestoreFromInbox = () => {
   if (process.env.RANGE_DISABLE_AUTORESTORE === "1") return;
   if (Object.keys(store.games).length > 0) return;
+  let raw: string;
+  try { raw = fs.readFileSync(path.join(DATA_DIR, "hybrid-inbox.json"), "utf8"); }
+  catch { return; } // no inbox file: nothing to restore from
   let parsed: any;
-  try { parsed = JSON.parse(fs.readFileSync(path.join(DATA_DIR, "hybrid-inbox.json"), "utf8")); }
-  catch { return; } // no inbox file (or unreadable): nothing to restore from
-  const games: any[] = Array.isArray(parsed?.games) ? parsed.games : [];
+  try { parsed = JSON.parse(raw); }
+  catch (err) {
+    // A corrupt inbox must never fail silently at boot: the warehouse
+    // stays empty and, without this line, nothing anywhere says why.
+    console.error("warehouse: auto-restore FAILED — hybrid-inbox.json is corrupt (unparseable); warehouse NOT restored. Fix or remove the file:", err);
+    return;
+  }
+  if (!Array.isArray(parsed?.games)) {
+    console.error("warehouse: auto-restore FAILED — hybrid-inbox.json has no games array; warehouse NOT restored. Fix or remove the file.");
+    return;
+  }
+  const games: any[] = parsed.games;
   if (!games.length) return;
   rememberGames(games);
   let statsAdded = 0, teamsAdded = 0;
