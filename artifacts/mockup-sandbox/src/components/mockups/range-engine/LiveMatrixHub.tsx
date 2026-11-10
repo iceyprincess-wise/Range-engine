@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { minutesToTipoff } from "@workspace/range-engine";
 import { Button } from "@/components/ui/button";
 
 interface LiveMatrixHubProps {
@@ -19,18 +20,19 @@ export const LiveMatrixHub: React.FC<LiveMatrixHubProps> = ({ history, setHistor
   const [apiReferenceMap, setApiReferenceMap] = useState<Record<string, any>>({}); // Maps history IDs to API data
   const API_BASE = (import.meta.env.VITE_API_BASE || "").replace(/\/+$/, "");
 
-  const getTipoffMinutes = (koTime: string) => {
-    const [kH, kM] = koTime.split(":").map(Number);
-    const [cH, cM] = new Date()
-      .toTimeString()
-      .slice(0, 5)
-      .split(":")
-      .map(Number);
-    return kH * 60 + kM - (cH * 60 + cM);
+  // Date-aware: history entries carry their fixture `date`, so a
+  // tomorrow 01:00 game at 23:50 today reads as +70 min (EARLY READ
+  // stays on) instead of -1370 min (badge wrongly dropped).
+  const getTipoffMinutes = (koTime: string, fixtureDate?: string) => {
+    const now = new Date();
+    const current = String(now.getHours()).padStart(2, "0") + ":" + String(now.getMinutes()).padStart(2, "0");
+    const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+    const mins = minutesToTipoff(koTime, current, fixtureDate, today);
+    return mins ?? NaN;
   };
 
   const getEarlyReadBadge = (game: any) => {
-    const minutes = game.koTime ? getTipoffMinutes(game.koTime) : Infinity;
+    const minutes = game.koTime ? getTipoffMinutes(game.koTime, game.date) : Infinity;
     if (game.earlyRead || minutes > 45) {
       return (
         <span className="px-2 py-1 rounded-full text-[9px] font-black uppercase tracking-widest text-red-300 bg-red-950/60 border border-red-800">

@@ -7,7 +7,7 @@ type InboxGame = {
 };
 type InboxData = {
   updatedAt: string | null; total: number; newCount: number; invalidCount: number;
-  alreadyExistCount: number; games: InboxGame[];
+  alreadyExistCount: number; games: InboxGame[]; parseError?: boolean;
 };
 
 // 🔀 HYBRID SYNC — move banked games between Termux and Render through a
@@ -194,7 +194,10 @@ export function HybridPage({ apiBase, onClose }: { apiBase: string; onClose: () 
             Inbox {inbox.total} game{inbox.total === 1 ? "" : "s"} · {inbox.newCount} new · {inbox.alreadyExistCount} already in this warehouse{inbox.invalidCount ? ` · ${inbox.invalidCount} invalid (no final scores)` : ""}
             {inbox.updatedAt ? ` · updated ${new Date(inbox.updatedAt).toLocaleString()}` : ""}
           </p>
-          {inbox.total === 0 && (
+          {inbox.parseError === true && (
+            <p className="text-[11px] text-red-400 mb-2 border border-red-800 bg-red-950/40 rounded px-2 py-1.5">Inbox file is corrupt — the server reads it as empty. Fix or remove hybrid-inbox.json on the server, then reload this page. Export and Send are refused until then.</p>
+          )}
+          {inbox.total === 0 && !inbox.parseError && (
             <p className="text-zinc-500 text-xs mt-2">Inbox is empty — export this store to fill it, or pull from the other server.</p>
           )}
           {inbox.total > 0 && inbox.newCount === 0 && inbox.invalidCount === 0 && (

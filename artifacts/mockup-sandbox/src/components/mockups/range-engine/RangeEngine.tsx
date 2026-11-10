@@ -1,5 +1,5 @@
 import { upgradeWithWarehouse } from "@workspace/range-engine";
-import { nextCountdownSec } from "@workspace/range-engine";
+import { minutesToTipoff, nextCountdownSec } from "@workspace/range-engine";
 import { useState, useRef, useEffect, useMemo } from "react";
 import { LiveMatrixHub } from "./LiveMatrixHub";
 import { WarehousePage } from "./WarehousePage";
@@ -255,17 +255,12 @@ export function RangeEngine() {
   const [koTime, setKoTime] = useState("20:00");
   const [currentTime, setCurrentTime] = useState("19:30");
   const [tipOff, setTipOff] = useState(""); // auto-calculated
-  const currentMinutes = currentTime
-    .split(":")
-    .map(Number)
-    .reduce((sum, part, i) => sum + part * (i === 0 ? 60 : 1), 0);
-  const koMinutes = koTime
-    .split(":")
-    .map(Number)
-    .reduce((sum, part, i) => sum + part * (i === 0 ? 60 : 1), 0);
-  const tipOffMinutes = Number.isFinite(currentMinutes)
-    ? koMinutes - currentMinutes
-    : null;
+  // Date-aware: `date` is the fixture's local date, `today` is the
+  // local date now. The old minutes-since-midnight subtraction read a
+  // tomorrow 01:00 kick-off at 23:50 today as -1370 min, so the
+  // EARLY READ badge, minutes_to_tipoff and the revalidation watch
+  // were all wrong for post-midnight tipoffs (D-2026-11-10-02).
+  const tipOffMinutes = minutesToTipoff(koTime, currentTime, date, today);
   const isEarlyPreMatch = tipOffMinutes != null && tipOffMinutes > 45;
 
   useEffect(() => {
@@ -609,7 +604,7 @@ export function RangeEngine() {
     async function performFinalReanalysis() {
       if (!homeTeam || !awayTeam || !league) {
         // Nothing to reanalyse
-        setRefreshCountdown(nextCountdownSec(koTime, currentTime) ?? 60);
+        setRefreshCountdown(nextCountdownSec(koTime, currentTime, date, today) ?? 60);
         return;
       }
 
@@ -660,13 +655,13 @@ export function RangeEngine() {
           setReanalysisProgress(0);
           setTimeout(() => setReanalysisMessage(null), 1200);
           // Restart 60s countdown
-          setRefreshCountdown(nextCountdownSec(koTime, currentTime) ?? 60);
+          setRefreshCountdown(nextCountdownSec(koTime, currentTime, date, today) ?? 60);
         }, 800);
       }
     }
 
     if (refreshCountdown === 0) {
-      const delaySec = nextCountdownSec(koTime, currentTime);
+      const delaySec = nextCountdownSec(koTime, currentTime, date, today);
       if (delaySec === null) {
         setRefreshCountdown(60); // IDLE/FINAL: keep the display clock alive, spend nothing
       } else {
@@ -838,8 +833,6 @@ export function RangeEngine() {
 
   useEffect(() => {
     if (!history.length || !currentTime) return;
-    const now = currentTime.split(":").map(Number);
-    const nowMinutes = now[0] * 60 + now[1];
     history.forEach((entry) => {
       if (
         !entry.earlyRead ||
@@ -848,9 +841,12 @@ export function RangeEngine() {
       ) {
         return;
       }
-      const [kH, kM] = entry.koTime.split(":").map(Number);
-      const minutesToTipoff = kH * 60 + kM - nowMinutes;
-      if (minutesToTipoff <= 15 && minutesToTipoff >= 0) {
+      // Date-aware against the ENTRY's own fixture date: a tomorrow
+      // 01:00 game at 23:50 today is 70 min out (no revalidation
+      // yet), not -1370 min (which never satisfied this window at
+      // all — and at 00:45 it is 15 min out, which does).
+      const minsToTipoff = minutesToTipoff(entry.koTime, currentTime, entry.date, today);
+      if (minsToTipoff != null && minsToTipoff <= 15 && minsToTipoff >= 0) {
         revalidateEarlyEntry(entry);
       }
     });
@@ -859,9 +855,8 @@ export function RangeEngine() {
   // ── Auto Tip-Off Calculation (KO time − current time) ─────────────────────
   useEffect(() => {
     if (!koTime || !currentTime) return;
-    const [kH, kM] = koTime.split(":").map(Number);
-    const [cH, cM] = currentTime.split(":").map(Number);
-    const diff = kH * 60 + kM - (cH * 60 + cM);
+    const diff = minutesToTipoff(koTime, currentTime, date, today);
+    if (diff == null) return;
     if (diff > 0) {
       const h = Math.floor(diff / 60);
       const m = diff % 60;
@@ -875,7 +870,7 @@ export function RangeEngine() {
     } else {
       setTipOff(`In progress (${Math.abs(diff)} min elapsed)`);
     }
-  }, [koTime, currentTime]);
+  }, [koTime, currentTime, date]);
 
   // ── Auto-Research trigger — fires 1.8s after teams + league are entered ────
   useEffect(() => {
@@ -1057,10 +1052,8 @@ export function RangeEngine() {
         setTimeout(() => {
           setResult(res);
           setPhase("result");
-          const [kH, kM] = koTime.split(":").map(Number);
-          const [cH, cM] = currentTime.split(":").map(Number);
-          const minutesToTipoff = kH * 60 + kM - (cH * 60 + cM);
-          const earlyRead = minutesToTipoff > 45;
+          const minsToTipoff = minutesToTipoff(koTime, currentTime, date, today);
+          const earlyRead = minsToTipoff != null && minsToTipoff > 45;
           const entry: HistoryEntry = {
             id: Date.now().toString(),
             timestamp: new Date().toLocaleString("en-GB"),
