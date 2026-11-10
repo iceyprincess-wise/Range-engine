@@ -74,8 +74,12 @@ router.get("/v1/games/tournaments", async (req: Request, res: Response) => {
     const payload = { date: seg, updatedAt: new Date().toISOString(), count: tours.length, tournaments: tours, partial: pagesFailed > 0, pagesFailed };
     // A partial list is reported as partial and is NOT cached: caching
     // it used to overwrite the last complete list with an incomplete
-    // one presented as fresh.
-    if (tours.length > 0 && pagesFailed === 0) { disk.tournaments = payload; saveDisk(); }
+    // one presented as fresh. A COMPLETE list IS cached even when it
+    // is empty: a genuine 0-tournament day is the provider's real
+    // answer (the schedule route already caches a genuine 0-game day
+    // for the same reason), and leaving it uncached made every app
+    // entry re-fire the 6-page force. D-2026-11-10-08.
+    if (pagesFailed === 0) { disk.tournaments = payload; saveDisk(); }
     return res.json({ ...payload, stale: false, fromDisk: false, quotaSpent: before != null && quota.remaining != null ? before - quota.remaining : null });
   } catch (error) {
     return res.status(502).json({ error: error instanceof Error ? error.message : "update failed" });

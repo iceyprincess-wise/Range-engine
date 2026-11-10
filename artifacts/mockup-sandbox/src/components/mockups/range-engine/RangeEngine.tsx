@@ -436,11 +436,14 @@ export function RangeEngine() {
               if (t2) {
                 setGTours(t2.tournaments || []);
                 setGMeta(t2);
-                // Only bank the flag on a REAL populated list: a
-                // partial or empty force did not refill the server
-                // disk (games.ts only caches a complete non-empty
-                // list), so the next entry must be free to try again.
-                if (Array.isArray(t2.tournaments) && t2.tournaments.length > 0 && t2.partial !== true) {
+                // Bank the flag on any COMPLETE non-partial force,
+                // populated or empty: a complete force has now
+                // refilled the server disk (games.ts caches a
+                // complete list even when it is empty), so the next
+                // entry must not re-fire the 6-page force. Only a
+                // partial force leaves the flag unbanked, so the next
+                // entry may try again. D-2026-11-10-08.
+                if (Array.isArray(t2.tournaments) && t2.partial !== true) {
                   try { localStorage.setItem(forceKey, "1"); } catch { /* best-effort */ }
                 }
               }
