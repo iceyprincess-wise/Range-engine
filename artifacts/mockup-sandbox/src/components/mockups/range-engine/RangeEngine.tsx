@@ -371,7 +371,9 @@ export function RangeEngine() {
   //   2. ONE conditional update — only when that free payload is
   //      stale (a previous day's list) or empty (wiped/fresh server),
   //      quota remains, and this browser has not already auto-updated
-  //      today (localStorage day flag), it performs the same ?force=1
+  //      for THIS server payload (localStorage flag keyed by date +
+  //      the payload's updatedAt — D-2026-11-10-04), it performs the
+  //      same ?force=1
   //      update the ⟳ tap performs. After one success the disk
   //      payload is fresh for today, so later entries the same day
   //      spend nothing; quota-exhausted (remaining <= 0) never forces.
@@ -385,13 +387,27 @@ export function RangeEngine() {
     void (async () => {
       setRefreshing(true);
       try {
+        // D-2026-11-10-06: every entry fetch gets a 20 s timeout.
+        // Render's free tier takes ~60 s to wake, and a fetch with
+        // no timeout hangs the whole auto-load on attempt 1, so the
+        // 4 s / 8 s retry backoff below never runs. An aborted
+        // attempt returns null and the loop retries; once Render is
+        // awake a later attempt lands the data.
+        const fetchJson = async (url: string, ms = 20000): Promise<any> => {
+          const ctrl = new AbortController();
+          const timer = setTimeout(() => ctrl.abort(), ms);
+          try {
+            const r = await fetch(url, { signal: ctrl.signal });
+            return r.ok ? await r.json() : null;
+          } catch { return null; } finally { clearTimeout(timer); }
+        };
         let tours: any = null;
         let remaining: number | null = null;
         for (let attempt = 0; attempt < 3 && !tours; attempt++) {
           try {
             const [t, q] = await Promise.all([
-              fetch(`${API_BASE}/api/v1/games/tournaments?date=${today}`).then((r) => (r.ok ? r.json() : null)),
-              fetch(`${API_BASE}/api/v1/quota`).then((r) => (r.ok ? r.json() : null)),
+              fetchJson(`${API_BASE}/api/v1/games/tournaments?date=${today}`),
+              fetchJson(`${API_BASE}/api/v1/quota`),
             ]);
             if (q) { remaining = (q as any).remaining ?? null; setQuotaInfo({ limit: (q as any).limit ?? null, remaining, resetAt: (q as any).resetAt ?? null }); }
             if (t) tours = t;
@@ -402,16 +418,31 @@ export function RangeEngine() {
           setGTours(tours.tournaments || []);
           setGMeta(tours);
           const needsUpdate = tours.stale === true || !Array.isArray(tours.tournaments) || tours.tournaments.length === 0;
-          const forceKey = `rangengine_autoload_v1:${today}`;
+          // D-2026-11-10-04: key the once-a-day flag by the server
+          // payload's updatedAt as well as the date. The old
+          // date-only key stayed set after a successful force, so
+          // when Render later wiped its disk (free tier) and the
+          // free load came back empty with updatedAt null, the
+          // browser refused to force again all day — tournaments
+          // stayed empty with quota to spare (proven live
+          // 2026-11-10 17:28 WAT: count 0, stale true,
+          // updatedAt null, quota 47/50).
+          const forceKey = `rangengine_autoload_v1:${today}:${tours.updatedAt ?? "none"}`;
           let alreadyForced = false;
           try { alreadyForced = localStorage.getItem(forceKey) === "1"; } catch { /* storage unavailable — server freshness still gates repeats */ }
           if (needsUpdate && !alreadyForced && !(remaining !== null && remaining <= 0)) {
             try {
-              const t2 = await fetch(`${API_BASE}/api/v1/games/tournaments?force=1&date=${today}`).then((r) => (r.ok ? r.json() : null));
+              const t2 = await fetchJson(`${API_BASE}/api/v1/games/tournaments?force=1&date=${today}`);
               if (t2) {
                 setGTours(t2.tournaments || []);
                 setGMeta(t2);
-                try { localStorage.setItem(forceKey, "1"); } catch { /* best-effort */ }
+                // Only bank the flag on a REAL populated list: a
+                // partial or empty force did not refill the server
+                // disk (games.ts only caches a complete non-empty
+                // list), so the next entry must be free to try again.
+                if (Array.isArray(t2.tournaments) && t2.tournaments.length > 0 && t2.partial !== true) {
+                  try { localStorage.setItem(forceKey, "1"); } catch { /* best-effort */ }
+                }
               }
             } catch { /* best-effort — the free payload above still stands */ }
           }
@@ -1194,7 +1225,9 @@ export function RangeEngine() {
           <p className="text-[10px] text-zinc-500 mb-3">API quota: {quotaInfo.remaining ?? "—"}/{quotaInfo.limit ?? "—"} remaining · {gMeta?.fromDisk === false ? "fresh UPDATE" : "showing last saved update"}{typeof gMeta?.quotaSpent === "number" ? ` — cost ${gMeta.quotaSpent} calls` : ""}{quotaResetLabel ? ` · ${quotaResetLabel}` : ""}</p>
           {!gSel ? (
             <div className="space-y-1.5">
-              {gTours.length === 0 && <p className="text-zinc-500 text-xs">No tournaments loaded — daily API quota exhausted or nothing scheduled yet. Quota resets in the afternoon.</p>}
+              {gTours.length === 0 && refreshing && <p className="text-zinc-500 text-xs">Loading today's tournaments…</p>}
+              {gTours.length === 0 && !refreshing && quotaInfo.remaining !== null && quotaInfo.remaining <= 0 && <p className="text-zinc-500 text-xs">No tournaments loaded — daily API quota is exhausted{quotaResetLabel ? ` (${quotaResetLabel})` : ""}.</p>}
+              {gTours.length === 0 && !refreshing && (quotaInfo.remaining === null || quotaInfo.remaining > 0) && <p className="text-zinc-500 text-xs">No tournaments loaded yet — tap ⬆ UPDATE above to fetch today's list (spends quota).</p>}
               {gTours.map((t) => (
                 <Button key={t.id} onClick={() => openTournament(t)} className="w-full text-left bg-zinc-900 border border-yellow-950 rounded-lg px-3 py-2 hover:border-yellow-700 transition h-auto min-h-0 justify-start">
                   <span className="text-xs text-zinc-200 font-bold">{t.name}</span>
