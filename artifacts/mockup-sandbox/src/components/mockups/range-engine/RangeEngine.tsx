@@ -31,7 +31,7 @@ import {
   generateLineOptions, parseNumber,
   formatDataValue, formatPercentValue, safeStringArray,
   getLeagueDNA, lookupTeam, autoCorrectTeamName,
-  loadHistory, loadAnalysisArchive, saveHistory,
+  loadHistory, loadAnalysisArchive, saveHistory, isSettleAttemptDue, recordSettleAttempt,
   saveTournamentsBank, loadTournamentsBank,
   runEngine, fetchResearchDataCached,
 } from "./engine/core";
@@ -822,7 +822,10 @@ export function RangeEngine() {
   // kickoff + 3h has passed (a full game plus overtime buffer);
   // without a usable kickoff time, only a fixture dated before
   // today can be finished. Each receipt is attempted at most
-  // once per page load.
+  // once per page load, and a failed attempt is not retried for
+  // 24h (persisted in localStorage — D-2026-11-11-13): the
+  // in-memory set alone reset on every reload, so an unbanked
+  // receipt was re-probed on every load.
   useEffect(() => {
     if (tab !== "history") return;
     history
@@ -833,7 +836,8 @@ export function RangeEngine() {
         return !!h.date && h.date < today;
       })
       .filter((h) => !settleAttemptedRef.current.has(h.id))
-      .forEach((h) => { settleAttemptedRef.current.add(h.id); settleAndGrade(h); });
+      .filter((h) => isSettleAttemptDue(h.id))
+      .forEach((h) => { settleAttemptedRef.current.add(h.id); recordSettleAttempt(h.id); settleAndGrade(h); });
   }, [tab]);
   const revalidateEarlyEntry = async (entry: HistoryEntry) => {
     try {

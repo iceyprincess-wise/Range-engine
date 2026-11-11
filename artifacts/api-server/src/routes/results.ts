@@ -11,6 +11,18 @@ const norm = (s: string) => s.trim().toLowerCase();
 // so do not re-probe it on every request for 5 minutes.
 let settleCooldownUntil = 0;
 
+// Per-fixture settle-fetch cooldown (D-2026-11-11-13): the global
+// 5-minute cooldown above only fires on 429/403, so a fixture whose
+// game is simply not banked yet was re-fetched on every /v1/result
+// call — up to 2 provider calls per Archive open, per page load,
+// forever. A completed fetch that finds nothing cools that one
+// fixture for 24h. In-memory only: a server restart clears it, and
+// the client's persisted 24h attempt backoff covers that case.
+const settleFetchCooldown = new Map<string, number>();
+const SETTLE_FETCH_COOLDOWN_MS = 24 * 3600 * 1000;
+const fixtureSettleKey = (home: string, away: string, date?: string, koTime?: string) =>
+  [home, away, date ?? "", koTime ?? ""].join("|");
+
 const apiFetch = async (p: string): Promise<any> => {
   const response = await fetch("https" + "://" + RAPIDAPI_HOST + p, {
     headers: { "x-rapidapi-key": RAPIDAPI_KEY ?? "", "x-rapidapi-host": RAPIDAPI_HOST },
@@ -88,7 +100,10 @@ router.get("/v1/result", async (req: Request, res: Response) => {
   // stored copy cannot settle the receipt, and without the
   // fetch the scored copy is never banked (D-2026-11-11-08).
   const needsSettleFetch = !g || g.homeScore?.current == null || g.awayScore?.current == null;
-  if (needsSettleFetch && RAPIDAPI_KEY && quotaAllowsSettle && Date.now() > settleCooldownUntil) {
+  const settleKey = fixtureSettleKey(h, a, date, koTime);
+  const settleCooledDown = (settleFetchCooldown.get(settleKey) ?? 0) > Date.now();
+  if (needsSettleFetch && RAPIDAPI_KEY && quotaAllowsSettle && !settleCooledDown && Date.now() > settleCooldownUntil) {
+    let fetchCompleted = false;
     try {
       let team = store.teams[h];
       if (!team) {
@@ -105,9 +120,23 @@ router.get("/v1/result", async (req: Request, res: Response) => {
         persist();
         g = findStored(h, a, date, koTime);
       }
+      fetchCompleted = true;
     } catch (err) {
       if (/BasketAPI (429|403)/.test(err instanceof Error ? err.message : "")) settleCooldownUntil = Date.now() + 5 * 60 * 1000;
       /* stays unsettled — honest response below */
+    }
+    // A completed fetch that still leaves the game unbanked or
+    // unscored cools this fixture down for 24h: without it every
+    // /v1/result call re-spent up to 2 provider calls on the same
+    // unbankable fixture (D-2026-11-11-13). The warehouse lookup
+    // above still runs on every call, so a game banked by another
+    // path settles immediately.
+    if (fetchCompleted && (!g || g.homeScore?.current == null || g.awayScore?.current == null)) {
+      settleFetchCooldown.set(settleKey, Date.now() + SETTLE_FETCH_COOLDOWN_MS);
+      if (settleFetchCooldown.size > 200) {
+        const now = Date.now();
+        for (const [k, v] of settleFetchCooldown) if (v <= now) settleFetchCooldown.delete(k);
+      }
     }
   }
 

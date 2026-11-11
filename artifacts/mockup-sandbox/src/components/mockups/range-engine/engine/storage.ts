@@ -159,3 +159,36 @@ if (typeof window !== "undefined" && window.location.hash === "#export-archive")
   if (document.readyState === "complete") addBtn();
   else window.addEventListener("load", addBtn);
 }
+
+// ─── Settle-attempt memory (D-2026-11-11-13) ─────────────────────────
+// The Archive auto-settle used to re-probe every due-but-unbanked
+// receipt on EVERY page load + Archive open: the in-memory attempted
+// set resets on reload, and the server kept no per-fixture failure
+// memory, so one unbanked receipt cost up to 2 provider calls per
+// load, forever. Persist the last attempt per receipt id: a failed
+// attempt is not retried for 24h. A game banked by another path in
+// the meantime still settles on the next attempt after the window.
+export const SETTLE_ATTEMPTS_KEY = "rangengine_v3_settle_attempts_v1";
+export const SETTLE_RETRY_MS = 24 * 3600 * 1000;
+export function loadSettleAttempts(): Record<string, number> {
+  try {
+    const parsed = JSON.parse(localStorage.getItem(SETTLE_ATTEMPTS_KEY) ?? "{}");
+    if (!parsed || typeof parsed !== "object") return {};
+    return parsed as Record<string, number>;
+  } catch { return {}; }
+}
+export function isSettleAttemptDue(id: string, nowMs: number = Date.now()): boolean {
+  try {
+    const last = loadSettleAttempts()[id];
+    return typeof last !== "number" || nowMs - last >= SETTLE_RETRY_MS;
+  } catch { return true; }
+}
+export function recordSettleAttempt(id: string, nowMs: number = Date.now()): void {
+  try {
+    const attempts = loadSettleAttempts();
+    // Prune stale entries so the map cannot grow past the history cap.
+    for (const [k, v] of Object.entries(attempts)) if (typeof v !== "number" || nowMs - v >= SETTLE_RETRY_MS) delete attempts[k];
+    attempts[id] = nowMs;
+    localStorage.setItem(SETTLE_ATTEMPTS_KEY, JSON.stringify(attempts));
+  } catch { /* best-effort: the in-memory attempted set still bounds this load */ }
+}
