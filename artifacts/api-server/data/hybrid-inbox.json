@@ -190937,6 +190937,951 @@
         "name": "Mortgage Matchup Center"
       },
       "source": "espn-freefeed"
+    },
+    {
+      "id": 401909945,
+      "startTimestamp": 1794169800,
+      "status": {
+        "code": 100,
+        "description": "Ended",
+        "type": "finished"
+      },
+      "homeTeam": {
+        "id": 3409,
+        "name": "Chicago Bulls",
+        "gender": "M"
+      },
+      "awayTeam": {
+        "id": 3420,
+        "name": "Philadelphia 76ers",
+        "gender": "M"
+      },
+      "homeScore": {
+        "current": 121,
+        "display": 121,
+        "period1": 33,
+        "period2": 28,
+        "period3": 32,
+        "period4": 28
+      },
+      "awayScore": {
+        "current": 127,
+        "display": 127,
+        "period1": 34,
+        "period2": 34,
+        "period3": 31,
+        "period4": 28
+      },
+      "tournament": {
+        "name": "NBA",
+        "category": {
+          "name": "USA"
+        }
+      },
+      "venue": {
+        "name": "United Center"
+      },
+      "source": "espn-freefeed"
+    },
+    {
+      "id": 401909946,
+      "startTimestamp": 1794178800,
+      "status": {
+        "code": 100,
+        "description": "Ended",
+        "type": "finished"
+      },
+      "homeTeam": {
+        "id": 3424,
+        "name": "Detroit Pistons",
+        "gender": "M"
+      },
+      "awayTeam": {
+        "id": 3427,
+        "name": "Los Angeles Lakers",
+        "gender": "M"
+      },
+      "homeScore": {
+        "current": 116,
+        "display": 116,
+        "period1": 14,
+        "period2": 34,
+        "period3": 33,
+        "period4": 35
+      },
+      "awayScore": {
+        "current": 121,
+        "display": 121,
+        "period1": 38,
+        "period2": 23,
+        "period3": 27,
+        "period4": 33
+      },
+      "tournament": {
+        "name": "NBA",
+        "category": {
+          "name": "USA"
+        }
+      },
+      "venue": {
+        "name": "Little Caesars Arena"
+      },
+      "source": "espn-freefeed"
+    },
+    {
+      "id": 401909947,
+      "startTimestamp": 1794182400,
+      "status": {
+        "code": 100,
+        "description": "Ended",
+        "type": "finished"
+      },
+      "homeTeam": {
+        "id": 3426,
+        "name": "Minnesota Timberwolves",
+        "gender": "M"
+      },
+      "awayTeam": {
+        "id": 3434,
+        "name": "Utah Jazz",
+        "gender": "M"
+      },
+      "homeScore": {
+        "current": 115,
+        "display": 115,
+        "period1": 28,
+        "period2": 29,
+        "period3": 33,
+        "period4": 25
+      },
+      "awayScore": {
+        "current": 100,
+        "display": 100,
+        "period1": 25,
+        "period2": 26,
+        "period3": 27,
+        "period4": 22
+      },
+      "tournament": {
+        "name": "NBA",
+        "category": {
+          "name": "USA"
+        }
+      },
+      "venue": {
+        "name": "Target Center"
+      },
+      "source": "espn-freefeed"
+    },
+    {
+      "id": 401909948,
+      "startTimestamp": 1794184200,
+      "status": {
+        "code": 100,
+        "description": "Ended",
+        "type": "finished"
+      },
+      "homeTeam": {
+        "id": 3411,
+        "name": "Dallas Mavericks",
+        "gender": "M"
+      },
+      "awayTeam": {
+        "id": 3436,
+        "name": "Brooklyn Nets",
+        "gender": "M"
+      },
+      "homeScore": {
+        "current": 130,
+        "display": 130,
+        "period1": 33,
+        "period2": 33,
+        "period3": 34,
+        "period4": 30
+      },
+      "awayScore": {
+        "current": 93,
+        "display": 93,
+        "period1": 26,
+        "period2": 20,
+        "period3": 25,
+        "period4": 22
+      },
+      "tournament": {
+        "name": "NBA",
+        "category": {
+          "name": "USA"
+        }
+      },
+      "venue": {
+        "name": "American Airlines Center"
+      },
+      "source": "espn-freefeed"
+    },
+    {
+      "id": 401909949,
+      "startTimestamp": 1794186000,
+      "status": {
+        "code": 100,
+        "description": "Ended",
+        "type": "finished"
+      },
+      "homeTeam": {
+        "id": 3410,
+        "name": "Milwaukee Bucks",
+        "gender": "M"
+      },
+      "awayTeam": {
+        "id": 3422,
+        "name": "Boston Celtics",
+        "gender": "M"
+      },
+      "homeScore": {
+        "current": 97,
+        "display": 97,
+        "period1": 27,
+        "period2": 18,
+        "period3": 29,
+        "period4": 23
+      },
+      "awayScore": {
+        "current": 117,
+        "display": 117,
+        "period1": 25,
+        "period2": 33,
+        "period3": 33,
+        "period4": 26
+      },
+      "tournament": {
+        "name": "NBA",
+        "category": {
+          "name": "USA"
+        }
+      },
+      "venue": {
+        "name": "Fiserv Forum"
+      },
+      "source": "espn-freefeed"
+    },
+    {
+      "id": 401909950,
+      "startTimestamp": 1794189600,
+      "status": {
+        "code": 100,
+        "description": "Ended",
+        "type": "finished"
+      },
+      "homeTeam": {
+        "id": 3425,
+        "name": "Los Angeles Clippers",
+        "gender": "M"
+      },
+      "awayTeam": {
+        "id": 5539,
+        "name": "New Orleans Pelicans",
+        "gender": "M"
+      },
+      "homeScore": {
+        "current": 139,
+        "display": 139,
+        "period1": 28,
+        "period2": 39,
+        "period3": 35,
+        "period4": 37
+      },
+      "awayScore": {
+        "current": 123,
+        "display": 123,
+        "period1": 28,
+        "period2": 32,
+        "period3": 35,
+        "period4": 28
+      },
+      "tournament": {
+        "name": "NBA",
+        "category": {
+          "name": "USA"
+        }
+      },
+      "venue": {
+        "name": "Intuit Dome"
+      },
+      "source": "espn-freefeed"
+    },
+    {
+      "id": 401909951,
+      "startTimestamp": 1794189600,
+      "status": {
+        "code": 100,
+        "description": "Ended",
+        "type": "finished"
+      },
+      "homeTeam": {
+        "id": 3413,
+        "name": "Sacramento Kings",
+        "gender": "M"
+      },
+      "awayTeam": {
+        "id": 3435,
+        "name": "Miami Heat",
+        "gender": "M"
+      },
+      "homeScore": {
+        "current": 108,
+        "display": 108,
+        "period1": 30,
+        "period2": 29,
+        "period3": 22,
+        "period4": 27
+      },
+      "awayScore": {
+        "current": 114,
+        "display": 114,
+        "period1": 34,
+        "period2": 34,
+        "period3": 23,
+        "period4": 23
+      },
+      "tournament": {
+        "name": "NBA",
+        "category": {
+          "name": "USA"
+        }
+      },
+      "venue": {
+        "name": "Golden 1 Center"
+      },
+      "source": "espn-freefeed"
+    },
+    {
+      "id": 401909952,
+      "startTimestamp": 1794268800,
+      "status": {
+        "code": 100,
+        "description": "Ended",
+        "type": "finished"
+      },
+      "homeTeam": {
+        "id": 3423,
+        "name": "Atlanta Hawks",
+        "gender": "M"
+      },
+      "awayTeam": {
+        "id": 3427,
+        "name": "Los Angeles Lakers",
+        "gender": "M"
+      },
+      "homeScore": {
+        "current": 114,
+        "display": 114,
+        "period1": 22,
+        "period2": 35,
+        "period3": 33,
+        "period4": 24
+      },
+      "awayScore": {
+        "current": 124,
+        "display": 124,
+        "period1": 31,
+        "period2": 37,
+        "period3": 27,
+        "period4": 29
+      },
+      "tournament": {
+        "name": "NBA",
+        "category": {
+          "name": "USA"
+        }
+      },
+      "venue": {
+        "name": "State Farm Arena"
+      },
+      "source": "espn-freefeed"
+    },
+    {
+      "id": 401909953,
+      "startTimestamp": 1794268800,
+      "status": {
+        "code": 100,
+        "description": "Ended",
+        "type": "finished"
+      },
+      "homeTeam": {
+        "id": 3430,
+        "name": "Charlotte Hornets",
+        "gender": "M"
+      },
+      "awayTeam": {
+        "id": 3432,
+        "name": "Cleveland Cavaliers",
+        "gender": "M"
+      },
+      "homeScore": {
+        "current": 124,
+        "display": 124,
+        "period1": 29,
+        "period2": 40,
+        "period3": 38,
+        "period4": 17
+      },
+      "awayScore": {
+        "current": 112,
+        "display": 112,
+        "period1": 28,
+        "period2": 25,
+        "period3": 27,
+        "period4": 32
+      },
+      "tournament": {
+        "name": "NBA",
+        "category": {
+          "name": "USA"
+        }
+      },
+      "venue": {
+        "name": "Spectrum Center"
+      },
+      "source": "espn-freefeed"
+    },
+    {
+      "id": 401909954,
+      "startTimestamp": 1794268800,
+      "status": {
+        "code": 100,
+        "description": "Ended",
+        "type": "finished"
+      },
+      "homeTeam": {
+        "id": 3424,
+        "name": "Detroit Pistons",
+        "gender": "M"
+      },
+      "awayTeam": {
+        "id": 3431,
+        "name": "Washington Wizards",
+        "gender": "M"
+      },
+      "homeScore": {
+        "current": 122,
+        "display": 122,
+        "period1": 31,
+        "period2": 37,
+        "period3": 35,
+        "period4": 19
+      },
+      "awayScore": {
+        "current": 111,
+        "display": 111,
+        "period1": 32,
+        "period2": 26,
+        "period3": 29,
+        "period4": 24
+      },
+      "tournament": {
+        "name": "NBA",
+        "category": {
+          "name": "USA"
+        }
+      },
+      "venue": {
+        "name": "Little Caesars Arena"
+      },
+      "source": "espn-freefeed"
+    },
+    {
+      "id": 401909955,
+      "startTimestamp": 1794270600,
+      "status": {
+        "code": 100,
+        "description": "Ended",
+        "type": "finished"
+      },
+      "homeTeam": {
+        "id": 3433,
+        "name": "Toronto Raptors",
+        "gender": "M"
+      },
+      "awayTeam": {
+        "id": 3415,
+        "name": "Memphis Grizzlies",
+        "gender": "M"
+      },
+      "homeScore": {
+        "current": 102,
+        "display": 102,
+        "period1": 26,
+        "period2": 27,
+        "period3": 28,
+        "period4": 21
+      },
+      "awayScore": {
+        "current": 118,
+        "display": 118,
+        "period1": 25,
+        "period2": 34,
+        "period3": 30,
+        "period4": 29
+      },
+      "tournament": {
+        "name": "NBA",
+        "category": {
+          "name": "USA"
+        }
+      },
+      "venue": {
+        "name": "Scotiabank Arena"
+      },
+      "source": "espn-freefeed"
+    },
+    {
+      "id": 401909956,
+      "startTimestamp": 1794272400,
+      "status": {
+        "code": 100,
+        "description": "Ended",
+        "type": "finished"
+      },
+      "homeTeam": {
+        "id": 3411,
+        "name": "Dallas Mavericks",
+        "gender": "M"
+      },
+      "awayTeam": {
+        "id": 3419,
+        "name": "Indiana Pacers",
+        "gender": "M"
+      },
+      "homeScore": {
+        "current": 125,
+        "display": 125,
+        "period1": 26,
+        "period2": 30,
+        "period3": 34,
+        "period4": 35
+      },
+      "awayScore": {
+        "current": 122,
+        "display": 122,
+        "period1": 31,
+        "period2": 35,
+        "period3": 27,
+        "period4": 29
+      },
+      "tournament": {
+        "name": "NBA",
+        "category": {
+          "name": "USA"
+        }
+      },
+      "venue": {
+        "name": "American Airlines Center"
+      },
+      "source": "espn-freefeed"
+    },
+    {
+      "id": 401909957,
+      "startTimestamp": 1794274200,
+      "status": {
+        "code": 100,
+        "description": "Ended",
+        "type": "finished"
+      },
+      "homeTeam": {
+        "id": 3412,
+        "name": "Houston Rockets",
+        "gender": "M"
+      },
+      "awayTeam": {
+        "id": 3417,
+        "name": "Denver Nuggets",
+        "gender": "M"
+      },
+      "homeScore": {
+        "current": 110,
+        "display": 110,
+        "period1": 32,
+        "period2": 22,
+        "period3": 23,
+        "period4": 33
+      },
+      "awayScore": {
+        "current": 100,
+        "display": 100,
+        "period1": 24,
+        "period2": 16,
+        "period3": 28,
+        "period4": 32
+      },
+      "tournament": {
+        "name": "NBA",
+        "category": {
+          "name": "USA"
+        }
+      },
+      "venue": {
+        "name": "Toyota Center (Houston)"
+      },
+      "source": "espn-freefeed"
+    },
+    {
+      "id": 401909958,
+      "startTimestamp": 1794276000,
+      "status": {
+        "code": 100,
+        "description": "Ended",
+        "type": "finished"
+      },
+      "homeTeam": {
+        "id": 3416,
+        "name": "Phoenix Suns",
+        "gender": "M"
+      },
+      "awayTeam": {
+        "id": 3429,
+        "name": "San Antonio Spurs",
+        "gender": "M"
+      },
+      "homeScore": {
+        "current": 96,
+        "display": 96,
+        "period1": 25,
+        "period2": 21,
+        "period3": 22,
+        "period4": 28
+      },
+      "awayScore": {
+        "current": 122,
+        "display": 122,
+        "period1": 31,
+        "period2": 30,
+        "period3": 32,
+        "period4": 29
+      },
+      "tournament": {
+        "name": "NBA",
+        "category": {
+          "name": "USA"
+        }
+      },
+      "venue": {
+        "name": "Mortgage Matchup Center"
+      },
+      "source": "espn-freefeed"
+    },
+    {
+      "id": 401909959,
+      "startTimestamp": 1794279600,
+      "status": {
+        "code": 100,
+        "description": "Ended",
+        "type": "finished"
+      },
+      "homeTeam": {
+        "id": 3428,
+        "name": "Golden State Warriors",
+        "gender": "M"
+      },
+      "awayTeam": {
+        "id": 5539,
+        "name": "New Orleans Pelicans",
+        "gender": "M"
+      },
+      "homeScore": {
+        "current": 138,
+        "display": 138,
+        "period1": 35,
+        "period2": 37,
+        "period3": 40,
+        "period4": 26
+      },
+      "awayScore": {
+        "current": 87,
+        "display": 87,
+        "period1": 20,
+        "period2": 23,
+        "period3": 22,
+        "period4": 22
+      },
+      "tournament": {
+        "name": "NBA",
+        "category": {
+          "name": "USA"
+        }
+      },
+      "venue": {
+        "name": "Chase Center"
+      },
+      "source": "espn-freefeed"
+    },
+    {
+      "id": 401909960,
+      "startTimestamp": 1794357000,
+      "status": {
+        "code": 100,
+        "description": "Ended",
+        "type": "finished"
+      },
+      "homeTeam": {
+        "id": 3421,
+        "name": "New York Knicks",
+        "gender": "M"
+      },
+      "awayTeam": {
+        "id": 3410,
+        "name": "Milwaukee Bucks",
+        "gender": "M"
+      },
+      "homeScore": {
+        "current": 117,
+        "display": 117,
+        "period1": 26,
+        "period2": 32,
+        "period3": 27,
+        "period4": 32
+      },
+      "awayScore": {
+        "current": 85,
+        "display": 85,
+        "period1": 21,
+        "period2": 13,
+        "period3": 38,
+        "period4": 13
+      },
+      "tournament": {
+        "name": "NBA",
+        "category": {
+          "name": "USA"
+        }
+      },
+      "venue": {
+        "name": "Madison Square Garden"
+      },
+      "source": "espn-freefeed"
+    },
+    {
+      "id": 401909961,
+      "startTimestamp": 1794358800,
+      "status": {
+        "code": 100,
+        "description": "Ended",
+        "type": "finished"
+      },
+      "homeTeam": {
+        "id": 3420,
+        "name": "Philadelphia 76ers",
+        "gender": "M"
+      },
+      "awayTeam": {
+        "id": 3422,
+        "name": "Boston Celtics",
+        "gender": "M"
+      },
+      "homeScore": {
+        "current": 101,
+        "display": 101,
+        "period1": 23,
+        "period2": 28,
+        "period3": 31,
+        "period4": 19
+      },
+      "awayScore": {
+        "current": 123,
+        "display": 123,
+        "period1": 30,
+        "period2": 32,
+        "period3": 29,
+        "period4": 32
+      },
+      "tournament": {
+        "name": "NBA",
+        "category": {
+          "name": "USA"
+        }
+      },
+      "venue": {
+        "name": "Xfinity Mobile Arena"
+      },
+      "source": "espn-freefeed"
+    },
+    {
+      "id": 401909962,
+      "startTimestamp": 1794362400,
+      "status": {
+        "code": 100,
+        "description": "Ended",
+        "type": "finished"
+      },
+      "homeTeam": {
+        "id": 3416,
+        "name": "Phoenix Suns",
+        "gender": "M"
+      },
+      "awayTeam": {
+        "id": 3425,
+        "name": "Los Angeles Clippers",
+        "gender": "M"
+      },
+      "homeScore": {
+        "current": 133,
+        "display": 133,
+        "period1": 29,
+        "period2": 35,
+        "period3": 35,
+        "period4": 34
+      },
+      "awayScore": {
+        "current": 110,
+        "display": 110,
+        "period1": 18,
+        "period2": 29,
+        "period3": 25,
+        "period4": 38
+      },
+      "tournament": {
+        "name": "NBA",
+        "category": {
+          "name": "USA"
+        }
+      },
+      "venue": {
+        "name": "Mortgage Matchup Center"
+      },
+      "source": "espn-freefeed"
+    },
+    {
+      "id": 401909963,
+      "startTimestamp": 1794362400,
+      "status": {
+        "code": 100,
+        "description": "Ended",
+        "type": "finished"
+      },
+      "homeTeam": {
+        "id": 3434,
+        "name": "Utah Jazz",
+        "gender": "M"
+      },
+      "awayTeam": {
+        "id": 3435,
+        "name": "Miami Heat",
+        "gender": "M"
+      },
+      "homeScore": {
+        "current": 109,
+        "display": 109,
+        "period1": 25,
+        "period2": 29,
+        "period3": 18,
+        "period4": 37
+      },
+      "awayScore": {
+        "current": 115,
+        "display": 115,
+        "period1": 29,
+        "period2": 35,
+        "period3": 28,
+        "period4": 23
+      },
+      "tournament": {
+        "name": "NBA",
+        "category": {
+          "name": "USA"
+        }
+      },
+      "venue": {
+        "name": "Delta Center"
+      },
+      "source": "espn-freefeed"
+    },
+    {
+      "id": 401909964,
+      "startTimestamp": 1794366000,
+      "status": {
+        "code": 100,
+        "description": "Ended",
+        "type": "finished"
+      },
+      "homeTeam": {
+        "id": 3413,
+        "name": "Sacramento Kings",
+        "gender": "M"
+      },
+      "awayTeam": {
+        "id": 3437,
+        "name": "Orlando Magic",
+        "gender": "M"
+      },
+      "homeScore": {
+        "current": 100,
+        "display": 100,
+        "period1": 27,
+        "period2": 25,
+        "period3": 24,
+        "period4": 24
+      },
+      "awayScore": {
+        "current": 107,
+        "display": 107,
+        "period1": 34,
+        "period2": 23,
+        "period3": 27,
+        "period4": 23
+      },
+      "tournament": {
+        "name": "NBA",
+        "category": {
+          "name": "USA"
+        }
+      },
+      "venue": {
+        "name": "Golden 1 Center"
+      },
+      "source": "espn-freefeed"
+    },
+    {
+      "id": 401909965,
+      "startTimestamp": 1794369600,
+      "status": {
+        "code": 100,
+        "description": "Ended",
+        "type": "finished"
+      },
+      "homeTeam": {
+        "id": 3414,
+        "name": "Portland Trail Blazers",
+        "gender": "M"
+      },
+      "awayTeam": {
+        "id": 3418,
+        "name": "Oklahoma City Thunder",
+        "gender": "M"
+      },
+      "homeScore": {
+        "current": 123,
+        "display": 123,
+        "period1": 26,
+        "period2": 33,
+        "period3": 38,
+        "period4": 26
+      },
+      "awayScore": {
+        "current": 103,
+        "display": 103,
+        "period1": 27,
+        "period2": 32,
+        "period3": 21,
+        "period4": 23
+      },
+      "tournament": {
+        "name": "NBA",
+        "category": {
+          "name": "USA"
+        }
+      },
+      "venue": {
+        "name": "Moda Center"
+      },
+      "source": "espn-freefeed"
     }
   ],
   "stats": {
@@ -201071,5 +202016,5 @@
       "name": "Sampaio Correa U15"
     }
   ],
-  "updatedAt": "2026-11-08T19:57:30.562Z"
+  "updatedAt": "2026-11-11T20:12:59.579Z"
 }
