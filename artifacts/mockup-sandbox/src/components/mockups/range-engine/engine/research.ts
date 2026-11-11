@@ -217,7 +217,7 @@ export async function fetchResearchData(
     // last banked actual starters from ESPN). Fills the lineup
     // payload fields that until now no producer ever set.
     try {
-      const linRes = await fetch(`${API_BASE}/api/v1/freefeed/lineups?home=${encodeURIComponent(homeTeam)}&away=${encodeURIComponent(awayTeam)}&league=${injuryLeague}`);
+      const linRes = await fetch(`${API_BASE}/api/v1/freefeed/lineups?home=${encodeURIComponent(homeTeam)}&away=${encodeURIComponent(awayTeam)}&league=${injuryLeague}${fixtureDate ? `&date=${fixtureDate}` : ""}`);
       if (linRes.ok) {
         const linData = await linRes.json();
         if ((Array.isArray(linData?.homeLineup) && linData.homeLineup.length) || (Array.isArray(linData?.awayLineup) && linData.awayLineup.length)) {

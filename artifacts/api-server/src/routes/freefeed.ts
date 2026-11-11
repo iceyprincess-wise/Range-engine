@@ -30,6 +30,22 @@ const NAME_ALIASES: Record<string, string> = {
   "la clippers": "los angeles clippers",
 };
 
+// ESPN short names vs warehouse names, shared by every consumer
+// of an ESPN team name — not just game banking. Injuries and
+// starters both compare ESPN display names against warehouse
+// names, so an unaliased "LA Clippers" silently dropped 5 OUT
+// injuries AND the Clippers' banked starters (D-2026-11-11-01).
+// aliasedName maps through the table; canonicalTeamName
+// additionally returns the warehouse's own casing (title-cased
+// alias when the team is not banked yet), so the client's
+// exact-match linesFor sees the canonical name.
+const aliasedName = (s: string): string => NAME_ALIASES[normName(s)] ?? normName(s);
+const canonicalTeamName = (raw: string, ids: Map<string, { id: number; name: string }>): string => {
+  const alias = NAME_ALIASES[normName(raw)];
+  if (!alias) return raw;
+  return ids.get(alias)?.name ?? alias.replace(/\b\w/g, (c) => c.toUpperCase());
+};
+
 const teamIdByName = (): Map<string, { id: number; name: string }> => {
   const m = new Map<string, { id: number; name: string }>();
   for (const t of Object.values(store.teams) as any[]) {
@@ -188,7 +204,10 @@ const parseEspnStarters = (summary: any, homeName: string, awayName: string): { 
   const entries: any[] = summary?.boxscore?.players ?? [];
   const out: { home: { pos: string; name: string }[]; away: { pos: string; name: string }[] } = { home: [], away: [] };
   for (const entry of entries) {
-    const teamName = normName(String(entry?.team?.displayName ?? ""));
+    // ESPN boxscore teams use the same short names as the injuries
+    // feed ("LA Clippers"), so match through the alias table or the
+    // Clippers' starters never align to the stored game.
+    const teamName = aliasedName(String(entry?.team?.displayName ?? ""));
     const side = teamName === normName(homeName) ? "home" : teamName === normName(awayName) ? "away" : null;
     if (!side) continue;
     const athletes: any[] = entry?.statistics?.[0]?.athletes ?? [];
@@ -294,9 +313,14 @@ router.get("/v1/freefeed/injuries", async (req: Request, res: Response) => {
     return res.json({ ...cached.data, cached: true });
   try {
     const data = await espnFetch(`${ESPN}/${lg.path}/injuries`);
+    const ids = teamIdByName();
     const out: any[] = [];
     for (const entry of data?.injuries ?? []) {
-      const team = entry?.displayName ?? entry?.team?.displayName ?? "?";
+      // Normalise through the alias table: ESPN lists "LA Clippers"
+      // while the warehouse (and the client's exact-match linesFor)
+      // uses "Los Angeles Clippers" — without this the team's rows
+      // never match and its injuries are silently dropped.
+      const team = canonicalTeamName(entry?.displayName ?? entry?.team?.displayName ?? "?", ids);
       const list = Array.isArray(entry?.injuries) ? entry.injuries : entry?.athlete ? [entry] : [];
       for (const inj of list) {
         out.push({
@@ -507,14 +531,24 @@ const fetchRotoLineups = async (): Promise<any[]> => {
   return games;
 };
 
-// GET /v1/freefeed/lineups?home=<warehouse name>&away=<name>&league=nba|wnba
+// GET /v1/freefeed/lineups?home=<warehouse name>&away=<name>&league=nba|wnba[&date=YYYY-MM-DD]
+// RotoWire's page is today-only, so a ?date= that is not the
+// server's today skips it and the route returns each team's last
+// banked ACTUAL starters (status "Last game") instead of
+// mislabelling today's Confirmed five as the fixture's lineup.
 router.get("/v1/freefeed/lineups", async (req: Request, res: Response) => {
   const key = String(req.query.league ?? "nba").toLowerCase();
   const lg = LEAGUES[key];
   if (!lg) return res.status(400).json({ error: "league must be nba or wnba" });
   const home = String(req.query.home ?? "");
   const away = String(req.query.away ?? "");
-  if (key === "nba" && home && away) {
+  // Same today convention as the referees route (UTC date); a
+  // malformed ?date= falls back to today rather than erroring, so
+  // existing callers without ?date= are unaffected.
+  const dateParam = String(req.query.date ?? "");
+  const todayStr = new Date().toISOString().slice(0, 10);
+  const fixtureDate = /^\d{4}-\d{2}-\d{2}$/.test(dateParam) ? dateParam : todayStr;
+  if (key === "nba" && home && away && fixtureDate === todayStr) {
     try {
       const games = await fetchRotoLineups();
       const m =

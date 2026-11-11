@@ -183,7 +183,10 @@ export const LiveMatrixHub: React.FC<LiveMatrixHubProps> = ({ history, setHistor
       // previous label claimed an "Authentic Deep Scan", which overstated it.
       let stallNote = `Possession-skew check: home possession ${homePoss}% — within the normal band.`;
       
-      if (homePoss > 65 || homePoss < 35) {
+      if (homePoss >= 75 || homePoss <= 25) {
+         stallRisk = "HIGH";
+         stallNote = "🚨 EXTREME POSSESSION SKEW: Severe offensive lockdown or transition stalling detected.";
+      } else if (homePoss > 65 || homePoss < 35) {
          stallRisk = "MODERATE";
          stallNote = "⚠ EXTREME POSSESSION SKEW: Potential offensive lockdown or severe transition stalling detected.";
       }
