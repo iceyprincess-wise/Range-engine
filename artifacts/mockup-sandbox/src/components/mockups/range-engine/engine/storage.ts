@@ -90,6 +90,48 @@ export function isResearchCacheValid(entry: { ts: number; payload: any } | null)
   return Date.now() - entry.ts < RESEARCH_CACHE_TTL;
 }
 
+// ─── Tournaments Bank ─────────────────────────────────────────────────
+// The tournaments list used to live ONLY in RangeEngine state:
+// re-entering the page after a Render disk wipe got an empty
+// free payload (count 0 / updatedAt null) and the list vanished
+// until someone paid for an UPDATE (D-2026-11-11-06). The
+// banked copy for today survives reloads and server wipes, so
+// re-entry shows the last fresh list with 0 API calls.
+export const TOURNAMENTS_KEY_PREFIX = "rangengine_v3_tournaments_v1:";
+export interface BankedTournaments {
+  date: string;
+  updatedAt: string | null;
+  count: number;
+  tournaments: { id: number; name: string; country: string }[];
+}
+export function saveTournamentsBank(payload: any, day: string) {
+  try {
+    if (!payload || !Array.isArray(payload.tournaments)) return;
+    // Never let a wiped-server empty payload (count 0,
+    // updatedAt null, stale) overwrite a good banked list for
+    // today, and never bank another day's stale list under
+    // today's key.
+    if (payload.stale === true) return;
+    if (payload.updatedAt == null && payload.tournaments.length === 0) return;
+    const banked: BankedTournaments = {
+      date: day,
+      updatedAt: payload.updatedAt ?? null,
+      count: payload.tournaments.length,
+      tournaments: payload.tournaments,
+    };
+    localStorage.setItem(TOURNAMENTS_KEY_PREFIX + day, JSON.stringify(banked));
+  } catch { /* best-effort */ }
+}
+export function loadTournamentsBank(day: string): BankedTournaments | null {
+  try {
+    const raw = localStorage.getItem(TOURNAMENTS_KEY_PREFIX + day);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (!parsed || !Array.isArray(parsed.tournaments)) return null;
+    return parsed as BankedTournaments;
+  } catch { return null; }
+}
+
 // ─── Forensic export (manual, hash-gated) ───
 
 // TEMP forensic export — only activates when the URL ends with #export-archive

@@ -32,6 +32,7 @@ import {
   formatDataValue, formatPercentValue, safeStringArray,
   getLeagueDNA, lookupTeam, autoCorrectTeamName,
   loadHistory, loadAnalysisArchive, saveHistory,
+  saveTournamentsBank, loadTournamentsBank,
   runEngine, fetchResearchDataCached,
 } from "./engine/core";
 import type { EngineOutput, HistoryEntry, ResearchData } from "./engine/core";
@@ -346,10 +347,22 @@ export function RangeEngine() {
         ? `${API_BASE}/api/v1/games/tournaments?date=${today}`
         : `${API_BASE}/api/v1/games/tournaments?force=1&date=${today}`;
       try {
-        const t = await fetch(url).then((r) => (r.ok ? r.json() : { tournaments: [] }));
-        setGTours(t.tournaments || []);
-        setGMeta(t);
-      } catch { setGTours([]); }
+        const t = await fetch(url).then((r) => (r.ok ? r.json() : null));
+        if (t && Array.isArray(t.tournaments)) {
+          setGTours(t.tournaments);
+          setGMeta(t);
+          saveTournamentsBank(t, today);
+        } else {
+          // A failed force must not wipe the list on screen:
+          // keep it, or fall back to the banked list for
+          // today (D-2026-11-11-10).
+          const banked = loadTournamentsBank(today);
+          if (banked && banked.tournaments.length > 0) { setGTours(banked.tournaments); setGMeta(banked); }
+        }
+      } catch {
+        const banked = loadTournamentsBank(today);
+        if (banked && banked.tournaments.length > 0) { setGTours(banked.tournaments); setGMeta(banked); }
+      }
       setGSel(null);
       setGGames([]);
     } finally {
@@ -358,28 +371,22 @@ export function RangeEngine() {
     }
   };
   // ── AUTO-LOAD ON ENTRY: the page arrives updated, no ⟳ tap needed ──
-  // Everything refreshAll does used to run ONLY from the ⟳ button
-  // beside System Status (its sole caller), so on entry the
-  // tournaments list was never loaded at all and a failed one-shot
-  // quota fetch left the header stale until the user tapped ⟳.
-  // This effect runs once on mount:
-  //   1. FREE loads with retry — quota + today's tournaments from the
-  //      server's disk cache (the server guarantees quotaSpent: 0 for
-  //      the no-flag request), up to 3 attempts with backoff, so a
-  //      sleeping Render instance waking up still lands the data
-  //      without a tap.
-  //   2. ONE conditional update — only when that free payload is
-  //      stale (a previous day's list) or empty (wiped/fresh server),
-  //      quota remains, and this browser has not already auto-updated
-  //      for THIS server payload (localStorage flag keyed by date +
-  //      the payload's updatedAt — D-2026-11-10-04), it performs the
-  //      same ?force=1
-  //      update the ⟳ tap performs. After one success the disk
-  //      payload is fresh for today, so later entries the same day
-  //      spend nothing; quota-exhausted (remaining <= 0) never forces.
-  // The research cache is NOT cleared here: clearing it is the manual
-  // ⟳'s explicit force-fresh act, and entry loads must not defeat
-  // the 6h research cache on every visit.
+  // Entry spends ZERO BasketAPI calls. The free loads below (quota
+  // + today's tournaments from the server's disk cache, quotaSpent
+  // 0, up to 3 attempts with backoff so a sleeping Render instance
+  // waking up still lands the data) are the ONLY entry reads. The
+  // ?force=1 that used to run here spent 6 provider calls whenever
+  // the free payload was empty/stale, yet the force feeds nothing
+  // to the warehouse or the engine — it only lists tournament names
+  // for the Games Browser (D-2026-11-11-05). A fresh list is now
+  // fetched only on an explicit UPDATE / Master Refresh tap.
+  // When the server disk was wiped the free payload comes back
+  // empty with updatedAt null; the list then falls back to this
+  // browser's banked copy for today instead of vanishing until
+  // someone pays for an update (D-2026-11-11-06). The research
+  // cache is NOT cleared here: clearing it is the manual ⟳'s
+  // explicit force-fresh act, and entry loads must not defeat the
+  // 6h research cache on every visit.
   const autoLoadRef = useRef(false);
   useEffect(() => {
     if (autoLoadRef.current) return;
@@ -402,52 +409,40 @@ export function RangeEngine() {
           } catch { return null; } finally { clearTimeout(timer); }
         };
         let tours: any = null;
-        let remaining: number | null = null;
         for (let attempt = 0; attempt < 3 && !tours; attempt++) {
           try {
             const [t, q] = await Promise.all([
               fetchJson(`${API_BASE}/api/v1/games/tournaments?date=${today}`),
               fetchJson(`${API_BASE}/api/v1/quota`),
             ]);
-            if (q) { remaining = (q as any).remaining ?? null; setQuotaInfo({ limit: (q as any).limit ?? null, remaining, resetAt: (q as any).resetAt ?? null }); }
+            if (q) { setQuotaInfo({ limit: (q as any).limit ?? null, remaining: (q as any).remaining ?? null, resetAt: (q as any).resetAt ?? null }); }
             if (t) tours = t;
           } catch { /* cold start / network — the loop retries */ }
           if (!tours && attempt < 2) await new Promise((resolve) => setTimeout(resolve, 4000 * (attempt + 1)));
         }
         if (tours) {
-          setGTours(tours.tournaments || []);
-          setGMeta(tours);
-          const needsUpdate = tours.stale === true || !Array.isArray(tours.tournaments) || tours.tournaments.length === 0;
-          // D-2026-11-10-04: key the once-a-day flag by the server
-          // payload's updatedAt as well as the date. The old
-          // date-only key stayed set after a successful force, so
-          // when Render later wiped its disk (free tier) and the
-          // free load came back empty with updatedAt null, the
-          // browser refused to force again all day — tournaments
-          // stayed empty with quota to spare (proven live
-          // 2026-11-10 17:28 WAT: count 0, stale true,
-          // updatedAt null, quota 47/50).
-          const forceKey = `rangengine_autoload_v1:${today}:${tours.updatedAt ?? "none"}`;
-          let alreadyForced = false;
-          try { alreadyForced = localStorage.getItem(forceKey) === "1"; } catch { /* storage unavailable — server freshness still gates repeats */ }
-          if (needsUpdate && !alreadyForced && !(remaining !== null && remaining <= 0)) {
-            try {
-              const t2 = await fetchJson(`${API_BASE}/api/v1/games/tournaments?force=1&date=${today}`);
-              if (t2) {
-                setGTours(t2.tournaments || []);
-                setGMeta(t2);
-                // Bank the flag on any COMPLETE non-partial force,
-                // populated or empty: a complete force has now
-                // refilled the server disk (games.ts caches a
-                // complete list even when it is empty), so the next
-                // entry must not re-fire the 6-page force. Only a
-                // partial force leaves the flag unbanked, so the next
-                // entry may try again. D-2026-11-10-08.
-                if (Array.isArray(t2.tournaments) && t2.partial !== true) {
-                  try { localStorage.setItem(forceKey, "1"); } catch { /* best-effort */ }
-                }
-              }
-            } catch { /* best-effort — the free payload above still stands */ }
+          // No ?force=1 here anymore (D-2026-11-11-05): entry
+          // spends 0 BasketAPI calls. A fresh server payload is
+          // shown and banked; an empty/stale one falls back to
+          // this browser's banked list for today, so the list
+          // survives reloads and server wipes (D-2026-11-11-06).
+          // The old once-a-day flag is gone with the force — its
+          // key (`<today>:none`) could not tell a wiped server
+          // from a fresh one, so after a wipe it blocked the
+          // re-force all day while the list stayed empty.
+          if (Array.isArray(tours.tournaments) && tours.stale === false) {
+            setGTours(tours.tournaments);
+            setGMeta(tours);
+            saveTournamentsBank(tours, today);
+          } else {
+            const banked = loadTournamentsBank(today);
+            if (banked && banked.tournaments.length > 0) {
+              setGTours(banked.tournaments);
+              setGMeta(banked);
+            } else {
+              setGTours(tours.tournaments || []);
+              setGMeta(tours);
+            }
           }
         }
       } finally {
@@ -480,7 +475,7 @@ export function RangeEngine() {
     setRefreshing(true);
     try {
       const t = await fetch(`${API_BASE}/api/v1/games/tournaments?update=1&date=${today}`).then((r) => (r.ok ? r.json() : null));
-      if (t) { setGTours(t.tournaments || []); setGMeta(t); }
+      if (t) { setGTours(t.tournaments || []); setGMeta(t); saveTournamentsBank(t, today); }
       const q = await fetch(`${API_BASE}/api/v1/quota`).then((r) => (r.ok ? r.json() : null));
       if (q) setQuotaInfo({ limit: (q as any).limit ?? null, remaining: (q as any).remaining ?? null, resetAt: (q as any).resetAt ?? null });
     } catch { /* best-effort */ } finally { setRefreshing(false); }
@@ -518,11 +513,20 @@ export function RangeEngine() {
         fetch(`${API_BASE}/api/v1/games/tournaments?date=${today}`).then((r) => (r.ok ? r.json() : { tournaments: [] })),
         fetch(`${API_BASE}/api/v1/quota`).then((r) => (r.ok ? r.json() : {})),
       ]);
-      setGTours(t.tournaments || []);
-      setGMeta(t);
+      if (Array.isArray(t.tournaments) && t.stale === false) {
+        setGTours(t.tournaments);
+        setGMeta(t);
+        saveTournamentsBank(t, today);
+      } else {
+        const banked = loadTournamentsBank(today);
+        if (banked && banked.tournaments.length > 0) { setGTours(banked.tournaments); setGMeta(banked); }
+        else { setGTours(t.tournaments || []); setGMeta(t); }
+      }
       setQuotaInfo({ limit: (q as any).limit ?? null, remaining: (q as any).remaining ?? null, resetAt: (q as any).resetAt ?? null });
     } catch {
-      setGTours([]);
+      const banked = loadTournamentsBank(today);
+      if (banked && banked.tournaments.length > 0) { setGTours(banked.tournaments); setGMeta(banked); }
+      else setGTours([]);
     }
   };
 
@@ -728,12 +732,20 @@ export function RangeEngine() {
   // History
   const [history, setHistory] = useState<HistoryEntry[]>([]);
   const currentEntryId = useRef<string | null>(null);
+  // Receipts already settle-attempted this page load, so a
+  // due-but-unbanked receipt is not re-probed (and re-charged)
+  // every time the Archive tab is re-opened.
+  const settleAttemptedRef = useRef<Set<string>>(new Set());
 
   useEffect(() => {
     setHistory(loadHistory());
   }, []);
 
-  // ── SETTLE & POST-MATCH GRADE — warehouse-settled, zero API cost, never overwrites ──
+  // ── SETTLE & POST-MATCH GRADE — warehouse-first, never overwrites ──
+  // Cost is NOT zero: /v1/result spends up to 2 provider calls
+  // (settle-fetch) for a due fixture whose game is not banked
+  // yet. The auto-settle effect below is what keeps that spend
+  // bounded — it only attempts fixtures that should be finished.
   // ── CONFIRM: reopen a receipt as the full Results page ──
   const confirmEntry = (id: string) => {
     const hist: any = history.find((h) => h.id === id);
@@ -753,7 +765,10 @@ export function RangeEngine() {
   };
   const settleAndGrade = async (entry: HistoryEntry) => {
     try {
-      const r = await fetch(`${API_BASE}/api/v1/result?homeTeam=${encodeURIComponent(entry.homeTeam)}&awayTeam=${encodeURIComponent(entry.awayTeam)}&date=${encodeURIComponent(entry.date)}`).then((x) => (x.ok ? x.json() : null));
+      // koTime pins the settlement to THIS fixture: without it
+      // the server's +-1-day window could answer with a
+      // back-to-back pair's other meeting (D-2026-11-11-08).
+      const r = await fetch(`${API_BASE}/api/v1/result?homeTeam=${encodeURIComponent(entry.homeTeam)}&awayTeam=${encodeURIComponent(entry.awayTeam)}&date=${encodeURIComponent(entry.date)}${entry.koTime ? `&koTime=${encodeURIComponent(entry.koTime)}` : ""}`).then((x) => (x.ok ? x.json() : null));
       if (!r?.settled || r.total == null) return false;
       // Settlement identity, verified client-side too: the returned
       // game must have started within a day of THIS fixture's date.
@@ -781,18 +796,44 @@ export function RangeEngine() {
           ? `Actual ${r.total} landed inside ${res?.lb}–${res?.hb} — the pre-match study captured this game.`
           : `Actual ${r.total} vs range ${res?.lb}–${res?.hb} (mid ${res?.midpoint}) — missed by ${err} pts. Logged for recalibration.`,
       };
-      const updated = history.map((h) => (h.id === entry.id ? ({ ...h, outcome, actualTotal: r.total, ftScore: postMatch.ftScore, postMatch } as any) : h));
-      setHistory(updated);
-      saveHistory(updated);
+      // Functional update: every PENDING receipt settles
+      // concurrently on opening the Archive, and each call
+      // closed over the same stale `history` snapshot — the
+      // last fetch to resolve overwrote the others' outcomes
+      // in state AND in localStorage. Deriving the new list
+      // from the previous state keeps every settlement
+      // (D-2026-11-11-09).
+      setHistory((prev) => {
+        const updated = prev.map((h) => (h.id === entry.id ? ({ ...h, outcome, actualTotal: r.total, ftScore: postMatch.ftScore, postMatch } as any) : h));
+        saveHistory(updated);
+        return updated;
+      });
       void refreshQuota();
       return true;
     } catch { void refreshQuota(); return false; }
   };
 
-  // Auto-settle: opening the Archive tries every PENDING receipt against the warehouse (free)
+  // Auto-settle: opening the Archive tries DUE PENDING receipts
+  // against the warehouse — and ONLY due ones. A fixture that
+  // has not finished cannot be settled: its /v1/result lookup
+  // misses, and the server's settle-fetch then spends up to 2
+  // BasketAPI calls fetching previous matches that can never
+  // contain it, on EVERY Archive open (D-2026-11-11-07). Due =
+  // kickoff + 3h has passed (a full game plus overtime buffer);
+  // without a usable kickoff time, only a fixture dated before
+  // today can be finished. Each receipt is attempted at most
+  // once per page load.
   useEffect(() => {
     if (tab !== "history") return;
-    history.filter((h) => h.outcome === "PENDING").forEach((h) => { settleAndGrade(h); });
+    history
+      .filter((h) => h.outcome === "PENDING")
+      .filter((h) => {
+        const mins = minutesToTipoff(h.koTime, currentTime, h.date, today);
+        if (mins != null) return mins <= -180;
+        return !!h.date && h.date < today;
+      })
+      .filter((h) => !settleAttemptedRef.current.has(h.id))
+      .forEach((h) => { settleAttemptedRef.current.add(h.id); settleAndGrade(h); });
   }, [tab]);
   const revalidateEarlyEntry = async (entry: HistoryEntry) => {
     try {
@@ -1412,7 +1453,7 @@ export function RangeEngine() {
                               )}
                             </div>
                           ) : (
-                            <p className="text-[9px] text-zinc-600">Not settled yet — open the games browser once after full time to bank the result, then revisit this tab.</p>
+                            <p className="text-[9px] text-zinc-600">Not settled yet — settles automatically from the warehouse once the game is finished and banked; reopen this tab after full time. Only finished fixtures settle — a fixture still to play stays pending.</p>
                           )}
                           <Button onClick={() => confirmEntry(entry.id)} className="w-full bg-yellow-700 hover:bg-yellow-600 text-black text-[10px] font-black py-2 rounded-lg uppercase tracking-widest transition h-auto min-h-0 border-0">
                             Confirm → Full Results

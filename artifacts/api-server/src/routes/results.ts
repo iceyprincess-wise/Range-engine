@@ -20,7 +20,7 @@ const apiFetch = async (p: string): Promise<any> => {
   return response.json();
 };
 
-const findStored = (h: string, a: string, date?: string): any => {
+const findStored = (h: string, a: string, date?: string, koTime?: string): any => {
   // SETTLEMENT IDENTITY: a result belongs to ONE fixture. Matching on
   // team names alone returned the pair's most recent scored meeting -
   // an April game "settled" a November fixture minutes before its
@@ -29,6 +29,16 @@ const findStored = (h: string, a: string, date?: string): any => {
   // UTC/local date edges around midnight); exact-date matches are
   // preferred over window-edge ones in the return below.
   const target = date ? Date.parse(date + "T00:00:00Z") : NaN;
+  // Kickoff window: the fixture itself, not its neighbours.
+  // date+koTime parsed as UTC with a +-4h tolerance covers the
+  // WAT/UTC+1 offset and clock skew; a scored meeting 24h away
+  // (yesterday's game of a back-to-back pair, or tomorrow's) is
+  // a DIFFERENT fixture and must never settle this one, so with
+  // koTime there is no +-1-day fallback at all: no window match
+  // means "not banked yet", honestly (D-2026-11-11-08).
+  const koMs = date && koTime && /^\d{2}:\d{2}$/.test(koTime)
+    ? Date.parse(date + "T" + koTime + ":00Z")
+    : NaN;
   const dayOf = (g: any) => (g.startTimestamp ? new Date(g.startTimestamp * 1000).toISOString().slice(0, 10) : null);
   const pool = Object.values(store.games).filter((g: any) => {
     if (!Number.isFinite(target)) return true;
@@ -54,14 +64,19 @@ const findStored = (h: string, a: string, date?: string): any => {
     return byTime(games.filter((g: any) => norm(g.homeTeam?.name ?? "").includes(h) && norm(g.awayTeam?.name ?? "").includes(a)));
   };
   const exactDay = Number.isFinite(target) ? pool.filter((g: any) => dayOf(g) === date) : pool;
+  if (Number.isFinite(koMs)) {
+    const inWindow = (g: any) => g.startTimestamp != null && Math.abs(g.startTimestamp * 1000 - koMs) <= 4 * 3600 * 1000;
+    const windowGames = Object.values(store.games).filter(inWindow);
+    return pick(scored(windowGames)) ?? pick(windowGames);
+  }
   return pick(scored(exactDay)) ?? pick(scored(pool)) ?? pick(exactDay) ?? pick(pool);
 };
 
 router.get("/v1/result", async (req: Request, res: Response) => {
-  const { homeTeam, awayTeam, date } = req.query as Record<string, string>;
+  const { homeTeam, awayTeam, date, koTime } = req.query as Record<string, string>;
   if (!homeTeam || !awayTeam) return res.status(400).json({ error: "homeTeam and awayTeam required" });
   const h = norm(homeTeam), a = norm(awayTeam);
-  let g = findStored(h, a, date);
+  let g = findStored(h, a, date, koTime);
 
   // SETTLE-FETCH: not banked + quota healthy -> bank it now (once, permanent). Never fires on a dead quota.
   // Quota "unknown" (null on a fresh boot, before any upstream call has
@@ -69,7 +84,11 @@ router.get("/v1/result", async (req: Request, res: Response) => {
   // itself reports the real quota in its response headers. A 429/403
   // answer cools further attempts down for 5 minutes instead.
   const quotaAllowsSettle = quota.remaining === null || quota.remaining >= 10;
-  if (!g && RAPIDAPI_KEY && quotaAllowsSettle && Date.now() > settleCooldownUntil) {
+  // Also fires when a match was found but is UNSCORED: the
+  // stored copy cannot settle the receipt, and without the
+  // fetch the scored copy is never banked (D-2026-11-11-08).
+  const needsSettleFetch = !g || g.homeScore?.current == null || g.awayScore?.current == null;
+  if (needsSettleFetch && RAPIDAPI_KEY && quotaAllowsSettle && Date.now() > settleCooldownUntil) {
     try {
       let team = store.teams[h];
       if (!team) {
@@ -84,7 +103,7 @@ router.get("/v1/result", async (req: Request, res: Response) => {
         const prev = await apiFetch("/api/basketball/team/" + team.id + "/matches/previous/0");
         rememberGames(prev?.events || []);
         persist();
-        g = findStored(h, a, date);
+        g = findStored(h, a, date, koTime);
       }
     } catch (err) {
       if (/BasketAPI (429|403)/.test(err instanceof Error ? err.message : "")) settleCooldownUntil = Date.now() + 5 * 60 * 1000;
