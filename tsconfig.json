@@ -4,13 +4,7 @@
   "files": [],
   "references": [
     {
-      "path": "./lib/api-zod"
-    },
-    {
       "path": "./lib/range-engine"
-    },
-    {
-      "path": "./lib/api-spec"
     }
   ]
 }

@@ -28,7 +28,7 @@ import {
 
 
 import {
-  generateLineOptions, parseNumber,
+  generateLineOptions,
   formatDataValue, formatPercentValue, safeStringArray,
   getLeagueDNA, lookupTeam, autoCorrectTeamName,
   loadHistory, loadAnalysisArchive, saveHistory, isSettleAttemptDue, recordSettleAttempt,
@@ -700,8 +700,13 @@ export function RangeEngine() {
 
     if (refreshCountdown === 0) {
       const delaySec = nextCountdownSec(koTime, currentTime, date, today);
-      if (delaySec === null) {
-        setRefreshCountdown(60); // IDLE/FINAL: keep the display clock alive, spend nothing
+      // The final reanalysis force-refreshes research for the
+      // ANALYZER fixture; without a tab guard it also fired while
+      // the user sat on the Archive (or any other tab), re-spending
+      // prematch + sync every 90–600s for data the open tab never
+      // displays (D-2026-11-12-04). Only reanalyse on the analyzer tab.
+      if (delaySec === null || tab !== "analyzer") {
+        setRefreshCountdown(60); // IDLE/FINAL or off-tab: keep the display clock alive, spend nothing
       } else {
         performFinalReanalysis();
       }
@@ -710,7 +715,7 @@ export function RangeEngine() {
     return () => {
       if (progressInterval) clearInterval(progressInterval);
     };
-  }, [refreshCountdown, homeTeam, awayTeam, league, researchData]);
+  }, [refreshCountdown, homeTeam, awayTeam, league, researchData, tab]);
   // Engine state
   const [phase, setPhase] = useState<"idle" | "hunting" | "result">("idle");
   const [huntStep, setHuntStep] = useState(0);
@@ -769,7 +774,12 @@ export function RangeEngine() {
       // the server's +-1-day window could answer with a
       // back-to-back pair's other meeting (D-2026-11-11-08).
       const r = await fetch(`${API_BASE}/api/v1/result?homeTeam=${encodeURIComponent(entry.homeTeam)}&awayTeam=${encodeURIComponent(entry.awayTeam)}&date=${encodeURIComponent(entry.date)}${entry.koTime ? `&koTime=${encodeURIComponent(entry.koTime)}` : ""}`).then((x) => (x.ok ? x.json() : null));
-      if (!r?.settled || r.total == null) return false;
+      // Surface the server's low-quota note to the caller: the
+      // auto-settle effect must NOT record this attempt
+      // (D-2026-11-12-05) — recording it would block the receipt
+      // for 24h even though the quota resets daily (~13:22 WAT)
+      // and the server itself says "retry after reset".
+      if (!r?.settled || r.total == null) return r?.note?.includes("quota too low") ? "low-quota" : false;
       // Settlement identity, verified client-side too: the returned
       // game must have started within a day of THIS fixture's date.
       // Without the date, the warehouse answered with the pair's
@@ -808,9 +818,8 @@ export function RangeEngine() {
         saveHistory(updated);
         return updated;
       });
-      void refreshQuota();
       return true;
-    } catch { void refreshQuota(); return false; }
+    } catch { return false; }
   };
 
   // Auto-settle: opening the Archive tries DUE PENDING receipts
@@ -828,7 +837,7 @@ export function RangeEngine() {
   // receipt was re-probed on every load.
   useEffect(() => {
     if (tab !== "history") return;
-    history
+    const due = history
       .filter((h) => h.outcome === "PENDING")
       .filter((h) => {
         const mins = minutesToTipoff(h.koTime, currentTime, h.date, today);
@@ -836,78 +845,42 @@ export function RangeEngine() {
         return !!h.date && h.date < today;
       })
       .filter((h) => !settleAttemptedRef.current.has(h.id))
-      .filter((h) => isSettleAttemptDue(h.id))
-      .forEach((h) => { settleAttemptedRef.current.add(h.id); recordSettleAttempt(h.id); settleAndGrade(h); });
+      .filter((h) => isSettleAttemptDue(h.id));
+    // Settle concurrently, then refresh quota ONCE for the whole
+    // batch (D-2026-11-12-06): settleAndGrade used to refresh quota
+    // per receipt. An attempt is recorded only after the call, and
+    // never on the server's low-quota answer (D-2026-11-12-05) — the
+    // in-memory set still bounds this load, and the receipt retries
+    // after the reset.
+    void Promise.allSettled(due.map((h) => {
+      settleAttemptedRef.current.add(h.id);
+      return settleAndGrade(h).then((res) => { if (res !== "low-quota") recordSettleAttempt(h.id); });
+    })).then(() => { void refreshQuota(); });
   }, [tab]);
+  // Early-read revalidation used to call /api/v1/sync expecting
+  // closing lines (closing_over / final_over / over_line) and
+  // scratch notices — but the sync payload is a live-score payload
+  // (basket.ts) that never carries any of those fields, so every
+  // call ended on the inconclusive branch; and a pre-tipoff game is
+  // not in /matches/live, so the call 404'd and retried every minute
+  // for the whole 15-minute window (up to ~15 provider calls per
+  // entry, D-2026-11-12-03). No provider endpoint returns closing
+  // lines, so there is nothing to fetch: mark the entry
+  // AWAITING_SYNC once, with the same message the old success path
+  // wrote. If a closing-lines source is ever wired, restore the
+  // fetch here and gate it on that source.
   const revalidateEarlyEntry = async (entry: HistoryEntry) => {
-    try {
-      const params = new URLSearchParams({
-        league: entry.league,
-        homeTeam: entry.homeTeam,
-        awayTeam: entry.awayTeam,
-        final: "true",
-      });
-      if (gameId) params.set("gameId", gameId);
-      if (bookmaker) params.set("bookmaker", bookmaker);
-      const syncUrl = `${API_BASE}/api/v1/sync?${params.toString()}`;
-      const response = await fetch(syncUrl);
-      if (!response.ok) throw new Error(`Revalidation failed: ${response.status}`);
-      const payload = await response.json();
-      void refreshQuota();
-
-      const finalOver = parseNumber(
-        payload.closing_over ?? payload.final_over ?? payload.over_line ?? payload.overLine,
-      );
-      const finalUnder = parseNumber(
-        payload.closing_under ?? payload.final_under ?? payload.under_line ?? payload.underLine,
-      );
-      const finalInjuries = String(
-        payload.lateScratches ?? payload.scratches ?? payload.late_injury_note ?? "",
-      );
-      const lateScratch = /scratch|out|questionable|doubtful/i.test(finalInjuries);
-      // The sync payload carries NO closing-line fields (it is a live-score
-      // payload), so finalOver/finalUnder are 0 whenever they are absent —
-      // and |0 − line| made EVERY revalidation report a fake LATE_SHIFT.
-      // With no closing lines and no scratch notice there is nothing to
-      // verify against: say so honestly instead of inventing a shift.
-      if (finalOver <= 0 && finalUnder <= 0 && !lateScratch) {
-        const inconclusive = history.map((item) => {
-          if (item.id !== entry.id) return item;
-          return {
-            ...item,
-            revalidationRequested: true,
-            revalidationStatus: "AWAITING_SYNC" as HistoryEntry["revalidationStatus"],
-            lastRevalidationMsg: "Final sync returned no closing-line data — revalidation inconclusive; no shift claimed.",
-          };
-        });
-        setHistory(inconclusive);
-        saveHistory(inconclusive);
-        return;
-      }
-      const lineShift = Math.max(
-        Math.abs(finalOver - parseFloat(entry.overHigh)),
-        Math.abs(finalUnder - parseFloat(entry.underHigh)),
-      );
-      const lateShiftDetected = lineShift > 2 || lateScratch;
-      const newStatus: HistoryEntry["revalidationStatus"] = lateShiftDetected
-        ? "LATE_SHIFT"
-        : "CONFIRMED";
-      const updatedHistory = history.map((item) => {
-        if (item.id !== entry.id) return item;
-        return {
-          ...item,
-          revalidationRequested: true,
-          revalidationStatus: newStatus,
-          lastRevalidationMsg: lateShiftDetected
-            ? `LATE SHIFT DETECTED – ${lineShift.toFixed(1)}pt move or scratch notice. Recalculate.`
-            : `Final sync complete. No late shift detected.`,
-        };
-      });
-      setHistory(updatedHistory);
-      saveHistory(updatedHistory);
-    } catch (err) {
-      console.error("Pre-match revalidation failed:", err);
-    }
+    const inconclusive = history.map((item) => {
+      if (item.id !== entry.id) return item;
+      return {
+        ...item,
+        revalidationRequested: true,
+        revalidationStatus: "AWAITING_SYNC" as HistoryEntry["revalidationStatus"],
+        lastRevalidationMsg: "Final sync returned no closing-line data — revalidation inconclusive; no shift claimed.",
+      };
+    });
+    setHistory(inconclusive);
+    saveHistory(inconclusive);
   };
 
   useEffect(() => {

@@ -263,10 +263,23 @@ router.get("/v1/freefeed/bank", async (req: Request, res: Response) => {
   // again to continue). Officials + starters ride the game object, so
   // they travel through the hybrid inbox like everything else banked.
   let statsFilled = 0, officialsFilled = 0, startersFilled = 0, enrichFailed = 0;
-  const needEnrich = (Object.values(store.games) as any[])
-    .filter((g) => g.source === "espn-freefeed" && g.tournament?.name === lg.name &&
-      (!store.stats[g.id] || !Array.isArray(g.officials) || !g.starters))
-    .slice(0, 20);
+  // Two passes inside the same 20-fetch cap (D-2026-11-12-02): the
+  // old single filter put stats-missing games behind the oldest
+  // games that merely lack officials/starters, and a summary whose
+  // officials/starters parse to null never clears those games — so
+  // the head-20 never drained and newer games' stats froze (156
+  // from Nov 8 to Nov 11 while 21 ESPN games banked stat-less).
+  // Stats-missing games go first, so stats can never be starved by
+  // an unparseable officials field again; officials/starters-missing
+  // games fill the remaining slots. One summary fetch still fills
+  // all three fields. No attempt-marking: a parse-null must stay
+  // retryable after a parser fix.
+  const leagueEspn = (Object.values(store.games) as any[])
+    .filter((g) => g.source === "espn-freefeed" && g.tournament?.name === lg.name);
+  const needEnrich = [
+    ...leagueEspn.filter((g) => !store.stats[g.id]),
+    ...leagueEspn.filter((g) => store.stats[g.id] && (!Array.isArray(g.officials) || !g.starters)),
+  ].slice(0, 20);
   for (const g of needEnrich) {
     try {
       const summary = await espnFetch(`${ESPN}/${lg.path}/summary?event=${g.id}`);

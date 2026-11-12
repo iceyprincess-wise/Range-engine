@@ -10,7 +10,6 @@
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
-    "@workspace/api-zod": "workspace:*",
     "@workspace/range-engine": "workspace:*",
     "cors": "^2",
     "dotenv": "^17.4.2",

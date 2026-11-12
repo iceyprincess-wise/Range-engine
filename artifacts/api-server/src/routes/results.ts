@@ -23,6 +23,13 @@ const SETTLE_FETCH_COOLDOWN_MS = 24 * 3600 * 1000;
 const fixtureSettleKey = (home: string, away: string, date?: string, koTime?: string) =>
   [home, away, date ?? "", koTime ?? ""].join("|");
 
+// In-flight settle-fetch guard (D-2026-11-12-07): two concurrent
+// /v1/result calls for the same fixture both passed the cooldown
+// gate (checked before the awaits) and each spent up to 2 provider
+// calls. The 24h cooldown is only set after the fetch completes,
+// so it cannot dedupe a race.
+const settleInFlight = new Set<string>();
+
 const apiFetch = async (p: string): Promise<any> => {
   const response = await fetch("https" + "://" + RAPIDAPI_HOST + p, {
     headers: { "x-rapidapi-key": RAPIDAPI_KEY ?? "", "x-rapidapi-host": RAPIDAPI_HOST },
@@ -102,7 +109,8 @@ router.get("/v1/result", async (req: Request, res: Response) => {
   const needsSettleFetch = !g || g.homeScore?.current == null || g.awayScore?.current == null;
   const settleKey = fixtureSettleKey(h, a, date, koTime);
   const settleCooledDown = (settleFetchCooldown.get(settleKey) ?? 0) > Date.now();
-  if (needsSettleFetch && RAPIDAPI_KEY && quotaAllowsSettle && !settleCooledDown && Date.now() > settleCooldownUntil) {
+  if (needsSettleFetch && RAPIDAPI_KEY && quotaAllowsSettle && !settleCooledDown && !settleInFlight.has(settleKey) && Date.now() > settleCooldownUntil) {
+    settleInFlight.add(settleKey);
     let fetchCompleted = false;
     try {
       let team = store.teams[h];
@@ -124,6 +132,8 @@ router.get("/v1/result", async (req: Request, res: Response) => {
     } catch (err) {
       if (/BasketAPI (429|403)/.test(err instanceof Error ? err.message : "")) settleCooldownUntil = Date.now() + 5 * 60 * 1000;
       /* stays unsettled — honest response below */
+    } finally {
+      settleInFlight.delete(settleKey);
     }
     // A completed fetch that still leaves the game unbanked or
     // unscored cools this fixture down for 24h: without it every
