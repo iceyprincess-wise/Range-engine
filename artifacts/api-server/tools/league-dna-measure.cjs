@@ -1,3 +1,10 @@
+// NOTE (D-2026-11-12-08): this tool groups by uniqueTournament.name, so it
+// emits 21 rows and NO DTA row — DTA (tournament.name "DTA", 12 games) is a
+// hand-maintained tournament-name split inside the "Divisional Tercera de
+// Ascenso" unique family, whose 17 games DIV_TERCERA already counts. Do NOT
+// overwrite lib/range-engine/src/leagueDnaMeasured.ts from this tool's
+// output without re-adding the DTA row + profile, or DTA fixtures fall back
+// to the DEFAULT proxy (the bug a588ba7 fixed). See that file's header.
 const fs = require("fs"), path = require("path");
 const storePath = path.join(__dirname, "..", "data", "store.json");
 if (!fs.existsSync(storePath)) { console.error("missing store:", storePath); process.exit(1); }

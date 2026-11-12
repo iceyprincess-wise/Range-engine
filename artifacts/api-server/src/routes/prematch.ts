@@ -291,7 +291,7 @@ const shootingSeries = (games: any[], teamId: number) => {
   return { fouls, ftAttempts };
 };
 // The provider records each team's gender ("M" / "F") on the team
-// objects inside banked games - 770 of the 852 games in the tracked
+// objects inside banked games - 791 of the 873 games in the tracked
 // warehouse carry it, and nothing read it. Detection is per team over
 // ALL its banked appearances; conflicting records claim nothing.
 const teamGender = (teamId: number): "M" | "F" | null => {

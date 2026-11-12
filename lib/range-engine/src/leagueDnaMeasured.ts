@@ -1,13 +1,19 @@
 // ─────────────────────────────────────────────────────────────────────────────
 // MEASURED LEAGUE DNA — derived ONLY from finished games in the local warehouse.
-// Source: artifacts/api-server/data/store.json (now committed in the repo)
+// Source: artifacts/api-server/data/store.json (live, gitignored) — tracked copy in repo: hybrid-inbox.json
 // Regenerate: node artifacts/api-server/tools/league-dna-measure.cjs
-// Snapshot: 2026-11-08 · 852 scored games · 35 leagues · 0 API calls
-// (852/35 = every scored game / every league in the store. The table below
-// lists only the 21 leagues with n >= 4 — 653 games. Excluded from the table:
-// leagues with n < 4 (14 games) and the four hand-profile leagues the tool
-// also measures but whose hand-written profiles keep serving (NBA 131,
-// Germany BBL 38, Euroleague 10, Liga ACB 6 — 185 games). 653 + 14 + 185 = 852.
+// Snapshot: measurements 2026-11-08 (DTA added 2026-11-09) · 873 scored games
+// · 35 leagues in the tracked inbox at HEAD 3f24b75 · 0 API calls
+// (873/35 = every scored game / every league in the store. The table below
+// lists 22 entries covering 21 distinct unique-tournament families with
+// n >= 4 — 653 distinct games. The 22nd entry, DTA (n: 12), is a
+// tournament-name split inside the "Divisional Tercera de Ascenso" unique
+// family, whose 17 games DIV_TERCERA already counts (12 DTA + 5 Playoffs),
+// so the entry-n sum is 665 while distinct games covered are 653.
+// Excluded from the table: leagues with n < 4 (14 games) and the four
+// hand-profile leagues the tool also measures but whose hand-written
+// profiles keep serving (NBA 152, Germany BBL 38, Euroleague 10,
+// Liga ACB 6 — 206 games). 653 + 14 + 206 = 873.
 // Refreshed 2026-11-08 from the tracked hybrid inbox (tool re-run on the
 // 852-game warehouse): WNBA updated 247 -> 250 games, and six families
 // promoted to measured profiles — NBA Summer League, NBA Preseason,
@@ -61,7 +67,7 @@ export type DnaMeasurement = {
 };
 
 export const DNA_SNAPSHOT_AT = "2026-11-08";
-export const DNA_SNAPSHOT_GAMES = 653; // games covered by LEAGUE_DNA_MEASURED below (store-wide scored total is 852; see header)
+export const DNA_SNAPSHOT_GAMES = 653; // DISTINCT games covered by LEAGUE_DNA_MEASURED below (entry-n sum is 665: DTA's 12 games are also inside DIV_TERCERA's 17 — shared unique family; store-wide scored total is 873; see header)
 export const SHRINK_K = 1;
 export const CAP_DISCOUNT = 0.93; // Derivation factor for MEASURED_PROFILES proxyPPG
 // (round1(avgTotal / 2 * CAP_DISCOUNT)); verified against all 13 profiles.
