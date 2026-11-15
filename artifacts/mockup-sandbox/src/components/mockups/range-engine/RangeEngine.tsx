@@ -36,6 +36,8 @@ import {
   runEngine, fetchResearchDataCached,
 } from "./engine/core";
 import type { EngineOutput, HistoryEntry, ResearchData } from "./engine/core";
+import { tourLabelExtra } from "./engine/tournamentLabels";
+import type { GameTournament } from "./engine/tournamentLabels";
 
 function decisionStyle(d: string) {
   if (d.includes("HAMMER"))
@@ -302,9 +304,9 @@ export function RangeEngine() {
   const [awayManualOut, setAwayManualOut] = useState("");
   // ── Games Browser (STATUS panel): today's covered tournaments & fixtures ──
   const [showGames, setShowGames] = useState(false);
-  const [gTours, setGTours] = useState<{ id: number; name: string; country: string }[]>([]);
+  const [gTours, setGTours] = useState<GameTournament[]>([]);
   const [gGames, setGGames] = useState<any[]>([]);
-  const [gSel, setGSel] = useState<{ id: number; name: string; country: string } | null>(null);
+  const [gSel, setGSel] = useState<GameTournament | null>(null);
   const [gLoading, setGLoading] = useState(false);
   const [quotaInfo, setQuotaInfo] = useState<{ limit: number | null; remaining: number | null; resetAt: number | null }>({ limit: null, remaining: null, resetAt: null });
   // When the provider says the daily quota returns (banked server-side
@@ -530,7 +532,7 @@ export function RangeEngine() {
     }
   };
 
-  const openTournament = async (t: { id: number; name: string; country: string }) => {
+  const openTournament = async (t: GameTournament) => {
     setGSel(t);
     setGLoading(true);
     try {
@@ -1245,23 +1247,31 @@ export function RangeEngine() {
             <p className="text-yellow-400 font-black text-sm uppercase tracking-widest">📡 Covered Games — Today</p>
             <span className="flex items-center gap-2"><Button onClick={() => updateTournaments()} className="text-yellow-300 text-[10px] font-black px-2 py-1 rounded border border-yellow-700 bg-yellow-950/40 uppercase h-auto min-h-0">{refreshing ? "⬆ UPDATING…" : "⬆ UPDATE (spends quota)"}</Button><Button onClick={() => setShowGames(false)} className="text-zinc-400 text-xl px-2 py-0 h-auto min-h-0 border-0 bg-transparent">✕</Button></span>
           </div>
-          <p className="text-[10px] text-zinc-500 mb-3">API quota: {quotaInfo.remaining ?? "—"}/{quotaInfo.limit ?? "—"} remaining · {gMeta?.fromDisk === false ? "fresh UPDATE" : (gMeta?.updatedAt != null && gTours.length > 0 ? "showing last saved update" : "no saved update yet")}{typeof gMeta?.quotaSpent === "number" ? ` — cost ${gMeta.quotaSpent} calls` : ""}{quotaResetLabel ? ` · ${quotaResetLabel}` : ""}</p>
+          <p className="text-[10px] text-zinc-500 mb-3">API quota: {quotaInfo.remaining ?? "—"}/{quotaInfo.limit ?? "—"} remaining · {gMeta?.fromDisk === false ? "fresh UPDATE" : (gMeta?.updatedAt != null && gTours.length > 0 ? "showing last saved update" : "no saved update yet")}{typeof gMeta?.quotaSpent === "number" ? ` — cost ${gMeta.quotaSpent} call${gMeta.quotaSpent === 1 ? "" : "s"}` : ""}{quotaResetLabel ? ` · ${quotaResetLabel}` : ""}</p>
           {!gSel ? (
             <div className="space-y-1.5">
               {gTours.length === 0 && refreshing && <p className="text-zinc-500 text-xs">Loading today's tournaments…</p>}
               {gTours.length === 0 && !refreshing && quotaInfo.remaining !== null && quotaInfo.remaining <= 0 && <p className="text-zinc-500 text-xs">No tournaments loaded — daily API quota is exhausted{quotaResetLabel ? ` (${quotaResetLabel})` : ""}.</p>}
               {gTours.length === 0 && !refreshing && (quotaInfo.remaining === null || quotaInfo.remaining > 0) && <p className="text-zinc-500 text-xs">No tournaments loaded yet — tap ⬆ UPDATE above to fetch today's list (spends quota).</p>}
-              {gTours.map((t) => (
-                <Button key={t.id} onClick={() => openTournament(t)} className="w-full text-left bg-zinc-900 border border-yellow-950 rounded-lg px-3 py-2 hover:border-yellow-700 transition h-auto min-h-0 justify-start">
-                  <span className="text-xs text-zinc-200 font-bold">{t.name}</span>
-                  <span className="text-[10px] text-zinc-500 ml-2">{t.country}</span>
-                </Button>
-              ))}
+              {gTours.map((t) => {
+                // D-2026-11-15-08: rows sharing a (name, country)
+                // label get the provider league name appended; a
+                // missing league name falls back to the id, so two
+                // rows can never look identical. Other rows unchanged.
+                const extra = tourLabelExtra(t, gTours);
+                return (
+                  <Button key={t.id} onClick={() => openTournament(t)} className="w-full text-left bg-zinc-900 border border-yellow-950 rounded-lg px-3 py-2 hover:border-yellow-700 transition h-auto min-h-0 justify-start">
+                    <span className="text-xs text-zinc-200 font-bold">{t.name}</span>
+                    <span className="text-[10px] text-zinc-500 ml-2">{t.country}</span>
+                    {extra ? <span className="text-[10px] text-yellow-600/80 ml-2">{extra}</span> : null}
+                  </Button>
+                );
+              })}
             </div>
           ) : (
             <div>
               <Button onClick={() => { setGSel(null); setGGames([]); }} className="text-[10px] text-yellow-400 mb-2 px-0 py-0 h-auto min-h-0 border-0 bg-transparent">← All tournaments</Button>
-              <p className="text-xs text-zinc-300 font-bold mb-2">{gSel.country} - {gSel.name}</p>
+              <p className="text-xs text-zinc-300 font-bold mb-2">{gSel.country} - {gSel.name}{(() => { const extra = tourLabelExtra(gSel, gTours); return extra ? ` — ${extra}` : ""; })()}</p>
               {gLoading && <p className="text-zinc-500 text-xs">Loading fixtures…</p>}
               {!gLoading && gGames.length === 0 && <p className="text-zinc-500 text-xs">No fixtures returned for today.</p>}
               <div className="space-y-1.5">

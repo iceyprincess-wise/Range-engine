@@ -1,4 +1,5 @@
 import type { HistoryEntry, AnalysisArchiveEntry } from "@workspace/range-engine";
+import type { GameTournament } from "./tournamentLabels";
 export const HISTORY_KEY = "rangengine_v3_history";
 export const ARCHIVE_KEY = "splendor_analysis_archive";
 
@@ -102,7 +103,7 @@ export interface BankedTournaments {
   date: string;
   updatedAt: string | null;
   count: number;
-  tournaments: { id: number; name: string; country: string }[];
+  tournaments: GameTournament[];
 }
 export function saveTournamentsBank(payload: any, day: string) {
   try {

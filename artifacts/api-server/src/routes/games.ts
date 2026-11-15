@@ -73,13 +73,17 @@ router.get("/v1/games/tournaments", async (req: Request, res: Response) => {
       // presenting an empty list as fresh ("0 tournaments today").
       return res.status(502).json({ error: "tournaments update failed: BasketAPI unreachable" });
     }
-    const tours: { id: number; name: string; country: string }[] = [];
+    const tours: { id: number; name: string; country: string; uniqueName: string }[] = [];
     const seen = new Set<number>();
     for (const data of results) for (const s of data?.scheduled || []) {
       const uid = s?.tournament?.uniqueTournament?.id;
       if (!uid || seen.has(uid)) continue;
       seen.add(uid);
-      tours.push({ id: uid, name: s.tournament?.name ?? "Unknown", country: s.tournament?.category?.name ?? "" });
+      // D-2026-11-15-08: carry the provider league name
+      // (uniqueTournament.name — the same field hybrid.ts leagueOf()
+      // already trusts as the league) so two tournaments that share
+      // a (name, country) label can still be told apart downstream.
+      tours.push({ id: uid, name: s.tournament?.name ?? "Unknown", country: s.tournament?.category?.name ?? "", uniqueName: s.tournament?.uniqueTournament?.name ?? "" });
     }
     const payload = { date: seg, updatedAt: new Date().toISOString(), count: tours.length, tournaments: tours, partial: pagesFailed > 0, pagesFailed };
     // A partial list is reported as partial and is NOT cached: caching
