@@ -21,6 +21,11 @@ const LEAGUES: Record<string, { path: string; name: string }> = {
   wnba: { path: "wnba", name: "WNBA" },
 };
 
+// User timezone (WAT, UTC+1 — the same local-date convention the
+// client uses for fixtureDate, see RangeEngine.tsx `today`).
+// D-2026-11-15-11.
+const WAT_OFFSET_MS = 60 * 60 * 1000;
+
 const normName = (s: string) => s.trim().toLowerCase().replace(/\s+/g, " ");
 
 // Proven provider name variants (ESPN short name vs the warehouse's
@@ -546,7 +551,7 @@ const fetchRotoLineups = async (): Promise<any[]> => {
 
 // GET /v1/freefeed/lineups?home=<warehouse name>&away=<name>&league=nba|wnba[&date=YYYY-MM-DD]
 // RotoWire's page is today-only, so a ?date= that is not the
-// server's today skips it and the route returns each team's last
+// user's today (WAT, UTC+1) skips it and the route returns each team's last
 // banked ACTUAL starters (status "Last game") instead of
 // mislabelling today's Confirmed five as the fixture's lineup.
 router.get("/v1/freefeed/lineups", async (req: Request, res: Response) => {
@@ -555,11 +560,14 @@ router.get("/v1/freefeed/lineups", async (req: Request, res: Response) => {
   if (!lg) return res.status(400).json({ error: "league must be nba or wnba" });
   const home = String(req.query.home ?? "");
   const away = String(req.query.away ?? "");
-  // Same today convention as the referees route (UTC date); a
-  // malformed ?date= falls back to today rather than erroring, so
-  // existing callers without ?date= are unaffected.
+  // D-2026-11-15-11: "today" is the USER's day (WAT, UTC+1): the
+  // server clock is UTC, so between 00:00 and 00:59 WAT the
+  // server's own date was still yesterday and the gate below
+  // skipped RotoWire for a today fixture. A malformed ?date=
+  // falls back to today rather than erroring, so existing callers
+  // without ?date= are unaffected.
   const dateParam = String(req.query.date ?? "");
-  const todayStr = new Date().toISOString().slice(0, 10);
+  const todayStr = new Date(Date.now() + WAT_OFFSET_MS).toISOString().slice(0, 10);
   const fixtureDate = /^\d{4}-\d{2}-\d{2}$/.test(dateParam) ? dateParam : todayStr;
   if (key === "nba" && home && away && fixtureDate === todayStr) {
     try {

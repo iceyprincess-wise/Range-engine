@@ -8,12 +8,51 @@ const router = Router();
 const RAPIDAPI_KEY = process.env.RAPIDAPI_KEY;
 const RAPIDAPI_HOST = process.env.RAPIDAPI_HOST || "basketapi1.p.rapidapi.com";
 const CACHE_PATH = path.join(resolveDataDir(), "games-cache.json");
+const BANK_PATH = path.join(resolveDataDir(), "tournaments-bank.json");
 
 type DiskCache = { tournaments?: any; schedules: Record<string, any> };
-const loadDisk = (): DiskCache => { try { return JSON.parse(fs.readFileSync(CACHE_PATH, "utf8")); } catch (e) { if ((e as any)?.code !== "ENOENT") console.error("[games] games-cache.json unreadable — disk tournament list lost until next paid update:", (e as any)?.message ?? e); return { schedules: {} }; } };
+// D-2026-11-15-10: the tournaments payload lived ONLY in
+// games-cache.json on the ephemeral disk, so a server restart lost
+// the whole list until the next paid UPDATE. The bank file is the
+// repo-tracked mirror (same pattern as hybrid-inbox.json): it is
+// written on every COMPLETE tournaments UPDATE and read back here
+// when the disk cache is missing or has no tournaments. Boot never
+// spends quota to re-fetch.
+const loadBankTournaments = (): any | null => {
+  try {
+    const parsed = JSON.parse(fs.readFileSync(BANK_PATH, "utf8"));
+    if (Array.isArray(parsed?.tournaments)) return parsed;
+    console.error("[games] tournaments-bank.json has no tournaments array — bank fallback ignored");
+    return null;
+  } catch (e) {
+    if ((e as any)?.code !== "ENOENT") console.error("[games] tournaments-bank.json unreadable — bank fallback unavailable:", (e as any)?.message ?? e);
+    return null;
+  }
+};
+const loadDisk = (): DiskCache => {
+  let cache: DiskCache;
+  try {
+    cache = JSON.parse(fs.readFileSync(CACHE_PATH, "utf8"));
+  } catch (e) {
+    if ((e as any)?.code !== "ENOENT") console.error("[games] games-cache.json unreadable:", (e as any)?.message ?? e);
+    cache = { schedules: {} };
+  }
+  if (!cache.tournaments) {
+    const bank = loadBankTournaments();
+    if (bank) {
+      cache.tournaments = bank;
+      console.log("[games] tournaments restored from repo-tracked tournaments-bank.json (disk cache had none)");
+    }
+  }
+  return cache;
+};
 const disk: DiskCache = loadDisk();
 if (!disk.schedules) disk.schedules = {};
-const saveDisk = () => { try { fs.mkdirSync(path.dirname(CACHE_PATH), { recursive: true }); fs.writeFileSync(CACHE_PATH, JSON.stringify(disk)); } catch { /* non-fatal */ } };
+const saveDisk = () => { try { fs.mkdirSync(path.dirname(CACHE_PATH), { recursive: true }); fs.writeFileSync(CACHE_PATH, JSON.stringify(disk)); } catch (e) { console.error("[games] games-cache.json write FAILED — disk cache not saved:", (e as any)?.message ?? e); } };
+// D-2026-11-15-10: persist the tournaments payload to the
+// repo-tracked bank file. A failed bank write is logged, never
+// silent: without this file the next restart loses the list.
+const saveBank = (payload: any) => { try { fs.mkdirSync(path.dirname(BANK_PATH), { recursive: true }); fs.writeFileSync(BANK_PATH, JSON.stringify(payload)); } catch (e) { console.error("[games] tournaments-bank.json write FAILED — repo-tracked bank not updated:", (e as any)?.message ?? e); } };
 
 const apiFetch = async (p: string): Promise<any> => {
   const response = await fetch("https" + "://" + RAPIDAPI_HOST + p, {
@@ -93,7 +132,7 @@ router.get("/v1/games/tournaments", async (req: Request, res: Response) => {
     // answer (the schedule route already caches a genuine 0-game day
     // for the same reason), and leaving it uncached made every app
     // entry re-fire the 6-page force. D-2026-11-10-08.
-    if (pagesFailed === 0) { disk.tournaments = payload; saveDisk(); }
+    if (pagesFailed === 0) { disk.tournaments = payload; saveDisk(); saveBank(payload); } // D-2026-11-15-10: bank mirrors the complete payload so a restart restores it with 0 quota
     // Lowest remaining observed across the batch (plus the final
     // read); clamped at 0 so a mid-batch provider reset can never
     // report a negative cost.
