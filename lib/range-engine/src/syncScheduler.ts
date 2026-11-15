@@ -13,6 +13,19 @@ export function computeSyncPhase(opts: {
   const delta = tipoffMs - nowMs;
   if (delta > 35 * 60_000) return "IDLE";        // too early: research cache covers it
   if (delta > 0) return "PRE_TIPOFF";            // T-35 .. tipoff
+  // A game tipped more than 3 h ago is over (D-2026-11-15-02):
+  // return FINAL so the countdown stops polling. Without this,
+  // phaseFromClock could never return FINAL — no caller passes
+  // matchStatus/quarter — so the analyzer kept force-refreshing
+  // research every 270 s forever after FT (~13 provider calls
+  // per hour on a finished game). The 3 h bound is the same
+  // convention the games-browser ticker uses (startTimestamp +
+  // 3 h => "ENDED (unconfirmed)"); no real game runs 3 h past
+  // tipoff, and the only cost of an early stop on a freak
+  // overtime game is losing auto-reanalysis (manual re-analysis
+  // still works). DECISION stays unwired on purpose: its 90 s
+  // cadence would spend MORE quota (40/hr), not less.
+  if (delta < -3 * 60 * 60_000) return "FINAL";
   if (quarter === 2 && (clockRemainingSec ?? 9999) <= 150) return "DECISION";
   if (quarter === 4) return "DECISION";
   return "LIVE";

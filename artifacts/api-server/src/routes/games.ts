@@ -10,7 +10,7 @@ const RAPIDAPI_HOST = process.env.RAPIDAPI_HOST || "basketapi1.p.rapidapi.com";
 const CACHE_PATH = path.join(resolveDataDir(), "games-cache.json");
 
 type DiskCache = { tournaments?: any; schedules: Record<string, any> };
-const loadDisk = (): DiskCache => { try { return JSON.parse(fs.readFileSync(CACHE_PATH, "utf8")); } catch { return { schedules: {} }; } };
+const loadDisk = (): DiskCache => { try { return JSON.parse(fs.readFileSync(CACHE_PATH, "utf8")); } catch (e) { if ((e as any)?.code !== "ENOENT") console.error("[games] games-cache.json unreadable — disk tournament list lost until next paid update:", (e as any)?.message ?? e); return { schedules: {} }; } };
 const disk: DiskCache = loadDisk();
 if (!disk.schedules) disk.schedules = {};
 const saveDisk = () => { try { fs.mkdirSync(path.dirname(CACHE_PATH), { recursive: true }); fs.writeFileSync(CACHE_PATH, JSON.stringify(disk)); } catch { /* non-fatal */ } };
@@ -55,8 +55,18 @@ router.get("/v1/games/tournaments", async (req: Request, res: Response) => {
   }
   if (!RAPIDAPI_KEY) return res.status(500).json({ error: "Missing RAPIDAPI_KEY" });
   const before = quota.remaining;
+  // Track the lowest remaining seen while the 6 pages resolve
+  // (D-2026-11-15-04): each apiFetch mutates the shared quota
+  // from its own response headers, so the last-ARRIVING response
+  // wins — which need not be the last-PROCESSED one, and the
+  // reported cost could understate the true spend by up to 5.
+  // Every snapshot is a real response's remaining, so the
+  // minimum is provably no lower than the true post-batch
+  // remaining and no higher than the old single-read value:
+  // the estimate can only move toward the truth.
+  const seenRemaining: number[] = [];
   try {
-    const results = await Promise.all([1, 2, 3, 4, 5, 6].map((pg) => apiFetch("/api/basketball/scheduled-tournaments/" + seg + "/page/" + pg).catch(() => null)));
+    const results = await Promise.all([1, 2, 3, 4, 5, 6].map((pg) => apiFetch("/api/basketball/scheduled-tournaments/" + seg + "/page/" + pg).catch(() => null).then((r) => { if (quota.remaining != null) seenRemaining.push(quota.remaining); return r; })));
     const pagesFailed = results.filter((r) => r === null).length;
     if (results.every((r) => r === null)) {
       // Every upstream page failed: report the failure instead of
@@ -80,7 +90,12 @@ router.get("/v1/games/tournaments", async (req: Request, res: Response) => {
     // for the same reason), and leaving it uncached made every app
     // entry re-fire the 6-page force. D-2026-11-10-08.
     if (pagesFailed === 0) { disk.tournaments = payload; saveDisk(); }
-    return res.json({ ...payload, stale: false, fromDisk: false, quotaSpent: before != null && quota.remaining != null ? before - quota.remaining : null });
+    // Lowest remaining observed across the batch (plus the final
+    // read); clamped at 0 so a mid-batch provider reset can never
+    // report a negative cost.
+    const minRemaining = seenRemaining.length > 0 ? Math.min(...seenRemaining, quota.remaining ?? Infinity) : quota.remaining;
+    const spent = before != null && minRemaining != null && minRemaining !== Infinity ? Math.max(0, before - minRemaining) : null;
+    return res.json({ ...payload, stale: false, fromDisk: false, quotaSpent: spent });
   } catch (error) {
     return res.status(502).json({ error: error instanceof Error ? error.message : "update failed" });
   }

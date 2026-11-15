@@ -113,6 +113,14 @@ export function saveTournamentsBank(payload: any, day: string) {
     // today's key.
     if (payload.stale === true) return;
     if (payload.updatedAt == null && payload.tournaments.length === 0) return;
+    // Never bank a PARTIAL tournament list as the fallback for
+    // later entry (D-2026-11-15-03): the server reports partial
+    // updates with updatedAt set and stale false, and deliberately
+    // does NOT cache them to disk — but this bank accepted them,
+    // so a later entry would show an incomplete list as if
+    // complete. A partial list is fine on screen for this session;
+    // it just must not overwrite the last complete banked list.
+    if (payload.partial === true) return;
     const banked: BankedTournaments = {
       date: day,
       updatedAt: payload.updatedAt ?? null,

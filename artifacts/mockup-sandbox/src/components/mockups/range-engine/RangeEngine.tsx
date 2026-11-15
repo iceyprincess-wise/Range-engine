@@ -946,9 +946,12 @@ export function RangeEngine() {
         // League DNA, team profiles and H2H arrive in the single real
         // fetch below — progress tracks that fetch, with no artificial
         // delays staged in front of it.
+        // Progress tracks the fetch honestly: 40 while the real
+        // fetch below is in flight, 100 when it lands. (The 80/90
+        // sets used to sit here synchronously before the await —
+        // React batches them, so only 90 ever painted and the bar
+        // sat at "90% Complete" for the whole fetch.)
         setResearchProgress(40);
-        setResearchProgress(80);
-        setResearchProgress(90);
 
         // Retrieve expanded 50-game analytics from the live telemetry payload
         const data = await fetchResearchDataCached(homeTeam, awayTeam, league, gameId, bookmaker, false, date);
@@ -1208,7 +1211,6 @@ export function RangeEngine() {
     total: archiveEntries.length,
     wins: archiveEntries.filter((entry) => entry.outcome === "WIN").length,
     losses: archiveEntries.filter((entry) => entry.outcome === "LOSS").length,
-    hammers: 0,
     pending: archiveEntries.filter((entry) => entry.outcome === "PENDING").length,
   };
   const winRate =
@@ -1481,12 +1483,12 @@ export function RangeEngine() {
                   </p>
                 </div>
 
-                {/* 60-Second Auto-Sync Timer Sentinel */}
+                {/* Auto-Sync Timer — the label reflects whether polling is live (270 s live / 600 s pre-tipoff; nothing polls while IDLE/FINAL) */}
                 <div className="bg-black border border-yellow-950 rounded-lg p-3 mb-4 flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <span className="text-yellow-500 animate-pulse">⏳</span>
                     <span className="text-[10px] font-bold text-zinc-300 uppercase tracking-wider">
-                      Live Sync Active
+                      {nextCountdownSec(koTime, currentTime, date, today) === null ? "Auto-Sync Idle" : "Live Sync Active"}
                     </span>
                   </div>
                   <div className="text-xs font-mono text-yellow-400 font-bold">
@@ -1860,7 +1862,7 @@ MATCH CONTEXT — Rule 1 (Time Sync)
                               </p>
                               <div className="flex items-center gap-1.5">
                                 <span
-                                  className={`w-1.5 h-1.5 rounded-full ${(researchData?.collapsePct ?? 0) > 20 ? "bg-yellow-500 shadow-[0_0_5px_rgba(59,130,246,0.8)]" : "bg-yellow-500"}`}
+                                  className={`w-1.5 h-1.5 rounded-full ${(researchData?.collapsePct ?? 0) > 20 ? "bg-red-500 shadow-[0_0_5px_rgba(239,68,68,0.8)]" : "bg-yellow-500"}`}
                                 ></span>
                                 <span className="text-[8px] text-zinc-500">
                                   {researchData?.collapsePct ?? 0}% peak · {(researchData?.homeQuarters?.gamesWithQuarters ?? 0) + (researchData?.awayQuarters?.gamesWithQuarters ?? 0)} games studied
