@@ -1245,7 +1245,7 @@ export function RangeEngine() {
             <p className="text-yellow-400 font-black text-sm uppercase tracking-widest">📡 Covered Games — Today</p>
             <span className="flex items-center gap-2"><Button onClick={() => updateTournaments()} className="text-yellow-300 text-[10px] font-black px-2 py-1 rounded border border-yellow-700 bg-yellow-950/40 uppercase h-auto min-h-0">{refreshing ? "⬆ UPDATING…" : "⬆ UPDATE (spends quota)"}</Button><Button onClick={() => setShowGames(false)} className="text-zinc-400 text-xl px-2 py-0 h-auto min-h-0 border-0 bg-transparent">✕</Button></span>
           </div>
-          <p className="text-[10px] text-zinc-500 mb-3">API quota: {quotaInfo.remaining ?? "—"}/{quotaInfo.limit ?? "—"} remaining · {gMeta?.fromDisk === false ? "fresh UPDATE" : "showing last saved update"}{typeof gMeta?.quotaSpent === "number" ? ` — cost ${gMeta.quotaSpent} calls` : ""}{quotaResetLabel ? ` · ${quotaResetLabel}` : ""}</p>
+          <p className="text-[10px] text-zinc-500 mb-3">API quota: {quotaInfo.remaining ?? "—"}/{quotaInfo.limit ?? "—"} remaining · {gMeta?.fromDisk === false ? "fresh UPDATE" : (gMeta?.updatedAt != null && gTours.length > 0 ? "showing last saved update" : "no saved update yet")}{typeof gMeta?.quotaSpent === "number" ? ` — cost ${gMeta.quotaSpent} calls` : ""}{quotaResetLabel ? ` · ${quotaResetLabel}` : ""}</p>
           {!gSel ? (
             <div className="space-y-1.5">
               {gTours.length === 0 && refreshing && <p className="text-zinc-500 text-xs">Loading today's tournaments…</p>}

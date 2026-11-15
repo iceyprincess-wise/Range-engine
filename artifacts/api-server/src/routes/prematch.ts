@@ -32,9 +32,29 @@ const searchOnce = async (q: string) => {
   return hit ? { id: hit.entity.id as number, name: hit.entity.name as string } : null;
 };
 
+// Compare team names the way the candidate queries are built
+// (D-2026-11-15-05): strip parenthetical suffixes, normalise
+// punctuation/whitespace, drop diacritics, lower-case — so
+// "Zalgiris Kaunas" matches provider "Žalgiris Kaunas" and
+// "Real Madrid (W)" matches provider "Real Madrid", while a
+// different team never compares equal.
+const normTeamName = (s: string) =>
+  s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\(.*?\)/g, " ").replace(/[._]/g, " ").replace(/\s+/g, " ").trim().toLowerCase();
+
 const searchTeam = async (name: string) => {
   const key = name.trim().toLowerCase();
-  if (store.teams[key]) return store.teams[key];
+  // A banked entry is trusted only when its name IS the team
+  // asked for (D-2026-11-15-05): the pre-fix fallback banked
+  // wrong teams under the requested key ("Springfield Magic"
+  // -> Orlando Magic, id 999), and the old early return served
+  // that poisoned mapping forever without even searching.
+  // A mismatched banked entry is deleted here (markDirty, so
+  // the next persist writes the cleaned map) — the provider
+  // search below (or the warehouse fallback) resolves again
+  // and re-banks the correct team.
+  const bankedTeam = store.teams[key];
+  if (bankedTeam && normTeamName(bankedTeam.name) === normTeamName(name)) return bankedTeam;
+  if (bankedTeam) { delete store.teams[key]; markDirty(); }
   const base = name.replace(/\(.*?\)/g, " ").replace(/[._]/g, " ").replace(/\s+/g, " ").trim();
   const words = base.split(" ");
   const candidates = [...new Set([
@@ -45,7 +65,21 @@ const searchTeam = async (name: string) => {
   for (const q of candidates) {
     try {
       const team = await searchOnce(q);
-      if (team) { store.teams[key] = team; markDirty(); return team; }
+      // Accept a provider hit ONLY when it is the team actually
+      // asked for (D-2026-11-15-05): searchOnce falls back to
+      // hits[0] when no hit matches the query exactly, so an
+      // unchecked hit can be a completely different team. The
+      // last-word candidate is the demonstrated trigger
+      // ("Springfield Magic" -> "Magic" -> Orlando Magic, id
+      // 999, banked under the wrong key), but the base and
+      // first-2-words candidates take the same unchecked path —
+      // a provider that fuzzy-matches the full name returns the
+      // same wrong team there (harness S2), so the gate covers
+      // every candidate, not just the last word. A non-matching
+      // hit is skipped, not banked: the next candidate, then
+      // the warehouse fallback, then the honest 502 below
+      // still run.
+      if (team && normTeamName(team.name) === normTeamName(name)) { store.teams[key] = team; markDirty(); return team; }
     } catch {
       // Provider unreachable for this query — try the next candidate,
       // then the warehouse fallback below, instead of failing a
