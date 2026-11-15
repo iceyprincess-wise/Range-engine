@@ -23,8 +23,19 @@ export function upgradeWithWarehouse(
     quarterValues.length === 4 && quarterValues.every(Number.isFinite)
       ? quarterValues.reduce((sum, value) => sum + value, 0)
       : null;
+  // Prefer the venue-specific MEASURED points-allowed carried from
+  // prematch (homeArenaAllowed / awayRoadAllowed) — same population
+  // as `scored` (venue-specific). The derived totalAvg - scored
+  // fallback mixes all-venue quarter totals with venue-specific
+  // scoring (D-2026-11-13-01) and is kept only when no measured
+  // value exists.
+  const measuredAllowed = side === "home" ? r.homeArenaAllowed : r.awayRoadAllowed;
   const allowed =
-    totalAvg != null ? +(totalAvg - scored).toFixed(1) : info.stats.avg_allowed;
+    typeof measuredAllowed === "number" && Number.isFinite(measuredAllowed)
+      ? +measuredAllowed.toFixed(1)
+      : totalAvg != null
+        ? +(totalAvg - scored).toFixed(1)
+        : info.stats.avg_allowed;
 
   const stats = {
     ...info.stats,

@@ -20,10 +20,21 @@ try { Object.assign(quota, JSON.parse(fs.readFileSync(QPATH, "utf8"))); } catch 
 // updatedAt to notice. A snapshot from a previous UTC day is reset to
 // UNKNOWN (null), never to an invented number: the gates treat null as
 // "unmeasured" and the next real response re-measures it.
+// Exception (D-2026-11-13-02): when the snapshot carries a future
+// resetAt, the provider day has not reset yet, so the snapshot is
+// kept even though its UTC day has passed.
 const startOfUtcDay = (t: number) => { const d = new Date(t); return Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()); };
 export const rolloverQuotaIfStaleDay = () => {
   if (quota.updatedAt == null) return;
   if (startOfUtcDay(quota.updatedAt) >= startOfUtcDay(Date.now())) return;
+  // Provider resets ~12:22 UTC, not 00:00 UTC (D-2026-11-13-02):
+  // in the 00:00-12:22 UTC window a known-exhausted snapshot must
+  // NOT roll to unknown, or the enrich / team-refresh / settle-fetch
+  // gates reopen on a dead budget. When the snapshot carries a
+  // future resetAt, the provider day has not reset yet — keep the
+  // snapshot. Fall back to the UTC-day check alone when resetAt
+  // is unknown.
+  if (quota.resetAt != null && Date.now() < quota.resetAt) return;
   quota.limit = null; quota.remaining = null; quota.updatedAt = Date.now(); quota.resetInSec = null; quota.resetAt = null;
   try {
     fs.mkdirSync(path.dirname(QPATH), { recursive: true });

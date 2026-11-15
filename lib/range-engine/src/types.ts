@@ -86,6 +86,8 @@ export interface ResearchData {
   awayTeam: string;
   homeArenaPPG: number;
   awayRoadPPG: number;
+  homeArenaAllowed: number | null;
+  awayRoadAllowed: number | null;
   h2hAvgTotal: number;
   homeFt: number | null;
   awayFt: number | null;

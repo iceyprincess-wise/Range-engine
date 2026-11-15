@@ -60,6 +60,8 @@ export async function fetchResearchData(
     apiData.provenance = "real";
     apiData.homeArenaPPG = preData.home?.homeArenaPPG ?? apiData.homeArenaPPG;
     apiData.awayRoadPPG = preData.away?.awayRoadPPG ?? apiData.awayRoadPPG;
+    apiData.homeArenaAllowed = preData.home?.homeArenaAllowed ?? apiData.homeArenaAllowed;
+    apiData.awayRoadAllowed = preData.away?.awayRoadAllowed ?? apiData.awayRoadAllowed;
     apiData.h2hAvgTotal = preData.h2h?.avgTotal ?? apiData.h2hAvgTotal;
     if (Array.isArray(preData.h2h?.totals) && preData.h2h.totals.length) {
       apiData.h2h = preData.h2h.totals;
@@ -163,7 +165,15 @@ export async function fetchResearchData(
     if (qc.length) {
       apiData.collapsePct = Math.max(...qc.flatMap((c: any) => [c.q1, c.q2, c.q3, c.q4]));
     }
-    const qf = (q: any) => (q?.q1 != null ? +((q.q1 + q.q2) - (q.q3 + q.q4)).toFixed(1) : null);
+    // Fade guard checks ALL FOUR quarters (not only q1): the
+    // producer (prematch quarterProfile) guarantees
+    // all-four-numbers or all-four-null, but a partial object
+    // would otherwise yield NaN here and poison the
+    // stall/surge risk below.
+    const qf = (q: any) =>
+      q?.q1 != null && q?.q2 != null && q?.q3 != null && q?.q4 != null
+        ? +((q.q1 + q.q2) - (q.q3 + q.q4)).toFixed(1)
+        : null;
     const fadeH = qf(preData.home?.quarters?.avgCombined);
     const fadeA = qf(preData.away?.quarters?.avgCombined);
     if (fadeH != null || fadeA != null) {
@@ -489,6 +499,16 @@ export async function fetchResearchData(
   const homeDefPpg: number | null = homeDefPpgRaw == null ? null : parseNumber(homeDefPpgRaw, 0);
   const awayDefPpgRaw = apiData.awayDefPpg ?? apiData.away_def_ppg ?? apiData.awayDefensePpg;
   const awayDefPpg: number | null = awayDefPpgRaw == null ? null : parseNumber(awayDefPpgRaw, 0);
+  // Venue-specific measured points-ALLOWED (D-2026-11-13-01):
+  // the server measures homeArenaAllowed / awayRoadAllowed per
+  // venue (prematch summarize). The derived totalAvg - scored
+  // subtraction in warehouseUpgrade mixes all-venue totals with
+  // venue-specific scoring, so carry the measured values and let
+  // warehouseUpgrade prefer them; absent stays null (fallback).
+  const homeArenaAllowedRaw = apiData.homeArenaAllowed ?? apiData.home_arena_allowed;
+  const homeArenaAllowed: number | null = homeArenaAllowedRaw == null ? null : parseNumber(homeArenaAllowedRaw, 0);
+  const awayRoadAllowedRaw = apiData.awayRoadAllowed ?? apiData.away_road_allowed;
+  const awayRoadAllowed: number | null = awayRoadAllowedRaw == null ? null : parseNumber(awayRoadAllowedRaw, 0);
   const homePointDiff: number | null = awayDefPpg == null ? null : parseFloat((homeOffPpg - awayDefPpg).toFixed(1));
   const awayPointDiff: number | null = homeDefPpg == null ? null : parseFloat((awayOffPpg - homeDefPpg).toFixed(1));
   // No endpoint in the repo returns lead-time fields, so a missing value must
@@ -612,6 +632,8 @@ export async function fetchResearchData(
     awayOffPpg: awayOffPpg,
     homeDefPpg: homeDefPpg,
     awayDefPpg: awayDefPpg,
+    homeArenaAllowed: homeArenaAllowed,
+    awayRoadAllowed: awayRoadAllowed,
     homePointDiff: homePointDiff,
     awayPointDiff: awayPointDiff,
     homeLeadTime: homeLeadTime,
