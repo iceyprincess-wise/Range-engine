@@ -27,7 +27,12 @@ const readInbox = (): InboxFile => {
     const parsed = JSON.parse(raw);
     if (parsed && Array.isArray(parsed.games)) {
       return {
-        games: parsed.games,
+        // D-2026-11-16-10: a tracked inbox holding a null (or other
+        // non-object) entry is valid JSON, so it sailed past the
+        // parse check and crashed GET /v1/hybrid/inbox (view() reads
+        // g.id). Drop non-object entries here, the single choke
+        // point every inbox reader (GET/export/import) goes through.
+        games: parsed.games.filter((g: any) => g != null && typeof g === "object"),
         stats: parsed.stats && typeof parsed.stats === "object" ? parsed.stats : {},
         teams: Array.isArray(parsed.teams) ? parsed.teams : [],
         updatedAt: parsed.updatedAt ?? null,
@@ -72,14 +77,14 @@ const writeInbox = (inbox: InboxFile) => {
 };
 
 const leagueOf = (g: any) =>
-  (g.tournament && (g.tournament.uniqueTournament ? g.tournament.uniqueTournament.name : null)) ||
-  (g.tournament && g.tournament.name) ||
+  (g?.tournament && (g.tournament.uniqueTournament ? g.tournament.uniqueTournament.name : null)) ||
+  (g?.tournament && g.tournament.name) ||
   "Unknown";
 
-const dt = (g: any) => (g.startTimestamp ? new Date(g.startTimestamp * 1000).toISOString().slice(0, 10) : "?");
+const dt = (g: any) => (g?.startTimestamp ? new Date(g.startTimestamp * 1000).toISOString().slice(0, 10) : "?");
 
 const view = (g: any) => ({
-  id: g.id, date: dt(g),
+  id: g?.id, date: dt(g),
   home: g.homeTeam?.name ?? "?", away: g.awayTeam?.name ?? "?",
   hs: g.homeScore?.current ?? null, as: g.awayScore?.current ?? null,
   league: leagueOf(g),
@@ -88,7 +93,7 @@ const view = (g: any) => ({
 // A game that fails bankable() can NEVER enter the warehouse, so
 // calling it "new" makes the inbox promise a send that always skips
 // it. Three honest states instead.
-const statusOf = (g: any) => (store.games[g.id] ? "already-exist" : bankable(g) ? "new" : "invalid");
+const statusOf = (g: any) => (store.games[g?.id] ? "already-exist" : bankable(g) ? "new" : "invalid");
 
 // GET /v1/hybrid/inbox — read FRESH on every request (never cached at
 // boot), so a pushed or hand-dropped inbox file is visible without a
@@ -151,8 +156,17 @@ router.post("/v1/hybrid/export", (_req: Request, res: Response) => {
   for (const t of Object.values(store.teams) as any[]) {
     if (t?.name && t?.id != null) teamByName.set(t.name.trim().toLowerCase(), { id: t.id, name: t.name });
   }
-  const teamsChanged = inbox.teams.length !== teamByName.size;
-  inbox.teams = [...teamByName.values()];
+  // D-2026-11-16-11: teamsChanged used to compare LENGTH only, so a
+  // same-length teams swap rewrote inbox.teams without bumping
+  // updatedAt, breaking its "the inbox content changed" invariant.
+  // Compare content instead: sorted "name|id" keys of old vs new.
+  const teamKey = (t: any) => `${typeof t?.name === "string" ? t.name.trim().toLowerCase() : ""}|${t?.id ?? ""}`;
+  const newTeams = [...teamByName.values()];
+  const oldTeamKeys = inbox.teams.map(teamKey).sort();
+  const newTeamKeys = newTeams.map(teamKey).sort();
+  const teamsChanged = oldTeamKeys.length !== newTeamKeys.length ||
+    oldTeamKeys.some((k, i) => k !== newTeamKeys[i]);
+  inbox.teams = newTeams;
   // updatedAt means "the inbox content changed" — the old code bumped
   // it on every export, even one that added nothing.
   if (added > 0 || statsAdded > 0 || teamsChanged || pruned > 0) inbox.updatedAt = new Date().toISOString();
