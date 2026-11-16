@@ -144,6 +144,24 @@ router.get("/v1/games/tournaments", async (req: Request, res: Response) => {
   }
 });
 
+// D-2026-11-16-01: the bank file is written only to the live server's
+// ephemeral data dir, and no route served it — after a restart the only
+// copy was gone and nothing could pull it into git (the UPDATE response
+// body was the only retrieval path, and only at tap time). This free
+// read endpoint (0 quota) returns the bank payload any time after a
+// complete UPDATE, so it can be pulled and committed:
+//   curl -s https://<host>/api/v1/games/tournaments-bank -o artifacts/api-server/data/tournaments-bank.json
+// .gitignore already un-ignores tournaments-bank.json (Round 25, same
+// pattern as hybrid-inbox.json); store.json / quota.json /
+// games-cache.json stay ignored and are never committed. A 404 means no
+// complete UPDATE has banked a payload yet.
+router.get("/v1/games/tournaments-bank", (_req: Request, res: Response) => {
+  const bank = loadBankTournaments();
+  if (bank) return res.json({ ...bank, fromBank: true, quotaSpent: 0 });
+  if (disk.tournaments) return res.json({ ...disk.tournaments, fromDisk: true, quotaSpent: 0 });
+  return res.status(404).json({ error: "no saved tournaments bank yet — run a complete tournaments UPDATE first (?update=1), then pull this endpoint and commit artifacts/api-server/data/tournaments-bank.json" });
+});
+
 // SCHEDULE — 1 call first tap per tournament per day, disk forever after (works quota-dead).
 router.get("/v1/games/schedule", async (req: Request, res: Response) => {
   const tid = Number(req.query.tid);

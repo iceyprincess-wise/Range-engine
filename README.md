@@ -45,3 +45,12 @@ page (Hybrid button on the home page): export the store to
 file, and send the staged games to the warehouse from the page — or pull
 the other server's games straight in. No database, no provisioning, no
 paid plan.
+
+The tournaments list has the same treatment: after every complete
+tournaments UPDATE, pull the bank payload from the live server and
+commit that one file —
+`curl -s https://<host>/api/v1/games/tournaments-bank -o artifacts/api-server/data/tournaments-bank.json`
+— so the next restart restores the list with 0 quota
+(`tournaments-bank.json` is un-ignored in `.gitignore`, like
+`hybrid-inbox.json`). `store.json`, `quota.json` and `games-cache.json`
+stay ignored and are never committed.

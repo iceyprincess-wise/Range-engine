@@ -143,6 +143,56 @@ function CheckRow({ label, ok = true }: { label: string; ok?: boolean }) {
     </div>
   );
 }
+// D-2026-11-16-02: the audit table sliced adj_log by fixed position
+// (rows 0-7 / 7-12 / 12+), but runEngine does not push one row per rule
+// in numeric order — "Gender Adjustment" is always pushed after Rule 2
+// (runEngine.ts:215-216; genderNote is set in both branches, so the
+// guard is always true) and live rows land before Rule 4 (:252,
+// :276/:278). Fixed slices therefore filed foundation rules under the
+// environment header and decision rules under the wrong block on every
+// analysis. Group by rule identity instead: every row lands in exactly
+// one block, so a future push-order change cannot misfile a row again.
+// "Rule 8/9" / "Rule 10/11" group by their first number; "Rule 5b" by
+// 5; unparseable rows (none today) fall into Block 1 so no row is ever
+// dropped. Block 3 sorts numerically so Rule 14 no longer renders
+// after Rule 16.
+function auditRuleNum(rule: string): number | null {
+  const m = /^Rule\s+(\d+)/.exec(rule);
+  return m ? Number(m[1]) : null;
+}
+function auditBlockOf(rule: string): 1 | 2 | 3 {
+  if (
+    rule === "Gender Adjustment" ||
+    rule === "Live Match Variance" ||
+    rule.startsWith("Live Projection")
+  )
+    return 1;
+  const n = auditRuleNum(rule);
+  if (n == null) return 1;
+  if (n <= 7) return 1;
+  if (n === 8 || n === 9 || n === 10 || n === 11 || n === 12 || n === 18)
+    return 2;
+  return 3;
+}
+function groupAuditLog(rows: EngineOutput["adj_log"]): {
+  block1: EngineOutput["adj_log"];
+  block2: EngineOutput["adj_log"];
+  block3: EngineOutput["adj_log"];
+} {
+  const block1: EngineOutput["adj_log"] = [];
+  const block2: EngineOutput["adj_log"] = [];
+  const block3: EngineOutput["adj_log"] = [];
+  for (const row of rows) {
+    const b = auditBlockOf(row.rule);
+    if (b === 1) block1.push(row);
+    else if (b === 2) block2.push(row);
+    else block3.push(row);
+  }
+  block3.sort(
+    (a, b) => (auditRuleNum(a.rule) ?? 99) - (auditRuleNum(b.rule) ?? 99),
+  );
+  return { block1, block2, block3 };
+}
 function AdjRow({
   rule,
   lb,
@@ -3354,7 +3404,7 @@ Unavailable data is labeled — never invented.`);
                     <p className="text-[8px] font-bold uppercase tracking-widest text-zinc-600 py-1.5 border-b border-yellow-950 mb-1">
                       BLOCK 1 — FOUNDATION (Rules 1–7)
                     </p>
-                    {result.adj_log.slice(0, 7).map((row, i) => (
+                    {groupAuditLog(result.adj_log).block1.map((row, i) => (
                       <AdjRow
                         key={i}
                         rule={row.rule}
@@ -3367,7 +3417,7 @@ Unavailable data is labeled — never invented.`);
                     <p className="text-[8px] font-bold uppercase tracking-widest text-zinc-600 py-1.5 border-b border-yellow-950 mt-2 mb-1">
                       BLOCK 2 — ENVIRONMENT (Rules 8–12/18)
                     </p>
-                    {result.adj_log.slice(7, 12).map((row, i) => (
+                    {groupAuditLog(result.adj_log).block2.map((row, i) => (
                       <AdjRow
                         key={i + 7}
                         rule={row.rule}
@@ -3380,7 +3430,7 @@ Unavailable data is labeled — never invented.`);
                     <p className="text-[8px] font-bold uppercase tracking-widest text-zinc-600 py-1.5 border-b border-yellow-950 mt-2 mb-1">
                       BLOCK 3 — DECISION CORE (Rules 13–16)
                     </p>
-                    {result.adj_log.slice(12).map((row, i) => (
+                    {groupAuditLog(result.adj_log).block3.map((row, i) => (
                       <AdjRow
                         key={i + 12}
                         rule={row.rule}
@@ -3458,7 +3508,7 @@ Unavailable data is labeled — never invented.`);
                         </span>
                       </div>
                     </div>
-                    <p className="text-[10px] text-zinc-600">
+                    <div className="text-[10px] text-zinc-600">
                       Market position:{" "}
                       <span
                         className={`font-bold ${result.line_position === "Inside" ? "text-zinc-500" : "text-yellow-400"}`}
@@ -3475,6 +3525,12 @@ Unavailable data is labeled — never invented.`);
                       </span>
                       &nbsp;|&nbsp; Lean:{" "}
                       <span className="text-yellow-400 font-bold">
+                        {result.lean !== "NONE"
+                          ? result.lean.includes("UNDER")
+                            ? "UNDER"
+                            : "OVER"
+                          : "—"}
+                      </span>
                   {reconfirm && (
                     <p className={`text-[10px] font-bold mb-2 ${reconfirm === "match" ? "text-yellow-400" : reconfirm === "variance" ? "text-red-400" : "text-zinc-500"}`}>
                       {reconfirm === "pending" ? "⟳ Auto-reconfirm running…" : reconfirm === "match" ? "✓ RECONFIRMED — cold recompute agrees (Heavy-Adj limits enforced)" : "⚠ VARIANCE — recompute disagrees. Review audit before staking."}
@@ -3488,13 +3544,7 @@ Unavailable data is labeled — never invented.`);
                       <p className="text-[11px] text-yellow-200 leading-snug">{result.alt_line_note}</p>
                     </div>
                   )}
-                        {result.lean !== "NONE"
-                          ? result.lean.includes("UNDER")
-                            ? "UNDER"
-                            : "OVER"
-                          : "—"}
-                      </span>
-                    </p>
+                    </div>
                   </div>
                 </div>
 
