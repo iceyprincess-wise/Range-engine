@@ -2,6 +2,12 @@ import { Router, type Request, type Response } from "express";
 import { store } from "../lib/warehouse";
 
 const router = Router();
+// D-2026-11-16-07: a fouls-per-game average needs a minimum sample.
+// One high-foul game returned foulsPerGame: 47 with measured: true,
+// and Rule 10 fires at > 40 — one game could tilt a whole league's
+// pricing. Below the minimum the value is null (foulStatGames still
+// reports the sample so callers can see why).
+const MIN_FOUL_GAMES = 5;
 const norm = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, " ").replace(/\s+/g, " ").trim();
 const tokens = (s: string) => norm(s).split(" ").filter(Boolean);
 
@@ -30,6 +36,6 @@ router.get("/v1/league-dna", (req: Request, res: Response) => {
   const avg = totals.reduce((s, v) => s + v, 0) / totals.length;
   // Sample SD (n-1), matching league-dna-measure.cjs, the generator of the DNA snapshot.
   const sd = totals.length > 1 ? Math.sqrt(totals.reduce((s, v) => s + (v - avg) ** 2, 0) / (totals.length - 1)) : 0;
-  return res.json({ measured: true, games: totals.length, avgTotal: +avg.toFixed(1), sd: +sd.toFixed(1), minTotal: Math.min(...totals), maxTotal: Math.max(...totals), foulsPerGame: foulGames ? +(foulTotal / foulGames).toFixed(1) : null, foulStatGames: foulGames, provenance: "warehouse" });
+  return res.json({ measured: true, games: totals.length, avgTotal: +avg.toFixed(1), sd: +sd.toFixed(1), minTotal: Math.min(...totals), maxTotal: Math.max(...totals), foulsPerGame: foulGames >= MIN_FOUL_GAMES ? +(foulTotal / foulGames).toFixed(1) : null, foulStatGames: foulGames, provenance: "warehouse" });
 });
 export default router;

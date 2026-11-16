@@ -36,6 +36,23 @@ router.get("/v1/backtest", (_req: Request, res: Response) => {
     };
   };
 
+  // D-2026-11-16-08: key the rules table by rule IDENTITY, not the
+  // full triggered_rules text — the text embeds the numbers (LB/HB),
+  // so one rule split into many rows ("Rule 5 (Eff/Pace): LB +3,
+  // HB +3" vs "LB -3, HB -3"). Same leading-"Rule N" parse as
+  // RangeEngine groupAuditLog; "Rule 8/9" / "Rule 10/11" group by
+  // their full head, "Rule 5b" stays distinct from "Rule 5", and
+  // non-Rule signals ("Live Match:", "Live Projection:", "Alt-Line
+  // Reco:") group by the head before the first colon — their text
+  // embeds numbers too (line, projection), so keeping the full text
+  // would split them the same way. A headless string keeps its text.
+  const ruleKey = (r: string) => {
+    const m = /^Rule\s+\d+[a-z]?(?:\/\d+[a-z]?)?(?:\s*\([^)]*\))?/.exec(r);
+    if (m) return m[0];
+    const c = r.indexOf(":");
+    return c > 0 ? r.slice(0, c) : r;
+  };
+
   const MIN_PRIOR = 8;
   const rows: any[] = [];
   const ruleTable: Record<string, { fired: number; within: number; absErrSum: number }> = {};
@@ -97,10 +114,11 @@ router.get("/v1/backtest", (_req: Request, res: Response) => {
     rows.push({ league, match: `${g.homeTeam.name} vs ${g.awayTeam.name}`, actual, lb: out.lb, hb: out.hb, midpoint: out.midpoint, within, err });
 
     for (const r of out.triggered_rules || []) {
-      ruleTable[r] = ruleTable[r] || { fired: 0, within: 0, absErrSum: 0 };
-      ruleTable[r].fired++;
-      if (within) ruleTable[r].within++;
-      ruleTable[r].absErrSum += Math.abs(err);
+      const k = ruleKey(r);
+      ruleTable[k] = ruleTable[k] || { fired: 0, within: 0, absErrSum: 0 };
+      ruleTable[k].fired++;
+      if (within) ruleTable[k].within++;
+      ruleTable[k].absErrSum += Math.abs(err);
     }
   }
 

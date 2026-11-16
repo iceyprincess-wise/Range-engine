@@ -43,7 +43,12 @@ export async function fetchResearchData(
       sourcesScanned++;
       const ld = await ldRes.json();
       if (ld?.measured) leagueDnaMeasured = { games: ld.games, avgTotal: ld.avgTotal, sd: ld.sd };
-      if (typeof ld?.foulsPerGame === "number") leagueFoulsMeasured = ld.foulsPerGame;
+      // D-2026-11-16-07: never feed a small-sample foul average into
+      // Rule 10. league-dna now returns null below 5 games; this gate
+      // also covers a stale/older server that still sends a number
+      // with foulStatGames < 5 (a server that sends no foulStatGames
+      // at all is accepted, as before).
+      if (typeof ld?.foulsPerGame === "number" && (typeof ld?.foulStatGames !== "number" || ld.foulStatGames >= 5)) leagueFoulsMeasured = ld.foulsPerGame;
     }
   } catch { leagueDnaMeasured = null; }
 

@@ -5,6 +5,11 @@ const router = Router();
 const RAPIDAPI_KEY = process.env.RAPIDAPI_KEY;
 const RAPIDAPI_HOST = process.env.RAPIDAPI_HOST || "basketapi1.p.rapidapi.com";
 
+// User timezone (WAT, UTC+1 — the same local-date convention the
+// client uses for fixtureDate and freefeed.ts uses for lineups,
+// D-2026-11-15-11). D-2026-11-16-06: /v1/resolve "today" below.
+const WAT_OFFSET_MS = 60 * 60 * 1000;
+
 if (!RAPIDAPI_KEY) {
   console.warn(
     "RAPIDAPI_KEY is not configured. BasketAPI routes will return 500 until the key is provided.",
@@ -105,6 +110,11 @@ router.get("/v1/sync", async (req: Request, res: Response) => {
       periods: {
         home: [target.homeScore?.period1 ?? null, target.homeScore?.period2 ?? null, target.homeScore?.period3 ?? null, target.homeScore?.period4 ?? null],
         away: [target.awayScore?.period1 ?? null, target.awayScore?.period2 ?? null, target.awayScore?.period3 ?? null, target.awayScore?.period4 ?? null],
+        // D-2026-11-16-04: overtime is a SEPARATE field, not a 5th
+        // quarter — the Q1-Q4 arrays stay 4 long so the UI map over
+        // them stays honest, and OT points (5 in the harness: 100
+        // vs 105 live) stop vanishing from the quarters line.
+        overtime: { home: target.homeScore?.overtime ?? null, away: target.awayScore?.overtime ?? null },
       },
       statusDescription: target.status?.description ?? null,
       // Live clock from the SAME event: the provider time object
@@ -119,14 +129,23 @@ router.get("/v1/sync", async (req: Request, res: Response) => {
         if (!periodLength) return null;
         const totalPeriods = typeof t.totalPeriodCount === "number" ? t.totalPeriodCount : 4;
         const overtimeLength = typeof t.overtimeLength === "number" ? t.overtimeLength : 300;
+        const otActive = target.homeScore?.overtime != null || target.awayScore?.overtime != null;
         let elapsed: number | null = typeof t.played === "number" && t.played > 0 ? t.played : null;
         if (elapsed == null && typeof t.currentPeriodStartTimestamp === "number") {
           const started = [target.homeScore?.period1, target.homeScore?.period2, target.homeScore?.period3, target.homeScore?.period4].filter((v: any) => v != null).length;
           const inPeriod = Math.max(0, Math.min(periodLength, Math.floor(Date.now() / 1000) - t.currentPeriodStartTimestamp));
-          elapsed = started > 0 ? (started - 1) * periodLength + inPeriod : inPeriod;
+          // D-2026-11-16-05: in OT the current period IS overtime, so
+          // inPeriod is OT elapsed, not Q4 elapsed. Regulation is 4
+          // full periods, then OT time (capped at overtimeLength).
+          // The old (started-1)*periodLength counted OT as Q4 and
+          // understated elapsed by a full period (harness: 1920 vs
+          // true 2520 at 10-min periods). Assumes the provider's
+          // currentPeriodStartTimestamp is the OT start once an
+          // overtime score exists — the same assumption the old
+          // fallback already made for Q4.
+          elapsed = otActive ? 4 * periodLength + Math.min(inPeriod, overtimeLength) : started > 0 ? (started - 1) * periodLength + inPeriod : inPeriod;
         }
         if (elapsed == null) return null;
-        const otActive = target.homeScore?.overtime != null || target.awayScore?.overtime != null;
         const gameSeconds = periodLength * totalPeriods + (otActive ? overtimeLength : 0);
         return { elapsedSeconds: Math.max(0, Math.min(elapsed, gameSeconds)), gameSeconds, periodLength, totalPeriods };
       })(),
@@ -164,8 +183,13 @@ router.get("/v1/resolve", async (req: Request, res: Response) => {
   // answered from the live feed, so say so instead of silently
   // returning today's match (or a 404) for another day. Use
   // /api/v1/games/schedule for dated fixtures.
+  // D-2026-11-16-06: "today" is the USER's day (WAT, UTC+1), not UTC:
+  // same bug class as D-2026-11-15-11 (freefeed lineups) — between
+  // 00:00 and 00:59 WAT the server's UTC date is still yesterday, so
+  // a dated query for today 400'd. The payload default below reuses
+  // this same WAT date.
+  const today = new Date(Date.now() + WAT_OFFSET_MS).toISOString().split("T")[0];
   if (date) {
-    const today = new Date().toISOString().split("T")[0];
     if (date !== today) {
       return res.status(400).json({ error: "resolve only searches live matches; use /api/v1/games/schedule for dated fixtures", date, today });
     }
@@ -195,7 +219,7 @@ router.get("/v1/resolve", async (req: Request, res: Response) => {
         home: target.homeScore?.current ?? 0,
         away: target.awayScore?.current ?? 0,
       },
-      date: date || new Date().toISOString().split("T")[0],
+      date: date || today,
     };
 
     setCache(cacheKey, payload, 20_000);
