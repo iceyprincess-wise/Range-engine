@@ -524,10 +524,18 @@ export function RangeEngine() {
   const [gStatuses, setGStatuses] = useState<Record<number, any>>({});
   const updateTournaments = async () => {
     if (refreshing) return;
+    // D-2026-11-17-15: refuse a quota-spending UPDATE when the quota is
+    // already known-exhausted, and never let an empty payload wipe the
+    // on-screen list — restore the banked list instead, like openGames.
+    if (quotaInfo.remaining != null && quotaInfo.remaining <= 0) return;
     setRefreshing(true);
     try {
       const t = await fetch(`${API_BASE}/api/v1/games/tournaments?update=1&date=${today}`).then((r) => (r.ok ? r.json() : null));
-      if (t) { setGTours(t.tournaments || []); setGMeta(t); saveTournamentsBank(t, today); }
+      if (t && Array.isArray(t.tournaments) && t.tournaments.length > 0) { setGTours(t.tournaments); setGMeta(t); saveTournamentsBank(t, today); }
+      else if (t) {
+        const banked = loadTournamentsBank(today);
+        if (banked && banked.tournaments.length > 0) { setGTours(banked.tournaments); setGMeta(banked); }
+      }
       const q = await fetch(`${API_BASE}/api/v1/quota`).then((r) => (r.ok ? r.json() : null));
       if (q) setQuotaInfo({ limit: (q as any).limit ?? null, remaining: (q as any).remaining ?? null, resetAt: (q as any).resetAt ?? null });
     } catch { /* best-effort */ } finally { setRefreshing(false); }
@@ -609,31 +617,45 @@ export function RangeEngine() {
   };
   useEffect(() => {
     if (!homeTeam || !awayTeam) { setHomeNews([]); setAwayNews([]); return; }
+    // D-2026-11-17-14: a slow fetch for old teams used to overwrite the
+    // new teams' news. The cleanup flag drops stale resolutions.
+    let cancelled = false;
     const t = setTimeout(async () => {
       try {
         const [h, a] = await Promise.all([
           fetch(`${API_BASE}/api/v1/news?team=${encodeURIComponent(homeTeam)}`).then((r) => (r.ok ? r.json() : { items: [] })),
           fetch(`${API_BASE}/api/v1/news?team=${encodeURIComponent(awayTeam)}`).then((r) => (r.ok ? r.json() : { items: [] })),
         ]);
+        if (cancelled) return;
         setHomeNews(h.items || []);
         setAwayNews(a.items || []);
       } catch { /* news is best-effort */ }
     }, 2500);
-    return () => clearTimeout(t);
+    return () => { cancelled = true; clearTimeout(t); };
   }, [homeTeam, awayTeam]);
   // ─────────────────────────────────────────────────────────────────────────
   const [isReportOpen, setIsReportOpen] = useState(false);
   // --- Auto-Refresh Sync Timer ---
-  const [refreshCountdown, setRefreshCountdown] = useState(60);
+  // D-2026-11-17-10: initialise from the real next-poll delay instead
+  // of a hardcoded 60s (first poll used to fire at 60s, not 600/270s).
+  // D-2026-11-17-17: when the phase is IDLE (delay null) the display
+  // freezes instead of ticking 1:00 -> 0:00 forever with no sync.
+  const [refreshCountdown, setRefreshCountdown] = useState(() => nextCountdownSec(koTime, currentTime, date, today) ?? 60);
   const [isReanalyzing, setIsReanalyzing] = useState(false);
   const [reanalysisProgress, setReanalysisProgress] = useState(0);
-  const [, setReanalysisMessage] = useState<string | null>(null);
+  // D-2026-11-17-18: the message was set 6x but its value was discarded
+  // ([, setter]) so it never rendered. It is a real value now.
+  const [reanalysisMessage, setReanalysisMessage] = useState<string | null>(null);
+  const reanalysisResetRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // --- POINT 11: TOP NOTCH AUTO-SYNC ENGINE TIMER (SURGICALLY INJECTED) ---
   // This is the single, bulletproof source of truth for the 60s countdown.
   useEffect(() => {
     const mainSyncTimer = setInterval(() => {
       setRefreshCountdown((prev) => {
+        // D-2026-11-17-17: IDLE polls nothing — freeze the display
+        // instead of ticking 1:00 -> 0:00 forever with no sync firing.
+        if (nextCountdownSec(koTime, currentTime, date, today) === null) return prev;
         const next = prev - 1;
         if (next < 0) return 60; // wrap-around after hitting 0
         return next;
@@ -642,7 +664,7 @@ export function RangeEngine() {
 
     // 100% Red Screen Prevention: Clear interval on unmount
     return () => clearInterval(mainSyncTimer);
-  }, []);
+  }, [koTime, currentTime, date, today]);
 
 
   // 2. LIVE SYNC TICKER (60s loop)
@@ -690,6 +712,9 @@ export function RangeEngine() {
   // When the countdown reaches 0 we must run a final bypassing re-analysis
   useEffect(() => {
     let progressInterval: ReturnType<typeof setInterval> | null = null;
+    // D-2026-11-17-10: never re-enter while a reanalysis is running —
+    // the effect used to re-fire 2-4x per cycle with no guard.
+    if (isReanalyzing) return;
 
     async function performFinalReanalysis() {
       if (!homeTeam || !awayTeam || !league) {
@@ -740,11 +765,11 @@ export function RangeEngine() {
       } finally {
         void refreshQuota();
         // keep the status visible briefly before reset
-        setTimeout(() => {
+        reanalysisResetRef.current = setTimeout(() => {
           setIsReanalyzing(false);
           setReanalysisProgress(0);
           setTimeout(() => setReanalysisMessage(null), 1200);
-          // Restart 60s countdown
+          // Restart countdown from the real next-poll delay
           setRefreshCountdown(nextCountdownSec(koTime, currentTime, date, today) ?? 60);
         }, 800);
       }
@@ -757,8 +782,12 @@ export function RangeEngine() {
       // the user sat on the Archive (or any other tab), re-spending
       // prematch + sync every 90–600s for data the open tab never
       // displays (D-2026-11-12-04). Only reanalyse on the analyzer tab.
-      if (delaySec === null || tab !== "analyzer") {
-        setRefreshCountdown(60); // IDLE/FINAL or off-tab: keep the display clock alive, spend nothing
+      if (delaySec === null) {
+        // D-2026-11-17-17: IDLE polls nothing — park the display at 0:00
+        // instead of restarting a 60s clock that never fires a sync.
+        setRefreshCountdown(0);
+      } else if (tab !== "analyzer") {
+        setRefreshCountdown(60); // off-tab: keep the display clock alive, spend nothing
       } else {
         performFinalReanalysis();
       }
@@ -766,11 +795,15 @@ export function RangeEngine() {
 
     return () => {
       if (progressInterval) clearInterval(progressInterval);
+      if (reanalysisResetRef.current) { clearTimeout(reanalysisResetRef.current); reanalysisResetRef.current = null; }
     };
-  }, [refreshCountdown, homeTeam, awayTeam, league, researchData, tab]);
+    // D-2026-11-17-10: researchData dropped from deps — it re-fired the
+    // effect (and bypassed the 6h research cache) on every data change.
+  }, [refreshCountdown, homeTeam, awayTeam, league, tab, isReanalyzing]);
   // Engine state
   const [phase, setPhase] = useState<"idle" | "hunting" | "result">("idle");
   const [huntStep, setHuntStep] = useState(0);
+  const huntIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const [result, setResult] = useState<EngineOutput | null>(null);
   const [homeInfo, setHomeInfo] = useState<ReturnType<
     typeof lookupTeam
@@ -788,7 +821,6 @@ export function RangeEngine() {
 
   // History
   const [history, setHistory] = useState<HistoryEntry[]>([]);
-  const currentEntryId = useRef<string | null>(null);
   // Receipts already settle-attempted this page load, so a
   // due-but-unbanked receipt is not re-probed (and re-charged)
   // every time the Archive tab is re-opened.
@@ -812,6 +844,18 @@ export function RangeEngine() {
     const dna = getLeagueDNA(lg);
     setHomeTeam(hist.homeTeam ?? "");
     setAwayTeam(hist.awayTeam ?? "");
+    // D-2026-11-17-11: the receipt stores date/KO/lines/bookmaker/
+    // gameId — restore them too, or the reopened Results page shows
+    // the wrong fixture's context. (gameId is stored on the entry at
+    // save time; older receipts without one simply keep the current.)
+    if (hist.date) setDate(hist.date);
+    if (hist.koTime) setKoTime(hist.koTime);
+    if (hist.overLow != null) setOverLow(hist.overLow);
+    if (hist.overHigh != null) setOverHigh(hist.overHigh);
+    if (hist.underLow != null) setUnderLow(hist.underLow);
+    if (hist.underHigh != null) setUnderHigh(hist.underHigh);
+    if (hist.bookmaker) setBookmaker(hist.bookmaker);
+    if (hist.gameId) setGameId(hist.gameId);
     setHomeInfo(hist.homeInfoSnap ?? lookupTeam(hist.homeTeam ?? "", dna));
     setAwayInfo(hist.awayInfoSnap ?? lookupTeam(hist.awayTeam ?? "", dna));
     setRerunResult(hist.rerunResult ?? null);
@@ -904,11 +948,16 @@ export function RangeEngine() {
     // never on the server's low-quota answer (D-2026-11-12-05) — the
     // in-memory set still bounds this load, and the receipt retries
     // after the reset.
-    void Promise.allSettled(due.map((h) => {
-      settleAttemptedRef.current.add(h.id);
-      return settleAndGrade(h).then((res) => { if (res !== "low-quota") recordSettleAttempt(h.id); });
-    })).then(() => { void refreshQuota(); });
-  }, [tab]);
+    void Promise.allSettled(due.map((h) =>
+      settleAndGrade(h).then((res) => {
+        // D-2026-11-17-16: mark the attempt only on a real outcome — a
+        // low-quota answer must not block the receipt after the reset.
+        if (res !== "low-quota") { settleAttemptedRef.current.add(h.id); recordSettleAttempt(h.id); }
+      }),
+    )).then(() => { void refreshQuota(); });
+    // currentTime ticks every 60s, so due receipts are now re-checked
+    // while the Archive stays open — not only when the tab is entered.
+  }, [tab, currentTime]);
   // Early-read revalidation used to call /api/v1/sync expecting
   // closing lines (closing_over / final_over / over_line) and
   // scratch notices — but the sync payload is a live-score payload
@@ -1026,7 +1075,7 @@ export function RangeEngine() {
     return () => {
       if (researchTimer.current) clearTimeout(researchTimer.current);
     };
-  }, [homeTeam, awayTeam, league]);
+  }, [homeTeam, awayTeam, league, gameId, bookmaker, date]);
 
   // ─── Deep Scan panel: derived from the REAL research pipeline ────
   // (Replaces the legacy duplicate scan effect, which ran its own
@@ -1082,6 +1131,7 @@ export function RangeEngine() {
       case 0: return `KO ${koTime} · ${tipOff || "syncing"}`;
       case 1: return hg + ag > 0 ? `${hg + ag} warehouse games loaded` : "awaiting warehouse data";
       case 2: return researchData?.homeFt ? `FT ${researchData.homeFt}% · 3PT ${researchData.homePt3 ?? "—"}% (home side)` : "shooting splits pending";
+      case 3: return researchData?.homeArenaPPG != null || researchData?.awayRoadPPG != null ? `Rule 5/6 — arena ${researchData.homeArenaPPG ?? "—"} · road ${researchData.awayRoadPPG ?? "—"} PPG (efficiency & pace inputs ready)` : "Rule 5/6 — efficiency & pace inputs pending";
       case 4: return `peak collapse ${researchData?.collapsePct ?? 0}% across ${hg + ag} studied games`;
       case 5: return `${getLeagueDNA(league).name} · width cap ${getLeagueDNA(league).maxWidth} pts`;
       case 6: return news > 0 ? `${news} real news reports scanned${detectKeyOut().out ? " · KEY-OUT SIGNAL" : ""}` : "no injury reports found — nothing invented";
@@ -1103,11 +1153,15 @@ export function RangeEngine() {
 
     const rd = researchData; // snapshot auto-researched data
     let step = 0;
+    // D-2026-11-17-13: cancel any hunt already running, then track the
+    // new one in a ref so handleReset / unmount can cancel it.
+    if (huntIntervalRef.current) clearInterval(huntIntervalRef.current);
     const iv = setInterval(() => {
       step++;
       setHuntStep(step);
       if (step >= HUNT_STEPS.length) {
         clearInterval(iv);
+        huntIntervalRef.current = null;
         const res = runEngine({
           home_name: homeTeam,
           away_name: awayTeam,
@@ -1179,13 +1233,13 @@ export function RangeEngine() {
           awayInfoSnap: aInfo,
             earlyRead,
             bookmaker,
+            gameId: gameId || undefined,
             revalidationRequested: false,
             revalidationStatus: earlyRead ? "AWAITING_SYNC" : "OK",
             lastRevalidationMsg: earlyRead
               ? "EARLY READ: AWAITING FINAL SYNC"
               : "No pre-match watch needed",
           };
-          currentEntryId.current = entry.id;
           const updated = [entry, ...history];
           setHistory(updated);
           saveHistory(updated);
@@ -1245,11 +1299,17 @@ export function RangeEngine() {
     return () => clearTimeout(t);
   }, [result, phase]);
   function handleReset() {
+    // D-2026-11-17-13: "New Analysis" cancels the running hunt — the
+    // orphaned interval used to keep running the engine and saving
+    // history after the reset.
+    if (huntIntervalRef.current) { clearInterval(huntIntervalRef.current); huntIntervalRef.current = null; }
     setPhase("idle");
     setResult(null);
     setRerunResult(null);
     setRerunPhase("idle");
   }
+  // An orphaned hunt interval must not survive unmount either.
+  useEffect(() => () => { if (huntIntervalRef.current) clearInterval(huntIntervalRef.current); }, []);
   function clearHistory() {
     setHistory([]);
     saveHistory([]);
@@ -1401,6 +1461,7 @@ export function RangeEngine() {
             setHistory={setHistory}
             saveHistory={saveHistory}
             onSpend={() => { void refreshQuota(); }}
+            quotaRemaining={quotaInfo.remaining}
           />
         </div>
       ) : null}
@@ -1550,6 +1611,7 @@ export function RangeEngine() {
                     <span className="text-[10px] font-bold text-zinc-300 uppercase tracking-wider">
                       {nextCountdownSec(koTime, currentTime, date, today) === null ? "Auto-Sync Idle" : "Live Sync Active"}
                     </span>
+                    {reanalysisMessage ? <span className="text-[10px] font-mono text-yellow-400 normal-case tracking-normal">· {reanalysisMessage}</span> : null}
                   </div>
                   <div className="text-xs font-mono text-yellow-400 font-bold">
                     {isReanalyzing ? (

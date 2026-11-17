@@ -1,6 +1,25 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { minutesToTipoff } from "@workspace/range-engine";
 import { Button } from "@/components/ui/button";
+
+// D-2026-11-17-25: live linkage, deep telemetry and stall state used to
+// vanish on close/reload and cost fresh quota to re-fetch. They persist
+// for 10 minutes; stale entries are dropped on load.
+const LIVE_MATRIX_CACHE_KEY = "rangengine_v3_livematrix_v1";
+const LIVE_MATRIX_CACHE_TTL_MS = 10 * 60 * 1000;
+function loadLiveMatrixCache(): { matchStats: Record<string, any>; stallStatus: Record<string, any>; apiReferenceMap: Record<string, any> } {
+  try {
+    const raw = localStorage.getItem(LIVE_MATRIX_CACHE_KEY);
+    if (!raw) return { matchStats: {}, stallStatus: {}, apiReferenceMap: {} };
+    const parsed = JSON.parse(raw);
+    if (!parsed || typeof parsed !== "object" || Date.now() - (parsed.ts ?? 0) > LIVE_MATRIX_CACHE_TTL_MS) return { matchStats: {}, stallStatus: {}, apiReferenceMap: {} };
+    return {
+      matchStats: parsed.matchStats && typeof parsed.matchStats === "object" ? parsed.matchStats : {},
+      stallStatus: parsed.stallStatus && typeof parsed.stallStatus === "object" ? parsed.stallStatus : {},
+      apiReferenceMap: parsed.apiReferenceMap && typeof parsed.apiReferenceMap === "object" ? parsed.apiReferenceMap : {},
+    };
+  } catch { return { matchStats: {}, stallStatus: {}, apiReferenceMap: {} }; }
+}
 
 interface LiveMatrixHubProps {
   history: any[];
@@ -9,15 +28,29 @@ interface LiveMatrixHubProps {
   // Called after any action that may have spent provider quota, so the
   // parent can re-read the quota snapshot and the header stays accurate.
   onSpend?: () => void;
+  // D-2026-11-17-24: remaining quota, so Refresh Board can refuse at zero.
+  quotaRemaining?: number | null;
 }
 
-export const LiveMatrixHub: React.FC<LiveMatrixHubProps> = ({ history, setHistory, saveHistory, onSpend }) => {
+export const LiveMatrixHub: React.FC<LiveMatrixHubProps> = ({ history, setHistory, saveHistory, onSpend, quotaRemaining }) => {
+  const [liveCache] = useState(loadLiveMatrixCache);
   const [expandedMatch, setExpandedMatch] = useState<string | null>(null);
-  const [matchStats, setMatchStats] = useState<Record<string, any>>({});
-  const [stallStatus, setStallStatus] = useState<Record<string, any>>({});
+  const [matchStats, setMatchStats] = useState<Record<string, any>>(liveCache.matchStats);
+  const [stallStatus, setStallStatus] = useState<Record<string, any>>(liveCache.stallStatus);
   const [syncing, setSyncing] = useState<Record<string, boolean>>({});
   const [globalLoading, setGlobalLoading] = useState(false);
-  const [apiReferenceMap, setApiReferenceMap] = useState<Record<string, any>>({}); // Maps history IDs to API data
+  const [apiReferenceMap, setApiReferenceMap] = useState<Record<string, any>>(liveCache.apiReferenceMap); // Maps history IDs to API data
+  // D-2026-11-17-23: whether a refresh has ever run, and the last error.
+  const [hasRefreshed, setHasRefreshed] = useState(false);
+  const [refreshError, setRefreshError] = useState<string | null>(null);
+  // D-2026-11-17-24: minimum 30s between Refresh Board taps.
+  const lastRefreshAtRef = useRef(0);
+  // D-2026-11-17-25: persist live state with a short TTL.
+  useEffect(() => {
+    try {
+      localStorage.setItem(LIVE_MATRIX_CACHE_KEY, JSON.stringify({ ts: Date.now(), matchStats, stallStatus, apiReferenceMap }));
+    } catch { /* best-effort */ }
+  }, [matchStats, stallStatus, apiReferenceMap]);
   const API_BASE = (import.meta.env.VITE_API_BASE || "").replace(/\/+$/, "");
 
   // Date-aware: history entries carry their fixture `date`, so a
@@ -28,12 +61,14 @@ export const LiveMatrixHub: React.FC<LiveMatrixHubProps> = ({ history, setHistor
     const current = String(now.getHours()).padStart(2, "0") + ":" + String(now.getMinutes()).padStart(2, "0");
     const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
     const mins = minutesToTipoff(koTime, current, fixtureDate, today);
-    return mins ?? NaN;
+    return mins;
   };
 
   const getEarlyReadBadge = (game: any) => {
-    const minutes = game.koTime ? getTipoffMinutes(game.koTime, game.date) : Infinity;
-    if (game.earlyRead || minutes > 45) {
+    // D-2026-11-17-21: no kickoff time used to read as Infinity > 45,
+    // so the EARLY READ badge fired for games with no KO time at all.
+    const minutes = game.koTime ? getTipoffMinutes(game.koTime, game.date) : null;
+    if (game.earlyRead || (minutes != null && minutes > 45)) {
       return (
         <span className="px-2 py-1 rounded-full text-[9px] font-black uppercase tracking-widest text-red-300 bg-red-950/60 border border-red-800">
           EARLY READ
@@ -50,12 +85,36 @@ export const LiveMatrixHub: React.FC<LiveMatrixHubProps> = ({ history, setHistor
 
   // 📡 THE REFRESH BOARD ALGORITHM (Lightweight Sync + Auto-Full-Time Push)
   const fetchGlobalLive = async () => {
+    // D-2026-11-17-24: refuse at known-zero quota, and at most once
+    // per 30s — one tap used to cost a call with no check at all.
+    if (quotaRemaining != null && quotaRemaining <= 0) {
+      setRefreshError("Daily API quota exhausted — Refresh Board disabled until reset");
+      return;
+    }
+    if (Date.now() - lastRefreshAtRef.current < 30_000) return;
+    lastRefreshAtRef.current = Date.now();
     setGlobalLoading(true);
     try {
       // Fetch the global live matches from the backend proxy
       const res = await fetch(`${API_BASE}/api/basket/live`);
-      const data = await res.json();
-      const liveEvents = data?.events || [];
+      // D-2026-11-17-19: an error payload is not an empty board — keep
+      // the last good map and scores, and say so.
+      if (!res.ok) {
+        setRefreshError(`Live feed error ${res.status} — showing last good board`);
+        return;
+      }
+      let data: any;
+      try {
+        data = await res.json();
+      } catch {
+        setRefreshError("Live feed returned an unreadable body — showing last good board");
+        return;
+      }
+      if (!Array.isArray(data?.events)) {
+        setRefreshError("Live feed returned no event list — showing last good board");
+        return;
+      }
+      const liveEvents = data.events;
 
       let updatedHistory = [...history];
       let historyChanged = false;
@@ -106,23 +165,30 @@ export const LiveMatrixHub: React.FC<LiveMatrixHubProps> = ({ history, setHistor
               outcome = total < underLine ? "WIN" : total === underLine ? "PUSH" : "LOSS";
             }
 
-            updatedHistory = updatedHistory.map(h => {
-              if (h.id === game.id) {
-                return {
-                  ...h,
-                  ...(outcome ? { outcome, actualTotal: total, ftScore: `${homeScore}-${awayScore}` } : {}),
-                  result: { ...h.result, type: "FT", home: homeScore, away: awayScore }
-                };
-              }
-              return h;
-            });
-            historyChanged = true;
+            // D-2026-11-17-28: only stamp type:"FT" (and save) when the
+            // outcome is decidable — an undecidable finish used to be
+            // saved as a finished result with no outcome.
+            if (outcome) {
+              updatedHistory = updatedHistory.map(h => {
+                if (h.id === game.id) {
+                  return {
+                    ...h,
+                    outcome, actualTotal: total, ftScore: `${homeScore}-${awayScore}`,
+                    result: { ...h.result, type: "FT", home: homeScore, away: awayScore }
+                  };
+                }
+                return h;
+              });
+              historyChanged = true;
+            }
           }
         }
       });
 
       setApiReferenceMap(newRefMap);
-      
+      setHasRefreshed(true);
+      setRefreshError(null);
+
       if (historyChanged) {
         setHistory(updatedHistory);
         saveHistory(updatedHistory);
@@ -130,9 +196,11 @@ export const LiveMatrixHub: React.FC<LiveMatrixHubProps> = ({ history, setHistor
 
     } catch (err) {
       console.error("Global Live Feed Error:", err);
+      setRefreshError("Live feed request failed — showing last good board");
+    } finally {
+      onSpend?.();
+      setGlobalLoading(false);
     }
-    onSpend?.();
-    setGlobalLoading(false);
   };
 
   // TASK D: Auto-fetch DISABLED to prevent silent API rate-limit draining
@@ -153,14 +221,31 @@ export const LiveMatrixHub: React.FC<LiveMatrixHubProps> = ({ history, setHistor
     setSyncing(prev => ({ ...prev, [historyId]: true }));
     try {
       const res = await fetch(`${API_BASE}/api/basket/match/${apiMatchId}/statistics`);
-      const data = await res.json();
-      
-      // Safe parsing to protect React from crashing (Object mapping)
-      const rawStats = data?.statistics?.[0]?.groups || [];
+      // D-2026-11-17-20: an error answer must never fabricate zero stats
+      // and stamp them VERIFIED — bail out before touching state.
+      if (!res.ok) {
+        setRefreshError(`Deep sync failed (${res.status}) — no stats updated`);
+        return;
+      }
+      let data: any;
+      try {
+        data = await res.json();
+      } catch {
+        setRefreshError("Deep sync returned an unreadable body — no stats updated");
+        return;
+      }
+      const rawStats = Array.isArray(data?.statistics?.[0]?.groups) ? data.statistics[0].groups : [];
+      if (rawStats.length === 0) {
+        setRefreshError("Deep sync returned no statistics — no stats updated");
+        return;
+      }
+
+      // Safe parsing to protect React from crashing (Object mapping).
+      // A missing stat renders as "—", never a fabricated "0".
       const getStat = (groupName: string, statName: string) => {
         const group = rawStats.find((g: any) => g.groupName === groupName);
         const item = group?.statisticsItems?.find((s: any) => s.name === statName);
-        return { home: item?.home || "0", away: item?.away || "0" };
+        return { home: item?.home ?? "—", away: item?.away ?? "—" };
       };
 
       const parsedStats = {
@@ -188,7 +273,7 @@ export const LiveMatrixHub: React.FC<LiveMatrixHubProps> = ({ history, setHistor
          stallNote = "🚨 EXTREME POSSESSION SKEW: Severe offensive lockdown or transition stalling detected.";
       } else if (homePoss > 65 || homePoss < 35) {
          stallRisk = "MODERATE";
-         stallNote = "⚠ EXTREME POSSESSION SKEW: Potential offensive lockdown or severe transition stalling detected.";
+         stallNote = "⚠ ELEVATED POSSESSION SKEW: Potential offensive lockdown or transition stalling detected.";
       }
 
       setStallStatus(prev => ({ ...prev, [historyId]: { risk: stallRisk, note: stallNote, verifiedAt: new Date().toLocaleTimeString() } }));
@@ -196,9 +281,10 @@ export const LiveMatrixHub: React.FC<LiveMatrixHubProps> = ({ history, setHistor
     } catch (err) {
       console.error("Deep sync error:", err);
       alert("Failed to pull deep telemetry. API may be rate limiting.");
+    } finally {
+      onSpend?.();
+      setSyncing(prev => ({ ...prev, [historyId]: false }));
     }
-    onSpend?.();
-    setSyncing(prev => ({ ...prev, [historyId]: false }));
   };
 
   return (
@@ -208,20 +294,23 @@ export const LiveMatrixHub: React.FC<LiveMatrixHubProps> = ({ history, setHistor
           <span className="text-white">📡 Global</span> Live Matrix
         </h2>
         <Button
-          onClick={fetchGlobalLive} 
-          disabled={globalLoading}
+          onClick={fetchGlobalLive}
+          disabled={globalLoading || quotaRemaining === 0}
           className="px-5 py-2 bg-gradient-to-r from-yellow-600 to-yellow-600 hover:from-yellow-500 hover:to-yellow-500 text-white font-bold rounded-lg shadow-lg border border-yellow-400/50 transition-all disabled:opacity-50 disabled:cursor-not-allowed text-base h-auto min-h-0 disabled:pointer-events-auto"
         >
           {globalLoading ? "Scanning Feed..." : "Refresh Board"}
         </Button>
       </div>
+      {refreshError && (
+        <div className="mb-4 p-3 bg-red-950/40 border border-red-600/50 rounded-lg text-red-300 text-xs font-bold">{refreshError}</div>
+      )}
 
       <div className="space-y-4">
         {!safeHistory.length && (
           <div className="text-center p-8 bg-black/40 backdrop-blur-sm border border-yellow-500/20 rounded-xl text-zinc-400 font-bold tracking-widest uppercase text-sm">
             Awaiting Active Match Streams
             <br />
-            <span className="text-xs font-normal opacity-50 mt-2 block">Server returned no history — check API bridge or create an analyzed fixture in Analyzer.</span>
+            <span className="text-xs font-normal opacity-50 mt-2 block">No analyzed fixtures are saved on this device yet — create one in Analyzer and it will appear here for live tracking.</span>
           </div>
         )}
 
@@ -245,11 +334,10 @@ export const LiveMatrixHub: React.FC<LiveMatrixHubProps> = ({ history, setHistor
                     {isLive
                       ? `${apiMatchData.homeTeam?.name || 'Home'} vs ${apiMatchData.awayTeam?.name || 'Away'}`
                       : `${game.homeTeam || String(game.fixture || "").split(' vs ')[0] || 'Home'} vs ${game.awayTeam || String(game.fixture || "").split(' vs ')[1] || 'Away'}`}
-                    <span className="text-yellow-400 font-black px-1">VS</span>
                   </span>
                   <div className="flex items-center gap-3 mt-1">
                     <span className={`text-[10px] font-black px-2 py-1 rounded border uppercase tracking-widest ${isLive ? 'bg-yellow-900/40 text-yellow-300 border-yellow-500/50' : 'bg-zinc-800/40 text-zinc-400 border-zinc-600/50'}`}>
-                      {isLive ? apiMatchData.periods?.current || "LIVE" : "AWAITING KICKOFF"}
+                      {isLive ? apiMatchData.periods?.current || "LIVE" : hasRefreshed ? "AWAITING KICKOFF" : "NOT YET CHECKED"}
                     </span>
                     {getEarlyReadBadge(game)}
                     {isLive && (
@@ -286,7 +374,7 @@ export const LiveMatrixHub: React.FC<LiveMatrixHubProps> = ({ history, setHistor
                       <div className="p-3 bg-black/40 backdrop-blur-sm rounded-lg border border-yellow-500/20 text-center"><strong className="text-zinc-400 text-xs block mb-1">TIMEOUTS</strong> <span className="text-yellow-400">H: {stats.timeouts.home}</span> <span className="text-zinc-600 mx-1">|</span> <span className="text-yellow-400">A: {stats.timeouts.away}</span></div>
                       
                       {stall && (
-                        <div className={`col-span-2 md:col-span-4 p-4 mt-2 border rounded-lg font-semibold flex flex-col justify-center ${stall.risk === 'HIGH' ? 'bg-red-950/30 border-red-600/50 text-red-300' : stall.risk === 'MODERATE' ? 'bg-yellow-950/30 border-yellow-600/50 text-yellow-300' : 'bg-yellow-950/30 border-yellow-600/50 text-yellow-300'}`}>
+                        <div className={`col-span-2 md:col-span-4 p-4 mt-2 border rounded-lg font-semibold flex flex-col justify-center ${stall.risk === 'HIGH' ? 'bg-red-950/30 border-red-600/50 text-red-300' : stall.risk === 'MODERATE' ? 'bg-yellow-950/30 border-yellow-600/50 text-yellow-300' : 'bg-zinc-800/40 border-zinc-600/50 text-zinc-300'}`}>
                            <span className="block mb-1">{stall.note}</span> 
                            <span className="text-[10px] font-black opacity-70 uppercase tracking-widest">VERIFIED SYNC: {stall.verifiedAt}</span>
                         </div>

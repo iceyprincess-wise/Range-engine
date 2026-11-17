@@ -112,8 +112,26 @@ export function runEngine(opts: {
   const eff_pt3_home = opts.home_pt3 != null ? opts.home_pt3 / 100 : H.pt3_pct;
   const eff_pt3_away = opts.away_pt3 != null ? opts.away_pt3 / 100 : A.pt3_pct;
   const avg_ft = (eff_ft_home + eff_ft_away) / 2;
+  // D-2026-11-17-06: Rule 5b prices MEASURED shooting only. Averaging a
+  // measured side with a profile side presented the profile rate as
+  // measured and let one real number fire the rule for both teams.
+  // avg_pt3 stays the profile-blended display average (Rule 3 note);
+  // avg_pt3_measured is the only average Rule 5b may fire on.
   const avg_pt3 = (eff_pt3_home + eff_pt3_away) / 2;
-  const avg_pace = (H.pace + A.pace) / 2;
+  const measuredPt3 = [
+    ...(opts.home_pt3 != null ? [eff_pt3_home] : []),
+    ...(opts.away_pt3 != null ? [eff_pt3_away] : []),
+  ];
+  const avg_pt3_measured =
+    measuredPt3.length > 0
+      ? measuredPt3.reduce((s, v) => s + v, 0) / measuredPt3.length
+      : null;
+  // D-2026-11-17-08: TEAM_DB pace is possessions/48 (~98-104) while
+  // the proxy pace and the Rule 5/8-9 thresholds (70 / 72) live on the
+  // ~70 band — <70 was unreachable and >=72 true for all 1,190 DB
+  // pairs. Normalise possessions-scale pace into the ~70 band here.
+  const toPace70 = (p: number) => (p > 90 ? +(p * 0.7).toFixed(1) : p);
+  const avg_pace = (toPace70(H.pace) + toPace70(A.pace)) / 2;
   const leagueMeasuredActive = !!(opts.league_measured && opts.league_measured.games >= 15);
   const leagueAvg = leagueMeasuredActive ? +(opts.league_measured!.avgTotal / 2).toFixed(1) : dna.proxyPPG;
 
@@ -324,18 +342,18 @@ export function runEngine(opts: {
   // so callers that pass no 3PT data (e.g. backtest) are unchanged.
   const pt3Measured = opts.home_pt3 != null || opts.away_pt3 != null;
   let r5b_hb = 0;
-  if (pt3Measured && avg_pt3 >= 0.38) r5b_hb = Math.round(2 * ws);
-  else if (pt3Measured && avg_pt3 <= 0.3) r5b_hb = -Math.round(2 * ws);
+  if (pt3Measured && avg_pt3_measured != null && avg_pt3_measured >= 0.38) r5b_hb = Math.round(2 * ws);
+  else if (pt3Measured && avg_pt3_measured != null && avg_pt3_measured <= 0.3) r5b_hb = -Math.round(2 * ws);
   hb += r5b_hb;
   adj_log.push({
     rule: "Rule 5b — 3PT Volume",
     lb_adj: 0,
     hb_adj: r5b_hb,
-    note: pt3Measured ? `Measured 3PT%: H ${(eff_pt3_home * 100).toFixed(0)}% / A ${(eff_pt3_away * 100).toFixed(0)}% (avg ${(avg_pt3 * 100).toFixed(0)}%)${r5b_hb > 0 ? " — elite combined shooting raises the ceiling" : r5b_hb < 0 ? " — poor combined shooting compresses the ceiling" : " — inside the 30-38% neutral band"}` : "No measured 3PT% supplied — profile rates are not priced (neutral)",
+    note: pt3Measured ? `Measured 3PT%: H ${(eff_pt3_home * 100).toFixed(0)}%${opts.home_pt3 != null ? "" : " (profile — not priced)"} / A ${(eff_pt3_away * 100).toFixed(0)}%${opts.away_pt3 != null ? "" : " (profile — not priced)"} (measured avg ${avg_pt3_measured != null ? (avg_pt3_measured * 100).toFixed(0) + "%" : "—"})${r5b_hb > 0 ? " — elite combined shooting raises the ceiling" : r5b_hb < 0 ? " — poor combined shooting compresses the ceiling" : " — inside the 30-38% neutral band"}` : "No measured 3PT% supplied — profile rates are not priced (neutral)",
     status: r5b_hb !== 0 ? "triggered" : "checked",
   });
   if (r5b_hb !== 0)
-    triggered.push(`Rule 5b (3PT Volume): HB ${r5b_hb >= 0 ? "+" : ""}${r5b_hb} — measured avg 3PT% ${(avg_pt3 * 100).toFixed(0)}%`);
+    triggered.push(`Rule 5b (3PT Volume): HB ${r5b_hb >= 0 ? "+" : ""}${r5b_hb} — measured avg 3PT% ${avg_pt3_measured != null ? (avg_pt3_measured * 100).toFixed(0) : "—"}%`);
 
   // ── Rule 6 (Defensive Safety Lock — single-side only) ────────────────────
   let r6_lb = 0,
@@ -609,7 +627,8 @@ export function runEngine(opts: {
   let hammer = false,
     vol_killed = false,
     buf_blocked = false,
-    heavy_adj_kill = false;
+    heavy_adj_kill = false,
+    collapseBlocked = false;
 
   // Hook Shield: base buffer per DNA, +0.5 for .5 lines
   const halfLine = (l: number) => l % 1 === 0.5;
@@ -677,6 +696,7 @@ export function runEngine(opts: {
       // Collapse % > 20% OVERRIDES Hammer (no Hammer on stall risk)
       if (collapsePct > 20) {
         hammer = false;
+        collapseBlocked = true;
         decision = "NO ACTION";
         triggered.push(
           `Rule 16 (Hammer BLOCKED): Hammer edge confirmed BUT Collapse ${collapsePct}% >20% → Stall override → NO ACTION`,
@@ -779,7 +799,14 @@ export function runEngine(opts: {
           note: `Pre-cap width ${preCapWidth} ≤ ${dna.maxWidth} — PASS`,
           status: "checked",
         });
-        if (over_edge > overBuf) {
+        // D-2026-11-17-07: a collapse stall override must hold — the
+        // normal Rule 12/13 chain must not revive a decision the
+        // collapse block already forced to NO ACTION.
+        if (collapseBlocked) {
+          triggered.push(
+            "Rule 14: Collapse stall override holds — NO ACTION stands (Rule 16 blocked the Hammer, the normal chain must not revive it)",
+          );
+        } else if (over_edge > overBuf) {
           decision = `OVER ${best_over_line}`;
           confidence = "Medium";
           triggered.push(

@@ -58,8 +58,18 @@ export async function fetchResearchData(
     throw new Error(preErr ?? `API request failed${response ? ` with status ${response.status}` : ""}`);
   }
 
-  const apiData: any = response && response.ok ? await response.json() : {};
-  if (response && response.ok) sourcesScanned++;
+  // D-2026-11-17-33: a 200 with an unparsable body used to throw out of
+  // here and discard the good prematch data. Treat it as a failed sync
+  // and carry on with preData.
+  let apiData: any = {};
+  if (response && response.ok) {
+    try {
+      apiData = await response.json();
+      sourcesScanned++;
+    } catch {
+      apiData = {};
+    }
+  }
 
   if (preData) {
     apiData.provenance = "real";
@@ -136,9 +146,13 @@ export async function fetchResearchData(
     apiData.homeOtRate = preData.home?.otRate ?? apiData.homeOtRate;
     apiData.awayOtRate = preData.away?.otRate ?? apiData.awayOtRate;
     apiData.h2hOtRate = preData.h2h?.otRate ?? apiData.h2hOtRate;
-    // Pooled measured OT rate across both teams' banked games + H2H
-    // meetings (games-weighted, from the counts prematch serves).
-    {
+    // Pooled measured OT rate: the server's de-duplicated union
+    // (D-2026-11-17-29). The old client-side sum counted every H2H
+    // meeting three times; the fallback below is only for an older
+    // server that does not serve `pooled` yet.
+    if (preData.pooled && typeof preData.pooled.otRate !== "undefined") {
+      apiData.otRate = preData.pooled.otRate;
+    } else {
       const og = (preData.home?.otGames ?? 0) + (preData.away?.otGames ?? 0) + (preData.h2h?.otGames ?? 0);
       const gn = (preData.home?.gamesAnalyzed ?? 0) + (preData.away?.gamesAnalyzed ?? 0) + (preData.h2h?.meetings ?? 0);
       apiData.otRate = gn > 0 ? +(og / gn).toFixed(3) : null;
@@ -159,11 +173,15 @@ export async function fetchResearchData(
     apiData.awayRestDays = preData.away?.restDays ?? apiData.awayRestDays;
     // Pool the REAL recent game totals (both teams + H2H meetings) for the
     // Rule 16 variance gate in runEngine.
-    apiData.recentTotals = [
-      ...(Array.isArray(preData.home?.recentTotals) ? preData.home.recentTotals : []),
-      ...(Array.isArray(preData.away?.recentTotals) ? preData.away.recentTotals : []),
-      ...(Array.isArray(preData.h2h?.totals) ? preData.h2h.totals : []),
-    ];
+    // D-2026-11-17-29: prefer the server's de-duplicated union totals;
+    // the concatenated fallback is only for an older server.
+    apiData.recentTotals = Array.isArray(preData.pooled?.recentTotals)
+      ? preData.pooled.recentTotals
+      : [
+          ...(Array.isArray(preData.home?.recentTotals) ? preData.home.recentTotals : []),
+          ...(Array.isArray(preData.away?.recentTotals) ? preData.away.recentTotals : []),
+          ...(Array.isArray(preData.h2h?.totals) ? preData.h2h.totals : []),
+        ];
     // Quarters-derived collapse must be computed BEFORE the fade note below,
     // which quotes it ("Peak collapse X%"); previously it was computed after.
     const qc = [preData.home?.quarters?.collapsePct, preData.away?.quarters?.collapsePct].filter(Boolean);
@@ -660,10 +678,12 @@ export async function fetchResearchDataCached(
   if (!forceRefresh) {
     const entry = loadResearchCache(key);
     if (isResearchCacheValid(entry)) {
-      try {
-        return entry!.payload as ResearchData;
-      } catch (e) {
-        // fallthrough to fetching
+      // D-2026-11-17-34: the cached payload used to be returned
+      // unchecked, so a poisoned entry was served for up to 6h. Only a
+      // well-shaped payload is a hit; anything else refetches.
+      const p: any = entry!.payload;
+      if (p && typeof p === "object" && typeof p.homeTeam === "string" && typeof p.awayTeam === "string") {
+        return p as ResearchData;
       }
     }
   }

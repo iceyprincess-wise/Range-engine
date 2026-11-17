@@ -177,6 +177,31 @@ const summarize = (games: any[], teamId: number) => {
 
 const qpts = (e: any, side: "home" | "away", q: number) => e?.[side + "Score"]?.["period" + q] ?? null;
 
+// D-2026-11-17-29: the client pooled home + away + H2H by concatenation,
+// so every H2H meeting counted THREE times (once in each team's pool,
+// once in the H2H pool): pooled otRate 0.273 vs a true 2/18 = 0.111, and
+// recentTotals passed Rule 16's >=5 gate on 2 unique games. The union
+// is computed here because the client cannot dedupe totals arrays that
+// carry no game ids. Keyed by provider game id (composite fallback for
+// banked games without one); newest first.
+export function dedupeUnionPool(homeGames: any[], awayGames: any[], h2hGames: any[]) {
+  const isOt = (e: any) => e.homeScore?.overtime != null || e.awayScore?.overtime != null || e.status?.code === 110;
+  const byId = new Map<string, any>();
+  for (const g of [...homeGames, ...awayGames, ...h2hGames]) {
+    const k = (g as any).id != null ? `id:${(g as any).id}` : `g:${g.homeTeam?.id}-${g.awayTeam?.id}-${g.startTimestamp}`;
+    if (!byId.has(k)) byId.set(k, g);
+  }
+  const unionGames = [...byId.values()].sort((a: any, b: any) => (b.startTimestamp ?? 0) - (a.startTimestamp ?? 0));
+  const otGames = unionGames.filter(isOt).length;
+  const totals = unionGames.map((e: any) => (pts(e, "home") as number) + (pts(e, "away") as number));
+  return {
+    games: unionGames.length,
+    otGames,
+    otRate: unionGames.length ? +(otGames / unionGames.length).toFixed(3) : null,
+    recentTotals: totals.slice(0, 10),
+  };
+}
+
 const quarterProfile = (games: any[]) => {
   const combined: number[][] = [[], [], [], []];
   const collapse = [0, 0, 0, 0];
@@ -415,6 +440,9 @@ router.get("/v1/prematch", async (req: Request, res: Response) => {
     }).length;
     const h2hAwayWins = h2hGames.length - h2hHomeWins;
     const h2hOtGames = h2hGames.filter((e: any) => e.homeScore?.overtime != null || e.awayScore?.overtime != null || e.status?.code === 110).length;
+    // D-2026-11-17-29: pooled OT rate + recent totals on the union, not
+    // the triple-counted concatenation the client used to build.
+    const pooled = dedupeUnionPool(homeGames, awayGames, h2hGames);
     // "Vs Other" pools: each team's banked games EXCLUDING this
     // fixture's opponent. The UI's "Home/Away vs Other (L5)" rows
     // previously rendered the all-opponents form string, H2H games
@@ -449,6 +477,7 @@ router.get("/v1/prematch", async (req: Request, res: Response) => {
       home: { id: home.id, name: home.name, ...summarize(homeGames, home.id), quarters: quarterProfile(homeGames), shooting: teamShooting(homeGames, home.id), shootingSeries: shootingSeries(homeGames, home.id), restDays: homeGames[0]?.startTimestamp ? Math.max(0, Math.floor((fixtureTs - homeGames[0].startTimestamp) / 86400)) : null, vsOther: homeVsOther },
       away: { id: away.id, name: away.name, ...summarize(awayGames, away.id), quarters: quarterProfile(awayGames), shooting: teamShooting(awayGames, away.id), shootingSeries: shootingSeries(awayGames, away.id), restDays: awayGames[0]?.startTimestamp ? Math.max(0, Math.floor((fixtureTs - awayGames[0].startTimestamp) / 86400)) : null, vsOther: awayVsOther },
       h2h: { meetings: h2hGames.length, avgTotal: h2hAvgTotal, totals: h2hTotals, homeWins: h2hHomeWins, awayWins: h2hAwayWins, otGames: h2hOtGames, otRate: h2hGames.length ? +(h2hOtGames / h2hGames.length).toFixed(3) : null },
+      pooled,
       // What the warehouse records say this fixture IS (see
       // detectFixtureGender). Detection only - the engine still
       // prices the selector the user chose; the UI warns on mismatch

@@ -62,6 +62,7 @@ export interface HistoryEntry {
   ftScore?: string;
   earlyRead?: boolean;
   bookmaker?: string;
+  gameId?: string;
   revalidationRequested?: boolean;
   revalidationStatus?: "AWAITING_SYNC" | "CONFIRMED" | "LATE_SHIFT" | "OK";
   lastRevalidationMsg?: string;

@@ -5,7 +5,10 @@ export const ARCHIVE_KEY = "splendor_analysis_archive";
 
 export function loadHistory(): HistoryEntry[] {
   try {
-    return JSON.parse(localStorage.getItem(HISTORY_KEY) ?? "[]");
+    // D-2026-11-17-32: a non-array valid JSON value used to be returned
+    // as-is and crashed consumers (.filter outside any try).
+    const v = JSON.parse(localStorage.getItem(HISTORY_KEY) ?? "[]");
+    return Array.isArray(v) ? v : [];
   } catch {
     return [];
   }
@@ -13,7 +16,9 @@ export function loadHistory(): HistoryEntry[] {
 
 export function loadAnalysisArchive(): AnalysisArchiveEntry[] {
   try {
-    return JSON.parse(localStorage.getItem(ARCHIVE_KEY) ?? "[]");
+    // D-2026-11-17-32: same non-array guard as loadHistory.
+    const v = JSON.parse(localStorage.getItem(ARCHIVE_KEY) ?? "[]");
+    return Array.isArray(v) ? v : [];
   } catch {
     return [];
   }
@@ -21,24 +26,42 @@ export function loadAnalysisArchive(): AnalysisArchiveEntry[] {
 
 export function saveHistory(h: HistoryEntry[]) {
   try {
+    // D-2026-11-17-31: build the receipts FIRST and defensively — a
+    // legacy entry without `result` used to throw here AFTER the
+    // history write but BEFORE the archive write, freezing every future
+    // archive update. A result-less entry is skipped, never fatal.
+    // D-2026-11-17-30 (continued): receipts are built from the FULL list
+    // passed in, not the trimmed 50 — an entry dropped by the trim in
+    // the same save must still reach the archive.
+    const receipts: AnalysisArchiveEntry[] = [];
+    for (const entry of h) {
+      const r: any = (entry as any)?.result;
+      if (!r || typeof r.lb !== "number" || typeof r.hb !== "number" || typeof r.midpoint !== "number") continue;
+      receipts.push({
+        id: entry.id,
+        date: entry.date,
+        timestamp: entry.timestamp,
+        teams: `${entry.homeTeam} vs ${entry.awayTeam}`,
+        league: entry.league,
+        finalRange: `${r.lb.toFixed(1)} - ${r.hb.toFixed(1)}`,
+        midpoint: r.midpoint.toFixed(1),
+        bookmaker: entry.bookmaker || "Sportybet",
+        decision: r.decision,
+        outcome: entry.outcome || "PENDING",
+        confidence: r.confidence,
+      });
+    }
     const trimmed = h.slice(0, 50);
     localStorage.setItem(HISTORY_KEY, JSON.stringify(trimmed));
 
-    const archiveReceipts = trimmed.map((entry) => ({
-      id: entry.id,
-      date: entry.date,
-      timestamp: entry.timestamp,
-      teams: `${entry.homeTeam} vs ${entry.awayTeam}`,
-      league: entry.league,
-      finalRange: `${entry.result.lb.toFixed(1)} - ${entry.result.hb.toFixed(1)}`,
-      midpoint: entry.result.midpoint.toFixed(1),
-      bookmaker: entry.bookmaker || "Sportybet",
-      decision: entry.result.decision,
-      outcome: entry.outcome || "PENDING",
-      confidence: entry.result.confidence,
-    }));
-
-    localStorage.setItem(ARCHIVE_KEY, JSON.stringify(archiveReceipts));
+    // D-2026-11-17-30: the "archive" used to be overwritten from the
+    // trimmed history on every save, so the oldest receipt vanished
+    // with the 51st entry and win-rate history was silently rewritten.
+    // Merge cumulatively by id instead — never truncate from the trim.
+    const merged = new Map<string, AnalysisArchiveEntry>();
+    for (const old of loadAnalysisArchive()) merged.set(old.id, old);
+    for (const receipt of receipts) merged.set(receipt.id, receipt);
+    localStorage.setItem(ARCHIVE_KEY, JSON.stringify([...merged.values()]));
   } catch (e) {
     console.warn("Failed to save analysis archive", e);
   }
@@ -56,14 +79,19 @@ export function makeResearchCacheKey(
   bookmaker = "",
   fixtureDate = "",
 ) {
+  // D-2026-11-17-35: unlabeled, conditionally-included parts collided —
+  // (gameId "x") and (bookmaker "x") produced the same key. Every part
+  // is always present and labelled, so distinct triples can never share
+  // a key. (Keys change shape once; old entries are simply missed and
+  // refetched.)
   const parts = [
-    encodeURIComponent(league.trim().toLowerCase()),
-    encodeURIComponent(home.trim().toLowerCase()),
-    encodeURIComponent(away.trim().toLowerCase()),
+    `l:${encodeURIComponent(league.trim().toLowerCase())}`,
+    `h:${encodeURIComponent(home.trim().toLowerCase())}`,
+    `a:${encodeURIComponent(away.trim().toLowerCase())}`,
+    `g:${encodeURIComponent(String(gameId).trim().toLowerCase())}`,
+    `b:${encodeURIComponent(String(bookmaker).trim().toLowerCase())}`,
+    `d:${encodeURIComponent(String(fixtureDate).trim())}`,
   ];
-  if (gameId) parts.push(encodeURIComponent(String(gameId).trim().toLowerCase()));
-  if (bookmaker) parts.push(encodeURIComponent(String(bookmaker).trim().toLowerCase()));
-  if (fixtureDate) parts.push(encodeURIComponent(String(fixtureDate).trim()));
   return RESEARCH_CACHE_PREFIX + parts.join(":");
 }
 
@@ -152,10 +180,18 @@ if (typeof window !== "undefined" && window.location.hash === "#export-archive")
       "position:fixed;bottom:24px;left:50%;transform:translateX(-50%);z-index:99999;" +
       "padding:14px 22px;background:#eab308;color:#000;font-weight:700;border-radius:12px;border:0;";
     btn.onclick = () => {
+      // D-2026-11-17-37: a corrupt stored value used to throw out of
+      // the click handler — export [] for that section instead.
+      const safeParse = (key: string): any[] => {
+        try {
+          const v = JSON.parse(localStorage.getItem(key) ?? "[]");
+          return Array.isArray(v) ? v : [];
+        } catch { return []; }
+      };
       const payload = {
         exportedAt: new Date().toISOString(),
-        history: JSON.parse(localStorage.getItem(HISTORY_KEY) ?? "[]"),
-        archive: JSON.parse(localStorage.getItem(ARCHIVE_KEY) ?? "[]"),
+        history: safeParse(HISTORY_KEY),
+        archive: safeParse(ARCHIVE_KEY),
       };
       const a = document.createElement("a");
       a.href = URL.createObjectURL(new Blob([JSON.stringify(payload)], { type: "application/json" }));

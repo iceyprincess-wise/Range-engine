@@ -24,6 +24,12 @@ export function tourLabelExtra(
   let same = 0;
   for (const o of tours) if (o.name === t.name && o.country === t.country) same++;
   if (same < 2) return null;
-  if (t.uniqueName && t.uniqueName !== t.name) return t.uniqueName;
+  if (t.uniqueName && t.uniqueName !== t.name) {
+    // D-2026-11-17-36: two colliding rows can share one uniqueName, in
+    // which case both got the identical label. Fall back to #id when
+    // another colliding row carries the same uniqueName.
+    const shared = tours.some((o) => o.id !== t.id && o.name === t.name && o.country === t.country && o.uniqueName === t.uniqueName);
+    if (!shared) return t.uniqueName;
+  }
   return `#${t.id}`;
 }

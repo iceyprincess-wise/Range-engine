@@ -28,6 +28,11 @@ const setCache = (cacheKey: string, value: any, ttl = 15_000) => {
   cache.set(cacheKey, { value, expiresAt: Date.now() + ttl });
 };
 
+// D-2026-11-17-04: a not-found answer is cacheable too. Every poll for
+// a not-yet-live game used to spend 1 provider call; a brief negative
+// cache (~30s) replays the 404 without spending.
+const NOT_FOUND_TTL_MS = 30_000;
+
 const basketFetch = async (path: string): Promise<any> => {
   const url = `https://${RAPIDAPI_HOST}${path}`;
   const response = await fetch(url, {
@@ -82,6 +87,7 @@ router.get("/v1/sync", async (req: Request, res: Response) => {
     const cacheKey = `live-${homeTeam}-${awayTeam}`;
     const cached = getCached(cacheKey);
     if (cached) {
+      if (cached.__notFound) return res.status(404).json({ error: "Live match not found for the requested teams" });
       return res.json(cached);
     }
 
@@ -90,6 +96,7 @@ router.get("/v1/sync", async (req: Request, res: Response) => {
     const target = getTargetMatch(events, homeTeam, awayTeam);
 
     if (!target) {
+      setCache(cacheKey, { __notFound: true }, NOT_FOUND_TTL_MS);
       return res.status(404).json({ error: "Live match not found for the requested teams" });
     }
 
@@ -199,6 +206,7 @@ router.get("/v1/resolve", async (req: Request, res: Response) => {
     const cacheKey = `resolve-${homeTeam}-${awayTeam}-${date || ""}`;
     const cached = getCached(cacheKey);
     if (cached) {
+      if (cached.__notFound) return res.status(404).json({ error: "Match resolution failed: no live event found" });
       return res.json(cached);
     }
 
@@ -207,6 +215,7 @@ router.get("/v1/resolve", async (req: Request, res: Response) => {
     const target = getTargetMatch(events, homeTeam, awayTeam);
 
     if (!target) {
+      setCache(cacheKey, { __notFound: true }, NOT_FOUND_TTL_MS);
       return res.status(404).json({ error: "Match resolution failed: no live event found" });
     }
 
