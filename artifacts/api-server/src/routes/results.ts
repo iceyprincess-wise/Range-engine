@@ -20,6 +20,13 @@ let settleCooldownUntil = 0;
 // the client's persisted 24h attempt backoff covers that case.
 const settleFetchCooldown = new Map<string, number>();
 const SETTLE_FETCH_COOLDOWN_MS = 24 * 3600 * 1000;
+// Per-fixture error cooldown (D-2026-11-17-02): a completed fetch
+// that finds nothing cools the fixture for 24h, but a fetch that
+// ERRORS never set any cooldown, so it re-spent quota on every call.
+const SETTLE_FETCH_ERROR_COOLDOWN_MS = 1 * 3600 * 1000;
+// User timezone (WAT, UTC+1 — same convention as routes/basket.ts
+// and routes/freefeed.ts): fixture dates are the user's WAT day.
+const WAT_OFFSET_MS = 60 * 60 * 1000;
 const fixtureSettleKey = (home: string, away: string, date?: string, koTime?: string) =>
   [home, away, date ?? "", koTime ?? ""].join("|");
 
@@ -43,10 +50,12 @@ const findStored = (h: string, a: string, date?: string, koTime?: string): any =
   // SETTLEMENT IDENTITY: a result belongs to ONE fixture. Matching on
   // team names alone returned the pair's most recent scored meeting -
   // an April game "settled" a November fixture minutes before its
-  // tip-off (proven live 2026-11-08). With a fixture date, only games
-  // starting within +-1 day of it may answer (the +-1 tolerates
-  // UTC/local date edges around midnight); exact-date matches are
-  // preferred over window-edge ones in the return below.
+  // tip-off (proven live 2026-11-08). With a fixture date and no
+  // koTime, only games starting on that exact WAT day may answer:
+  // the old +-1-day pool fallback let a back-to-back pair's
+  // yesterday game "settle" today's unplayed fixture
+  // (D-2026-11-17-01). Fixture dates are WAT days, so the game's
+  // day is computed in WAT (UTC+1), not UTC.
   const target = date ? Date.parse(date + "T00:00:00Z") : NaN;
   // Kickoff window: the fixture itself, not its neighbours.
   // date+koTime parsed as UTC with a +-4h tolerance covers the
@@ -59,6 +68,7 @@ const findStored = (h: string, a: string, date?: string, koTime?: string): any =
     ? Date.parse(date + "T" + koTime + ":00Z")
     : NaN;
   const dayOf = (g: any) => (g.startTimestamp ? new Date(g.startTimestamp * 1000).toISOString().slice(0, 10) : null);
+  const watDayOf = (g: any) => (g.startTimestamp ? new Date(g.startTimestamp * 1000 + WAT_OFFSET_MS).toISOString().slice(0, 10) : null);
   const pool = Object.values(store.games).filter((g: any) => {
     if (!Number.isFinite(target)) return true;
     const d = dayOf(g);
@@ -82,13 +92,13 @@ const findStored = (h: string, a: string, date?: string, koTime?: string): any =
     if (exact) return exact;
     return byTime(games.filter((g: any) => norm(g.homeTeam?.name ?? "").includes(h) && norm(g.awayTeam?.name ?? "").includes(a)));
   };
-  const exactDay = Number.isFinite(target) ? pool.filter((g: any) => dayOf(g) === date) : pool;
+  const exactDay = Number.isFinite(target) ? Object.values(store.games).filter((g: any) => watDayOf(g) === date) : pool;
   if (Number.isFinite(koMs)) {
     const inWindow = (g: any) => g.startTimestamp != null && Math.abs(g.startTimestamp * 1000 - koMs) <= 4 * 3600 * 1000;
     const windowGames = Object.values(store.games).filter(inWindow);
     return pick(scored(windowGames)) ?? pick(windowGames);
   }
-  return pick(scored(exactDay)) ?? pick(scored(pool)) ?? pick(exactDay) ?? pick(pool);
+  return pick(scored(exactDay)) ?? pick(exactDay);
 };
 
 router.get("/v1/result", async (req: Request, res: Response) => {
@@ -119,8 +129,16 @@ router.get("/v1/result", async (req: Request, res: Response) => {
         // Prefer the provider hit whose name is exactly the query, not
         // whichever similarly-named team the provider lists first.
         const hits = (data?.results || []).filter((r: any) => r.type === "team");
-        const hit = hits.find((r: any) => norm(r.entity?.name ?? "") === h) || hits[0];
-        if (hit) { team = { id: hit.entity.id, name: hit.entity.name }; store.teams[h] = team; markDirty(); }
+        const exactHit = hits.find((r: any) => norm(r.entity?.name ?? "") === h);
+        const hit = exactHit || hits[0];
+        if (hit) {
+          team = { id: hit.entity.id, name: hit.entity.name };
+          // D-2026-11-17-03: only an exact-name resolution is cached
+          // durably. A hits[0] fallback is used for this request's
+          // fetch only — caching it would bank the wrong team id
+          // under the query name for every later settle-fetch.
+          if (exactHit) { store.teams[h] = team; markDirty(); }
+        }
       }
       if (team) {
         const prev = await apiFetch("/api/basketball/team/" + team.id + "/matches/previous/0");
@@ -131,6 +149,17 @@ router.get("/v1/result", async (req: Request, res: Response) => {
       fetchCompleted = true;
     } catch (err) {
       if (/BasketAPI (429|403)/.test(err instanceof Error ? err.message : "")) settleCooldownUntil = Date.now() + 5 * 60 * 1000;
+      // D-2026-11-17-02: any other settle-fetch error (e.g. a 500
+      // from previous-matches) left NO per-fixture cooldown, so
+      // every /v1/result call re-spent quota on the same failing
+      // fixture. Cool this fixture for 1h; the 24h cooldown still
+      // only follows a completed fetch. The response stays honest
+      // (settled:false) — this only stops the re-spend.
+      settleFetchCooldown.set(settleKey, Date.now() + SETTLE_FETCH_ERROR_COOLDOWN_MS);
+      if (settleFetchCooldown.size > 200) {
+        const now = Date.now();
+        for (const [k, v] of settleFetchCooldown) if (v <= now) settleFetchCooldown.delete(k);
+      }
       /* stays unsettled — honest response below */
     } finally {
       settleInFlight.delete(settleKey);
