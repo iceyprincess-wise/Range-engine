@@ -210,7 +210,7 @@ export function runEngine(opts: {
   // a future game ticked live) is flagged in the audit, not silently
   // priced on a contradiction.
   const minsToTip = opts.minutes_to_tipoff ?? null;
-  let r1Note = "Fixture timestamp confirmed via form input";
+  let r1Note = "No tip-off time supplied — time sync not checked";
   let r1Status: AdjLog["status"] = "checked";
   if (minsToTip != null) {
     if (minsToTip > 0) r1Note = `Tip-off in ${minsToTip} min (form KO time vs device clock)`;

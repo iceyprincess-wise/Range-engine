@@ -1,7 +1,13 @@
 const fs = require("fs"), path = require("path");
 const p = path.join(__dirname, "..", "data", "analysis-archive-export.json");
 if (!fs.existsSync(p)) { console.error("missing archive export:", p); process.exit(1); }
-const x = JSON.parse(fs.readFileSync(p, "utf8"));
+let x;
+try {
+  x = JSON.parse(fs.readFileSync(p, "utf8"));
+} catch {
+  console.error("unreadable archive export:", p);
+  process.exit(1);
+}
 const hist = x.history || [], arch = x.archive || [];
 console.log("exportedAt:", x.exportedAt, "| history:", hist.length, "| archive:", arch.length);
 

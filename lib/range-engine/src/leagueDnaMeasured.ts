@@ -30,7 +30,7 @@
 //   buffer    = sdTotal >= 25 ? 2.5 : 2.0
 //   grind     = avgQuarterTotal < 40          WNBA 43.2 false, TBT 36.5 true
 //   (avgQuarterTotal null -> grind false; U18_PAULISTA has no quarter data)
-//   hbDNA/lbDNA = 0 unless |homeEdge / SE| >= 2 — NOTHING measured qualifies
+//   hbDNA/lbDNA = 0 unless |homeEdge / SE| >= 2 — no league promoted to a measured profile reaches |t| >= 2; WNBA is the one exception and keeps its hand-tuned anchor profile
 //   noOT      = format-forbidden only, never inferred from otPct === 0
 //
 // WNBA and TBT are deliberately absent from MEASURED_PROFILES: their existing

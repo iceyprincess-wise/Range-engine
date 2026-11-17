@@ -6,8 +6,9 @@ const g = Object.values(s.games || {});
 // Usage: node h2h-probe.cjs [home-substring] [away-substring]  (defaults: portland fever)
 const homeNeed = (process.argv[2] || "portland").toLowerCase();
 const awayNeed = (process.argv[3] || "fever").toLowerCase();
-const has = (e, n) => (e.homeTeam?.name + " " + e.awayTeam?.name).toLowerCase().includes(n);
-const hits = g.filter(e => has(e, homeNeed) && has(e, awayNeed));
+const hasHome = (e, n) => (e.homeTeam?.name ?? "").toLowerCase().includes(n);
+const hasAway = (e, n) => (e.awayTeam?.name ?? "").toLowerCase().includes(n);
+const hits = g.filter(e => hasHome(e, homeNeed) && hasAway(e, awayNeed));
 const scored = hits.filter(e => e.homeScore?.current != null && e.awayScore?.current != null);
 console.log(homeNeed + " x " + awayNeed + " meetings banked:", hits.length, "| scored:", scored.length, "| unscored skipped:", hits.length - scored.length);
 for (const e of scored.sort((a, b) => (a.startTimestamp ?? 0) - (b.startTimestamp ?? 0))) {

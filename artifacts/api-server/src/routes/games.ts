@@ -93,6 +93,13 @@ router.get("/v1/games/tournaments", async (req: Request, res: Response) => {
     return res.json({ date: seg, updatedAt: null, count: 0, tournaments: [], stale: true, fromDisk: true, quotaSpent: 0 });
   }
   if (!RAPIDAPI_KEY) return res.status(500).json({ error: "Missing RAPIDAPI_KEY" });
+  // D-2026-11-17-44: the 6-page UPDATE had no quota gate — at known-zero
+  // remaining it fired all 6 calls for a 502. Refuse when the remaining
+  // is known-exhausted (null = unknown after a fresh boot, so proceed);
+  // the client-side D-15 rule only protects the UI path.
+  if (quota.remaining !== null && quota.remaining <= 0) {
+    return res.status(429).json({ error: "API quota exhausted — tournaments update refused; retry after reset", remaining: quota.remaining, resetAt: quota.resetAt, resetInSec: quota.resetInSec });
+  }
   const before = quota.remaining;
   // Track the lowest remaining seen while the 6 pages resolve
   // (D-2026-11-15-04): each apiFetch mutates the shared quota

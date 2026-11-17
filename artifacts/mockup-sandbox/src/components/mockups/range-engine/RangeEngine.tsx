@@ -647,6 +647,10 @@ export function RangeEngine() {
   // ([, setter]) so it never rendered. It is a real value now.
   const [reanalysisMessage, setReanalysisMessage] = useState<string | null>(null);
   const reanalysisResetRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // D-2026-11-17-39: the spinner interval lives here, not in the effect
+  // closure — the effect cleanup used to clear it the moment
+  // isReanalyzing flipped true, freezing the bar at 1%.
+  const reanalysisProgressRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // --- POINT 11: TOP NOTCH AUTO-SYNC ENGINE TIMER (SURGICALLY INJECTED) ---
   // This is the single, bulletproof source of truth for the 60s countdown.
@@ -711,7 +715,6 @@ export function RangeEngine() {
 
   // When the countdown reaches 0 we must run a final bypassing re-analysis
   useEffect(() => {
-    let progressInterval: ReturnType<typeof setInterval> | null = null;
     // D-2026-11-17-10: never re-enter while a reanalysis is running —
     // the effect used to re-fire 2-4x per cycle with no guard.
     if (isReanalyzing) return;
@@ -729,7 +732,7 @@ export function RangeEngine() {
         setReanalysisMessage("Reanalyzing (final sweep)");
 
         // Start a faux-progress spinner while we fetch fresh data
-        progressInterval = setInterval(() => {
+        reanalysisProgressRef.current = setInterval(() => {
           setReanalysisProgress((p) => Math.min(95, p + Math.floor(Math.random() * 6) + 1));
         }, 200);
 
@@ -738,10 +741,6 @@ export function RangeEngine() {
 
         // finalize progress
         setReanalysisProgress(100);
-        if (progressInterval) {
-          clearInterval(progressInterval);
-          progressInterval = null;
-        }
 
         // Compare with existing researchData and apply if updates present
         try {
@@ -763,6 +762,10 @@ export function RangeEngine() {
         console.error("Final reanalysis failed:", err);
         setReanalysisMessage("Reanalysis failed — network or API error");
       } finally {
+        // D-2026-11-17-39: stop the spinner here (success AND failure —
+        // the old code only cleared it on success and relied on the
+        // effect cleanup, which is what froze it).
+        if (reanalysisProgressRef.current) { clearInterval(reanalysisProgressRef.current); reanalysisProgressRef.current = null; }
         void refreshQuota();
         // keep the status visible briefly before reset
         reanalysisResetRef.current = setTimeout(() => {
@@ -794,7 +797,6 @@ export function RangeEngine() {
     }
 
     return () => {
-      if (progressInterval) clearInterval(progressInterval);
       if (reanalysisResetRef.current) { clearTimeout(reanalysisResetRef.current); reanalysisResetRef.current = null; }
     };
     // D-2026-11-17-10: researchData dropped from deps — it re-fired the
@@ -804,6 +806,9 @@ export function RangeEngine() {
   const [phase, setPhase] = useState<"idle" | "hunting" | "result">("idle");
   const [huntStep, setHuntStep] = useState(0);
   const huntIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  // D-2026-11-17-38: the 350ms completion timeout below is tracked here
+  // too — a reset inside that window used to be undone when it fired.
+  const huntTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [result, setResult] = useState<EngineOutput | null>(null);
   const [homeInfo, setHomeInfo] = useState<ReturnType<
     typeof lookupTeam
@@ -1027,6 +1032,10 @@ export function RangeEngine() {
 
   // ── Auto-Research trigger — fires 1.8s after teams + league are entered ────
   useEffect(() => {
+    // D-2026-11-17-40: a slow fetch for the previous fixture used to
+    // overwrite the new fixture's data. The cleanup flag drops stale
+    // resolutions — same pattern as the D-14 news fix.
+    let cancelled = false;
     if (researchTimer.current) clearTimeout(researchTimer.current);
     if (!homeTeam.trim() || !awayTeam.trim() || !league.trim()) {
       setResearchPhase("idle");
@@ -1056,12 +1065,14 @@ export function RangeEngine() {
 
         // Retrieve expanded 50-game analytics from the live telemetry payload
         const data = await fetchResearchDataCached(homeTeam, awayTeam, league, gameId, bookmaker, false, date);
+        if (cancelled) return;
         setResearchData(data);
         void refreshQuota();
         setResearchError(null);
         setResearchProgress(100);
         setResearchPhase("done");
       } catch (err: any) {
+        if (cancelled) return;
         console.error("Research error:", err);
         setResearchData(null);
         setResearchError(err?.message || "Research API failed.");
@@ -1073,6 +1084,7 @@ export function RangeEngine() {
 
     researchTimer.current = timer;
     return () => {
+      cancelled = true;
       if (researchTimer.current) clearTimeout(researchTimer.current);
     };
   }, [homeTeam, awayTeam, league, gameId, bookmaker, date]);
@@ -1131,7 +1143,7 @@ export function RangeEngine() {
       case 0: return `KO ${koTime} · ${tipOff || "syncing"}`;
       case 1: return hg + ag > 0 ? `${hg + ag} warehouse games loaded` : "awaiting warehouse data";
       case 2: return researchData?.homeFt ? `FT ${researchData.homeFt}% · 3PT ${researchData.homePt3 ?? "—"}% (home side)` : "shooting splits pending";
-      case 3: return researchData?.homeArenaPPG != null || researchData?.awayRoadPPG != null ? `Rule 5/6 — arena ${researchData.homeArenaPPG ?? "—"} · road ${researchData.awayRoadPPG ?? "—"} PPG (efficiency & pace inputs ready)` : "Rule 5/6 — efficiency & pace inputs pending";
+      case 3: return (researchData?.homeArenaPPG ?? 0) > 0 || (researchData?.awayRoadPPG ?? 0) > 0 ? `Rule 5/6 — arena ${researchData?.homeArenaPPG ?? "—"} · road ${researchData?.awayRoadPPG ?? "—"} PPG (efficiency & pace inputs ready)` : "Rule 5/6 — efficiency & pace inputs pending";
       case 4: return `peak collapse ${researchData?.collapsePct ?? 0}% across ${hg + ag} studied games`;
       case 5: return `${getLeagueDNA(league).name} · width cap ${getLeagueDNA(league).maxWidth} pts`;
       case 6: return news > 0 ? `${news} real news reports scanned${detectKeyOut().out ? " · KEY-OUT SIGNAL" : ""}` : "no injury reports found — nothing invented";
@@ -1151,7 +1163,9 @@ export function RangeEngine() {
     setRerunResult(null);
     setRerunPhase("idle");
 
-    const rd = researchData; // snapshot auto-researched data
+    // D-2026-11-17-40 (belt-and-braces): only consume research that
+    // belongs to this fixture — a stale payload must not feed analysis.
+    const rd = researchData && researchData.homeTeam === homeTeam && researchData.awayTeam === awayTeam ? researchData : null; // snapshot auto-researched data
     let step = 0;
     // D-2026-11-17-13: cancel any hunt already running, then track the
     // new one in a ref so handleReset / unmount can cancel it.
@@ -1210,7 +1224,7 @@ export function RangeEngine() {
           live_score: rd?.liveScore ? { home: rd.liveScore.home, away: rd.liveScore.away } : undefined,
           live_clock: rd?.liveScore?.clock ?? undefined,
         });
-        setTimeout(() => {
+        huntTimeoutRef.current = setTimeout(() => {
           setResult(res);
           setPhase("result");
           const minsToTipoff = minutesToTipoff(koTime, currentTime, date, today);
@@ -1246,6 +1260,9 @@ export function RangeEngine() {
         }, 350);
       }
     }, 400);
+    // D-2026-11-17-38: track the interval so handleReset / unmount can
+    // cancel it — the ref used to be cleared but never assigned.
+    huntIntervalRef.current = iv;
   }
 
   // ── AUTO-RECONFIRM: silent cold recompute the moment a verdict lands ──
@@ -1303,13 +1320,14 @@ export function RangeEngine() {
     // orphaned interval used to keep running the engine and saving
     // history after the reset.
     if (huntIntervalRef.current) { clearInterval(huntIntervalRef.current); huntIntervalRef.current = null; }
+    if (huntTimeoutRef.current) { clearTimeout(huntTimeoutRef.current); huntTimeoutRef.current = null; }
     setPhase("idle");
     setResult(null);
     setRerunResult(null);
     setRerunPhase("idle");
   }
   // An orphaned hunt interval must not survive unmount either.
-  useEffect(() => () => { if (huntIntervalRef.current) clearInterval(huntIntervalRef.current); }, []);
+  useEffect(() => () => { if (huntIntervalRef.current) clearInterval(huntIntervalRef.current); if (huntTimeoutRef.current) clearTimeout(huntTimeoutRef.current); }, []);
   function clearHistory() {
     setHistory([]);
     saveHistory([]);

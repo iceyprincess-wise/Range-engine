@@ -7,18 +7,20 @@ import { Button } from "@/components/ui/button";
 // for 10 minutes; stale entries are dropped on load.
 const LIVE_MATRIX_CACHE_KEY = "rangengine_v3_livematrix_v1";
 const LIVE_MATRIX_CACHE_TTL_MS = 10 * 60 * 1000;
-function loadLiveMatrixCache(): { matchStats: Record<string, any>; stallStatus: Record<string, any>; apiReferenceMap: Record<string, any> } {
+function loadLiveMatrixCache(): { matchStats: Record<string, any>; stallStatus: Record<string, any>; apiReferenceMap: Record<string, any>; hasRefreshed: boolean } {
   try {
     const raw = localStorage.getItem(LIVE_MATRIX_CACHE_KEY);
-    if (!raw) return { matchStats: {}, stallStatus: {}, apiReferenceMap: {} };
+    if (!raw) return { matchStats: {}, stallStatus: {}, apiReferenceMap: {}, hasRefreshed: false };
     const parsed = JSON.parse(raw);
-    if (!parsed || typeof parsed !== "object" || Date.now() - (parsed.ts ?? 0) > LIVE_MATRIX_CACHE_TTL_MS) return { matchStats: {}, stallStatus: {}, apiReferenceMap: {} };
+    if (!parsed || typeof parsed !== "object" || Date.now() - (parsed.ts ?? 0) > LIVE_MATRIX_CACHE_TTL_MS) return { matchStats: {}, stallStatus: {}, apiReferenceMap: {}, hasRefreshed: false };
     return {
       matchStats: parsed.matchStats && typeof parsed.matchStats === "object" ? parsed.matchStats : {},
       stallStatus: parsed.stallStatus && typeof parsed.stallStatus === "object" ? parsed.stallStatus : {},
       apiReferenceMap: parsed.apiReferenceMap && typeof parsed.apiReferenceMap === "object" ? parsed.apiReferenceMap : {},
+      // D-2026-11-17-43: whether a refresh ever ran survives reload.
+      hasRefreshed: parsed.hasRefreshed === true,
     };
-  } catch { return { matchStats: {}, stallStatus: {}, apiReferenceMap: {} }; }
+  } catch { return { matchStats: {}, stallStatus: {}, apiReferenceMap: {}, hasRefreshed: false }; }
 }
 
 interface LiveMatrixHubProps {
@@ -41,16 +43,23 @@ export const LiveMatrixHub: React.FC<LiveMatrixHubProps> = ({ history, setHistor
   const [globalLoading, setGlobalLoading] = useState(false);
   const [apiReferenceMap, setApiReferenceMap] = useState<Record<string, any>>(liveCache.apiReferenceMap); // Maps history IDs to API data
   // D-2026-11-17-23: whether a refresh has ever run, and the last error.
-  const [hasRefreshed, setHasRefreshed] = useState(false);
+  // D-2026-11-17-43: restored from the cache — a warm board no longer
+  // reads "NOT YET CHECKED" after reload.
+  const [hasRefreshed, setHasRefreshed] = useState(liveCache.hasRefreshed);
   const [refreshError, setRefreshError] = useState<string | null>(null);
   // D-2026-11-17-24: minimum 30s between Refresh Board taps.
   const lastRefreshAtRef = useRef(0);
   // D-2026-11-17-25: persist live state with a short TTL.
+  // D-2026-11-17-42: skip the first run — it used to re-stamp ts on
+  // mount, so a 9-minute-old entry survived ~10 more minutes.
+  // D-2026-11-17-43: hasRefreshed is persisted in the same blob.
+  const liveCachePersistedRef = useRef(false);
   useEffect(() => {
+    if (!liveCachePersistedRef.current) { liveCachePersistedRef.current = true; return; }
     try {
-      localStorage.setItem(LIVE_MATRIX_CACHE_KEY, JSON.stringify({ ts: Date.now(), matchStats, stallStatus, apiReferenceMap }));
+      localStorage.setItem(LIVE_MATRIX_CACHE_KEY, JSON.stringify({ ts: Date.now(), matchStats, stallStatus, apiReferenceMap, hasRefreshed }));
     } catch { /* best-effort */ }
-  }, [matchStats, stallStatus, apiReferenceMap]);
+  }, [matchStats, stallStatus, apiReferenceMap, hasRefreshed]);
   const API_BASE = (import.meta.env.VITE_API_BASE || "").replace(/\/+$/, "");
 
   // Date-aware: history entries carry their fixture `date`, so a

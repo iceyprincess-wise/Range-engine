@@ -22,7 +22,16 @@ type InboxFile = { games: any[]; stats: Record<string, any>; teams: any[]; updat
 const readInbox = (): InboxFile => {
   let raw: string;
   try { raw = fs.readFileSync(INBOX_PATH, "utf8"); }
-  catch { return { games: [], stats: {}, teams: [], updatedAt: null }; } // no inbox yet
+  catch (e) {
+    if ((e as any)?.code === "ENOENT") return { games: [], stats: {}, teams: [], updatedAt: null }; // no inbox yet
+    // D-2026-11-17-45: any other read failure (EISDIR, EACCES, …) used
+    // to read as an empty inbox with no parseError, so export/import
+    // treated a broken-but-present inbox as "no inbox yet" — the exact
+    // data-destruction shape the parseError guard was built to prevent
+    // for corrupt JSON. Flag it instead; export/import refuse on it.
+    console.error("hybrid: inbox file unreadable — reads see an empty inbox; export/import are disabled until the file is fixed:", (e as any)?.message ?? e);
+    return { games: [], stats: {}, teams: [], updatedAt: null, parseError: true };
+  }
   try {
     const parsed = JSON.parse(raw);
     if (parsed && Array.isArray(parsed.games)) {
@@ -71,9 +80,16 @@ const mergeStatsTeams = (stats: any, teams: any) => {
   return { statsAdded, teamsAdded };
 };
 
-const writeInbox = (inbox: InboxFile) => {
-  fs.mkdirSync(path.dirname(INBOX_PATH), { recursive: true });
-  fs.writeFileSync(INBOX_PATH, JSON.stringify(inbox, null, 2));
+// D-2026-11-17-45: a write failure used to throw out of export into
+// Express's HTML 500 page, leaking the stack and server path. Mirror
+// games.ts saveBank (log, never silent) and report success so export
+// can answer with a 500 JSON instead.
+const writeInbox = (inbox: InboxFile): boolean => {
+  try {
+    fs.mkdirSync(path.dirname(INBOX_PATH), { recursive: true });
+    fs.writeFileSync(INBOX_PATH, JSON.stringify(inbox, null, 2));
+    return true;
+  } catch (e) { console.error("[hybrid] hybrid-inbox.json write FAILED — inbox not saved:", (e as any)?.message ?? e); return false; }
 };
 
 const leagueOf = (g: any) =>
@@ -170,7 +186,9 @@ router.post("/v1/hybrid/export", (_req: Request, res: Response) => {
   // updatedAt means "the inbox content changed" — the old code bumped
   // it on every export, even one that added nothing.
   if (added > 0 || statsAdded > 0 || teamsChanged || pruned > 0) inbox.updatedAt = new Date().toISOString();
-  writeInbox(inbox);
+  if (!writeInbox(inbox)) {
+    return res.status(500).json({ error: "inbox file write failed — export not saved; fix hybrid-inbox.json first" });
+  }
   return res.json({ added, skippedInvalid, pruned, statsAdded, teams: inbox.teams.length, total: inbox.games.length });
 });
 
