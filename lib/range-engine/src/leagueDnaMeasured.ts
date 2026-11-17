@@ -166,7 +166,9 @@ export function resolveMeasuredKey(leagueUpper: string): string | null {
   // D-2026-11-17-09: a bare TURKISH token routed every non-Super-League
   // Turkish competition to the Super League profile. Require a Super
   // League token too (SUPER, or BSL for Basketball Super League).
-  if (lg.includes("TURKISH") && (lg.includes("SUPER") || /\bBSL\b/.test(lg))) return "TURKISH_SL";
+  // Round 31 item 1: the datalist spelling "Turkiye - Super Lig"
+  // carries TURKIYE, not TURKISH — accept both spellings, same guard.
+  if ((lg.includes("TURKISH") || lg.includes("TURKIYE")) && (lg.includes("SUPER") || /\bBSL\b/.test(lg))) return "TURKISH_SL";
   if (lg.includes("EUROPE CUP")) return "FIBA_EUROPE_CUP";
   return null;
 }

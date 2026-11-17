@@ -2,6 +2,36 @@ import { parseNumber, parseNumberArray, normalizePercent, weightedAverage, forma
 import { makeResearchCacheKey, saveResearchCache, loadResearchCache, isResearchCacheValid } from "./storage";
 import type { ResearchData } from "@workspace/range-engine";
 export const API_BASE = (import.meta.env.VITE_API_BASE || "").replace(/\/+$/, "");
+
+// Round 31 item 3: client-side de-duplicated pooled union for an OLD
+// server that does not serve `pooled` (D-2026-11-17-29). The server
+// helper dedupeUnionPool works on game objects; the client fallback
+// only ever sees aggregates, so it dedupes by counts — every H2H
+// meeting sits inside BOTH side pools, so the union is home + away -
+// meetings and union OT is homeOT + awayOT - h2hOT. recentTotals are
+// deduped as a multiset (one copy of each H2H total removed from the
+// concatenated side lists). The merged totals are home-first, not
+// globally newest-first, so the slice keeps the union's first 10 in
+// that order — the Rule 16 gate consumes the multiset, not the order.
+export function dedupePooledFallback(home: any, away: any, h2h: any) {
+  const meetings = h2h?.meetings ?? (Array.isArray(h2h?.totals) ? h2h.totals.length : 0);
+  const games = Math.max(0, (home?.gamesAnalyzed ?? 0) + (away?.gamesAnalyzed ?? 0) - meetings);
+  const otGames = Math.max(0, (home?.otGames ?? 0) + (away?.otGames ?? 0) - (h2h?.otGames ?? 0));
+  const merged: number[] = [
+    ...(Array.isArray(home?.recentTotals) ? home.recentTotals : []),
+    ...(Array.isArray(away?.recentTotals) ? away.recentTotals : []),
+  ];
+  for (const t of (Array.isArray(h2h?.totals) ? h2h.totals : [])) {
+    const i = merged.indexOf(t);
+    if (i >= 0) merged.splice(i, 1);
+  }
+  return {
+    games,
+    otGames,
+    otRate: games > 0 ? +(otGames / games).toFixed(3) : null,
+    recentTotals: merged.slice(0, 10),
+  };
+}
 export async function fetchResearchData(
   homeTeam: string,
   awayTeam: string,
@@ -153,9 +183,9 @@ export async function fetchResearchData(
     if (preData.pooled && typeof preData.pooled.otRate !== "undefined") {
       apiData.otRate = preData.pooled.otRate;
     } else {
-      const og = (preData.home?.otGames ?? 0) + (preData.away?.otGames ?? 0) + (preData.h2h?.otGames ?? 0);
-      const gn = (preData.home?.gamesAnalyzed ?? 0) + (preData.away?.gamesAnalyzed ?? 0) + (preData.h2h?.meetings ?? 0);
-      apiData.otRate = gn > 0 ? +(og / gn).toFixed(3) : null;
+      // Round 31 item 3: the old sum triple-counted every H2H meeting.
+      // Dedupe the union client-side (same counts as the server helper).
+      apiData.otRate = dedupePooledFallback(preData.home, preData.away, preData.h2h).otRate;
     }
     apiData.venue = preData.venue ?? apiData.venue;
     apiData.homeVsOtherForm = preData.home?.vsOther?.form ?? apiData.homeVsOtherForm;
@@ -174,14 +204,10 @@ export async function fetchResearchData(
     // Pool the REAL recent game totals (both teams + H2H meetings) for the
     // Rule 16 variance gate in runEngine.
     // D-2026-11-17-29: prefer the server's de-duplicated union totals;
-    // the concatenated fallback is only for an older server.
+    // the deduped fallback below is only for an older server.
     apiData.recentTotals = Array.isArray(preData.pooled?.recentTotals)
       ? preData.pooled.recentTotals
-      : [
-          ...(Array.isArray(preData.home?.recentTotals) ? preData.home.recentTotals : []),
-          ...(Array.isArray(preData.away?.recentTotals) ? preData.away.recentTotals : []),
-          ...(Array.isArray(preData.h2h?.totals) ? preData.h2h.totals : []),
-        ];
+      : dedupePooledFallback(preData.home, preData.away, preData.h2h).recentTotals;
     // Quarters-derived collapse must be computed BEFORE the fade note below,
     // which quotes it ("Peak collapse X%"); previously it was computed after.
     const qc = [preData.home?.quarters?.collapsePct, preData.away?.quarters?.collapsePct].filter(Boolean);

@@ -112,6 +112,19 @@ export function runEngine(opts: {
   const eff_pt3_home = opts.home_pt3 != null ? opts.home_pt3 / 100 : H.pt3_pct;
   const eff_pt3_away = opts.away_pt3 != null ? opts.away_pt3 / 100 : A.pt3_pct;
   const avg_ft = (eff_ft_home + eff_ft_away) / 2;
+  // Round 31 item 2: avg_ft has the same half-profile mixing as D-06
+  // (one measured FT% averaged with a profile FT%) and Rule 10 fired
+  // on it. avg_ft stays the profile-blended display average; only
+  // avg_ft_measured may fire Rule 10 or the low-FT% warning.
+  const measuredFt = [
+    ...(opts.home_ft != null ? [eff_ft_home] : []),
+    ...(opts.away_ft != null ? [eff_ft_away] : []),
+  ];
+  const avg_ft_measured =
+    measuredFt.length > 0
+      ? measuredFt.reduce((s, v) => s + v, 0) / measuredFt.length
+      : null;
+  const ftMeasured = opts.home_ft != null || opts.away_ft != null;
   // D-2026-11-17-06: Rule 5b prices MEASURED shooting only. Averaging a
   // measured side with a profile side presented the profile rate as
   // measured and let one real number fire the rule for both teams.
@@ -487,7 +500,7 @@ export function runEngine(opts: {
     totalFtAttempts >= 45 || totalFoulRate >= 42 || leagueFoulAverage > 40;
   const refereeSignal = refereeStrictness >= 7;
   let r10_hb = 0;
-  if (margin <= 6 && avg_ft >= 0.75) r10_hb = Math.round(11 * ws);
+  if (margin <= 6 && ftMeasured && avg_ft_measured != null && avg_ft_measured >= 0.75) r10_hb = Math.round(11 * ws);
   if (foulVolumeSignal) r10_hb += 2;
   if (refereeSignal && margin <= 8) {
     r10_hb += 2.5;
@@ -512,7 +525,9 @@ export function runEngine(opts: {
     hb -= stacking_cut;
   }
   const r10note = [
-    `FT%: ${(avg_ft * 100).toFixed(0)}%, Fouls: ${totalFoulRate.toFixed(1)}/g, FTAs: ${totalFtAttempts}`,
+    ftMeasured && avg_ft_measured != null
+      ? `FT%: H ${(eff_ft_home * 100).toFixed(0)}%${opts.home_ft != null ? "" : " (profile — not priced)"} / A ${(eff_ft_away * 100).toFixed(0)}%${opts.away_ft != null ? "" : " (profile — not priced)"} (measured avg ${(avg_ft_measured * 100).toFixed(0)}%), Fouls: ${totalFoulRate.toFixed(1)}/g, FTAs: ${totalFtAttempts}`
+      : `FT%: ${(avg_ft * 100).toFixed(0)}% (profile — not priced), Fouls: ${totalFoulRate.toFixed(1)}/g, FTAs: ${totalFtAttempts}`,
     weightedFoul ? "| Weighted foul/FTA (recent-form)" : "",
     leagueFoulAverage ? `| League Fouls: ${leagueFoulAverage.toFixed(1)}` : "",
     refereeSignal ? "| Referee Strictness: Elevated" : "",
@@ -533,7 +548,7 @@ export function runEngine(opts: {
   });
   if (r10_hb > 0)
     triggered.push(
-      `Rule 10 (Foul Engine): HB+${r10_hb}${stacking_cut > 0 ? ` (Stack Cap -${stacking_cut})` : ""} | FT%: ${(avg_ft * 100).toFixed(0)}% | Fouls: ${totalFoulRate.toFixed(1)}/g | FTAs: ${totalFtAttempts}${refereeSignal ? " 🚨" : ""}`,
+      `Rule 10 (Foul Engine): HB+${r10_hb}${stacking_cut > 0 ? ` (Stack Cap -${stacking_cut})` : ""} | FT%: ${ftMeasured && avg_ft_measured != null ? (avg_ft_measured * 100).toFixed(0) + "% (measured avg)" : "— (no measured FT%)"} | Fouls: ${totalFoulRate.toFixed(1)}/g | FTAs: ${totalFtAttempts}${refereeSignal ? " 🚨" : ""}`,
     );
   if (key_player_out)
     triggered.push(
@@ -925,9 +940,9 @@ export function runEngine(opts: {
     );
   if (collapsePct > 0)
     failParts.push(`${collapsePct}% historical Q1-Q4 Structural Collapse`);
-  if (avg_ft < 0.7)
+  if (ftMeasured && avg_ft_measured != null && avg_ft_measured < 0.7)
     failParts.push(
-      `Low FT% (${(avg_ft * 100).toFixed(0)}%) — Foul Engine underperforms`,
+      `Low FT% (${(avg_ft_measured * 100).toFixed(0)}% measured avg) — Foul Engine underperforms`,
     );
   if (avg_pt3 < 0.33)
     failParts.push(
