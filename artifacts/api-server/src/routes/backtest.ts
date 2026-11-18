@@ -40,14 +40,16 @@ router.get("/v1/backtest", (_req: Request, res: Response) => {
   // full triggered_rules text — the text embeds the numbers (LB/HB),
   // so one rule split into many rows ("Rule 5 (Eff/Pace): LB +3,
   // HB +3" vs "LB -3, HB -3"). Same leading-"Rule N" parse as
-  // RangeEngine groupAuditLog; "Rule 8/9" / "Rule 10/11" group by
-  // their full head, "Rule 5b" stays distinct from "Rule 5", and
+  // RangeEngine groupAuditLog; "Rule 8/9" / "Rule 10/11" and
+  // "Rule 12+13" group by their full head (D-2026-11-18-52: the
+  // old regex had no "+" arm, so "Rule 12+13 (OVER)/(UNDER)"
+  // merged into "Rule 12"), "Rule 5b" stays distinct from "Rule 5", and
   // non-Rule signals ("Live Match:", "Live Projection:", "Alt-Line
   // Reco:") group by the head before the first colon — their text
   // embeds numbers too (line, projection), so keeping the full text
   // would split them the same way. A headless string keeps its text.
   const ruleKey = (r: string) => {
-    const m = /^Rule\s+\d+[a-z]?(?:\/\d+[a-z]?)?(?:\s*\([^)]*\))?/.exec(r);
+    const m = /^Rule\s+\d+[a-z]?(?:[\/+]\d+[a-z]?)?(?:\s*\([^)]*\))?/.exec(r);
     if (m) return m[0];
     const c = r.indexOf(":");
     return c > 0 ? r.slice(0, c) : r;

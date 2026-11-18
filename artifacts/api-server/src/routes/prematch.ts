@@ -1,6 +1,7 @@
 import { Router, type Request, type Response } from "express";
 import { quota, updateQuotaFromResponse } from "../lib/quotaTracker";
 import { store, persist, markDirty, rememberGames, resolveDataDir } from "../lib/warehouse";
+import { expandTeamAlias } from "../lib/teamNames";
 import fs from "node:fs";
 import path from "node:path";
 const router = Router();
@@ -38,8 +39,10 @@ const searchOnce = async (q: string) => {
 // "Zalgiris Kaunas" matches provider "Žalgiris Kaunas" and
 // "Real Madrid (W)" matches provider "Real Madrid", while a
 // different team never compares equal.
+// D-2026-11-18-53: wrapped in the shared alias expansion, so
+// "LA Clippers" compares equal to "Los Angeles Clippers".
 const normTeamName = (s: string) =>
-  s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\(.*?\)/g, " ").replace(/[._]/g, " ").replace(/\s+/g, " ").trim().toLowerCase();
+  expandTeamAlias(s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\(.*?\)/g, " ").replace(/[._]/g, " ").replace(/\s+/g, " ").trim().toLowerCase());
 
 const searchTeam = async (name: string) => {
   const key = name.trim().toLowerCase();

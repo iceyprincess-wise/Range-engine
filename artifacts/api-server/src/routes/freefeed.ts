@@ -1,5 +1,6 @@
 import { Router, type Request, type Response } from "express";
 import { store, rememberGames, markDirty, persist } from "../lib/warehouse";
+import { NAME_ALIASES, normTeamName as normName } from "../lib/teamNames";
 
 const router = Router();
 
@@ -26,14 +27,11 @@ const LEAGUES: Record<string, { path: string; name: string }> = {
 // D-2026-11-15-11.
 const WAT_OFFSET_MS = 60 * 60 * 1000;
 
-const normName = (s: string) => s.trim().toLowerCase().replace(/\s+/g, " ");
-
-// Proven provider name variants (ESPN short name vs the warehouse's
-// BasketAPI name). An alias is only a lookup hint: the game still
-// banks solely when the aliased name exists in the warehouse map.
-const NAME_ALIASES: Record<string, string> = {
-  "la clippers": "los angeles clippers",
-};
+// D-2026-11-18-53: NAME_ALIASES and normName now live in
+// lib/teamNames.ts — one shared normaliser for freefeed, basket,
+// results and prematch — and are imported above. The alias table
+// itself is unchanged: an alias is only a lookup hint; the game
+// still banks solely when the aliased name exists in the warehouse map.
 
 // ESPN short names vs warehouse names, shared by every consumer
 // of an ESPN team name — not just game banking. Injuries and
@@ -464,9 +462,11 @@ router.get("/v1/freefeed/referees", async (req: Request, res: Response) => {
   let crew: string[] | null = null;
   let assignmentSource: string | null = null;
   if (home && away) {
-    const dateStr = /^\d{4}-\d{2}-\d{2}$/.test(dateParam)
-      ? dateParam
-      : new Date().toISOString().slice(0, 10);
+    // D-2026-11-18-54: "today" is the USER's day (WAT, UTC+1), like
+    // the lineups route below (D-2026-11-15-11) — the UTC default
+    // fetched yesterday's crew in the 00:00-00:59 WAT hour.
+    const todayStr = new Date(Date.now() + WAT_OFFSET_MS).toISOString().slice(0, 10);
+    const dateStr = /^\d{4}-\d{2}-\d{2}$/.test(dateParam) ? dateParam : todayStr;
     try {
       const payload = await fetchOfficialsFeed(dateStr);
       const games = feedGamesFor(payload, key);

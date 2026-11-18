@@ -1,5 +1,6 @@
 import { Router, type Request, type Response } from "express";
 import { updateQuotaFromResponse } from "../lib/quotaTracker";
+import { expandTeamAlias } from "../lib/teamNames";
 
 const router = Router();
 const RAPIDAPI_KEY = process.env.RAPIDAPI_KEY;
@@ -54,8 +55,11 @@ const basketFetch = async (path: string): Promise<any> => {
 };
 
 const safeMatch = (event: any, homeSearch: string, awaySearch: string) => {
-  const homeName = event?.homeTeam?.name?.toLowerCase() || "";
-  const awayName = event?.awayTeam?.name?.toLowerCase() || "";
+  // D-2026-11-18-53: canonicalise both sides through the shared
+  // normaliser — a bare substring match never equated "LA Clippers"
+  // with the stored "Los Angeles Clippers", so a live game 404'd.
+  const homeName = expandTeamAlias(event?.homeTeam?.name ?? "");
+  const awayName = expandTeamAlias(event?.awayTeam?.name ?? "");
   // BOTH sides must match (each side allows either direction, so
   // "Lakers" still finds "Los Angeles Lakers"). The old OR logic
   // returned the first live game involving EITHER team, e.g. a
@@ -66,8 +70,8 @@ const safeMatch = (event: any, homeSearch: string, awaySearch: string) => {
 };
 
 const getTargetMatch = (events: any[], homeTeam: string, awayTeam: string) => {
-  const homeSearch = (homeTeam || "").trim().toLowerCase();
-  const awaySearch = (awayTeam || "").trim().toLowerCase();
+  const homeSearch = expandTeamAlias(homeTeam || "");
+  const awaySearch = expandTeamAlias(awayTeam || "");
 
   return events.find((event) => safeMatch(event, homeSearch, awaySearch));
 };

@@ -1,11 +1,15 @@
 import { Router, type Request, type Response } from "express";
 import { store, rememberGames, persist, markDirty } from "../lib/warehouse";
 import { quota, updateQuotaFromResponse } from "../lib/quotaTracker";
+import { expandTeamAlias } from "../lib/teamNames";
 
 const router = Router();
 const RAPIDAPI_KEY = process.env.RAPIDAPI_KEY;
 const RAPIDAPI_HOST = process.env.RAPIDAPI_HOST || "basketapi1.p.rapidapi.com";
-const norm = (s: string) => s.trim().toLowerCase();
+// D-2026-11-18-53: norm is the shared alias-aware normaliser —
+// "LA Clippers" now compares equal to "Los Angeles Clippers" in
+// pick() and in the settle-fetch exact-hit check below.
+const norm = expandTeamAlias;
 
 // Set after a 429/403 settle-fetch failure: the quota is known dead,
 // so do not re-probe it on every request for 5 minutes.
@@ -187,7 +191,13 @@ router.get("/v1/result", async (req: Request, res: Response) => {
   return res.json({
     settled: home != null && away != null,
     home, away, total: home != null && away != null ? home + away : null,
-    quarters: { home: [1, 2, 3, 4].map((q) => g.homeScore?.["period" + q] ?? null), away: [1, 2, 3, 4].map((q) => g.awayScore?.["period" + q] ?? null) },
+    // D-2026-11-18-55: overtime is a SEPARATE field, not a 5th
+    // quarter — mirroring basket.ts periods.overtime (D-2026-11-16-04).
+    // Without it the Archive quarters line summed short of the final
+    // on OT games (100 vs 105 in the harness). Banked games carry
+    // homeScore.overtime from both feeds (freefeed converts ESPN 5th+
+    // linescores; BasketAPI events carry it natively).
+    quarters: { home: [1, 2, 3, 4].map((q) => g.homeScore?.["period" + q] ?? null), away: [1, 2, 3, 4].map((q) => g.awayScore?.["period" + q] ?? null), overtime: { home: g.homeScore?.overtime ?? null, away: g.awayScore?.overtime ?? null } },
     startTimestamp: g.startTimestamp ?? null, provenance: "warehouse",
   });
 });

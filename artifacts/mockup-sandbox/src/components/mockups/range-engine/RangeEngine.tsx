@@ -1567,7 +1567,7 @@ export function RangeEngine() {
                               </p>
                               <p className="text-[10px] text-zinc-400 mt-1">{pm.note}</p>
                               {Array.isArray(pm.quarters?.home) && pm.quarters.home[0] != null && (
-                                <p className="text-[9px] text-zinc-500 font-mono mt-1">Quarters: {pm.quarters.home.join(" / ")} — {pm.quarters.away.join(" / ")}</p>
+                                <p className="text-[9px] text-zinc-500 font-mono mt-1">Quarters: {pm.quarters.home.join(" / ")} — {pm.quarters.away.join(" / ")}{(pm.quarters.overtime?.home != null || pm.quarters.overtime?.away != null) ? ` · OT ${pm.quarters.overtime.home ?? "—"}-${pm.quarters.overtime.away ?? "—"}` : ""}</p>
                               )}
                             </div>
                           ) : (
