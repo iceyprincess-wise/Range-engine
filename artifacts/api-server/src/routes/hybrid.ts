@@ -2,6 +2,7 @@ import { Router, type Request, type Response } from "express";
 import fs from "node:fs";
 import path from "node:path";
 import { markDirty, persist, store, resolveDataDir } from "../lib/warehouse";
+import { teamKey } from "../lib/teamNames";
 
 const router = Router();
 const INBOX_PATH = path.join(resolveDataDir(), "hybrid-inbox.json");
@@ -72,7 +73,7 @@ const mergeStatsTeams = (stats: any, teams: any) => {
   }
   if (Array.isArray(teams)) {
     for (const tm of teams) {
-      const key = typeof tm?.name === "string" ? tm.name.trim().toLowerCase() : "";
+      const key = typeof tm?.name === "string" ? teamKey(tm.name) : "";
       if (key && tm?.id != null && !store.teams[key]) { store.teams[key] = { id: tm.id, name: tm.name }; teamsAdded++; }
     }
   }

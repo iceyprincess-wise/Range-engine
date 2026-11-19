@@ -16,8 +16,16 @@ export const NAME_ALIASES: Record<string, string> = {
   "la clippers": "los angeles clippers",
 };
 
-// Plain normalisation: trim, lowercase, collapse whitespace.
-export const normTeamName = (s: string) => s.trim().toLowerCase().replace(/\s+/g, " ");
+// Plain normalisation: strip diacritics, trim, lowercase, collapse
+// whitespace. D-2026-11-18-87: the NFD strip lives here so every
+// consumer inherits it — expandTeamAlias("Beşiktaş JK") used to be
+// "beşiktaş jk", which matched nothing the UI offers ("Besiktas JK").
+export const normTeamName = (s: string) => s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim().toLowerCase().replace(/\s+/g, " ");
+
+// Canonical store key for a team name: alias expansion on top of the
+// shared normaliser (D-2026-11-18-88). Every store.teams reader and
+// writer must key through this one function.
+export const teamKey = (s: string): string => expandTeamAlias(s);
 
 // Canonical form for matching: a leading "la" token expands to
 // "los angeles" (freefeed sideTokens precedent), then the alias

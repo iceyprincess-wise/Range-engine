@@ -1,4 +1,29 @@
-MY FIRST MESSAGE 1️⃣⏬⏬ - REFER TO SCREENSHOT TO SEE REPLY 
+> NORMATIVE STATUS — 2026-11-19 · Round 34 · D-2026-11-18-85
+>
+> This file pastes Ed's original messages verbatim, including the
+> RangeEngineV2 Python snapshot and the STRICT+ prompt. Two of those
+> pastes are SUPERSEDED HISTORICAL TEXT and must never be "fixed to
+> match" — a fix that follows them would silently change pricing:
+>
+> 1. The Python snapshot (the `class RangeEngineV2` code pasted in
+>    the FIRST and TENTH messages): Rule 6 stacks `hb += 3` per weak
+>    side (the text says single-side safety lock) and Rule 11 does
+>    `lb -= 6, hb += 4` (the text says shift down AND expand width).
+>    The shipped code follows the TEXT for Rule 6 and the PYTHON for
+>    Rule 11.
+> 2. The STRICT+ numbers (NINTH message / DECISION ENGINE section):
+>    buffer ±3 NBA / ±2 others and final width ≤ 18. The shipped
+>    code uses the measured-DNA formulas instead: `buffer =
+>    sdTotal >= 25 ? 2.5 : 2.0` (+0.5 when the sample is stale) and
+>    `maxWidth = clamp(0.83 x sdTotal, 16, 24)` (see "Derivation
+>    constants" below, measured per league 2026-08-01).
+>
+> SINGLE NORMATIVE SPEC: the measured-DNA formulas above, as
+> implemented in `lib/range-engine/src/runEngine.ts`. Where any
+> pasted text in this file disagrees with that code, the CODE
+> governs. Do not edit the pasted messages below — they are history.
+>
+> MY FIRST MESSAGE 1️⃣⏬⏬ - REFER TO SCREENSHOT TO SEE REPLY 
 "CRITICAL: All analysis must be executed through the RangeEngineV2 logic. The Final Decision MUST match the engine's output (OVER/UNDER/NO ACTION). No intuitive guesses—stick to the math of the Rulebook." "When analyzing, first process all raw data through the logic of the RangeEngineV2 class. The Final Decision in the output must match the self.decision result from the code exactly. No 'gut feelings'—only the math." class RangeEngineV2: def init(self, data): self.data = data self.lb = self.hb = None self.reliability, self.range_width = "Weak", 0 self.decision, self.confidence, self.lean = "NO ACTION", "Low", "NONE" self.triggered_rules, self.notes = [], []
 
 def run(self):

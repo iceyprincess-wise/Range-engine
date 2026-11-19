@@ -52,6 +52,7 @@ function FieldGroup({
       data-variant={variant}
       className={cn(
         "group/field-group @container/field-group flex w-full flex-col gap-7 data-[slot=checkbox-group]:gap-3 [&>[data-slot=field-group]]:gap-4",
+        "data-[variant=outline]:rounded-lg data-[variant=outline]:border data-[variant=outline]:p-4",
         className
       )}
       {...props}
@@ -87,15 +88,17 @@ function Field({
   className,
   orientation = "vertical",
   invalid,
+  disabled,
   ...props
 }: React.ComponentProps<"div"> &
-  VariantProps<typeof fieldVariants> & { invalid?: boolean }) {
+  VariantProps<typeof fieldVariants> & { invalid?: boolean; disabled?: boolean }) {
   return (
     <div
       role="group"
       data-slot="field"
       data-orientation={orientation}
       data-invalid={invalid}
+      data-disabled={disabled}
       className={cn(fieldVariants({ orientation }), className)}
       {...props}
     />
@@ -208,16 +211,24 @@ function FieldError({
       return null
     }
 
-    if (errors?.length === 1 && errors[0]?.message) {
-      return errors[0].message
+    // D-2026-11-18-75: an empty <ul> is truthy, so an errors array
+    // with no message at all used to render an empty role="alert".
+    // No message anywhere means no alert at all.
+    const messages = errors.filter((error) => error?.message)
+
+    if (messages.length === 0) {
+      return null
+    }
+
+    if (messages.length === 1) {
+      return messages[0]?.message
     }
 
     return (
       <ul className="ml-4 flex list-disc flex-col gap-1">
-        {errors.map(
-          (error, index) =>
-            error?.message && <li key={index}>{error.message}</li>
-        )}
+        {messages.map((error, index) => (
+          <li key={index}>{error?.message}</li>
+        ))}
       </ul>
     )
   }, [children, errors])

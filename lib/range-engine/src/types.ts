@@ -38,6 +38,7 @@ export interface EngineOutput {
   collapsePctApplied: number;
   hook_buffer: number;
   hammer_edge_used: number;
+  rerun_timestamp?: string | null;
 }
 
 export interface HistoryEntry {
@@ -63,6 +64,8 @@ export interface HistoryEntry {
   earlyRead?: boolean;
   bookmaker?: string;
   gameId?: string;
+  matchGender?: "Men" | "Women";
+  isLiveMatch?: boolean;
   revalidationRequested?: boolean;
   revalidationStatus?: "AWAITING_SYNC" | "CONFIRMED" | "LATE_SHIFT" | "OK";
   lastRevalidationMsg?: string;

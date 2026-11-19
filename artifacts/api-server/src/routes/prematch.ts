@@ -1,7 +1,7 @@
 import { Router, type Request, type Response } from "express";
 import { quota, updateQuotaFromResponse } from "../lib/quotaTracker";
 import { store, persist, markDirty, rememberGames, resolveDataDir } from "../lib/warehouse";
-import { expandTeamAlias } from "../lib/teamNames";
+import { expandTeamAlias, teamKey } from "../lib/teamNames";
 import fs from "node:fs";
 import path from "node:path";
 const router = Router();
@@ -42,10 +42,10 @@ const searchOnce = async (q: string) => {
 // D-2026-11-18-53: wrapped in the shared alias expansion, so
 // "LA Clippers" compares equal to "Los Angeles Clippers".
 const normTeamName = (s: string) =>
-  expandTeamAlias(s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\(.*?\)/g, " ").replace(/[._]/g, " ").replace(/\s+/g, " ").trim().toLowerCase());
+  expandTeamAlias(s.replace(/\(.*?\)/g, " ").replace(/[._]/g, " ").replace(/\s+/g, " ").trim().toLowerCase());
 
 const searchTeam = async (name: string) => {
-  const key = name.trim().toLowerCase();
+  const key = teamKey(name); // D-2026-11-18-88: canonical team key — the raw-lowercase key missed the alias-expanded reader
   // A banked entry is trusted only when its name IS the team
   // asked for (D-2026-11-15-05): the pre-fix fallback banked
   // wrong teams under the requested key ("Springfield Magic"
@@ -270,13 +270,16 @@ const teamShooting = (games: any[], teamId: number) => {
     const fl = s["totalFouls"] ? (isHome ? s["totalFouls"].hv : s["totalFouls"].av) : null;
     if (!ft && !p3 && !fg) continue;
     n++;
-    if (ft?.a) { ftM += ft.m; ftA += ft.a; }
-    if (p3?.a) { p3M += p3.m; p3A += p3.a; }
-    if (fg?.a) { fgM += fg.m; fgA += fg.a; }
+    // D-2026-11-18-59: a null make with attempts present is MISSING
+    // data, not 0 makes — adding it pooled a 0% and could drive
+    // pt2Pct negative. Skip the line entirely when the make is null.
+    if (ft?.a && ft.m != null) { ftM += ft.m; ftA += ft.a; }
+    if (p3?.a && p3.m != null) { p3M += p3.m; p3A += p3.a; }
+    if (fg?.a && fg.m != null) { fgM += fg.m; fgA += fg.a; }
     // 2PT split: prefer the provider's own banked twoPointersScored
     // per game; fall back to the exact FG - 3PT derivation otherwise.
     const p2d = pick("twoPointersScored");
-    if (p2d?.a) { p2M += p2d.m; p2A += p2d.a; } else if (fg?.a && p3?.a) { p2M += fg.m - p3.m; p2A += fg.a - p3.a; }
+    if (p2d?.a && p2d.m != null) { p2M += p2d.m; p2A += p2d.a; } else if (fg?.a && p3?.a && fg.m != null && p3.m != null) { p2M += fg.m - p3.m; p2A += fg.a - p3.a; }
     if (fl != null) { fouls += fl; foulN++; }
     // Counting stats (Ed's added parameters): banked by BOTH providers
     // under these keys, previously averaged by nobody. Each stat keeps
@@ -304,7 +307,7 @@ const teamShooting = (games: any[], teamId: number) => {
     // Time in lead arrives as a made/attempted-style pair (seconds in
     // lead over total game seconds): aggregate as a RATIO of sums,
     // never a mean of per-game percentages.
-    const lead = pick("timeSpentInLead"); if (lead?.a) { leadSec += lead.m; leadTot += lead.a; }
+    const lead = pick("timeSpentInLead"); if (lead?.a && lead.m != null) { leadSec += lead.m; leadTot += lead.a; }
   }
   const pct = (m: number, a: number) => (a ? +((m / a) * 100).toFixed(1) : null);
   return {

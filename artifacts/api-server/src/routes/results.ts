@@ -1,7 +1,7 @@
 import { Router, type Request, type Response } from "express";
 import { store, rememberGames, persist, markDirty } from "../lib/warehouse";
 import { quota, updateQuotaFromResponse } from "../lib/quotaTracker";
-import { expandTeamAlias } from "../lib/teamNames";
+import { expandTeamAlias, teamKey } from "../lib/teamNames";
 
 const router = Router();
 const RAPIDAPI_KEY = process.env.RAPIDAPI_KEY;
@@ -127,7 +127,7 @@ router.get("/v1/result", async (req: Request, res: Response) => {
     settleInFlight.add(settleKey);
     let fetchCompleted = false;
     try {
-      let team = store.teams[h];
+      let team = store.teams[teamKey(homeTeam)];
       if (!team) {
         const data = await apiFetch("/api/basketball/search/" + encodeURIComponent(homeTeam));
         // Prefer the provider hit whose name is exactly the query, not
@@ -141,7 +141,7 @@ router.get("/v1/result", async (req: Request, res: Response) => {
           // durably. A hits[0] fallback is used for this request's
           // fetch only — caching it would bank the wrong team id
           // under the query name for every later settle-fetch.
-          if (exactHit) { store.teams[h] = team; markDirty(); }
+          if (exactHit) { store.teams[teamKey(homeTeam)] = team; markDirty(); }
         }
       }
       if (team) {

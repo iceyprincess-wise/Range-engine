@@ -7,20 +7,45 @@ import { Button } from "@/components/ui/button";
 // for 10 minutes; stale entries are dropped on load.
 const LIVE_MATRIX_CACHE_KEY = "rangengine_v3_livematrix_v1";
 const LIVE_MATRIX_CACHE_TTL_MS = 10 * 60 * 1000;
-function loadLiveMatrixCache(): { matchStats: Record<string, any>; stallStatus: Record<string, any>; apiReferenceMap: Record<string, any>; hasRefreshed: boolean } {
+function loadLiveMatrixCache(): { matchStats: Record<string, any>; stallStatus: Record<string, any>; apiReferenceMap: Record<string, any>; hasRefreshed: boolean; fetchedAt: Record<string, number> } {
   try {
     const raw = localStorage.getItem(LIVE_MATRIX_CACHE_KEY);
-    if (!raw) return { matchStats: {}, stallStatus: {}, apiReferenceMap: {}, hasRefreshed: false };
+    if (!raw) return { matchStats: {}, stallStatus: {}, apiReferenceMap: {}, hasRefreshed: false, fetchedAt: {} };
     const parsed = JSON.parse(raw);
-    if (!parsed || typeof parsed !== "object" || Date.now() - (parsed.ts ?? 0) > LIVE_MATRIX_CACHE_TTL_MS) return { matchStats: {}, stallStatus: {}, apiReferenceMap: {}, hasRefreshed: false };
+    if (!parsed || typeof parsed !== "object") return { matchStats: {}, stallStatus: {}, apiReferenceMap: {}, hasRefreshed: false, fetchedAt: {} };
+    // D-2026-11-18-61: expiry is PER ENTRY, not per blob — one game's
+    // refresh used to re-stamp the whole blob and extend every other
+    // entry past the 10-min TTL. An entry without its own fetchedAt
+    // falls back to the blob ts (caches written before this fix);
+    // anything older than the TTL is dropped individually on load.
+    const blobTs = typeof parsed.ts === "number" ? parsed.ts : 0;
+    const stampMap = parsed.fetchedAt && typeof parsed.fetchedAt === "object" ? parsed.fetchedAt : {};
+    const fresh = (id: string) => {
+      const at = typeof stampMap[id] === "number" ? stampMap[id] : blobTs;
+      return at > 0 && Date.now() - at <= LIVE_MATRIX_CACHE_TTL_MS;
+    };
+    const keep = (m: any) => {
+      const out: Record<string, any> = {};
+      if (m && typeof m === "object") for (const [k, v] of Object.entries(m)) if (fresh(k)) out[k] = v;
+      return out;
+    };
+    const fetchedAt: Record<string, number> = {};
+    for (const [k, v] of Object.entries(stampMap)) if (typeof v === "number") fetchedAt[k] = v;
+    const matchStats = keep(parsed.matchStats);
+    const stallStatus = keep(parsed.stallStatus);
+    const apiReferenceMap = keep(parsed.apiReferenceMap);
+    for (const k of [...Object.keys(matchStats), ...Object.keys(stallStatus), ...Object.keys(apiReferenceMap)]) {
+      if (fetchedAt[k] == null && blobTs > 0) fetchedAt[k] = blobTs;
+    }
     return {
-      matchStats: parsed.matchStats && typeof parsed.matchStats === "object" ? parsed.matchStats : {},
-      stallStatus: parsed.stallStatus && typeof parsed.stallStatus === "object" ? parsed.stallStatus : {},
-      apiReferenceMap: parsed.apiReferenceMap && typeof parsed.apiReferenceMap === "object" ? parsed.apiReferenceMap : {},
+      matchStats,
+      stallStatus,
+      apiReferenceMap,
       // D-2026-11-17-43: whether a refresh ever ran survives reload.
       hasRefreshed: parsed.hasRefreshed === true,
+      fetchedAt,
     };
-  } catch { return { matchStats: {}, stallStatus: {}, apiReferenceMap: {}, hasRefreshed: false }; }
+  } catch { return { matchStats: {}, stallStatus: {}, apiReferenceMap: {}, hasRefreshed: false, fetchedAt: {} }; }
 }
 
 interface LiveMatrixHubProps {
@@ -42,6 +67,11 @@ export const LiveMatrixHub: React.FC<LiveMatrixHubProps> = ({ history, setHistor
   const [syncing, setSyncing] = useState<Record<string, boolean>>({});
   const [globalLoading, setGlobalLoading] = useState(false);
   const [apiReferenceMap, setApiReferenceMap] = useState<Record<string, any>>(liveCache.apiReferenceMap); // Maps history IDs to API data
+  // D-2026-11-18-61/64: per-entry fetch stamps (see the loader) and
+  // whether this board was restored from cache — the age line below
+  // reads from these, never from the blob ts.
+  const [fetchedAt, setFetchedAt] = useState<Record<string, number>>(liveCache.fetchedAt);
+  const [restoredFromCache, setRestoredFromCache] = useState(Object.keys(liveCache.apiReferenceMap).length > 0 || Object.keys(liveCache.matchStats).length > 0);
   // D-2026-11-17-23: whether a refresh has ever run, and the last error.
   // D-2026-11-17-43: restored from the cache — a warm board no longer
   // reads "NOT YET CHECKED" after reload.
@@ -57,9 +87,15 @@ export const LiveMatrixHub: React.FC<LiveMatrixHubProps> = ({ history, setHistor
   useEffect(() => {
     if (!liveCachePersistedRef.current) { liveCachePersistedRef.current = true; return; }
     try {
-      localStorage.setItem(LIVE_MATRIX_CACHE_KEY, JSON.stringify({ ts: Date.now(), matchStats, stallStatus, apiReferenceMap, hasRefreshed }));
+      // D-2026-11-18-61: persist the per-entry stamps with the blob —
+      // and prune stamps for entries no longer in any map, so the
+      // stamp map cannot grow stale keys forever.
+      const liveIds = new Set([...Object.keys(matchStats), ...Object.keys(stallStatus), ...Object.keys(apiReferenceMap)]);
+      const prunedFetchedAt: Record<string, number> = {};
+      for (const [k, v] of Object.entries(fetchedAt)) if (liveIds.has(k)) prunedFetchedAt[k] = v;
+      localStorage.setItem(LIVE_MATRIX_CACHE_KEY, JSON.stringify({ ts: Date.now(), matchStats, stallStatus, apiReferenceMap, hasRefreshed, fetchedAt: prunedFetchedAt }));
     } catch { /* best-effort */ }
-  }, [matchStats, stallStatus, apiReferenceMap, hasRefreshed]);
+  }, [matchStats, stallStatus, apiReferenceMap, hasRefreshed, fetchedAt]);
   const API_BASE = (import.meta.env.VITE_API_BASE || "").replace(/\/+$/, "");
 
   // Date-aware: history entries carry their fixture `date`, so a
@@ -89,6 +125,13 @@ export const LiveMatrixHub: React.FC<LiveMatrixHubProps> = ({ history, setHistor
 
   // Safety: ensure history is an array before filtering
   const safeHistory = Array.isArray(history) ? history : [];
+  // D-2026-11-18-64: age of the freshest restored entry, for the
+  // "restored from cache" line — a cached score must never look
+  // as fresh as a live one.
+  const restoredAgeSecs = restoredFromCache && Object.keys(fetchedAt).length > 0
+    ? Math.max(0, Math.round((Date.now() - Math.max(...Object.values(fetchedAt))) / 1000))
+    : null;
+  const restoredAgeText = restoredAgeSecs == null ? null : restoredAgeSecs < 60 ? `${restoredAgeSecs}s` : `${Math.floor(restoredAgeSecs / 60)}m ${restoredAgeSecs % 60}s`;
   // ONLY show games that you have analyzed and are waiting for results
   const pendingGames = safeHistory.filter((h) => h && h.outcome === "PENDING");
 
@@ -100,8 +143,16 @@ export const LiveMatrixHub: React.FC<LiveMatrixHubProps> = ({ history, setHistor
       setRefreshError("Daily API quota exhausted — Refresh Board disabled until reset");
       return;
     }
-    if (Date.now() - lastRefreshAtRef.current < 30_000) return;
-    lastRefreshAtRef.current = Date.now();
+    // D-2026-11-18-62: a throttled tap used to be swallowed silently
+    // with the button still enabled — say when the next tap is
+    // allowed. The window is only spent on a successful fetch: the
+    // timestamp moves to after the feed answers, so a failed fetch
+    // does not burn the 30 s.
+    if (Date.now() - lastRefreshAtRef.current < 30_000) {
+      const secs = Math.ceil((30_000 - (Date.now() - lastRefreshAtRef.current)) / 1000);
+      setRefreshError(`Refresh available in ${secs}s`);
+      return;
+    }
     setGlobalLoading(true);
     try {
       // Fetch the global live matches from the backend proxy
@@ -123,6 +174,7 @@ export const LiveMatrixHub: React.FC<LiveMatrixHubProps> = ({ history, setHistor
         setRefreshError("Live feed returned no event list — showing last good board");
         return;
       }
+      lastRefreshAtRef.current = Date.now();
       const liveEvents = data.events;
 
       let updatedHistory = [...history];
@@ -195,6 +247,13 @@ export const LiveMatrixHub: React.FC<LiveMatrixHubProps> = ({ history, setHistor
       });
 
       setApiReferenceMap(newRefMap);
+      // D-2026-11-18-61: stamp ONLY the games this refresh touched —
+      // untouched entries keep their own fetchedAt and still expire.
+      const now = Date.now();
+      const stamped: Record<string, number> = {};
+      for (const id of Object.keys(newRefMap)) stamped[id] = now;
+      setFetchedAt((prev) => ({ ...prev, ...stamped }));
+      setRestoredFromCache(false);
       setHasRefreshed(true);
       setRefreshError(null);
 
@@ -269,6 +328,7 @@ export const LiveMatrixHub: React.FC<LiveMatrixHubProps> = ({ history, setHistor
       };
       
       setMatchStats(prev => ({ ...prev, [historyId]: parsedStats }));
+      setFetchedAt((prev) => ({ ...prev, [historyId]: Date.now() }));
 
       // STALL SENSOR SYNTHESIS (Mocked logic over deep data to prevent crash, as Q-scores vary by API)
       let stallRisk = "LOW";
@@ -310,6 +370,9 @@ export const LiveMatrixHub: React.FC<LiveMatrixHubProps> = ({ history, setHistor
           {globalLoading ? "Scanning Feed..." : "Refresh Board"}
         </Button>
       </div>
+      {restoredAgeText != null && (
+        <p className="mb-4 text-[10px] font-bold uppercase tracking-widest text-zinc-500">Updated {restoredAgeText} ago · restored from cache</p>
+      )}
       {refreshError && (
         <div className="mb-4 p-3 bg-red-950/40 border border-red-600/50 rounded-lg text-red-300 text-xs font-bold">{refreshError}</div>
       )}

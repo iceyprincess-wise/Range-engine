@@ -97,9 +97,11 @@ router.get("/v1/warehouse", (_req: Request, res: Response) => {
         const ft = pick("freeThrowsScored"), p3 = pick("threePointersScored"), fg = pick("fieldGoalsScored");
         const fl = st["totalFouls"] ? (isHome ? st["totalFouls"].hv : st["totalFouls"].av) : null;
         if (ft || p3 || fg) sn++;
-        if (ft?.a) { ftM += ft.m; ftA += ft.a; }
-        if (p3?.a) { p3M += p3.m; p3A += p3.a; }
-        if (fg?.a) { fgM += fg.m; fgA += fg.a; }
+        // D-2026-11-18-59: same null-make guard as prematch — a null
+        // make with attempts present is missing data, not 0 makes.
+        if (ft?.a && ft.m != null) { ftM += ft.m; ftA += ft.a; }
+        if (p3?.a && p3.m != null) { p3M += p3.m; p3A += p3.a; }
+        if (fg?.a && fg.m != null) { fgM += fg.m; fgA += fg.a; }
         if (fl != null) { fouls += fl; fn++; }
       }
     }

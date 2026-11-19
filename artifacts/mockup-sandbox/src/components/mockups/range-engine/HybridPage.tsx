@@ -10,6 +10,14 @@ type InboxData = {
   alreadyExistCount: number; games: InboxGame[]; parseError?: boolean;
 };
 
+// D-2026-11-18-63: parse a response body as JSON only defensively —
+// an HTML error page used to surface as a cryptic parser message
+// ("Unexpected token <...") instead of the real failure. Returns null
+// when the body is not JSON.
+const safeJson = async (r: Response): Promise<any> => {
+  try { return await r.json(); } catch { return null; }
+};
+
 // 🔀 HYBRID SYNC — move banked games between Termux and Render through a
 // staged inbox file. Written from scratch for this page (not copied from
 // WarehousePage, which stays locked). Every move here spends ZERO provider
@@ -33,7 +41,12 @@ export function HybridPage({ apiBase, onClose }: { apiBase: string; onClose: () 
     setErr(null);
     try {
       const r = await fetch(`${apiBase}/api/v1/hybrid/inbox`);
-      if (!r.ok) throw new Error("inbox request failed: HTTP " + r.status);
+      if (!r.ok) {
+        // D-2026-11-18-63: read the server's JSON error body when
+        // there is one — the bare HTTP status hid the real reason.
+        const d = await safeJson(r);
+        throw new Error(d?.error ?? "inbox request failed: HTTP " + r.status);
+      }
       setInbox(await r.json());
     } catch (e: any) {
       setErr(e?.message ?? "could not load inbox");
@@ -48,8 +61,9 @@ export function HybridPage({ apiBase, onClose }: { apiBase: string; onClose: () 
     setBusy("export"); setNotice(null); setErr(null);
     try {
       const r = await fetch(`${apiBase}/api/v1/hybrid/export`, { method: "POST" });
-      const d = await r.json();
+      const d = await safeJson(r);
       if (!r.ok) throw new Error(d?.error ?? "export failed");
+      if (d == null) throw new Error("export failed: server returned an unreadable body");
       setNotice(`Exported ${d.added} new game${d.added === 1 ? "" : "s"} to the inbox (total ${d.total}).${d.pruned ? ` Pruned ${d.pruned} unbankable game${d.pruned === 1 ? "" : "s"} (no final scores) from the inbox.` : ""}${d.skippedInvalid ? ` Skipped ${d.skippedInvalid} store game${d.skippedInvalid === 1 ? "" : "s"} with no final scores — they cannot be banked.` : ""} Commit + push the inbox file and Render auto-deploys it — then open this page on Render and Send to warehouse.`);
       await loadInbox();
     } catch (e: any) { setErr(e?.message ?? "export failed"); }
@@ -63,8 +77,9 @@ export function HybridPage({ apiBase, onClose }: { apiBase: string; onClose: () 
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify(ids ? { ids } : {}),
       });
-      const d = await r.json();
+      const d = await safeJson(r);
       if (!r.ok) throw new Error(d?.error ?? "import failed");
+      if (d == null) throw new Error("import failed: server returned an unreadable body");
       setNotice(`Sent ${d.added} game${d.added === 1 ? "" : "s"} to this warehouse (${d.alreadyExist} already there).${d.skippedInvalid ? ` ${d.skippedInvalid} skipped — no final scores recorded, cannot be banked.` : ""}`);
       await loadInbox();
     } catch (e: any) { setErr(e?.message ?? "import failed"); }
@@ -80,8 +95,9 @@ export function HybridPage({ apiBase, onClose }: { apiBase: string; onClose: () 
         dates.push(new Date(now - i * 86400000).toISOString().slice(0, 10).replace(/-/g, ""));
       }
       const r = await fetch(`${apiBase}/api/v1/freefeed/bank?league=${ffLeague}&dates=${dates.join(",")}`);
-      const d = await r.json();
+      const d = await safeJson(r);
       if (!r.ok) throw new Error(d?.error ?? "free bank failed");
+      if (d == null) throw new Error("free bank failed: server returned an unreadable body");
       setFfResult(
         `Banked ${d.banked} new game${d.banked === 1 ? "" : "s"} · ${d.alreadyBanked} already banked · ` +
         `${d.statsFilled} box-score stat set${d.statsFilled === 1 ? "" : "s"} filled` +
@@ -103,8 +119,9 @@ export function HybridPage({ apiBase, onClose }: { apiBase: string; onClose: () 
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ sourceUrl: pullUrl.trim() }),
       });
-      const d = await r.json();
+      const d = await safeJson(r);
       if (!r.ok) throw new Error(d?.error ?? "pull failed");
+      if (d == null) throw new Error("pull failed: server returned an unreadable body");
       setNotice(`Pulled ${d.added} new game${d.added === 1 ? "" : "s"} from the source (${d.alreadyExist} already here, ${d.sourceGames} on the source).${d.skippedInvalid ? ` ${d.skippedInvalid} skipped — no final scores recorded, cannot be banked.` : ""}`);
       await loadInbox();
     } catch (e: any) { setPullErr(e?.message ?? "pull failed"); }

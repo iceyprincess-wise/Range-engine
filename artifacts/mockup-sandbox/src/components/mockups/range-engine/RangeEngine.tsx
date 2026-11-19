@@ -343,6 +343,7 @@ export function RangeEngine() {
     done: false,
     cameo: "",
     confidence: "0.00",
+    failed: false,
   });
   // ─── Truth Protocol: Scanner Authenticity & Dynamic Data ───────────────────
   const [scanPhase, setScanPhase] = useState("Awaiting Target...");
@@ -861,6 +862,8 @@ export function RangeEngine() {
     if (hist.underHigh != null) setUnderHigh(hist.underHigh);
     if (hist.bookmaker) setBookmaker(hist.bookmaker);
     if (hist.gameId) setGameId(hist.gameId);
+    if (hist.matchGender) setMatchGender(hist.matchGender);
+    if (hist.isLiveMatch != null) setIsLiveMatch(hist.isLiveMatch);
     setHomeInfo(hist.homeInfoSnap ?? lookupTeam(hist.homeTeam ?? "", dna));
     setAwayInfo(hist.awayInfoSnap ?? lookupTeam(hist.awayTeam ?? "", dna));
     setRerunResult(hist.rerunResult ?? null);
@@ -975,9 +978,14 @@ export function RangeEngine() {
   // AWAITING_SYNC once, with the same message the old success path
   // wrote. If a closing-lines source is ever wired, restore the
   // fetch here and gate it on that source.
-  const revalidateEarlyEntry = async (entry: HistoryEntry) => {
+  // D-2026-11-18-66: mark ALL due entries in ONE history.map pass.
+  // The old per-entry calls each rebuilt setHistory on the same
+  // fixed `history` snapshot, so the second call overwrote the
+  // first call's marking and all but the last entry lost its flag.
+  const revalidateEarlyEntries = (entries: HistoryEntry[]) => {
+    const ids = new Set(entries.map((e) => e.id));
     const inconclusive = history.map((item) => {
-      if (item.id !== entry.id) return item;
+      if (!ids.has(item.id)) return item;
       return {
         ...item,
         revalidationRequested: true,
@@ -991,23 +999,25 @@ export function RangeEngine() {
 
   useEffect(() => {
     if (!history.length || !currentTime) return;
-    history.forEach((entry) => {
+    // D-2026-11-18-66: collect every due entry first, then mark them
+    // in a single pass (see revalidateEarlyEntries) — the old loop
+    // called the per-entry marker once per entry on one snapshot.
+    // Date-aware against the ENTRY's own fixture date: a tomorrow
+    // 01:00 game at 23:50 today is 70 min out (no revalidation
+    // yet), not -1370 min (which never satisfied this window at
+    // all — and at 00:45 it is 15 min out, which does).
+    const due = history.filter((entry) => {
       if (
         !entry.earlyRead ||
         entry.outcome !== "PENDING" ||
         entry.revalidationRequested
       ) {
-        return;
+        return false;
       }
-      // Date-aware against the ENTRY's own fixture date: a tomorrow
-      // 01:00 game at 23:50 today is 70 min out (no revalidation
-      // yet), not -1370 min (which never satisfied this window at
-      // all — and at 00:45 it is 15 min out, which does).
       const minsToTipoff = minutesToTipoff(entry.koTime, currentTime, entry.date, today);
-      if (minsToTipoff != null && minsToTipoff <= 15 && minsToTipoff >= 0) {
-        revalidateEarlyEntry(entry);
-      }
+      return minsToTipoff != null && minsToTipoff <= 15 && minsToTipoff >= 0;
     });
+    if (due.length) revalidateEarlyEntries(due);
   }, [history, currentTime]);
 
   // ── Auto Tip-Off Calculation (KO time − current time) ─────────────────────
@@ -1097,13 +1107,13 @@ export function RangeEngine() {
   // real source count and duration.)
   useEffect(() => {
     if (!homeTeam || !awayTeam) {
-      setResearch({ scanning: false, progress: 0, node: -1, done: false, cameo: "", confidence: "0.00" });
+      setResearch({ scanning: false, progress: 0, node: -1, done: false, cameo: "", confidence: "0.00", failed: false });
       setScanPhase("Awaiting Target...");
       return;
     }
     const forThisFixture = researchData && researchData.homeTeam === homeTeam && researchData.awayTeam === awayTeam;
     if (researchPhase === "researching" || (researchPhase === "done" && !forThisFixture && !researchError)) {
-      setResearch((r) => ({ ...r, scanning: true, progress: 45, node: 2, done: false, cameo: "> RESEARCH PIPELINE RUNNING — PREMATCH + LEAGUE DNA + SYNC + FREE FEEDS", confidence: "0.00" }));
+      setResearch((r) => ({ ...r, scanning: true, progress: 45, node: 2, done: false, cameo: "> RESEARCH PIPELINE RUNNING — PREMATCH + LEAGUE DNA + SYNC + FREE FEEDS", confidence: "0.00", failed: false }));
       setScanPhase("Researching…");
       return;
     }
@@ -1114,13 +1124,13 @@ export function RangeEngine() {
         h2h: researchData.h2hMeetings ? `${researchData.h2hMeetings} meeting(s) · avg total ${Math.round(researchData.h2hAvgTotal ?? 0)}` : "No recent H2H found",
         sourceNodes: [`Research pipeline — ${researchData.sourcesScanned} source(s) returned data in ${researchData.researchMs}ms (prematch warehouse/provider, league DNA, sync, ESPN free feeds)`],
       });
-      setResearch({ scanning: false, progress: 100, node: 8, done: true, cameo: `> RESEARCH COMPLETE — ${researchData.sourcesScanned} SOURCE(S) · ${researchData.researchMs}MS`, confidence: researchData.sourcesScanned > 0 ? "100.00" : "0.00" });
+      setResearch({ scanning: false, progress: 100, node: 8, done: true, cameo: `> RESEARCH COMPLETE — ${researchData.sourcesScanned} SOURCE(S) · ${researchData.researchMs}MS`, confidence: researchData.sourcesScanned > 0 ? "100.00" : "0.00", failed: false });
       setScanPhase("Scan Complete ✓");
       return;
     }
     if (researchPhase === "done" && researchError) {
       setLiveMatrixData({ homeForm: "DATA UNAVAILABLE", awayForm: "DATA UNAVAILABLE", h2h: "DATA UNAVAILABLE", sourceNodes: [`Research failed for ${homeTeam} vs ${awayTeam}: ${researchError}`] });
-      setResearch({ scanning: false, progress: 100, node: 8, done: true, cameo: "> RESEARCH FAILED — DATA UNAVAILABLE (NO PAYLOAD SECURED)", confidence: "0.00" });
+      setResearch({ scanning: false, progress: 100, node: 8, done: true, cameo: "> RESEARCH FAILED — DATA UNAVAILABLE (NO PAYLOAD SECURED)", confidence: "0.00", failed: true });
       setScanPhase("Scan Failed — Research Unavailable");
     }
   }, [researchPhase, researchData, researchError, homeTeam, awayTeam]);
@@ -1248,6 +1258,8 @@ export function RangeEngine() {
             earlyRead,
             bookmaker,
             gameId: gameId || undefined,
+            matchGender,
+            isLiveMatch,
             revalidationRequested: false,
             revalidationStatus: earlyRead ? "AWAITING_SYNC" : "OK",
             lastRevalidationMsg: earlyRead
@@ -1269,6 +1281,11 @@ export function RangeEngine() {
   const [reconfirm, setReconfirm] = useState<"pending" | "match" | "variance" | null>(null);
   useEffect(() => {
     if (phase !== "result" || !result || !homeInfo || !awayInfo || !overLow || !underHigh) { setReconfirm(null); return; }
+    // D-2026-11-18-65: only this fixture's research may feed the
+    // recompute — the same guard as the primary analysis. A stale
+    // payload (e.g. a reopened receipt, research for another
+    // fixture) reads as no measured inputs, never as wrong inputs.
+    const rd = researchData && researchData.homeTeam === homeTeam && researchData.awayTeam === awayTeam ? researchData : null;
     setReconfirm("pending");
     const t = setTimeout(() => {
       try {
@@ -1280,30 +1297,30 @@ export function RangeEngine() {
           key_player_name: detectKeyOut().name || "Key Scorer",
           over_low: parseFloat(overLow), over_high: parseFloat(overHigh || overLow),
           under_low: parseFloat(underLow || underHigh), under_high: parseFloat(underHigh),
-          home_ft: researchData?.homeFt ?? undefined, away_ft: researchData?.awayFt ?? undefined,
-          home_pt3: researchData?.homePt3 ?? undefined, away_pt3: researchData?.awayPt3 ?? undefined,
-          home_arena_ppg: researchData?.homeArenaPPG, away_arena_ppg: researchData?.awayRoadPPG,
-          h2h_avg_total: researchData?.h2hAvgTotal,
+          home_ft: rd?.homeFt ?? undefined, away_ft: rd?.awayFt ?? undefined,
+          home_pt3: rd?.homePt3 ?? undefined, away_pt3: rd?.awayPt3 ?? undefined,
+          home_arena_ppg: rd?.homeArenaPPG, away_arena_ppg: rd?.awayRoadPPG,
+          h2h_avg_total: rd?.h2hAvgTotal,
           // Same inputs as the primary analysis — the reconfirm previously
           // omitted every foul/rest/referee/weighted field, so Rule 10 ran
           // on different data and any "variance" could be an artifact of
           // the missing inputs, not of the game.
-          homeFoulRate: researchData?.homeFoulRate, awayFoulRate: researchData?.awayFoulRate,
-          homeFtAttempts: researchData?.homeFtAttempts, awayFtAttempts: researchData?.awayFtAttempts,
-          leagueFoulAverage: researchData?.leagueFoulAverage, refereeStrictness: researchData?.refereeStrictness,
-          homeRestDays: researchData?.homeRestDays ?? undefined, awayRestDays: researchData?.awayRestDays ?? undefined,
-          homeFoulWeightedAvg: researchData?.homeFoulWeightedAvg, awayFoulWeightedAvg: researchData?.awayFoulWeightedAvg,
-          homeFtAttemptWeightedAvg: researchData?.homeFtAttemptWeightedAvg, awayFtAttemptWeightedAvg: researchData?.awayFtAttemptWeightedAvg,
-          use_weighted: !!(researchData?.homeArenaPPG && researchData?.awayRoadPPG && researchData?.h2hAvgTotal),
-          collapse_pct: researchData?.collapsePct ?? 0,
-          recent_totals: researchData?.recentTotals,
-          league_measured: researchData?.leagueDnaMeasured ?? null,
-          home_def_ppg: researchData?.homeDefPpg ?? undefined,
-          away_def_ppg: researchData?.awayDefPpg ?? undefined,
-          ot_rate: researchData?.otRate ?? undefined,
+          homeFoulRate: rd?.homeFoulRate, awayFoulRate: rd?.awayFoulRate,
+          homeFtAttempts: rd?.homeFtAttempts, awayFtAttempts: rd?.awayFtAttempts,
+          leagueFoulAverage: rd?.leagueFoulAverage, refereeStrictness: rd?.refereeStrictness,
+          homeRestDays: rd?.homeRestDays ?? undefined, awayRestDays: rd?.awayRestDays ?? undefined,
+          homeFoulWeightedAvg: rd?.homeFoulWeightedAvg, awayFoulWeightedAvg: rd?.awayFoulWeightedAvg,
+          homeFtAttemptWeightedAvg: rd?.homeFtAttemptWeightedAvg, awayFtAttemptWeightedAvg: rd?.awayFtAttemptWeightedAvg,
+          use_weighted: !!(rd?.homeArenaPPG && rd?.awayRoadPPG && rd?.h2hAvgTotal),
+          collapse_pct: rd?.collapsePct ?? 0,
+          recent_totals: rd?.recentTotals,
+          league_measured: rd?.leagueDnaMeasured ?? null,
+          home_def_ppg: rd?.homeDefPpg ?? undefined,
+          away_def_ppg: rd?.awayDefPpg ?? undefined,
+          ot_rate: rd?.otRate ?? undefined,
           minutes_to_tipoff: tipOffMinutes,
-          live_score: researchData?.liveScore ? { home: researchData.liveScore.home, away: researchData.liveScore.away } : undefined,
-          live_clock: researchData?.liveScore?.clock ?? undefined,
+          live_score: rd?.liveScore ? { home: rd.liveScore.home, away: rd.liveScore.away } : undefined,
+          live_clock: rd?.liveScore?.clock ?? undefined,
           is_rerun: true,
           rerun_timestamp: new Date().toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", second: "2-digit" }),
         });
@@ -1372,7 +1389,7 @@ export function RangeEngine() {
       {showGames && (
         <div className="fixed inset-0 bg-black/95 flex flex-col p-4 overflow-y-auto" style={{ zIndex: 9999 }}>
           <div className="flex items-center justify-between mb-3">
-            <p className="text-yellow-400 font-black text-sm uppercase tracking-widest">📡 Covered Games — Today</p>
+            <p className="text-yellow-400 font-black text-sm uppercase tracking-widest">{gMeta?.date === today ? "📡 Covered Games — Today" : `📡 Covered Games — ${gMeta?.date ?? "—"}`}</p>
             <span className="flex items-center gap-2"><Button onClick={() => updateTournaments()} className="text-yellow-300 text-[10px] font-black px-2 py-1 rounded border border-yellow-700 bg-yellow-950/40 uppercase h-auto min-h-0">{refreshing ? "⬆ UPDATING…" : "⬆ UPDATE (spends quota)"}</Button><Button onClick={() => setShowGames(false)} className="text-zinc-400 text-xl px-2 py-0 h-auto min-h-0 border-0 bg-transparent">✕</Button></span>
           </div>
           <p className="text-[10px] text-zinc-500 mb-3">API quota: {quotaInfo.remaining ?? "—"}/{quotaInfo.limit ?? "—"} remaining · {gMeta?.fromDisk === false ? "fresh UPDATE" : (gMeta?.updatedAt != null && gTours.length > 0 ? "showing last saved update" + (gMeta?.date ? " · " + gMeta.date : " · " + String(gMeta.updatedAt).slice(0, 10)) : "no saved update yet")}{typeof gMeta?.quotaSpent === "number" ? ` — cost ${gMeta.quotaSpent} call${gMeta.quotaSpent === 1 ? "" : "s"}` : ""}{quotaResetLabel ? ` · ${quotaResetLabel}` : ""}</p>
@@ -2914,7 +2931,7 @@ Unavailable data is labeled — never invented.`);
                         <span
                           className={`w-2 h-2 rounded-full ${research.scanning ? "bg-yellow-400 animate-pulse" : research.done ? "bg-yellow-500" : "bg-slate-600"}`}
                         ></span>
-                        {research.scanning ? "Syncing Deep Scan..." : research.done ? "Deep Scan Live" : "Deep Scan Standby"}
+                        {research.scanning ? "Syncing Deep Scan..." : research.failed ? "Deep Scan Failed" : research.done ? "Deep Scan Live" : "Deep Scan Standby"}
                       </h4>
                       <span className="text-[9px] text-yellow-300/70 font-mono tracking-widest uppercase">
                         REAL CHANNELS · WAREHOUSE + NEWS + H2H + QUOTA
@@ -2972,7 +2989,9 @@ Unavailable data is labeled — never invented.`);
                           {research.scanning
                             ? "Real-time aggregation active. Delay for accuracy..."
                             : research.done
-                              ? "SCAN COMPLETE"
+                              ? research.failed
+                                ? "SCAN FAILED — no payload secured"
+                                : "SCAN COMPLETE"
                               : "AWAITING PARAMS..."}
                         </span>
                         <span
@@ -3034,7 +3053,8 @@ Unavailable data is labeled — never invented.`);
                             </div>
                             <div className="bg-black border border-yellow-500/20 rounded px-2 py-1">
                               <span className="text-zinc-600">Pace Volatility:</span>{" "}
-                              <span className="text-yellow-300 font-bold">API-Driven</span>
+                              {/* D-2026-11-18-70: "API-Driven" was a hard-coded constant — no measured pace-volatility value exists; "—" until one is measured. */}
+                              <span className="text-yellow-300 font-bold">—</span>
                             </div>
                           </div>
                           <p className="text-[8px] text-zinc-600 italic">
@@ -3486,7 +3506,7 @@ Unavailable data is labeled — never invented.`);
                     </p>
                     {groupAuditLog(result.adj_log).block1.map((row, i) => (
                       <AdjRow
-                        key={i}
+                        key={row.rule + "|" + i}
                         rule={row.rule}
                         lb={row.lb_adj}
                         hb={row.hb_adj}
@@ -3499,7 +3519,7 @@ Unavailable data is labeled — never invented.`);
                     </p>
                     {groupAuditLog(result.adj_log).block2.map((row, i) => (
                       <AdjRow
-                        key={i + 7}
+                        key={row.rule + "|" + i}
                         rule={row.rule}
                         lb={row.lb_adj}
                         hb={row.hb_adj}
@@ -3512,7 +3532,7 @@ Unavailable data is labeled — never invented.`);
                     </p>
                     {groupAuditLog(result.adj_log).block3.map((row, i) => (
                       <AdjRow
-                        key={i + 12}
+                        key={row.rule + "|" + i}
                         rule={row.rule}
                         lb={row.lb_adj}
                         hb={row.hb_adj}
@@ -3754,7 +3774,7 @@ Unavailable data is labeled — never invented.`);
                           <span className="text-zinc-700">
                             Time Sync (fresh):
                           </span>{" "}
-                          {date} · KO {koTime} WAT · RERUN at real-time ·{" "}
+                          {date} · KO {koTime} WAT · RERUN at {rerunResult.rerun_timestamp ?? "real-time"} ·{" "}
                           {tipOff} to tip
                         </p>
                         <p>
@@ -3774,17 +3794,9 @@ Unavailable data is labeled — never invented.`);
                         </p>
                         <p className="text-[10px] text-zinc-400 font-mono">
                           Base Range:{" "}
-                          {(
-                            homeInfo.stats.avg_pts +
-                            awayInfo.stats.avg_pts -
-                            6
-                          ).toFixed(1)}{" "}
-                          –{" "}
-                          {(
-                            homeInfo.stats.avg_pts +
-                            awayInfo.stats.avg_pts +
-                            6
-                          ).toFixed(1)}
+                          {rerunResult.adj_log.find(
+                            (r) => r.rule === "Rule 4 — Base Range"
+                          )?.note ?? "—"}
                         </p>
                         <p className="text-[10px] text-zinc-400 font-mono">
                           After All Adjustments: {rerunResult.lb.toFixed(1)} –{" "}

@@ -944,9 +944,13 @@ export function runEngine(opts: {
     failParts.push(
       `Low FT% (${(avg_ft_measured * 100).toFixed(0)}% measured avg) — Foul Engine underperforms`,
     );
-  if (avg_pt3 < 0.33)
+  // D-2026-11-18-86: gated on MEASURED 3PT% exactly like the low-FT%
+  // line above — the grind-league profile default (pt3 = 0.32) is
+  // below the threshold, so the ungated check fired on every
+  // grind-league proxy game.
+  if (pt3Measured && avg_pt3_measured != null && avg_pt3_measured < 0.33)
     failParts.push(
-      `Low 3PT% (${(avg_pt3 * 100).toFixed(0)}%) — scoring volume compressed`,
+      `Low 3PT% (${(avg_pt3_measured * 100).toFixed(0)}% measured avg) — scoring volume compressed`,
     );
   if (failParts.length === 0)
     failParts.push("None identified — Strong data confidence");
@@ -985,6 +989,7 @@ export function runEngine(opts: {
     collapsePctApplied: collapsePct,
     hook_buffer,
     hammer_edge_used,
+    rerun_timestamp: opts.rerun_timestamp ?? null,
   };
 }
 

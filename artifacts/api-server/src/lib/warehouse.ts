@@ -1,6 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { teamKey } from "./teamNames";
 
 /**
  * Data directory resolution. The server is normally started from
@@ -45,6 +46,32 @@ const loadStore = (): Store => {
         parsed[k] = {};
       }
     }
+    // D-2026-11-18-88: ONE-OFF KEY MIGRATION — store.teams was keyed
+    // by three conventions (raw lowercase at the writers, alias-
+    // expanded at the results.ts reader), so "La Laguna Tenerife"
+    // and "la clippers" missed. Re-key every entry through the
+    // canonical teamKey(); entries colliding under one key keep the
+    // first, exact duplicates (same id) are dropped.
+    {
+      const migrated: Record<string, StoredTeam> = {};
+      let rekeyed = 0, droppedDupes = 0;
+      for (const [k, tm] of Object.entries(parsed.teams as Record<string, StoredTeam>)) {
+        if (!tm || typeof tm.name !== "string") { droppedDupes++; continue; }
+        const ck = teamKey(tm.name);
+        if (ck !== k) rekeyed++;
+        if (migrated[ck]) {
+          if (migrated[ck].id === tm.id) droppedDupes++;
+          else console.error(`warehouse: team-key collision for "${ck}" — keeping id ${migrated[ck].id}, dropping id ${tm.id} ("${tm.name}")`);
+          continue;
+        }
+        migrated[ck] = tm;
+      }
+      parsed.teams = migrated;
+      if (rekeyed > 0 || droppedDupes > 0) {
+        storeRekeyed = rekeyed + droppedDupes;
+        console.error(`warehouse: re-keyed ${rekeyed} team(s), dropped ${droppedDupes} duplicate(s) under the canonical team key (D-2026-11-18-88)`);
+      }
+    }
     // Debris purge: every legitimate intake (rememberGames, hybrid
     // import/pull, the free bank) banks finished games WITH final
     // scores only. Anything else in the file is pre-validation debris
@@ -75,6 +102,7 @@ const loadStore = (): Store => {
   }
 };
 let storePurged = 0;
+let storeRekeyed = 0;
 export const store: Store = loadStore();
 
 let dirty = false;
@@ -94,6 +122,7 @@ export const persist = () => {
 };
 setInterval(persist, 30_000).unref();
 if (storePurged > 0) { markDirty(); persist(); }
+if (storeRekeyed > 0) { markDirty(); persist(); }
 
 const isFinished = (e: any) => e?.status?.type === "finished";
 const hasScores = (e: any) =>
@@ -151,7 +180,7 @@ const autoRestoreFromInbox = () => {
   }
   if (Array.isArray(parsed.teams)) {
     for (const tm of parsed.teams) {
-      const key = typeof tm?.name === "string" ? tm.name.trim().toLowerCase() : "";
+      const key = typeof tm?.name === "string" ? teamKey(tm.name) : "";
       if (key && tm?.id != null && !store.teams[key]) { store.teams[key] = { id: tm.id, name: tm.name }; teamsAdded++; }
     }
   }
