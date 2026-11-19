@@ -658,9 +658,16 @@ export function RangeEngine() {
   useEffect(() => {
     const mainSyncTimer = setInterval(() => {
       setRefreshCountdown((prev) => {
+        // D-2026-11-19-100: re-sync to the real next-poll delay on every
+        // tick — the old decrement-only clock never noticed a phase change
+        // (10:00 -> 4:30 -> 90s), so the display froze at the stale
+        // phase's value (D-56(b)). A jump of more than 1s from the
+        // expected prev-1 means the phase moved: snap to the target.
         // D-2026-11-17-17: IDLE polls nothing — freeze the display
         // instead of ticking 1:00 -> 0:00 forever with no sync firing.
-        if (nextCountdownSec(koTime, currentTime, date, today) === null) return prev;
+        const target = nextCountdownSec(koTime, currentTime, date, today);
+        if (target === null) return prev;
+        if (Math.abs(target - (prev - 1)) > 1) return target;
         const next = prev - 1;
         if (next < 0) return 60; // wrap-around after hitting 0
         return next;
@@ -1380,7 +1387,7 @@ export function RangeEngine() {
               <li>✓ Live 90-Minute Pacing Dynamics</li>
             </ul>
           </div>
-          <Button onClick={() => setTab("analyzer")} className="mt-8 px-8 py-3 bg-gradient-to-r from-yellow-600 to-yellow-600 text-white font-bold rounded-lg hover:from-yellow-500 hover:to-yellow-500 transition shadow-lg h-auto min-h-0 border-0 text-base">Return to Basketball</Button>
+          <Button onClick={() => setTab("analyzer")} variant="brand" className="mt-8 px-8 py-3 text-base transition">Return to Basketball</Button>
         </div>
       )}
       {showWh && <WarehousePage wh={wh} whAt={whAt} onClose={() => setShowWh(false)} />}
@@ -2631,7 +2638,7 @@ MATCH CONTEXT — Rule 1 (Time Sync)
                           <div className={`rounded-lg px-3 py-2 border ${researchData?.foulEngineStatus === "HIGH RISK" ? "border-red-800 bg-red-950/30" : "border-yellow-800 bg-yellow-950/30"}`}>
                             <div className="flex items-center gap-2 mb-1">
                               <span className={`text-[9px] font-black ${researchData?.foulEngineStatus === "HIGH RISK" ? "text-red-400" : "text-yellow-500"}`}>
-                                {researchData?.foulEngineStatus ?? "SAFE"}
+                                {researchData?.foulEngineStatus ?? "—"}
                               </span>
                               <span className="text-zinc-700 text-[9px]">
                                 status
@@ -3066,7 +3073,8 @@ Unavailable data is labeled — never invented.`);
                     {research.done && (
                       <Button
                         onClick={() => {
-                          alert(`LIVE SYNC SOURCE: BasketAPI via the prematch endpoint. The Dynamic Data Matrix above shows what was actually returned for this fixture.`);
+                          // D-2026-11-19-103: modal only — the alert() fired
+                          // first and the modal second: one tap, two dialogs.
                           setIsReportOpen(true);
                         }}
                         className="mt-3 w-full py-2 bg-yellow-600/20 hover:bg-yellow-600/40 border border-yellow-500/50 rounded text-[10px] text-yellow-300 font-bold tracking-widest uppercase transition-all duration-300 flex justify-center items-center gap-2 h-auto min-h-0 [&_svg]:size-3 whitespace-normal"

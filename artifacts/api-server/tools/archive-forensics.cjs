@@ -1,3 +1,7 @@
+// D-2026-11-19-97: INPUT — this tool reads artifacts/api-server/data/analysis-archive-export.json,
+// which is NOT in the repo (gitignored live data). Produce it first: open the app with
+// #export-archive in the URL, tap "Export Analysis Archive JSON", and place the downloaded
+// file in artifacts/api-server/data/. Never commit live data files.
 const fs = require("fs"), path = require("path");
 const p = path.join(__dirname, "..", "data", "analysis-archive-export.json");
 if (!fs.existsSync(p)) { console.error("missing archive export:", p); process.exit(1); }

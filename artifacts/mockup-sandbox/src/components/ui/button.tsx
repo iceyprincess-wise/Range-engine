@@ -19,6 +19,8 @@ const buttonVariants = cva(
           "border bg-secondary text-secondary-foreground border-secondary-border",
         ghost: "border border-transparent",
         link: "text-primary underline-offset-4 hover:underline",
+        brand:
+          "bg-gradient-to-r from-yellow-600 to-yellow-600 text-white font-bold rounded-lg hover:from-yellow-500 hover:to-yellow-500 shadow-lg h-auto min-h-0 border border-yellow-400/50",
       },
       size: {
         default: "min-h-9 px-4 py-2",

@@ -1,5 +1,5 @@
 import { Router, type Request, type Response } from "express";
-import { updateQuotaFromResponse } from "../lib/quotaTracker";
+import { quota, updateQuotaFromResponse } from "../lib/quotaTracker";
 import { expandTeamAlias } from "../lib/teamNames";
 
 const router = Router();
@@ -93,6 +93,13 @@ router.get("/v1/sync", async (req: Request, res: Response) => {
     if (cached) {
       if (cached.__notFound) return res.status(404).json({ error: "Live match not found for the requested teams" });
       return res.json(cached);
+    }
+
+    // D-2026-11-19-96: quota-exhausted pre-gate (games.ts tournaments
+    // UPDATE precedent) — refuse before spending a call the tracker
+    // already knows we cannot afford. Cached hits above already returned.
+    if (quota.remaining !== null && quota.remaining <= 0) {
+      return res.status(429).json({ error: "API quota exhausted — live sync refused; retry after reset", remaining: quota.remaining });
     }
 
     const liveResponse = await basketFetch("/api/basketball/matches/live");
@@ -214,6 +221,13 @@ router.get("/v1/resolve", async (req: Request, res: Response) => {
       return res.json(cached);
     }
 
+    // D-2026-11-19-96: quota-exhausted pre-gate (games.ts tournaments
+    // UPDATE precedent) — refuse before spending a call the tracker
+    // already knows we cannot afford. Cached hits above already returned.
+    if (quota.remaining !== null && quota.remaining <= 0) {
+      return res.status(429).json({ error: "API quota exhausted — live resolve refused; retry after reset", remaining: quota.remaining });
+    }
+
     const liveResponse = await basketFetch("/api/basketball/matches/live");
     const events = liveResponse?.events || [];
     const target = getTargetMatch(events, homeTeam, awayTeam);
@@ -254,6 +268,13 @@ router.get("/basket/live", async (_req, res: Response) => {
       return res.json(cached);
     }
 
+    // D-2026-11-19-96: quota-exhausted pre-gate (games.ts tournaments
+    // UPDATE precedent) — refuse before spending a call the tracker
+    // already knows we cannot afford. Cached hits above already returned.
+    if (quota.remaining !== null && quota.remaining <= 0) {
+      return res.status(429).json({ error: "API quota exhausted — live board refused; retry after reset", remaining: quota.remaining });
+    }
+
     const response = await basketFetch("/api/basketball/matches/live");
     setCache(cacheKey, response, 10_000);
     return res.json(response);
@@ -278,6 +299,13 @@ router.get("/basket/match/:id/statistics", async (req: Request, res: Response) =
     const cached = getCached(cacheKey);
     if (cached) {
       return res.json(cached);
+    }
+
+    // D-2026-11-19-96: quota-exhausted pre-gate (games.ts tournaments
+    // UPDATE precedent) — refuse before spending a call the tracker
+    // already knows we cannot afford. Cached hits above already returned.
+    if (quota.remaining !== null && quota.remaining <= 0) {
+      return res.status(429).json({ error: "API quota exhausted — match statistics refused; retry after reset", remaining: quota.remaining });
     }
 
     const response = await basketFetch(`/api/basketball/match/${encodeURIComponent(String(id))}/statistics`);

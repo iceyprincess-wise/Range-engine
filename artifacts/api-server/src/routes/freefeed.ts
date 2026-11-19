@@ -377,9 +377,21 @@ const pageFetch = async (url: string): Promise<string> => {
   return r.text();
 };
 
-const sideTokens = (s: string): string[] =>
-  s.toLowerCase().replace(/[^a-z ]/g, " ").split(/\s+/).filter(Boolean)
-    .flatMap((t) => (t === "la" ? ["los", "angeles"] : [t]));
+// D-2026-11-19-89: strip dots first so dotted initials collapse ("L.A." -> "la",
+  // which the line below expands to los/angeles). Without it "L.A. Lakers"
+  // tokenised to ["l", "a", ...] and matched nothing in the warehouse.
+  // Spaced initials ("L. A.") tokenise to ["l", "a"], so runs of single
+  // letters are merged before the expansion below.
+const sideTokens = (s: string): string[] => {
+  const toks = s.toLowerCase().replace(/\./g, "").replace(/[^a-z ]/g, " ").split(/\s+/).filter(Boolean);
+  const merged: string[] = [];
+  for (const t of toks) {
+    const last = merged[merged.length - 1];
+    if (t.length === 1 && last !== undefined && last.length === 1) merged[merged.length - 1] = last + t;
+    else merged.push(t);
+  }
+  return merged.flatMap((t) => (t === "la" ? ["los", "angeles"] : [t]));
+};
 const sideMatches = (pageSide: string, warehouseName: string): boolean => {
   const w = new Set(sideTokens(warehouseName));
   const toks = sideTokens(pageSide);

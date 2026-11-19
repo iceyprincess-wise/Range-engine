@@ -488,8 +488,11 @@ export function runEngine(opts: {
     ? opts.awayFtAttemptWeightedAvg!
     : (opts.awayFtAttempts ?? 0);
   const totalFtAttempts = homeFtAttempts + awayFtAttempts;
-  const homeRestDays = opts.homeRestDays ?? 1;
-  const awayRestDays = opts.awayRestDays ?? 1;
+  // D-2026-11-19-110: a missing side is null, not 1 — the old default
+  // fabricated a 1-day rest for an unknown side, shifting the HB by a
+  // point (null compares unequal to 0/1, so the penalty math is unchanged).
+  const homeRestDays = opts.homeRestDays ?? null;
+  const awayRestDays = opts.awayRestDays ?? null;
   const leagueFoulAverage = opts.leagueFoulAverage ?? 0;
   const refereeStrictness = opts.refereeStrictness ?? 0;
   const restDataProvided = opts.homeRestDays != null || opts.awayRestDays != null;
@@ -531,7 +534,7 @@ export function runEngine(opts: {
     weightedFoul ? "| Weighted foul/FTA (recent-form)" : "",
     leagueFoulAverage ? `| League Fouls: ${leagueFoulAverage.toFixed(1)}` : "",
     refereeSignal ? "| Referee Strictness: Elevated" : "",
-    fatiguePenalty > 0 ? `| Rest Days: ${homeRestDays}/${awayRestDays}` : "",
+    restDataProvided && fatiguePenalty > 0 ? `| Rest Days: ${homeRestDays ?? "—"}/${awayRestDays ?? "—"}` : "",
     key_player_out ? `| ${key_player_name} OUT (Vacuum)` : "",
     stacking_cut > 0 ? `| R9+R10 Stack Cap -${stacking_cut}` : "",
   ]
@@ -885,13 +888,22 @@ export function runEngine(opts: {
     const oT = lb - overBuf - relCushion;
     let oCand = Math.ceil(oT) - 0.5;
     if (oCand > oT) oCand -= 1;
+    // D-2026-11-19-109: candidates are ALWAYS .5 lines, so on re-run they
+    // face the buffer PLUS the 0.5 .5-line surcharge (Hook Shield) under
+    // strict Rule 13 (>) — the old candidates were computed against the
+    // unsurcharged buffer, so a recommended line could sit exactly on (or
+    // inside) the buffer it would face and the engine itself would block
+    // it on re-run. One step out always strictly clears: before the step
+    // the edge is >= buffer, after it is >= buffer + 1 > buffer + 0.5.
+    if (uCand - hb <= underBuf + 0.5) uCand += 1;
+    if (lb - oCand <= overBuf + 0.5) oCand -= 1;
     alt_line_under = +uCand.toFixed(1);
     alt_line_over = oCand > 0 ? +oCand.toFixed(1) : null;
     const leanSide = lean.includes("UNDER") ? "UNDER" : lean.includes("OVER") ? "OVER" : null;
     const primary = leanSide === "OVER" && alt_line_over
       ? `OVER ${alt_line_over}`
       : `UNDER ${alt_line_under}`;
-    alt_line_note = `Watch-line: ${primary} clears the ±${hook_buffer} buffer${relCushion ? ` + ${relCushion}pt reliability cushion` : ""}${leanSide ? ` (lean: ${leanSide})` : ""}. If the market (live spike or alt menu) offers it, the edge is real — stake there, not at the blocked line.`;
+    alt_line_note = `Watch-line: ${primary} clears the ±${(hook_buffer + 0.5).toFixed(1)} buffer (incl. +0.5 .5-line surcharge)${relCushion ? ` + ${relCushion}pt reliability cushion` : ""}${leanSide ? ` (lean: ${leanSide})` : ""}. If the market (live spike or alt menu) offers it, the edge is real — stake there, not at the blocked line.`;
     triggered.push(`Alt-Line Reco: ${alt_line_note}`);
   }
   const line_position: "Below" | "Inside" | "Above" | "Mixed" =
@@ -917,7 +929,10 @@ export function runEngine(opts: {
     whyParts.push(
       `Rule 13 Hook Shield (line within ±${dna.buffer}pts — no action)`,
     );
-  if (collapsePct > 20)
+  // D-2026-11-19-111: only claim a blocked Hammer when one actually
+  // existed (collapseBlocked is set inside the hammer-edge branch) —
+  // collapsePct > 20 alone also fires on NO ACTION with no Hammer edge.
+  if (collapseBlocked)
     whyParts.push(`Collapse ${collapsePct}% blocked Hammer`);
   if (heavy_adj_kill) whyParts.push("RERUN Heavy Adj ceiling hit");
   if (whyParts.length === 0)

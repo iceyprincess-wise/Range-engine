@@ -7,6 +7,7 @@ import { rememberGames, persist, store, resolveDataDir } from "../lib/warehouse"
 const router = Router();
 const RAPIDAPI_KEY = process.env.RAPIDAPI_KEY;
 const RAPIDAPI_HOST = process.env.RAPIDAPI_HOST || "basketapi1.p.rapidapi.com";
+const WAT_OFFSET_MS = 60 * 60 * 1000; // WAT = UTC+1 — same constant as basket.ts / freefeed.ts (D-2026-11-19-95)
 const CACHE_PATH = path.join(resolveDataDir(), "games-cache.json");
 const BANK_PATH = path.join(resolveDataDir(), "tournaments-bank.json");
 
@@ -79,7 +80,7 @@ const daySegments = (req?: Request) => {
     const d = new Date(y, mo - 1, da);
     if (d.getFullYear() === y && d.getMonth() === mo - 1 && d.getDate() === da) return segOf(d);
   }
-  return segOf(new Date());
+  return segOf(new Date(Date.now() + WAT_OFFSET_MS));
 };
 
 // TOURNAMENTS — opening is ALWAYS free (serves last saved update from disk).

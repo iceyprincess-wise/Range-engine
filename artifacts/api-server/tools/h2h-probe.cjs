@@ -1,3 +1,7 @@
+// D-2026-11-19-98: INPUT — this tool reads artifacts/api-server/data/store.json, the live
+// warehouse file, which is NOT in the repo (gitignored). Copy the live store.json from the
+// server disk (or from a local api-server run's data/ dir) into artifacts/api-server/data/
+// before running. Never commit store.json.
 const fs = require("fs"), path = require("path");
 const storePath = path.join(__dirname, "..", "data", "store.json");
 if (!fs.existsSync(storePath)) { console.error("missing store:", storePath); process.exit(1); }

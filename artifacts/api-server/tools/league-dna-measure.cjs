@@ -1,3 +1,7 @@
+// D-2026-11-19-98: INPUT — this tool reads artifacts/api-server/data/store.json, the live
+// warehouse file, which is NOT in the repo (gitignored). Copy the live store.json from the
+// server disk (or from a local api-server run's data/ dir) into artifacts/api-server/data/
+// before running. Never commit store.json.
 // NOTE (D-2026-11-12-08): this tool groups by uniqueTournament.name, so it
 // emits 21 rows and NO DTA row — DTA (tournament.name "DTA", 12 games) is a
 // hand-maintained tournament-name split inside the "Divisional Tercera de

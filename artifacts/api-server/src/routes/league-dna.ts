@@ -8,7 +8,10 @@ const router = Router();
 // pricing. Below the minimum the value is null (foulStatGames still
 // reports the sample so callers can see why).
 const MIN_FOUL_GAMES = 5;
-const norm = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, " ").replace(/\s+/g, " ").trim();
+// D-2026-11-19-92: NFD-strip diacritics first (same precedent as
+// teamNames.ts normTeamName, D-2026-11-18-87) — without it "Žalgiris"
+// normalised to "algiris" and never matched any stored league token.
+const norm = (s: string) => s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9]/g, " ").replace(/\s+/g, " ").trim();
 const tokens = (s: string) => norm(s).split(" ").filter(Boolean);
 
 // Measured league profile from banked games — zero API cost, grows daily

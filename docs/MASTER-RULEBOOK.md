@@ -653,7 +653,7 @@ As well Injury/Vacuum categories same activity of (4) that done in statistical D
 
 ## Measured League DNA (warehouse-derived)
 
-Snapshot 2026-08-01 · 570 scored games · 17 leagues · zero API calls.
+Snapshot 2026-11-08 · 873 scored games · 35 leagues · zero API calls.
 Regenerate with `node artifacts/api-server/tools/league-dna-measure.cjs`.
 
 Every value is computed from finished games held locally. Nothing is estimated,
@@ -670,10 +670,10 @@ analogised, or carried in from outside the warehouse.
 - `noOT` is set only where the format forbids overtime (TBT's Elam ending).
   Six leagues show otPct 0 on small samples; none of them earn the flag.
 
-**Home/low bias stays at zero everywhere.** Each league's measured homeEdge was
-tested against its own standard error (SE = avgMargin x 1.253 / sqrt(n)). Nothing
-reached |t| >= 2. The loudest offender was LDB: +12.5 points and 83.3% home wins
-across six games, t = 1.02 — indistinguishable from noise, and exactly the shape
+**Home/low bias stays at zero for every league promoted to a measured profile.** Each league's measured homeEdge was
+tested against its own standard error (SE = avgMargin x 1.253 / sqrt(n)). No promoted league reaches |t| >= 2; WNBA is the one
+exception (t = 2.41) and keeps its hand-tuned anchor profile. The loudest offender among the measured table is FIBA Europe Cup:
++20.4 points and 100.0% home wins across five games, t = 1.78 — still indistinguishable from noise, and exactly the shape
 of number that looks like an edge and is not.
 
 **Shrinkage.** Measured DNA blends toward the generic DEFAULT profile by

@@ -29,7 +29,9 @@ const searchOnce = async (q: string) => {
   const hits = (data?.results || []).filter((r: any) => r.type === "team");
   // Prefer the provider hit whose name is exactly the query: the old
   // first-hit pick could return a similarly-named team.
-  const hit = hits.find((r: any) => r.entity?.name?.trim().toLowerCase() === q.trim().toLowerCase()) || hits[0];
+  // D-2026-11-19-91: compare with normTeamName (diacritics/alias-aware),
+  // not raw lowercase exact-match — "Zalgiris" never equalled "Žalgiris".
+  const hit = hits.find((r: any) => normTeamName(r.entity?.name ?? "") === normTeamName(q)) || hits[0];
   return hit ? { id: hit.entity.id as number, name: hit.entity.name as string } : null;
 };
 
@@ -65,7 +67,12 @@ const searchTeam = async (name: string) => {
     words.slice(0, 2).join(" "),
     words.length > 1 ? words[words.length - 1] : "",
   ].filter((c) => c && c.length >= 3))].slice(0, 3);
-  for (const q of candidates) {
+  // D-2026-11-19-94: quota reserve BEFORE the provider search — the
+  // banked-map check above already ran, so a team the warehouse can answer
+  // never spends here. With <2 calls left the provider loop is skipped
+  // entirely and the warehouse fallback below still runs.
+  const quotaBlocked = quota.remaining !== null && quota.remaining < 2;
+  for (const q of (quotaBlocked ? [] : candidates)) {
     try {
       const team = await searchOnce(q);
       // Accept a provider hit ONLY when it is the team actually
@@ -93,10 +100,13 @@ const searchTeam = async (name: string) => {
   // already holds this team under its exact name — banked games carry
   // team ids + names. Resolve the id locally instead of failing a
   // request the warehouse can already answer.
+  // D-2026-11-19-90: compare with normTeamName (diacritics/alias-aware),
+  // not raw lowercase — the raw test missed alias-expanded keys, so the
+  // warehouse fallback never fired for teams stored under another form.
   const banked = (Object.values(store.games) as any[]).find((g: any) =>
-    (g.homeTeam?.name ?? "").trim().toLowerCase() === key || (g.awayTeam?.name ?? "").trim().toLowerCase() === key);
+    normTeamName(g.homeTeam?.name ?? "") === normTeamName(name) || normTeamName(g.awayTeam?.name ?? "") === normTeamName(name));
   const bankedSide = banked
-    ? ((banked.homeTeam?.name ?? "").trim().toLowerCase() === key ? banked.homeTeam : banked.awayTeam)
+    ? (normTeamName(banked.homeTeam?.name ?? "") === normTeamName(name) ? banked.homeTeam : banked.awayTeam)
     : null;
   if (bankedSide?.id) {
     const team = { id: bankedSide.id as number, name: bankedSide.name as string };
@@ -269,7 +279,6 @@ const teamShooting = (games: any[], teamId: number) => {
     const ft = pick("freeThrowsScored"), p3 = pick("threePointersScored"), fg = pick("fieldGoalsScored");
     const fl = s["totalFouls"] ? (isHome ? s["totalFouls"].hv : s["totalFouls"].av) : null;
     if (!ft && !p3 && !fg) continue;
-    n++;
     // D-2026-11-18-59: a null make with attempts present is MISSING
     // data, not 0 makes — adding it pooled a 0% and could drive
     // pt2Pct negative. Skip the line entirely when the make is null.
@@ -280,6 +289,10 @@ const teamShooting = (games: any[], teamId: number) => {
     // per game; fall back to the exact FG - 3PT derivation otherwise.
     const p2d = pick("twoPointersScored");
     if (p2d?.a && p2d.m != null) { p2M += p2d.m; p2A += p2d.a; } else if (fg?.a && p3?.a && fg.m != null && p3.m != null) { p2M += fg.m - p3.m; p2A += fg.a - p3.a; }
+    // D-2026-11-19-93: statGames counts only games that actually contributed
+    // a shooting line — the old n++ ran before the D-59 null-make guards,
+    // so a game whose every line was skipped still counted as a shooting game.
+    if ((ft?.a && ft.m != null) || (p3?.a && p3.m != null) || (fg?.a && fg.m != null) || (p2d?.a && p2d.m != null)) n++;
     if (fl != null) { fouls += fl; foulN++; }
     // Counting stats (Ed's added parameters): banked by BOTH providers
     // under these keys, previously averaged by nobody. Each stat keeps
@@ -397,6 +410,9 @@ router.get("/v1/prematch", async (req: Request, res: Response) => {
   // keep their own key guard. Proven by the no-key live test: the old
   // gate 500'd even for banked pairings.
   try {
+    // D-2026-11-19-94: searchTeam enforces the <2 quota reserve itself
+    // (banked check first, then reserve, then provider search), so this
+    // call never spends the reserve on a team the warehouse can answer.
     const [home, away] = await Promise.all([searchTeam(homeTeam), searchTeam(awayTeam)]);
     const now = Date.now();
     const stale = [home.id, away.id].filter((id) => now - (lastFetch[id] ?? 0) > FRESH_MS);

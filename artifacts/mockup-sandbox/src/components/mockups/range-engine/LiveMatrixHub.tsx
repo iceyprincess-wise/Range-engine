@@ -197,8 +197,32 @@ export const LiveMatrixHub: React.FC<LiveMatrixHubProps> = ({ history, setHistor
         // BOTH sides must match (either direction per side, as in the
         // server's safeMatch): the old OR test linked the first live game
         // involving EITHER team — a wrong game could settle this entry.
-        const sideMatch = (stored: string, query: string) =>
-          stored.length > 0 && query.length > 0 && (stored.includes(query) || query.includes(stored));
+        // D-2026-11-19-99: normalise both sides through the same alias
+        // expansion the server uses (expandTeamAlias precedent: LA ->
+        // Los Angeles, plus GS -> Golden State, NY -> New York) and
+        // collapse dotted initials (L.A. -> LA) before comparing — the
+        // bare substring test never equated "LA Clippers" with the
+        // stored "Los Angeles Clippers", so a live game missed.
+        const normSide = (s: string) => {
+          // Spaced initials ("L. A.") tokenise to ["l", "a"], so runs of
+          // single letters are merged before the alias expansion below.
+          const toks = s.replace(/\./g, "").split(/\s+/).filter(Boolean);
+          const merged: string[] = [];
+          for (const t of toks) {
+            const last = merged[merged.length - 1];
+            if (t.length === 1 && last !== undefined && last.length === 1) merged[merged.length - 1] = last + t;
+            else merged.push(t);
+          }
+          const t = merged.join(" ");
+          if (t.startsWith("la ")) return "los angeles " + t.slice(3);
+          if (t.startsWith("gs ")) return "golden state " + t.slice(3);
+          if (t.startsWith("ny ")) return "new york " + t.slice(3);
+          return t;
+        };
+        const sideMatch = (stored: string, query: string) => {
+          const a = normSide(stored), b = normSide(query);
+          return a.length > 0 && b.length > 0 && (a.includes(b) || b.includes(a));
+        };
         const matchedApiGame = liveEvents.find((evt: any) =>
           sideMatch((evt.homeTeam?.name || "").toLowerCase(), safeHome) &&
           sideMatch((evt.awayTeam?.name || "").toLowerCase(), safeAway)
@@ -329,6 +353,9 @@ export const LiveMatrixHub: React.FC<LiveMatrixHubProps> = ({ history, setHistor
       
       setMatchStats(prev => ({ ...prev, [historyId]: parsedStats }));
       setFetchedAt((prev) => ({ ...prev, [historyId]: Date.now() }));
+      // D-2026-11-19-102: a successful manual sync is fresh data, not a
+      // cache restore — clear the flag exactly as fetchGlobalLive does.
+      setRestoredFromCache(false);
 
       // STALL SENSOR SYNTHESIS (Mocked logic over deep data to prevent crash, as Q-scores vary by API)
       let stallRisk = "LOW";
@@ -365,7 +392,8 @@ export const LiveMatrixHub: React.FC<LiveMatrixHubProps> = ({ history, setHistor
         <Button
           onClick={fetchGlobalLive}
           disabled={globalLoading || quotaRemaining === 0}
-          className="px-5 py-2 bg-gradient-to-r from-yellow-600 to-yellow-600 hover:from-yellow-500 hover:to-yellow-500 text-white font-bold rounded-lg shadow-lg border border-yellow-400/50 transition-all disabled:opacity-50 disabled:cursor-not-allowed text-base h-auto min-h-0 disabled:pointer-events-auto"
+          variant="brand"
+          className="px-5 py-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed text-base disabled:pointer-events-auto"
         >
           {globalLoading ? "Scanning Feed..." : "Refresh Board"}
         </Button>
