@@ -267,7 +267,7 @@ const enrichStats = async (games: any[], max: number) => {
 };
 
 const teamShooting = (games: any[], teamId: number) => {
-  let ftM = 0, ftA = 0, p3M = 0, p3A = 0, fgM = 0, fgA = 0, p2M = 0, p2A = 0, fouls = 0, foulN = 0, n = 0;
+  let ftM = 0, ftA = 0, p3M = 0, p3A = 0, fgM = 0, fgA = 0, p2M = 0, p2A = 0, fouls = 0, foulN = 0, ftN = 0, n = 0;
   let stlSum = 0, stlN = 0, tovSum = 0, tovN = 0, rebSum = 0, rebN = 0, astSum = 0, astN = 0, blkSum = 0, blkN = 0;
   let orebSum = 0, orebN = 0, drebSum = 0, drebN = 0, bigSum = 0, bigN = 0, lcSum = 0, lcN = 0, runSum = 0, runN = 0, tmoSum = 0, tmoN = 0;
   let fbpSum = 0, fbpN = 0, pipSum = 0, pipN = 0, topSum = 0, topN = 0, leadSec = 0, leadTot = 0;
@@ -282,7 +282,10 @@ const teamShooting = (games: any[], teamId: number) => {
     // D-2026-11-18-59: a null make with attempts present is MISSING
     // data, not 0 makes — adding it pooled a 0% and could drive
     // pt2Pct negative. Skip the line entirely when the make is null.
-    if (ft?.a && ft.m != null) { ftM += ft.m; ftA += ft.a; }
+    // D-2026-11-20-114: ftN counts only FT-measured games - ftA
+    // sums only those games, so dividing by n (any shooting line)
+    // understated the average (D-93 residual).
+    if (ft?.a && ft.m != null) { ftM += ft.m; ftA += ft.a; ftN++; }
     if (p3?.a && p3.m != null) { p3M += p3.m; p3A += p3.a; }
     if (fg?.a && fg.m != null) { fgM += fg.m; fgA += fg.a; }
     // 2PT split: prefer the provider's own banked twoPointersScored
@@ -331,7 +334,7 @@ const teamShooting = (games: any[], teamId: number) => {
     // Neither provider publishes a 2PT split; it is exact arithmetic on
     // the measured FG and 3PT lines (2PT = FG - 3PT).
     pt2Pct: pct(p2M, p2A),
-    ftAttemptsPerGame: n ? +(ftA / n).toFixed(1) : null,
+    ftAttemptsPerGame: ftN ? +(ftA / ftN).toFixed(1) : null,
     foulsPerGame: foulN ? +(fouls / foulN).toFixed(1) : null,
     stealsPerGame: stlN ? +(stlSum / stlN).toFixed(1) : null,
     turnoversPerGame: tovN ? +(tovSum / tovN).toFixed(1) : null,

@@ -398,9 +398,13 @@ const sideMatches = (pageSide: string, warehouseName: string): boolean => {
   return toks.length > 0 && toks.every((t) => w.has(t));
 };
 
-let assignCache: { at: number; games: { home: string; away: string; crew: string[] }[] } | null = null;
+let assignCache: { at: number; date: string; games: { home: string; away: string; crew: string[] }[] } | null = null;
 const fetchNbaAssignments = async (): Promise<{ home: string; away: string; crew: string[] }[]> => {
-  if (assignCache && Date.now() - assignCache.at < 30 * 60 * 1000) return assignCache.games;
+  // D-2026-11-20-115: the assignments page shows TODAY's crews
+  // only - the cache is keyed by the WAT date it was fetched for,
+  // never reused across midnight.
+  const today = new Date(Date.now() + WAT_OFFSET_MS).toISOString().slice(0, 10);
+  if (assignCache && assignCache.date === today && Date.now() - assignCache.at < 30 * 60 * 1000) return assignCache.games;
   const html = await pageFetch("https://official.nba.com/referee-assignments/");
   const text = html
     .replace(/<script[\s\S]*?<\/script>|<style[\s\S]*?<\/style>/g, " ")
@@ -424,7 +428,7 @@ const fetchNbaAssignments = async (): Promise<{ home: string; away: string; crew
     // Page format is "Away @ Home".
     if (crew.length) games.push({ away: m[1].trim(), home: m[2].trim(), crew });
   }
-  assignCache = { at: Date.now(), games };
+  assignCache = { at: Date.now(), date: today, games };
   return games;
 };
 
@@ -487,7 +491,11 @@ router.get("/v1/freefeed/referees", async (req: Request, res: Response) => {
         games.find((g) => sideMatches(g.home, away) && sideMatches(g.away, home));
       if (match) { crew = match.crew; assignmentSource = "NBA Official feed (get-game-officials)"; }
     } catch { /* feed unavailable: page scrape is the failover */ }
-    if (!crew && key === "nba") {
+    // D-2026-11-20-115: the assignments-page scrape has no date,
+    // so it must never answer a non-today fixture - a wrong-day crew
+    // would be indistinguishable from the right one. officials: null
+    // is the honest answer there.
+    if (!crew && key === "nba" && dateStr === todayStr) {
       try {
         const games = await fetchNbaAssignments();
         const match =

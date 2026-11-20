@@ -515,6 +515,10 @@ export function RangeEngine() {
     try {
       const d = await fetch(`${API_BASE}/api/v1/warehouse`).then((r) => (r.ok ? r.json() : null));
       setWh(d);
+      // D-2026-11-20-112: the warehouse payload carries live quota, but
+      // the header chip reads quotaInfo - refresh it here or chip and
+      // footer disagree until a full reload.
+      void refreshQuota();
       setWhAt(Date.now());
     } catch { setWh(null); }
   };
